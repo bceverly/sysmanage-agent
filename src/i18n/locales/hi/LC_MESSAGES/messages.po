@@ -3454,6 +3454,29 @@ msgstr "सर्वर ने प्रमाणीकरण अस्वीक
 msgid "no connection token"
 msgstr "कोई कनेक्शन टोकन नहीं"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "स्कैन अनुरोध में कोई रन आईडी नहीं है।"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "इस होस्ट पर एक मैलवेयर स्कैन पहले से चल रहा है।"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "मैलवेयर स्कैन विफल: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "%s का क्वारंटाइन अस्वीकृत: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "%s की पुनर्स्थापना अस्वीकृत: %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u विफल (कोड %d): %s"
 

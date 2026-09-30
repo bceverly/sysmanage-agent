@@ -3402,6 +3402,29 @@ msgstr "伺服器拒絕了驗證：%s"
 msgid "no connection token"
 msgstr "無連線權杖"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "掃描請求中沒有執行 ID。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "此主機上已有惡意軟體掃描正在執行。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "惡意軟體掃描失敗：%s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "隔離 %s 遭拒絕：%s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "還原 %s 遭拒絕：%s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u 失敗（代碼 %d）：%s"
 

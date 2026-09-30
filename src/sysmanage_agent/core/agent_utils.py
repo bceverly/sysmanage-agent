@@ -360,6 +360,9 @@ class MessageProcessor:
             # the parameters and would be dropped by one.
             "apply_config_profile": self.agent.apply_config_profile,
             "run_query_pack": self.agent.run_query_pack,
+            "run_malware_scan": self.agent.run_malware_scan,
+            "quarantine_file": self.agent.quarantine_file,
+            "restore_file": self.agent.restore_file,
             # Phase 10.2 step 7 close-out (2026-05-14): the legacy
             # "deploy_opentelemetry" / "remove_opentelemetry" /
             # "attach_to_graylog" handlers were removed when the

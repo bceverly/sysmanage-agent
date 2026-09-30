@@ -164,6 +164,9 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     "custom_metrics": ("sync_custom_metrics",),
     # Phase 21.6: passive discovery of the devices on this host's segments.
     "network_discovery": ("configure_network_discovery", "run_network_sweep"),
+    # Phase 21.3: malware scanning with the host's own ClamAV.  Its own group:
+    # a host can inventory and patch perfectly well with no scanner installed.
+    "malware": ("run_malware_scan", "quarantine_file", "restore_file"),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",

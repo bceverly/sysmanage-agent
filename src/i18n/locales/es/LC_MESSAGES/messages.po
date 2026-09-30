@@ -3470,6 +3470,29 @@ msgstr "El servidor rechazó la autenticación: %s"
 msgid "no connection token"
 msgstr "no hay token de conexión"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "La solicitud de análisis no tiene ID de ejecución."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "Ya hay un análisis de malware en ejecución en este host."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "Error en el análisis de malware: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "Cuarentena de %s rechazada: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "Restauración de %s rechazada: %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u falló (código %d): %s"
 

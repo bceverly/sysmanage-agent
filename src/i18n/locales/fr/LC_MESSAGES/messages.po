@@ -3499,6 +3499,29 @@ msgstr "Authentification refusée par le serveur : %s"
 msgid "no connection token"
 msgstr "aucun jeton de connexion"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "La demande d'analyse ne contient aucun identifiant d'exécution."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "Une analyse antimalware est déjà en cours sur cet hôte."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "Échec de l'analyse antimalware : %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "Mise en quarantaine de %s refusée : %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "Restauration de %s refusée : %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "Échec de pkgin list -u (code %d) : %s"
 

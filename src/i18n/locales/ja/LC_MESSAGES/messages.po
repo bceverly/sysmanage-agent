@@ -3410,6 +3410,29 @@ msgstr "サーバーが認証を拒否しました: %s"
 msgid "no connection token"
 msgstr "接続トークンがありません"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "スキャン要求に実行 ID がありません。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "このホストではすでにマルウェアスキャンが実行中です。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "マルウェアスキャンに失敗しました: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "%s の隔離が拒否されました: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "%s の復元が拒否されました: %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u に失敗 (コード %d): %s"
 

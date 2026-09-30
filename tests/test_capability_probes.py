@@ -263,8 +263,10 @@ _LINUX_VIRT_TOOLS = {"virsh", "qemu-system-x86_64", "modprobe", "ip", "lxd"}
 # so a host that is meant to read as FULLY equipped has to carry its executor
 # too -- ansible-playbook on POSIX, dsc.exe on Windows.  Without these the
 # "nothing is unavailable" assertions below would fail for an honest reason.
-_POSIX_CFG_TOOLS = {"ansible-playbook"}
-_WINDOWS_CFG_TOOLS = {"dsc.exe"}
+# clamscan too: the malware group (21.3) needs a scanner, and a fixture that
+# pretends it is absent is testing "no ClamAV", not "OS-inapplicable".
+_POSIX_CFG_TOOLS = {"ansible-playbook", "clamscan"}
+_WINDOWS_CFG_TOOLS = {"dsc.exe", "clamscan.exe"}
 
 
 def test_linux_host_is_not_partial_for_lacking_bhyve_vmm_and_wsl():

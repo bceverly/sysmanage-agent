@@ -3410,6 +3410,29 @@ msgstr "서버에서 인증을 거부했습니다: %s"
 msgid "no connection token"
 msgstr "연결 토큰 없음"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "스캔 요청에 실행 ID가 없습니다."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "이 호스트에서 이미 맬웨어 스캔이 실행 중입니다."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "맬웨어 스캔 실패: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "%s 격리가 거부됨: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "%s 복원이 거부됨: %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u 실패 (코드 %d): %s"
 

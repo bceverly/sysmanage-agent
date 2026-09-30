@@ -3455,6 +3455,29 @@ msgstr "Сервер отказал в аутентификации: %s"
 msgid "no connection token"
 msgstr "нет токена подключения"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "В запросе на сканирование отсутствует идентификатор запуска."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "На этом хосте уже выполняется сканирование на вредоносное ПО."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "Ошибка сканирования на вредоносное ПО: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "Помещение %s в карантин отклонено: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "Восстановление %s отклонено: %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u не выполнен (код %d): %s"
 

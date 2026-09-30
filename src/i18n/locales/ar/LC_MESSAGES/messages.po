@@ -3422,6 +3422,29 @@ msgstr "رفض الخادم المصادقة: %s"
 msgid "no connection token"
 msgstr "لا يوجد رمز اتصال"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "لا يحتوي طلب الفحص على معرّف تشغيل."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "يوجد فحص للبرامج الضارة قيد التشغيل بالفعل على هذا المضيف."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "فشل فحص البرامج الضارة: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "تم رفض عزل %s: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "تم رفض استعادة %s: %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "فشل pkgin list -u (الرمز %d): %s"
 

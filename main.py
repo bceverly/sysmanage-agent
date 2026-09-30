@@ -57,6 +57,7 @@ from src.sysmanage_agent.operations.custom_metrics_operations import (
 from src.sysmanage_agent.operations.network_discovery_operations import (
     NetworkDiscoveryOperations,
 )
+from src.sysmanage_agent.operations.malware_scan_operations import MalwareScanOperations
 from src.sysmanage_agent.operations.query_pack_operations import (
     QueryPackOperations,
 )
@@ -196,6 +197,7 @@ class SysManageAgent(
         self.child_host_ops = ChildHostOperations(self)
         self.config_mgmt_ops = ConfigMgmtOperations(self)
         self.query_pack_ops = QueryPackOperations(self)
+        self.malware_scan_ops = MalwareScanOperations(self)
 
         # Initialize diagnostic collector
         self.diagnostic_collector = DiagnosticCollector(self)

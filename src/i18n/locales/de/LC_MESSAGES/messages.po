@@ -3478,6 +3478,29 @@ msgstr "Authentifizierung vom Server abgelehnt: %s"
 msgid "no connection token"
 msgstr "kein Verbindungstoken"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "Die Scan-Anfrage enthält keine Lauf-ID."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "Auf diesem Host läuft bereits ein Malware-Scan."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "Malware-Scan fehlgeschlagen: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "Quarantäne von %s abgelehnt: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "Wiederherstellung von %s abgelehnt: %s"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u fehlgeschlagen (Code %d): %s"
 
