@@ -386,3 +386,17 @@ class TestDeployedUpdatersCountAsEnabled:
                 collector._is_windows_task_enabled("SysManage ClamAV Update") is False
             )
             assert collector._is_launchd_job_loaded("org.sysmanage.freshclam") is False
+
+
+def test_freebsd_freshclam_alone_means_enabled(collector):
+    # FreeBSD's port names its updater clamav_freshclam; with clamd down (or
+    # invisible to rc) a running updater still keeps signatures current.
+    with patch("shutil.which", return_value="/usr/local/bin/clamscan"), patch.object(
+        collector,
+        "_is_service_running",
+        side_effect=lambda name: name == "clamav_freshclam",
+    ), patch("subprocess.run") as run:
+        run.return_value.returncode = 0
+        run.return_value.stdout = "ClamAV 1.5.2/28139"
+        info = collector._check_clamav()
+    assert info["software_name"] == "clamav" and info["enabled"] is True
