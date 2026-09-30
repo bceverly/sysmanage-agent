@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-29 09:23-0400\n"
+"POT-Creation-Date: 2026-09-30 15:33-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,31 +16,31 @@ msgstr "建立資料庫目錄 %s 失敗：%s"
 msgid "Failed to create database tables: %s"
 msgstr "建立資料庫表格失敗：%s"
 
-#: src/database/init.py:83
+#: src/database/init.py:138
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr "從設定取得資料庫路徑失敗：%s，使用本機回退"
 
-#: src/database/init.py:173
+#: src/database/init.py:228
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s 失敗，返回碼 %d"
 
-#: src/database/init.py:182
+#: src/database/init.py:238
 #, python-format
-msgid "Alembic %s timed out after 60 seconds"
-msgstr "Alembic %s 在 60 秒後逾時"
+msgid "Alembic %s timed out after %d seconds"
+msgstr "Alembic %s 在 %d 秒後逾時"
 
-#: src/database/init.py:185
+#: src/database/init.py:244
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "執行 alembic %s 失敗：%s"
 
-#: src/database/init.py:222
+#: src/database/init.py:284
 msgid "Failed to run database migrations"
 msgstr "執行資料庫遷移失敗"
 
-#: src/database/init.py:232
+#: src/database/init.py:294
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "初始化資料庫失敗：%s"
@@ -471,17 +471,17 @@ msgstr "處理fwupd更新時發生錯誤：%s"
 msgid "Unknown Device"
 msgstr "未知裝置"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:168
+#: src/sysmanage_agent/collection/network_discovery_collection.py:215
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "網路探索：擷取已停止：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:311
+#: src/sysmanage_agent/collection/network_discovery_collection.py:417
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "網路探索：無法進行原始擷取：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:346
+#: src/sysmanage_agent/collection/network_discovery_collection.py:441
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -881,17 +881,17 @@ msgstr "收集 Microsoft Store 應用程式失敗：%s"
 msgid "Failed to collect winget packages: %s"
 msgstr "收集 winget 套件失敗：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:66
+#: src/sysmanage_agent/collection/update_detection.py:69
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "更新檢測不支援的平台：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:135
+#: src/sysmanage_agent/collection/update_detection.py:138
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "無法檢測可用更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:182
+#: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
 #: src/sysmanage_agent/operations/package_operations.py:231
 #, python-format
@@ -1572,18 +1572,18 @@ msgstr "無法讀取外發佇列以進行輪詢"
 msgid "Could not mark polled message %s delivered"
 msgstr "無法標記已輪詢的消息 %s 已交付"
 
-#: src/sysmanage_agent/communication/http_polling.py:160
+#: src/sysmanage_agent/communication/http_polling.py:168
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "處理輪詢消息 %s 時發生錯誤"
 
-#: src/sysmanage_agent/communication/http_polling.py:176
+#: src/sysmanage_agent/communication/http_polling.py:184
 msgid ""
 "Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
 " must complete first."
 msgstr "無法使用 HTTP 回退：此代理程式沒有存儲的 host_id。註冊必須先完成。"
 
-#: src/sysmanage_agent/communication/http_polling.py:186
+#: src/sysmanage_agent/communication/http_polling.py:194
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1593,12 +1593,12 @@ msgstr ""
 "使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾秒的延遲到達。允許 WebSocket 升級至 "
 "%s 以恢復即時交付。"
 
-#: src/sysmanage_agent/communication/http_polling.py:201
+#: src/sysmanage_agent/communication/http_polling.py:209
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "輪詢失敗（%s）；將在 %d 秒後重試"
 
-#: src/sysmanage_agent/communication/http_polling.py:212
+#: src/sysmanage_agent/communication/http_polling.py:220
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "重新測試此網路是否現在允許 WebSocket 連接"
 
@@ -1797,126 +1797,137 @@ msgstr "無法確定主機名稱，使用備用值：%s"
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "飛行日誌對帳失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:53
+#: src/sysmanage_agent/core/agent_utils.py:55
 msgid "systemctl not found"
 msgstr "找不到 systemctl"
 
-#: src/sysmanage_agent/core/agent_utils.py:81
+#: src/sysmanage_agent/core/agent_utils.py:83
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "定期更新檢查期間發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:109
+#: src/sysmanage_agent/core/agent_utils.py:111
 #, python-format
 msgid "Update checker error: %s"
 msgstr "更新檢查器錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:147
+#: src/sysmanage_agent/core/agent_utils.py:149
 msgid "Package collection completed with some issues"
 msgstr "套件收集完成，但存在一些問題"
 
-#: src/sysmanage_agent/core/agent_utils.py:150
+#: src/sysmanage_agent/core/agent_utils.py:152
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "包收集期間發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:189
+#: src/sysmanage_agent/core/agent_utils.py:191
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "套件收集排程器錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:225
-#, python-format
-msgid "Auth failed with status %s: %s"
-msgstr "身份驗證失敗，狀態為 %s: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:333
+#: src/sysmanage_agent/core/agent_utils.py:300
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "建立能力報告失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:451
+#: src/sysmanage_agent/core/agent_utils.py:422
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:488
+#: src/sysmanage_agent/core/agent_utils.py:459
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:500
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:559
+#: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "收集 Homebrew 軟體包失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "檢查執行 UUID 時出錯：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:592
+#: src/sysmanage_agent/core/agent_utils.py:563
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:607
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:632
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存儲執行 UUID 時發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:697
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:742
+#: src/sysmanage_agent/core/agent_utils.py:717
+#: src/sysmanage_agent/core/agent_utils.py:801
+#: src/sysmanage_agent/core/agent_utils.py:808
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:749
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:755
+#: src/sysmanage_agent/core/agent_utils.py:730
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:821
+#: src/sysmanage_agent/core/agent_utils.py:818
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:860
+#: src/sysmanage_agent/core/agent_utils.py:857
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:903
+#: src/sysmanage_agent/core/agent_utils.py:900
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:913
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:961
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "無法將合成的 command_result 加入執行中日誌佇列：%s"
+
+#: src/sysmanage_agent/core/auth_helper.py:76
+#, python-format
+msgid "Auth refused by server: %s"
+msgstr "伺服器拒絕了驗證：%s"
+
+#: src/sysmanage_agent/core/auth_helper.py:77
+msgid "no connection token"
+msgstr "無連線權杖"
+
+#: src/sysmanage_agent/core/auth_helper.py:87
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "身份驗證失敗，狀態為 %s: %s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2483,21 +2494,46 @@ msgstr "無法保存 IP 轉發設置：%s"
 msgid "UFW rule failed: %s - %s"
 msgstr "UFW 規則失敗：%s - %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:130
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "掃描請求中沒有執行 ID。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "此主機上已有惡意軟體掃描正在執行。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "惡意軟體掃描失敗：%s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "隔離 %s 遭拒絕：%s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "還原 %s 遭拒絕：%s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:133
 #, python-format
 msgid "Network discovery setting could not be saved: %s"
 msgstr "無法儲存網路探索設定：%s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:158
+#: src/sysmanage_agent/operations/network_discovery_operations.py:161
 #, python-format
 msgid "Error sending network discovery report: %s"
 msgstr "傳送網路探索報告時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:166
+#: src/sysmanage_agent/operations/network_discovery_operations.py:169
+#: src/sysmanage_agent/operations/network_discovery_operations.py:241
 msgid "Cannot send network discovery report: no host approval"
 msgstr "無法傳送網路探索報告：主機未獲核准"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:179
+#: src/sysmanage_agent/operations/network_discovery_operations.py:182
+#: src/sysmanage_agent/operations/network_discovery_operations.py:259
 msgid "Failed to send network discovery report"
 msgstr "傳送網路探索報告失敗"
 
@@ -3392,38 +3428,8 @@ msgid "Error checking WSL support: %s"
 msgstr "檢查 WSL 支持時出錯：%s"
 
 #, python-format
-
-#: src/sysmanage_agent/core/auth_helper.py:76
-#, python-format
-msgid "Auth refused by server: %s"
-msgstr "伺服器拒絕了驗證：%s"
-
-#: src/sysmanage_agent/core/auth_helper.py:77
-msgid "no connection token"
-msgstr "無連線權杖"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:45
-msgid "The scan request has no run id."
-msgstr "掃描請求中沒有執行 ID。"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:48
-msgid "A malware scan is already running on this host."
-msgstr "此主機上已有惡意軟體掃描正在執行。"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:55
-#, python-format
-msgid "Malware scan failed: %s"
-msgstr "惡意軟體掃描失敗：%s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:85
-#, python-format
-msgid "Quarantine of %s refused: %s"
-msgstr "隔離 %s 遭拒絕：%s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:99
-#, python-format
-msgid "Restore of %s refused: %s"
-msgstr "還原 %s 遭拒絕：%s"
+#~ msgid "Alembic %s timed out after 60 seconds"
+#~ msgstr "Alembic %s 在 60 秒後逾時"
 
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u 失敗（代碼 %d）：%s"

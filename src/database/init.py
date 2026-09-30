@@ -6,16 +6,71 @@
 Database initialization and migration management for SysManage Agent.
 """
 
+import glob
 import logging
 import os
+import re
+import sqlite3
 import subprocess  # nosec B404
 import sys
+from typing import Optional, Set
 
 from src.i18n import _
 
 from .base import get_database_manager
 
 logger = logging.getLogger(__name__)
+
+# A real migration on a slow disk (or an agent tree on NFS, where importing
+# SQLAlchemy + Alembic alone took 68 s on 2026-09-30) needs far more than the
+# 60 s this used to allow; the limit only exists so a wedged run cannot block
+# startup forever.
+ALEMBIC_TIMEOUT_SECONDS = 600
+
+_REVISION = re.compile(r"^revision\b[^=]*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
+_DOWN_REVISION = re.compile(r"^down_revision\b[^=]*=\s*(.+)$", re.MULTILINE)
+_QUOTED = re.compile(r"[\"']([^\"']+)[\"']")
+
+
+def _migration_heads(versions_dir: str) -> Optional[Set[str]]:
+    """Head revisions of the agent's migration scripts, read from the files
+    without importing Alembic; None when a file cannot be parsed (the caller
+    then runs Alembic, which is always correct)."""
+    revisions, parents = set(), set()
+    for path in glob.glob(os.path.join(versions_dir, "*.py")):
+        with open(path, "r", encoding="utf-8") as handle:
+            text = handle.read()
+        revision = _REVISION.search(text)
+        down = _DOWN_REVISION.search(text)
+        if not revision or not down:
+            return None
+        revisions.add(revision.group(1))
+        parents.update(_QUOTED.findall(down.group(1)))
+    heads = revisions - parents
+    return heads or None
+
+
+def _database_revisions(db_path: str) -> Optional[Set[str]]:
+    """The revisions recorded in the database, read-only; None if unknown."""
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True, timeout=30)
+        try:
+            rows = conn.execute("SELECT version_num FROM alembic_version").fetchall()
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return None
+    return {row[0] for row in rows} or None
+
+
+def database_is_current(db_path: str) -> bool:
+    """Whether the database is already at every migration head, so starting
+    a second interpreter just to have Alembic say so can be skipped."""
+    if not os.path.exists(db_path):
+        return False
+    versions_dir = os.path.join(os.path.dirname(__file__), "alembic", "versions")
+    heads = _migration_heads(versions_dir)
+    return heads is not None and _database_revisions(db_path) == heads
 
 
 def get_database_path_from_config(config_manager) -> str:
@@ -158,7 +213,7 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
             cwd=agent_dir,
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=ALEMBIC_TIMEOUT_SECONDS,
             check=False,
             env=env,
         )
@@ -179,7 +234,11 @@ def run_alembic_migration(operation: str = "upgrade", revision: str = "head") ->
         return False
 
     except subprocess.TimeoutExpired:
-        logger.exception(_("Alembic %s timed out after 60 seconds"), operation)
+        logger.exception(
+            _("Alembic %s timed out after %d seconds"),
+            operation,
+            ALEMBIC_TIMEOUT_SECONDS,
+        )
         return False
     except Exception as error:
         logger.exception(_("Failed to run alembic %s: %s"), operation, error)
@@ -217,8 +276,11 @@ def initialize_database(config_manager) -> bool:
         if should_auto_migrate(config_manager):
             logger.info("Auto-migration is enabled")
 
-            # Run alembic upgrade to latest
-            if not run_alembic_migration("upgrade", "head"):
+            # Run alembic upgrade to latest -- unless the schema is already
+            # there, which is every ordinary restart.
+            if database_is_current(db_path):
+                logger.info("Database schema is current; no migration needed")
+            elif not run_alembic_migration("upgrade", "head"):
                 logger.error(_("Failed to run database migrations"))
                 return False
         else:

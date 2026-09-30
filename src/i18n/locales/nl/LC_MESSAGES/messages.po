@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-29 09:23-0400\n"
+"POT-Creation-Date: 2026-09-30 15:33-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,31 +16,31 @@ msgstr "Mislukt om database-map %s aan te maken: %s"
 msgid "Failed to create database tables: %s"
 msgstr "Mislukt om database-tabellen aan te maken: %s"
 
-#: src/database/init.py:83
+#: src/database/init.py:138
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr "Kan databasepad niet uit configuratie halen: %s, lokale fallback"
 
-#: src/database/init.py:173
+#: src/database/init.py:228
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s mislukt met retourcode %d"
 
-#: src/database/init.py:182
+#: src/database/init.py:238
 #, python-format
-msgid "Alembic %s timed out after 60 seconds"
-msgstr "Alembic %s time-out na 60 seconden"
+msgid "Alembic %s timed out after %d seconds"
+msgstr "Alembic %s time-out na %d seconden"
 
-#: src/database/init.py:185
+#: src/database/init.py:244
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "Kan alembic %s niet uitvoeren: %s"
 
-#: src/database/init.py:222
+#: src/database/init.py:284
 msgid "Failed to run database migrations"
 msgstr "Kan databasemigraties niet uitvoeren"
 
-#: src/database/init.py:232
+#: src/database/init.py:294
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "Mislukt om database in te stellen: %s"
@@ -475,17 +475,17 @@ msgstr "Fout bij verwerken van fwupd updates: %s"
 msgid "Unknown Device"
 msgstr "Onbekend Apparaat"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:168
+#: src/sysmanage_agent/collection/network_discovery_collection.py:215
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "Netwerkdetectie: vastleggen gestopt: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:311
+#: src/sysmanage_agent/collection/network_discovery_collection.py:417
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "Netwerkdetectie: directe vastlegging niet beschikbaar: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:346
+#: src/sysmanage_agent/collection/network_discovery_collection.py:441
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -893,17 +893,17 @@ msgstr "Mislukt om Microsoft Store-toepassingen te verzamelen: %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "Mislukt om winget-pakketten te verzamelen: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:66
+#: src/sysmanage_agent/collection/update_detection.py:69
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Niet-ondersteunde platform voor detectie van updates: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:135
+#: src/sysmanage_agent/collection/update_detection.py:138
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "Mislukt om beschikbare updates te detecteren: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:182
+#: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
 #: src/sysmanage_agent/operations/package_operations.py:231
 #, python-format
@@ -1586,12 +1586,12 @@ msgstr "Kon de uitgaande wachtrij voor polling niet lezen"
 msgid "Could not mark polled message %s delivered"
 msgstr "Kon het gepolde bericht %s niet als afgeleverd markeren"
 
-#: src/sysmanage_agent/communication/http_polling.py:160
+#: src/sysmanage_agent/communication/http_polling.py:168
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "Fout bij verwerken van gepold bericht %s"
 
-#: src/sysmanage_agent/communication/http_polling.py:176
+#: src/sysmanage_agent/communication/http_polling.py:184
 msgid ""
 "Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
 " must complete first."
@@ -1599,7 +1599,7 @@ msgstr ""
 "Kan de HTTP fallback niet gebruiken: deze agent heeft geen opgeslagen "
 "host_id. Registratie moet eerst voltooid zijn."
 
-#: src/sysmanage_agent/communication/http_polling.py:186
+#: src/sysmanage_agent/communication/http_polling.py:194
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1611,12 +1611,12 @@ msgstr ""
 " arriveren. Toestaan van WebSocket-upgrades naar %s om directe levering te "
 "herstellen."
 
-#: src/sysmanage_agent/communication/http_polling.py:201
+#: src/sysmanage_agent/communication/http_polling.py:209
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "Poll mislukt (%s); herproberen over %d seconden"
 
-#: src/sysmanage_agent/communication/http_polling.py:212
+#: src/sysmanage_agent/communication/http_polling.py:220
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "Nogmaals testen of dit netwerk WebSocket-verbindingen nu toestaat"
 
@@ -1831,128 +1831,139 @@ msgstr "Kan hostname niet bepalen, valt terug op fallback: %s"
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "In-flight dagboekreconciliatie is mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:53
+#: src/sysmanage_agent/core/agent_utils.py:55
 msgid "systemctl not found"
 msgstr "systemctl niet gevonden"
 
-#: src/sysmanage_agent/core/agent_utils.py:81
+#: src/sysmanage_agent/core/agent_utils.py:83
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "Fout bij periodieke updatecontrole: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:109
+#: src/sysmanage_agent/core/agent_utils.py:111
 #, python-format
 msgid "Update checker error: %s"
 msgstr "Updatecontrolefout: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:147
+#: src/sysmanage_agent/core/agent_utils.py:149
 msgid "Package collection completed with some issues"
 msgstr "Pakketverzameling voltooid met enkele problemen"
 
-#: src/sysmanage_agent/core/agent_utils.py:150
+#: src/sysmanage_agent/core/agent_utils.py:152
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "Fout tijdens pakketverzameling: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:189
+#: src/sysmanage_agent/core/agent_utils.py:191
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "Pakketverzamelplanner-fout: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:225
-#, python-format
-msgid "Auth failed with status %s: %s"
-msgstr "Authenticatie mislukt met statuscode %s: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:333
+#: src/sysmanage_agent/core/agent_utils.py:300
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "Mislukt om capaciteitsrapportage op te bouwen: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:451
+#: src/sysmanage_agent/core/agent_utils.py:422
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "Scriptuitvoerings-UUID %s al verwerkt, duplicaat overgeslagen"
 
-#: src/sysmanage_agent/core/agent_utils.py:488
+#: src/sysmanage_agent/core/agent_utils.py:459
 msgid "Generic command missing nested command_type"
 msgstr "Generieke opdracht mist geneste command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:500
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Onbekend opdrachttype: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:559
+#: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Fout bij het controleren van uitvoering UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:592
+#: src/sysmanage_agent/core/agent_utils.py:563
 msgid "No execution UUID provided, cannot track"
 msgstr "Geen uitvoerings-UUID opgegeven, kan niet volgen"
 
-#: src/sysmanage_agent/core/agent_utils.py:607
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Uitvoerings-UUID %s bestaat al in database"
 
-#: src/sysmanage_agent/core/agent_utils.py:632
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Fout bij het opslaan van uitvoerings UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:697
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Fout in service-controlafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:742
+#: src/sysmanage_agent/core/agent_utils.py:717
+#: src/sysmanage_agent/core/agent_utils.py:801
+#: src/sysmanage_agent/core/agent_utils.py:808
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "%s van service %s mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:749
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Time-out bij servicebeheer voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:755
+#: src/sysmanage_agent/core/agent_utils.py:730
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Servicebesturingsfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:821
+#: src/sysmanage_agent/core/agent_utils.py:818
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Bijwerken van rollen na servicebeheer mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:860
+#: src/sysmanage_agent/core/agent_utils.py:857
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Fout in service-statusafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:903
+#: src/sysmanage_agent/core/agent_utils.py:900
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Time-out bij servicestatus voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:913
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Servicestatusfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:961
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
 "Kon synthetische command_result niet in wachtrij plaatsen voor in-flight "
 "journal: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:76
+#, python-format
+msgid "Auth refused by server: %s"
+msgstr "Authenticatie geweigerd door server: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:77
+msgid "no connection token"
+msgstr "geen verbindingstoken"
+
+#: src/sysmanage_agent/core/auth_helper.py:87
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "Authenticatie mislukt met statuscode %s: %s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2526,21 +2537,46 @@ msgstr "Kan IP-forwarding-instelling niet opslaan: %s"
 msgid "UFW rule failed: %s - %s"
 msgstr "UFW-regel mislukt: %s - %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:130
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "Het scanverzoek heeft geen run-ID."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "Er wordt al een malwarescan uitgevoerd op deze host."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "Malwarescan mislukt: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "Quarantaine van %s geweigerd: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "Herstel van %s geweigerd: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:133
 #, python-format
 msgid "Network discovery setting could not be saved: %s"
 msgstr "Instelling voor netwerkdetectie kon niet worden opgeslagen: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:158
+#: src/sysmanage_agent/operations/network_discovery_operations.py:161
 #, python-format
 msgid "Error sending network discovery report: %s"
 msgstr "Fout bij het verzenden van het netwerkdetectierapport: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:166
+#: src/sysmanage_agent/operations/network_discovery_operations.py:169
+#: src/sysmanage_agent/operations/network_discovery_operations.py:241
 msgid "Cannot send network discovery report: no host approval"
 msgstr "Kan netwerkdetectierapport niet verzenden: host niet goedgekeurd"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:179
+#: src/sysmanage_agent/operations/network_discovery_operations.py:182
+#: src/sysmanage_agent/operations/network_discovery_operations.py:259
 msgid "Failed to send network discovery report"
 msgstr "Verzenden van netwerkdetectierapport mislukt"
 
@@ -3442,38 +3478,8 @@ msgid "Error checking WSL support: %s"
 msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
-
-#: src/sysmanage_agent/core/auth_helper.py:76
-#, python-format
-msgid "Auth refused by server: %s"
-msgstr "Authenticatie geweigerd door server: %s"
-
-#: src/sysmanage_agent/core/auth_helper.py:77
-msgid "no connection token"
-msgstr "geen verbindingstoken"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:45
-msgid "The scan request has no run id."
-msgstr "Het scanverzoek heeft geen run-ID."
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:48
-msgid "A malware scan is already running on this host."
-msgstr "Er wordt al een malwarescan uitgevoerd op deze host."
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:55
-#, python-format
-msgid "Malware scan failed: %s"
-msgstr "Malwarescan mislukt: %s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:85
-#, python-format
-msgid "Quarantine of %s refused: %s"
-msgstr "Quarantaine van %s geweigerd: %s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:99
-#, python-format
-msgid "Restore of %s refused: %s"
-msgstr "Herstel van %s geweigerd: %s"
+#~ msgid "Alembic %s timed out after 60 seconds"
+#~ msgstr "Alembic %s time-out na 60 seconden"
 
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u mislukt (code %d): %s"

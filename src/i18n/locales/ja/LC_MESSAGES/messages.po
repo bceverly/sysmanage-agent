@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-29 09:23-0400\n"
+"POT-Creation-Date: 2026-09-30 15:33-0400\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,31 +16,31 @@ msgstr "データベースディレクトリ%sを作成できませんでした:
 msgid "Failed to create database tables: %s"
 msgstr "データベーステーブルの作成に失敗しました: %s"
 
-#: src/database/init.py:83
+#: src/database/init.py:138
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr "設定からデータベースパスの取得に失敗: %s、ローカルフォールバックを使用"
 
-#: src/database/init.py:173
+#: src/database/init.py:228
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s がリターンコード %d で失敗"
 
-#: src/database/init.py:182
+#: src/database/init.py:238
 #, python-format
-msgid "Alembic %s timed out after 60 seconds"
-msgstr "Alembic %s が60秒後にタイムアウト"
+msgid "Alembic %s timed out after %d seconds"
+msgstr "Alembic %s が%d秒後にタイムアウト"
 
-#: src/database/init.py:185
+#: src/database/init.py:244
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "alembic %s の実行に失敗: %s"
 
-#: src/database/init.py:222
+#: src/database/init.py:284
 msgid "Failed to run database migrations"
 msgstr "データベースマイグレーションの実行に失敗"
 
-#: src/database/init.py:232
+#: src/database/init.py:294
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "データベースの初期化に失敗しました: %s"
@@ -471,17 +471,17 @@ msgstr "fwupdアップデートの処理中にエラーが発生しました: %s
 msgid "Unknown Device"
 msgstr "不明なデバイス"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:168
+#: src/sysmanage_agent/collection/network_discovery_collection.py:215
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "ネットワーク検出: キャプチャが停止しました: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:311
+#: src/sysmanage_agent/collection/network_discovery_collection.py:417
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "ネットワーク検出: 直接キャプチャは利用できません: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:346
+#: src/sysmanage_agent/collection/network_discovery_collection.py:441
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -883,17 +883,17 @@ msgstr "Microsoft Storeアプリの収集に失敗しました: %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "wingetパッケージの収集に失敗しました: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:66
+#: src/sysmanage_agent/collection/update_detection.py:69
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "更新検出に非対応のプラットフォーム: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:135
+#: src/sysmanage_agent/collection/update_detection.py:138
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "利用可能な更新プログラムの検出に失敗しました: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:182
+#: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
 #: src/sysmanage_agent/operations/package_operations.py:231
 #, python-format
@@ -1576,18 +1576,18 @@ msgstr "出力キューを読み込めませんでした"
 msgid "Could not mark polled message %s delivered"
 msgstr "ポーリングされたメッセージ%sの配信をマークできませんでした"
 
-#: src/sysmanage_agent/communication/http_polling.py:160
+#: src/sysmanage_agent/communication/http_polling.py:168
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "ポーリングされたメッセージ%sの処理中にエラーが発生しました"
 
-#: src/sysmanage_agent/communication/http_polling.py:176
+#: src/sysmanage_agent/communication/http_polling.py:184
 msgid ""
 "Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
 " must complete first."
 msgstr "HTTP フォールバックを使用できません: このエージェントには保存された host_id がありません。登録を最初に行う必要があります。"
 
-#: src/sysmanage_agent/communication/http_polling.py:186
+#: src/sysmanage_agent/communication/http_polling.py:194
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1597,12 +1597,12 @@ msgstr ""
 "WebSocket の代わりに HTTP ポーリングを使用しています: このネットワークは WebSocket "
 "アップグレードを拒否しました。コマンドは最大数秒の遅延で到着します。WebSocket アップグレードを %s に許可するように設定してください。"
 
-#: src/sysmanage_agent/communication/http_polling.py:201
+#: src/sysmanage_agent/communication/http_polling.py:209
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "ポーリングに失敗しました (%s); %d秒後に再試行します"
 
-#: src/sysmanage_agent/communication/http_polling.py:212
+#: src/sysmanage_agent/communication/http_polling.py:220
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "このネットワークが WebSocket 接続を許可するようになったかどうかを再テストしています"
 
@@ -1805,126 +1805,137 @@ msgstr "ホスト名が取得できません。デフォルト値を使用しま
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "フライト中のジャーナル調整に失敗しました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:53
+#: src/sysmanage_agent/core/agent_utils.py:55
 msgid "systemctl not found"
 msgstr "systemctl が見つかりません"
 
-#: src/sysmanage_agent/core/agent_utils.py:81
+#: src/sysmanage_agent/core/agent_utils.py:83
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "定期的な更新チェック中にエラーが発生しました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:109
+#: src/sysmanage_agent/core/agent_utils.py:111
 #, python-format
 msgid "Update checker error: %s"
 msgstr "更新チェッカーエラー: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:147
+#: src/sysmanage_agent/core/agent_utils.py:149
 msgid "Package collection completed with some issues"
 msgstr "パッケージ収集がいくつかの問題と共に完了しました"
 
-#: src/sysmanage_agent/core/agent_utils.py:150
+#: src/sysmanage_agent/core/agent_utils.py:152
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "パッケージの収集中にエラーが発生しました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:189
+#: src/sysmanage_agent/core/agent_utils.py:191
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "パッケージ収集スケジューラエラー: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:225
-#, python-format
-msgid "Auth failed with status %s: %s"
-msgstr "認証に失敗しました。ステータス：%s: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:333
+#: src/sysmanage_agent/core/agent_utils.py:300
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "キャパビリティレポートの作成に失敗しました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:451
+#: src/sysmanage_agent/core/agent_utils.py:422
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "スクリプト実行 UUID %s は既に処理済み、重複をスキップ"
 
-#: src/sysmanage_agent/core/agent_utils.py:488
+#: src/sysmanage_agent/core/agent_utils.py:459
 msgid "Generic command missing nested command_type"
 msgstr "汎用コマンドにネストされた command_type がありません"
 
-#: src/sysmanage_agent/core/agent_utils.py:500
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "不明なコマンドタイプ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:559
+#: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrewパッケージの収集に失敗しました：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "実行UUID のチェックに失敗しました：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:592
+#: src/sysmanage_agent/core/agent_utils.py:563
 msgid "No execution UUID provided, cannot track"
 msgstr "実行 UUID が指定されていないため、追跡できません"
 
-#: src/sysmanage_agent/core/agent_utils.py:607
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "実行 UUID %s はデータベースに既に存在します"
 
-#: src/sysmanage_agent/core/agent_utils.py:632
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "実行 UUID の保存エラー: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:697
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "サービス制御ハンドラーのエラー: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:742
+#: src/sysmanage_agent/core/agent_utils.py:717
+#: src/sysmanage_agent/core/agent_utils.py:801
+#: src/sysmanage_agent/core/agent_utils.py:808
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "サービス %s の %s に失敗しました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:749
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s のサービス制御がタイムアウトしました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:755
+#: src/sysmanage_agent/core/agent_utils.py:730
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s のサービス制御エラー: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:821
+#: src/sysmanage_agent/core/agent_utils.py:818
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "サービス制御後のロール更新に失敗しました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:860
+#: src/sysmanage_agent/core/agent_utils.py:857
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "サービス状態ハンドラーのエラー: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:903
+#: src/sysmanage_agent/core/agent_utils.py:900
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s のサービス状態取得がタイムアウトしました: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:913
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s のサービス状態エラー: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:961
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "実行中ジャーナルの合成 command_result をキューに入れられませんでした: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:76
+#, python-format
+msgid "Auth refused by server: %s"
+msgstr "サーバーが認証を拒否しました: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:77
+msgid "no connection token"
+msgstr "接続トークンがありません"
+
+#: src/sysmanage_agent/core/auth_helper.py:87
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "認証に失敗しました。ステータス：%s: %s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2491,21 +2502,46 @@ msgstr "IP フォワーディング設定を保存できませんでした：%s"
 msgid "UFW rule failed: %s - %s"
 msgstr "UFW ルールが失敗しました: %s - %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:130
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "スキャン要求に実行 ID がありません。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "このホストではすでにマルウェアスキャンが実行中です。"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "マルウェアスキャンに失敗しました: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "%s の隔離が拒否されました: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "%s の復元が拒否されました: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:133
 #, python-format
 msgid "Network discovery setting could not be saved: %s"
 msgstr "ネットワーク検出の設定を保存できませんでした: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:158
+#: src/sysmanage_agent/operations/network_discovery_operations.py:161
 #, python-format
 msgid "Error sending network discovery report: %s"
 msgstr "ネットワーク検出レポートの送信中にエラーが発生しました: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:166
+#: src/sysmanage_agent/operations/network_discovery_operations.py:169
+#: src/sysmanage_agent/operations/network_discovery_operations.py:241
 msgid "Cannot send network discovery report: no host approval"
 msgstr "ネットワーク検出レポートを送信できません: ホストが承認されていません"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:179
+#: src/sysmanage_agent/operations/network_discovery_operations.py:182
+#: src/sysmanage_agent/operations/network_discovery_operations.py:259
 msgid "Failed to send network discovery report"
 msgstr "ネットワーク検出レポートの送信に失敗しました"
 
@@ -3400,38 +3436,8 @@ msgid "Error checking WSL support: %s"
 msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
-
-#: src/sysmanage_agent/core/auth_helper.py:76
-#, python-format
-msgid "Auth refused by server: %s"
-msgstr "サーバーが認証を拒否しました: %s"
-
-#: src/sysmanage_agent/core/auth_helper.py:77
-msgid "no connection token"
-msgstr "接続トークンがありません"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:45
-msgid "The scan request has no run id."
-msgstr "スキャン要求に実行 ID がありません。"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:48
-msgid "A malware scan is already running on this host."
-msgstr "このホストではすでにマルウェアスキャンが実行中です。"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:55
-#, python-format
-msgid "Malware scan failed: %s"
-msgstr "マルウェアスキャンに失敗しました: %s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:85
-#, python-format
-msgid "Quarantine of %s refused: %s"
-msgstr "%s の隔離が拒否されました: %s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:99
-#, python-format
-msgid "Restore of %s refused: %s"
-msgstr "%s の復元が拒否されました: %s"
+#~ msgid "Alembic %s timed out after 60 seconds"
+#~ msgstr "Alembic %s が60秒後にタイムアウト"
 
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u に失敗 (コード %d): %s"

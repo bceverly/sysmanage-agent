@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-29 09:23-0400\n"
+"POT-Creation-Date: 2026-09-30 15:33-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,31 +16,31 @@ msgstr "कड़ियाँ डेटाबेस डिरेक्टरी 
 msgid "Failed to create database tables: %s"
 msgstr "काबल्ट डेटाबेस तालिकाएँ नहीं बना पाई: %s"
 
-#: src/database/init.py:83
+#: src/database/init.py:138
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr "कॉन्फ़िग से डेटाबेस पथ प्राप्त करने में विफल: %s, स्थानीय फॉलबैक"
 
-#: src/database/init.py:173
+#: src/database/init.py:228
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s रिटर्न कोड %d के साथ विफल"
 
-#: src/database/init.py:182
+#: src/database/init.py:238
 #, python-format
-msgid "Alembic %s timed out after 60 seconds"
-msgstr "60 सेकंड के बाद Alembic %s का समय समाप्त"
+msgid "Alembic %s timed out after %d seconds"
+msgstr "Alembic %s का समय %d सेकंड के बाद समाप्त हो गया"
 
-#: src/database/init.py:185
+#: src/database/init.py:244
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "alembic %s चलाने में विफल: %s"
 
-#: src/database/init.py:222
+#: src/database/init.py:284
 msgid "Failed to run database migrations"
 msgstr "डेटाबेस माइग्रेशन चलाने में विफल"
 
-#: src/database/init.py:232
+#: src/database/init.py:294
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "डेटाबेस का संचालन विफल हो गया: %s"
@@ -475,17 +475,17 @@ msgstr "fwupd अपडेट प्रोसेसिंग में त्र
 msgid "Unknown Device"
 msgstr "अज्ञात डिवाइस"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:168
+#: src/sysmanage_agent/collection/network_discovery_collection.py:215
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "नेटवर्क खोज: कैप्चर रुक गया: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:311
+#: src/sysmanage_agent/collection/network_discovery_collection.py:417
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "नेटवर्क खोज: सीधा कैप्चर उपलब्ध नहीं है: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:346
+#: src/sysmanage_agent/collection/network_discovery_collection.py:441
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -890,17 +890,17 @@ msgstr "Microsoft Store ऐप्स का संकलन फ़ैल गय�
 msgid "Failed to collect winget packages: %s"
 msgstr "विंगेट पैकेज एकत्र करने में विफल हो गए: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:66
+#: src/sysmanage_agent/collection/update_detection.py:69
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "परीक्षण के लिए समर्थित नहीं है कि प्लेटफार्म: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:135
+#: src/sysmanage_agent/collection/update_detection.py:138
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "उपलब्ध अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:182
+#: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
 #: src/sysmanage_agent/operations/package_operations.py:231
 #, python-format
@@ -1589,12 +1589,12 @@ msgstr "प्रस्तुत पॉलिंग के लिए बाह�
 msgid "Could not mark polled message %s delivered"
 msgstr "पुलिश्ड मेसेज %s को delivered अंकित करने में विफलता"
 
-#: src/sysmanage_agent/communication/http_polling.py:160
+#: src/sysmanage_agent/communication/http_polling.py:168
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "पुलिश्ड मेसेज %s के हाथांकन में त्रुटि"
 
-#: src/sysmanage_agent/communication/http_polling.py:176
+#: src/sysmanage_agent/communication/http_polling.py:184
 msgid ""
 "Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
 " must complete first."
@@ -1602,7 +1602,7 @@ msgstr ""
 "HTTP फॉलबैक का इस्तेमाल नहीं किया जा सकता: यह एजेंट में कोई भी stored "
 "host_id नहीं है। पंजीकरण पहले पूरा होना चाहिए."
 
-#: src/sysmanage_agent/communication/http_polling.py:186
+#: src/sysmanage_agent/communication/http_polling.py:194
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1614,12 +1614,12 @@ msgstr ""
 "पहुंचेंगे। WebSocket अपग्रेड को %s इजाजत देने से तुरंत डिलीवरी को पुन: "
 "स्थापित किया जा सकता है।"
 
-#: src/sysmanage_agent/communication/http_polling.py:201
+#: src/sysmanage_agent/communication/http_polling.py:209
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "पॉल विफल (%s); पुन: प्रयास करने का समय %ds"
 
-#: src/sysmanage_agent/communication/http_polling.py:212
+#: src/sysmanage_agent/communication/http_polling.py:220
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr ""
 "इस नेटवर्क की अब WebSocket कनेक्शंस इजाजत दिए जा रहे हैं कि यह पुन: परीक्षण "
@@ -1830,129 +1830,140 @@ msgstr "होस्टनाम का पता नहीं चल सका,
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "फ्लाइट में जर्नल रिकंसिलिएशन फेल हुआ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:53
+#: src/sysmanage_agent/core/agent_utils.py:55
 msgid "systemctl not found"
 msgstr "systemctl शेट्वो"
 
-#: src/sysmanage_agent/core/agent_utils.py:81
+#: src/sysmanage_agent/core/agent_utils.py:83
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "संचित अपडेट चेक के दौरान त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:109
+#: src/sysmanage_agent/core/agent_utils.py:111
 #, python-format
 msgid "Update checker error: %s"
 msgstr "अपडेट चेकर त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:147
+#: src/sysmanage_agent/core/agent_utils.py:149
 msgid "Package collection completed with some issues"
 msgstr "पैकेज संग्रह कुछ समस्याओं के साथ पूर्ण"
 
-#: src/sysmanage_agent/core/agent_utils.py:150
+#: src/sysmanage_agent/core/agent_utils.py:152
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "पैकेज कलेक्शन के दौरान त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:189
+#: src/sysmanage_agent/core/agent_utils.py:191
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "पैकेज संग्रह शेड्यूलर त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:225
-#, python-format
-msgid "Auth failed with status %s: %s"
-msgstr "प्रवीणता विफल हुई साइटस्टेस्टस: %s: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:333
+#: src/sysmanage_agent/core/agent_utils.py:300
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "क्षमता रिपोर्ट बनाने में विफल हुए: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:451
+#: src/sysmanage_agent/core/agent_utils.py:422
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
 
-#: src/sysmanage_agent/core/agent_utils.py:488
+#: src/sysmanage_agent/core/agent_utils.py:459
 msgid "Generic command missing nested command_type"
 msgstr "जेनेरिक कमांड में नेस्टेड command_type गायब"
 
-#: src/sysmanage_agent/core/agent_utils.py:500
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "अज्ञात कमांड प्रकार: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:559
+#: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "प्रोग्रेशियन UUID की जाँच में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:592
+#: src/sysmanage_agent/core/agent_utils.py:563
 msgid "No execution UUID provided, cannot track"
 msgstr "कोई निष्पादन UUID प्रदान नहीं किया गया, ट्रैक नहीं कर सकते"
 
-#: src/sysmanage_agent/core/agent_utils.py:607
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "निष्पादन UUID %s डेटाबेस में पहले से मौजूद है"
 
-#: src/sysmanage_agent/core/agent_utils.py:632
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "अद्यतन पहचान UUID संग्रहित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:697
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "सेवा नियंत्रण हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:742
+#: src/sysmanage_agent/core/agent_utils.py:717
+#: src/sysmanage_agent/core/agent_utils.py:801
+#: src/sysmanage_agent/core/agent_utils.py:808
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "सेवा %s पर %s विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:749
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:755
+#: src/sysmanage_agent/core/agent_utils.py:730
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:821
+#: src/sysmanage_agent/core/agent_utils.py:818
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "सेवा नियंत्रण के बाद भूमिकाएँ अद्यतन करने में विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:860
+#: src/sysmanage_agent/core/agent_utils.py:857
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "सेवा स्थिति हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:903
+#: src/sysmanage_agent/core/agent_utils.py:900
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s के लिए सेवा स्थिति समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:913
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s के लिए सेवा स्थिति त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:961
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
 "इन-फ्लाइट जर्नल के लिए सिंथेटिक command_result को कतार में डालने में विफल: "
 "%s"
+
+#: src/sysmanage_agent/core/auth_helper.py:76
+#, python-format
+msgid "Auth refused by server: %s"
+msgstr "सर्वर ने प्रमाणीकरण अस्वीकार किया: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:77
+msgid "no connection token"
+msgstr "कोई कनेक्शन टोकन नहीं"
+
+#: src/sysmanage_agent/core/auth_helper.py:87
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "प्रवीणता विफल हुई साइटस्टेस्टस: %s: %s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2527,21 +2538,46 @@ msgstr "IP फॉरवर्डिंग सेटिंग को संरक
 msgid "UFW rule failed: %s - %s"
 msgstr "UFW नियम विफल हो गया: %s - %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:130
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "स्कैन अनुरोध में कोई रन आईडी नहीं है।"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "इस होस्ट पर एक मैलवेयर स्कैन पहले से चल रहा है।"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "मैलवेयर स्कैन विफल: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "%s का क्वारंटाइन अस्वीकृत: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "%s की पुनर्स्थापना अस्वीकृत: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:133
 #, python-format
 msgid "Network discovery setting could not be saved: %s"
 msgstr "नेटवर्क खोज सेटिंग सहेजी नहीं जा सकी: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:158
+#: src/sysmanage_agent/operations/network_discovery_operations.py:161
 #, python-format
 msgid "Error sending network discovery report: %s"
 msgstr "नेटवर्क खोज रिपोर्ट भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:166
+#: src/sysmanage_agent/operations/network_discovery_operations.py:169
+#: src/sysmanage_agent/operations/network_discovery_operations.py:241
 msgid "Cannot send network discovery report: no host approval"
 msgstr "नेटवर्क खोज रिपोर्ट नहीं भेजी जा सकती: होस्ट स्वीकृत नहीं है"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:179
+#: src/sysmanage_agent/operations/network_discovery_operations.py:182
+#: src/sysmanage_agent/operations/network_discovery_operations.py:259
 msgid "Failed to send network discovery report"
 msgstr "नेटवर्क खोज रिपोर्ट भेजने में विफल"
 
@@ -3444,38 +3480,8 @@ msgid "Error checking WSL support: %s"
 msgstr "WSL समर्थन की जाँच में त्रुटि: %s"
 
 #, python-format
-
-#: src/sysmanage_agent/core/auth_helper.py:76
-#, python-format
-msgid "Auth refused by server: %s"
-msgstr "सर्वर ने प्रमाणीकरण अस्वीकार किया: %s"
-
-#: src/sysmanage_agent/core/auth_helper.py:77
-msgid "no connection token"
-msgstr "कोई कनेक्शन टोकन नहीं"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:45
-msgid "The scan request has no run id."
-msgstr "स्कैन अनुरोध में कोई रन आईडी नहीं है।"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:48
-msgid "A malware scan is already running on this host."
-msgstr "इस होस्ट पर एक मैलवेयर स्कैन पहले से चल रहा है।"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:55
-#, python-format
-msgid "Malware scan failed: %s"
-msgstr "मैलवेयर स्कैन विफल: %s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:85
-#, python-format
-msgid "Quarantine of %s refused: %s"
-msgstr "%s का क्वारंटाइन अस्वीकृत: %s"
-
-#: src/sysmanage_agent/operations/malware_scan_operations.py:99
-#, python-format
-msgid "Restore of %s refused: %s"
-msgstr "%s की पुनर्स्थापना अस्वीकृत: %s"
+#~ msgid "Alembic %s timed out after 60 seconds"
+#~ msgstr "60 सेकंड के बाद Alembic %s का समय समाप्त"
 
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u विफल (कोड %d): %s"

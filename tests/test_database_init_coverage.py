@@ -70,7 +70,7 @@ class TestDatabaseInitCoverage:
             assert result is False
             # Should log timeout error (line 102)
             mock_logger.exception.assert_called_with(
-                "Alembic %s timed out after 60 seconds", "upgrade"
+                "Alembic %s timed out after %d seconds", "upgrade", 600
             )
 
     @patch("subprocess.run")
