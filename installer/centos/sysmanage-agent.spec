@@ -1,5 +1,5 @@
 Name:           sysmanage-agent
-Version:        3.9.0.18
+Version:        3.9.0.19
 Release:        1%{?dist}
 Summary:        System management agent for SysManage
 
