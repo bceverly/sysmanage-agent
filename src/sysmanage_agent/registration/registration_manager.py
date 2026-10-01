@@ -118,18 +118,19 @@ class RegistrationManager:
             endpoint = ServerEndpoint(self.config)
             fingerprint_url = endpoint.rest_url("/api/certificates/server-fingerprint")
 
-            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
-                async with session.get(
-                    fingerprint_url, proxy=endpoint.proxy()
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        server_fingerprint = data.get("fingerprint")
-                        self.logger.info(
-                            "Retrieved server fingerprint for validation: %s",
-                            "***REDACTED***" if server_fingerprint else "None",
-                        )
-                        # We'll store it when we get the full cert data
+            async with aiohttp.ClientSession(
+                **endpoint.session_kwargs()
+            ) as session, session.get(
+                fingerprint_url, proxy=endpoint.proxy()
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    server_fingerprint = data.get("fingerprint")
+                    self.logger.info(
+                        "Retrieved server fingerprint for validation: %s",
+                        "***REDACTED***" if server_fingerprint else "None",
+                    )
+                    # We'll store it when we get the full cert data
 
         except Exception as error:
             self.logger.error(

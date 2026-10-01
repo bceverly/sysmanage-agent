@@ -246,11 +246,10 @@ class MessageHandler(MessageHandlerQueueMixin):
 
             async with aiohttp.ClientSession(
                 timeout=timeout, **endpoint.session_kwargs()
-            ) as session:
-                async with session.get(
-                    f"{http_url}/", proxy=endpoint.proxy()
-                ) as response:
-                    return response.status == 200
+            ) as session, session.get(
+                f"{http_url}/", proxy=endpoint.proxy()
+            ) as response:
+                return response.status == 200
         except Exception as error:
             self.logger.debug("Server health check failed: %s", error)
             return False

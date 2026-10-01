@@ -62,8 +62,8 @@ _ETH_P_ALL = 0x0003
 _ETH_P_ARP = 0x0806
 _ETH_P_IP = 0x0800
 _ETH_P_IPV6 = 0x86DD
-_MDNS = ("224.0.0.251", 5353)
-_SSDP = ("239.255.255.250", 1900)
+_MDNS = ("224.0.0.251", 5353)  # NOSONAR - the mDNS multicast group (RFC 6762)
+_SSDP = ("239.255.255.250", 1900)  # NOSONAR - the SSDP multicast group (UPnP)
 # Where raw capture exists (S6): AF_PACKET on Linux, BPF everywhere else.
 _CAPTURE_SYSTEMS = ("Linux", "Darwin", "FreeBSD", "OpenBSD", "NetBSD", "DragonFly")
 _SKIP_PREFIXES = (
@@ -300,7 +300,7 @@ class _MulticastListener(threading.Thread):
 
     def run(self):
         while not self.stop_event.is_set() and self.sockets:
-            for kind, sock in list(self.sockets.items()):
+            for kind, sock in self.sockets.items():
                 try:
                     payload, (src, _port) = sock.recvfrom(9000)
                 except socket.timeout:
@@ -453,6 +453,13 @@ class NetworkDiscoveryCollector:
 
 def _merge_cache(devices, cache, interfaces) -> None:
     """Fold the neighbor cache in, and give IP-only sightings their MAC."""
+    mac_of_ip = _fold_cache_rows(devices, cache, interfaces)
+    for key in [k for k in devices if k.startswith("ip:")]:
+        _resolve_ip_only(devices, key, mac_of_ip, interfaces)
+
+
+def _fold_cache_rows(devices, cache, interfaces) -> Dict[str, Any]:
+    """Add each cache row on a monitored interface; return ip -> (mac, iface)."""
     by_ip = {i["ip"]: i["name"] for i in interfaces}
     names = {i["name"] for i in interfaces}
     mac_of_ip = {}
@@ -472,26 +479,30 @@ def _merge_cache(devices, cache, interfaces) -> None:
             entry["ips"].append(row["ip"])
         entry["methods"].add("cache")
         entry["count"] += 1
-    for key in [k for k in devices if k.startswith("ip:")]:
-        row = devices[key]
-        found = mac_of_ip.get(row["ips"][0]) if row["ips"] else None
-        if found is None:
-            # Heard over a plain socket and not in the cache. Our OWN
-            # announcements loop back, and a socket bound to every address
-            # also hears the interfaces we deliberately skip (an LXD bridge,
-            # say): keep it only if it is someone else on a monitored subnet.
-            iface = _interface_for(row["ips"][0] if row["ips"] else None, interfaces)
-            if iface is None:
-                devices.pop(key)
-            else:
-                row["interface"] = iface
-            continue  # the server keys it by IP
-        mac, iface = found
-        if mac in devices:
-            _fold(devices[mac], devices.pop(key))
+    return mac_of_ip
+
+
+def _resolve_ip_only(devices, key, mac_of_ip, interfaces) -> None:
+    """Give one IP-only sighting its MAC from the cache, or keep it by IP."""
+    row = devices[key]
+    found = mac_of_ip.get(row["ips"][0]) if row["ips"] else None
+    if found is None:
+        # Heard over a plain socket and not in the cache. Our OWN
+        # announcements loop back, and a socket bound to every address
+        # also hears the interfaces we deliberately skip (an LXD bridge,
+        # say): keep it only if it is someone else on a monitored subnet.
+        iface = _interface_for(row["ips"][0] if row["ips"] else None, interfaces)
+        if iface is None:
+            devices.pop(key)
         else:
-            row["mac"], row["interface"] = mac, iface
-            devices[mac] = devices.pop(key)
+            row["interface"] = iface
+        return  # the server keys it by IP
+    mac, iface = found
+    if mac in devices:
+        _fold(devices[mac], devices.pop(key))
+    else:
+        row["mac"], row["interface"] = mac, iface
+        devices[mac] = devices.pop(key)
 
 
 def _interface_for(ip: Optional[str], interfaces) -> Optional[str]:

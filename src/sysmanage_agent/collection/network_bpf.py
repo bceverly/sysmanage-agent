@@ -159,7 +159,8 @@ _VIRTUAL_MEMBERS = (
     "pair", "vport", "feth", "utun",
 )  # fmt: skip
 _BRIDGE_NAMES = ("bridge", "veb")
-# FreeBSD/macOS: "member: tap0 flags=..."; OpenBSD/NetBSD: "\ttap0 flags=..."
+# Bridge member lines: FreeBSD and macOS prefix the interface name with
+# 'member:', OpenBSD and NetBSD indent it with a tab; both end in 'flags='.
 _MEMBER = re.compile(r"^\s+(?:member:\s+)?([A-Za-z][\w.]*)\s+flags=", re.MULTILINE)
 _IFCONFIG_TIMEOUT = 5
 

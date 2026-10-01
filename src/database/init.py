@@ -27,9 +27,22 @@ logger = logging.getLogger(__name__)
 # startup forever.
 ALEMBIC_TIMEOUT_SECONDS = 600
 
-_REVISION = re.compile(r"^revision\b[^=]*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
-_DOWN_REVISION = re.compile(r"^down_revision\b[^=]*=\s*(.+)$", re.MULTILINE)
 _QUOTED = re.compile(r"[\"']([^\"']+)[\"']")
+
+
+def _assignment(text: str, name: str) -> Optional[str]:
+    """The right-hand side of the module-level ``name = ...`` (or
+    ``name: type = ...``) line, read line by line -- no backtracking regex."""
+    for line in text.splitlines():
+        if not line.startswith(name):
+            continue
+        rest = line[len(name) :]
+        if rest[:1] not in ("=", ":", " "):
+            continue  # e.g. "revision_id", not "revision"
+        _, sep, value = rest.partition("=")
+        if sep:
+            return value.strip()
+    return None
 
 
 def _migration_heads(versions_dir: str) -> Optional[Set[str]]:
@@ -40,12 +53,12 @@ def _migration_heads(versions_dir: str) -> Optional[Set[str]]:
     for path in glob.glob(os.path.join(versions_dir, "*.py")):
         with open(path, "r", encoding="utf-8") as handle:
             text = handle.read()
-        revision = _REVISION.search(text)
-        down = _DOWN_REVISION.search(text)
-        if not revision or not down:
+        revision = _QUOTED.findall(_assignment(text, "revision") or "")
+        down = _assignment(text, "down_revision")
+        if not revision or down is None:
             return None
-        revisions.add(revision.group(1))
-        parents.update(_QUOTED.findall(down.group(1)))
+        revisions.add(revision[0])
+        parents.update(_QUOTED.findall(down))
     heads = revisions - parents
     return heads or None
 

@@ -704,19 +704,12 @@ class MessageProcessor:
             result = await run_command_async(cmd, timeout=30.0)
 
             if result.returncode == 0:
-                self.logger.info("Successfully %s service: %s", action, service)
-                return {
-                    "success": True,
-                    "message": f"Service {action} successful",
-                }
+                return self._service_ok(action, service)
 
             error_msg = (
                 result.stderr.strip() or result.stdout.strip() or "Unknown error"
             )
-            self.logger.error(
-                _("Failed to %s service %s: %s"), action, service, error_msg
-            )
-            return {"success": False, "error": error_msg}
+            return self._service_failed(action, service, error_msg)
 
         except asyncio.TimeoutError:
             error_msg = f"Service {action} timed out after 30 seconds"
@@ -796,20 +789,24 @@ class MessageProcessor:
                 service, action == "enable"
             )
             if ok:
-                self.logger.info("Successfully %s service: %s", action, service)
-                return {"success": True, "message": f"Service {action} successful"}
-            self.logger.error(_("Failed to %s service %s: %s"), action, service, error)
-            return {"success": False, "error": error}
+                return self._service_ok(action, service)
+            return self._service_failed(action, service, error)
         result = await run_command_async(cmd, timeout=60.0)
         output = f"{result.stdout}\n{result.stderr}"
         if result.returncode == 0 or bsd_service_control.already_in_state(
             action, output
         ):
-            self.logger.info("Successfully %s service: %s", action, service)
-            return {"success": True, "message": f"Service {action} successful"}
+            return self._service_ok(action, service)
         error_msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
-        self.logger.error(_("Failed to %s service %s: %s"), action, service, error_msg)
-        return {"success": False, "error": error_msg}
+        return self._service_failed(action, service, error_msg)
+
+    def _service_ok(self, action: str, service: str) -> Dict[str, Any]:
+        self.logger.info("Successfully %s service: %s", action, service)
+        return {"success": True, "message": f"Service {action} successful"}
+
+    def _service_failed(self, action: str, service: str, error: str) -> Dict[str, Any]:
+        self.logger.error(_("Failed to %s service %s: %s"), action, service, error)
+        return {"success": False, "error": error}
 
     async def _collect_roles_after_service_change(self) -> None:
         """Trigger role collection after a service control operation to update status."""

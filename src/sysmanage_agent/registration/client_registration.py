@@ -305,42 +305,43 @@ class ClientRegistration:
             # ca_bundle for TLS-inspecting proxies, and only disables
             # verification when an administrator explicitly asks for it.
             endpoint = ServerEndpoint(self.config)
-            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
-                async with session.post(
-                    registration_url,
-                    json=basic_info,
-                    headers={"Content-Type": "application/json"},
-                    proxy=endpoint.proxy(),
-                ) as response:
+            async with aiohttp.ClientSession(
+                **endpoint.session_kwargs()
+            ) as session, session.post(
+                registration_url,
+                json=basic_info,
+                headers={"Content-Type": "application/json"},
+                proxy=endpoint.proxy(),
+            ) as response:
 
-                    if response.status in [200, 201]:
-                        response_data = await response.json()
-                        self.registration_data = response_data
-                        self.registered = True
+                if response.status in [200, 201]:
+                    response_data = await response.json()
+                    self.registration_data = response_data
+                    self.registered = True
 
-                        # Store authentication data in database
-                        host_id = response_data.get("id")
-                        host_token = response_data.get("host_token")
-                        if host_id:
-                            self._store_auth_data(host_id, host_token)
+                    # Store authentication data in database
+                    host_id = response_data.get("id")
+                    host_token = response_data.get("host_token")
+                    if host_id:
+                        self._store_auth_data(host_id, host_token)
 
-                        self.logger.info(
-                            "Successfully registered with server. Host ID: %s",
-                            host_id,
-                        )
-                        return True
-                    if response.status == 409:
-                        # Host already exists - this is OK
-                        self.logger.info("Host already registered with server")
-                        self.registered = True
-                        return True
-                    error_text = await response.text()
-                    self.logger.error(
-                        _("Registration failed with status %s: %s"),
-                        response.status,
-                        error_text,
+                    self.logger.info(
+                        "Successfully registered with server. Host ID: %s",
+                        host_id,
                     )
-                    return False
+                    return True
+                if response.status == 409:
+                    # Host already exists - this is OK
+                    self.logger.info("Host already registered with server")
+                    self.registered = True
+                    return True
+                error_text = await response.text()
+                self.logger.error(
+                    _("Registration failed with status %s: %s"),
+                    response.status,
+                    error_text,
+                )
+                return False
 
         except (
             Exception

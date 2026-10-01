@@ -30,7 +30,7 @@ NETBSD_PKG_RC_EXAMPLES = "/usr/pkg/share/examples/rc.d"
 
 # A service name becomes an rc.conf variable and a path under /etc/rc.d, so
 # it is held to what rc.d names actually look like.
-_SERVICE_NAME = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$")
+_SERVICE_NAME = re.compile(r"^\w[\w.-]{0,63}$", re.ASCII)
 
 
 def bsd_system() -> Optional[str]:
@@ -94,7 +94,8 @@ def _install_netbsd_rc_script(
     if not os.path.isfile(example):
         return False, f"no rc.d script for {service} in {rc_d} or {examples}"
     shutil.copyfile(example, target)
-    os.chmod(target, 0o555)  # nosec B103 - rc.d scripts are world-readable
+    # Root runs rc.d scripts; nobody else needs to read or run this one.
+    os.chmod(target, 0o700)
     return True, ""
 
 
