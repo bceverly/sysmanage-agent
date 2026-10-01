@@ -164,7 +164,7 @@ but:
 - no package manager, no root, sandboxed filesystem
 
 Realistic capability: **`inventory` only**, and a reduced form of it via
-platform APIs rather than shell commands. This matches the Phase 22 companion
+platform APIs rather than shell commands. This matches the Phase 24 companion
 app already described in the ROADMAP as "reports inventory, executes nothing" --
 and it is the one place a genuinely trimmed agent build is unavoidable rather
 than optional.

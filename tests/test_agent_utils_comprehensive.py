@@ -556,7 +556,12 @@ class TestMessageProcessorServiceControl:
     @pytest.mark.asyncio
     async def test_process_service_control_action_no_systemctl(self):
         """Test service control action when systemctl not found."""
-        with patch("shutil.which", return_value=None):
+        # The systemd/OpenRC/launchd/Windows path: on a BSD CI runner the
+        # BSD service control would take over (it needs no systemctl).
+        with patch("shutil.which", return_value=None), patch(
+            "src.sysmanage_agent.core.bsd_service_control.bsd_system",
+            return_value=None,
+        ):
             result = await self.processor._process_service_control_action(
                 "start", "nginx"
             )

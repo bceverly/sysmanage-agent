@@ -464,7 +464,9 @@ python|3.11.6|3.11.7|false
         assert git_update["current_version"] == "2.42.0.2"
         assert git_update["available_version"] == "2.42.1"
 
-    @patch("subprocess.run")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded"
+    )
     @patch("platform.system")
     def test_detect_chocolatey_updates_no_command(self, mock_system, mock_run):
         """Test Chocolatey update detection when command not available."""
@@ -505,7 +507,9 @@ Microsoft Edge     Microsoft.Edge               118.0.2088   119.0.2151   winget
         assert sevenzip_update["current_version"] == "22.01"
         assert sevenzip_update["available_version"] == "23.01"
 
-    @patch("subprocess.run")
+    @patch(
+        "src.sysmanage_agent.collection.update_detection_windows_packages.run_bounded"
+    )
     @patch("platform.system")
     def test_detect_winget_updates_failure(self, mock_system, mock_run):
         """Test Winget update detection with command failure."""

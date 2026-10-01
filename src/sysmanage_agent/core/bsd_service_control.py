@@ -18,6 +18,7 @@ never ran.  Each BSD does it differently:
 
 import os
 import platform
+import posixpath
 import re
 import shutil
 from typing import List, Optional, Tuple
@@ -66,7 +67,8 @@ def build_command(system: str, action: str, service: str) -> Optional[List[str]]
         return [_tool("service"), service, action]
     if action in ("enable", "disable"):
         return None
-    return [os.path.join(NETBSD_RC_D, service), action]
+    # BSD paths are POSIX paths whatever the platform this code is built on.
+    return [posixpath.join(NETBSD_RC_D, service), action]
 
 
 # rc.subr's own words (FreeBSD and NetBSD) when the service is already where

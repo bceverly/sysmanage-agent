@@ -412,7 +412,11 @@ class TestServiceControlNewActions:
         ), patch("shutil.which", return_value="/usr/bin/systemctl"), patch(
             "src.sysmanage_agent.core.agent_utils.run_command_async",
             return_value=mock_result,
-        ) as mock_run:
+        ) as mock_run, patch(
+            # systemd path; on a BSD CI runner BSD service control takes over
+            "src.sysmanage_agent.core.bsd_service_control.bsd_system",
+            return_value=None,
+        ):
             result = await self.processor._handle_service_control(
                 {"action": action, "services": ["nginx"]}
             )
