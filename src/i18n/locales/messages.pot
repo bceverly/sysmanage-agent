@@ -3423,3 +3423,6 @@ msgstr ""
 msgid "Error checking WSL support: %s"
 msgstr ""
 
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""

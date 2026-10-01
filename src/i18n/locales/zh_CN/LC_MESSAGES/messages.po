@@ -5222,3 +5222,7 @@ msgstr "检查WSL支持时出错：%s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU 不能超过 64"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "队列中的消息 %s 不是可读的 JSON；不会通过轮询发送"

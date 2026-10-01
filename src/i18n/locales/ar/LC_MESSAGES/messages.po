@@ -5277,3 +5277,7 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "لا يمكن أن تتجاوز وحدات المعالجة المركزية 64"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "الرسالة %s في قائمة الانتظار ليست JSON قابلة للقراءة؛ لن يتم إرسالها عبر الاستطلاع"

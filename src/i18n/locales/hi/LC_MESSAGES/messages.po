@@ -5295,3 +5295,7 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU 64 से अधिक नहीं हो सकते"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "कतार में संदेश %s पढ़ने योग्य JSON नहीं है; इसे पोलिंग से नहीं भेजा जा रहा है"

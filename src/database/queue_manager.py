@@ -192,12 +192,14 @@ class MessageQueueManager:
                     Priority.NORMAL.value: 2,
                     Priority.LOW.value: 1,
                 }
+                # Higher priority first, then OLDER first.  (This was one key
+                # with reverse=True, which also reversed the time order:
+                # within a priority the newest message went out first.)
                 messages.sort(
                     key=lambda m: (
-                        priority_map.get(m.priority, 0),  # Priority first
-                        m.created_at,  # Then creation time
-                    ),
-                    reverse=True,  # Higher priority first, older messages first
+                        -priority_map.get(m.priority, 0),
+                        m.created_at,
+                    )
                 )
 
             # Eagerly load all attributes to avoid DetachedInstanceError

@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import text
 
 from src.database.base import get_db_session
+from src.database.host_identity import kept_host_token
 from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
@@ -441,6 +442,10 @@ class ClientRegistration:
         """Store authentication data in database."""
         try:
             with get_db_session() as session:
+                # Keep the token we already hold for this host when the reply
+                # omits it (the server returns it only to the registration
+                # that created the host).
+                host_token = host_token or kept_host_token(session, host_id)
                 # DELETE ALL ROWS - no questions asked
                 session.execute(text("DELETE FROM host_approval"))
 

@@ -5223,3 +5223,7 @@ msgstr "WSL 지원 확인 오류: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU는 64개를 초과할 수 없습니다"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "대기열의 메시지 %s은(는) 읽을 수 있는 JSON이 아닙니다. 폴링으로 보내지 않습니다"

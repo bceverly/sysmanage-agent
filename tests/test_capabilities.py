@@ -20,6 +20,7 @@ from pathlib import Path
 from src.sysmanage_agent.core.capabilities import (
     CAPABILITY_GROUPS,
     CAPABILITY_SCHEMA_VERSION,
+    PERSISTENT_TOKEN_CAPABILITY,
     REASON_NO_HANDLER,
     build_capability_report,
     command_to_group,
@@ -82,7 +83,10 @@ def test_baseline_agent_advertises_everything():
     live = _live_command_types()
     report = build_capability_report({c: None for c in live})
     assert report["schema_version"] == CAPABILITY_SCHEMA_VERSION
-    assert sorted(report["capabilities"]) == sorted(CAPABILITY_GROUPS)
+    # Every command group, plus the agent trait the server ratchets on (22.0).
+    assert sorted(report["capabilities"]) == sorted(
+        [*CAPABILITY_GROUPS, PERSISTENT_TOKEN_CAPABILITY]
+    )
     assert report["commands"] == sorted(live)
     assert report["unavailable"] == {}
     assert report["partial"] == {}

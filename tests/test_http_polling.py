@@ -14,6 +14,7 @@ These tests pin the behaviors that end-to-end run cannot cheaply cover: what
 happens when a poll FAILS.
 """
 
+import json
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -31,12 +32,23 @@ def make_agent(queued=None, host_id="host-42"):
     agent.config.get_server_config.return_value = {"url": "http://s.example:8080"}
     agent.config.should_verify_ssl.return_value = True
     agent.registration_manager.get_stored_host_id_sync.return_value = host_id
-    agent.queue_manager.dequeue_messages.return_value = queued or []
+    agent.message_handler.queue_manager.dequeue_messages.return_value = queued or []
+    # The queue lives on the message handler.  A bare Mock would invent
+    # ``agent.queue_manager`` on first touch -- which is how polling once read
+    # a queue that does not exist, sent nothing, and still passed these tests.
+    del agent.queue_manager
     return agent
 
 
-def queued_message(mid="out-1", mtype="heartbeat"):
-    return Mock(message_id=mid, message_type=mtype, message_data={"up": True})
+def queued_message(mid="out-1", mtype="heartbeat", envelope=None):
+    """A queue row as the real queue stores it: the whole envelope, as JSON."""
+    envelope = envelope or {
+        "message_type": mtype,
+        "message_id": "env-" + mid,
+        "timestamp": "2026-10-01T00:00:00+00:00",
+        "data": {"up": True},
+    }
+    return Mock(message_id=mid, message_type=mtype, message_data=json.dumps(envelope))
 
 
 @pytest.mark.asyncio
@@ -53,7 +65,7 @@ async def test_messages_are_marked_delivered_only_after_the_server_accepts():
     with pytest.raises(ConnectionError):
         await transport.poll_once(Mock(), Mock(), "host-42")
 
-    agent.queue_manager.mark_completed.assert_not_called()
+    agent.message_handler.queue_manager.mark_completed.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -64,7 +76,10 @@ async def test_a_successful_poll_marks_its_batch_delivered():
 
     await transport.poll_once(Mock(), Mock(), "host-42")
 
-    delivered = [c.args[0] for c in agent.queue_manager.mark_completed.call_args_list]
+    delivered = [
+        c.args[0]
+        for c in agent.message_handler.queue_manager.mark_completed.call_args_list
+    ]
     assert delivered == ["out-1", "out-2"]
 
 
@@ -210,3 +225,36 @@ async def test_a_rejected_poll_forgets_the_cached_token():
             _session_returning(401), endpoint, "host-42", []
         )
     agent.auth_helper.invalidate_auth_token.assert_called_once()
+
+
+def test_a_queued_envelope_is_polled_as_its_type_and_data():
+    """The endpoint takes {message_type, data}; the queue holds the envelope."""
+    agent = make_agent(queued=[queued_message("out-1", "hardware_update")])
+    entries = HttpPollingTransport(agent)._collect_outbound()
+    assert entries == [
+        {"message_type": "hardware_update", "data": {"up": True}, "message_id": "out-1"}
+    ]
+
+
+def test_top_level_fields_become_the_data():
+    """Command acknowledgments and script results carry no ``data`` object."""
+    row = queued_message(
+        "ack-1",
+        "command_acknowledgment",
+        envelope={
+            "message_type": "command_acknowledgment",
+            "message_id": "q-9",
+            "timestamp": "2026-10-01T00:00:00+00:00",
+            "exit_code": 0,
+        },
+    )
+    entries = HttpPollingTransport(make_agent(queued=[row]))._collect_outbound()
+    assert entries[0]["data"] == {"exit_code": 0}
+
+
+def test_an_unreadable_row_is_skipped_loudly_not_sent():
+    bad = Mock(message_id="bad", message_type="heartbeat", message_data="{not json")
+    agent = make_agent(queued=[bad, queued_message("ok")])
+    entries = HttpPollingTransport(agent)._collect_outbound()
+    assert [e["message_id"] for e in entries] == ["ok"]
+    agent.logger.error.assert_called_once()

@@ -18,6 +18,7 @@ import aiohttp
 from sqlalchemy import text
 
 from src.database.base import get_database_manager
+from src.database.host_identity import kept_host_token
 from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
@@ -183,6 +184,10 @@ class RegistrationManager:
             host_token = message.get("host_token")
             approved = message.get("approved", False)
 
+            # Read the token we hold BEFORE anything clears the row: the
+            # server no longer repeats it (Phase 22.0).
+            host_token = host_token or self._kept_token(host_id)
+
             if (host_id or host_token) and approved:
                 self.logger.info(
                     "Registration approved",
@@ -275,6 +280,18 @@ class RegistrationManager:
             self.logger.error(_("Error clearing host approval records: %s"), error)
             raise
 
+    def _kept_token(self, host_id) -> Optional[str]:
+        """The token already stored for ``host_id`` (None on any error)."""
+        try:
+            session = get_database_manager().get_session()
+            try:
+                return kept_host_token(session, host_id)
+            finally:
+                session.close()
+        except Exception:  # pylint: disable=broad-exception-caught
+            self.logger.error(_("Error retrieving stored credentials"))
+            return None
+
     async def store_host_approval(  # NOSONAR - async required by interface
         self,
         host_id: str,
@@ -290,6 +307,9 @@ class RegistrationManager:
             db_manager = get_database_manager()
             session = db_manager.get_session()
             try:
+                # Keep the token we already hold for this host when the
+                # message omits it (server Phase 22.0 sends it only once).
+                host_token = host_token or kept_host_token(session, host_id)
                 # CRITICAL: Delete ALL existing host approval records first
                 # This ensures we only ever have ONE record, preventing old host_id caching issues
                 deleted_count = session.query(HostApproval).delete()

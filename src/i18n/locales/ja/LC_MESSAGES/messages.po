@@ -5221,3 +5221,7 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU は 64 を超えることはできません"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "キュー内のメッセージ %s は読み取り可能な JSON ではありません。ポーリングでは送信しません"

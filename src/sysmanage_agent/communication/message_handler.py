@@ -455,20 +455,13 @@ class MessageHandler(MessageHandlerQueueMixin):
 
         if action == "refresh_inventory":
             try:
-                await self.agent.data_collector.send_software_inventory_update()
+                # The collector's method is the underscored one; the public
+                # name this used to call never existed, so the refresh was a
+                # caught AttributeError and a warning -- never a refresh.
+                # pylint: disable-next=protected-access
+                await self.agent.data_collector._send_software_inventory_update()
                 self.logger.info(
                     "Broadcast %s: software inventory refreshed", broadcast_id
-                )
-            except AttributeError:
-                # Older agent builds may not expose
-                # ``send_software_inventory_update``.  Best-effort:
-                # fall back to a no-op.
-                self.logger.warning(
-                    _(
-                        "Broadcast %s: inventory refresh requested but "
-                        "data_collector lacks send_software_inventory_update"
-                    ),
-                    broadcast_id,
                 )
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 self.logger.error(

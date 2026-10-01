@@ -5495,3 +5495,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "Les CPU ne peuvent pas dépasser 64"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "Le message en file d'attente %s n'est pas du JSON lisible ; il n'est pas envoyé par interrogation"
