@@ -80,8 +80,14 @@ def test_1_3_5_hostile_hostnames_are_refused(label):
     assert operations._validate_hostname(HOSTILE[label]) is False
 
 
+# Explicit ids: pytest copies the test id into the PYTEST_CURRENT_TEST
+# environment variable, and Windows refuses one longer than 32,767 characters
+# -- a 100 KB id failed the Windows leg.  Never parametrize on LONG itself.
 @pytest.mark.parametrize(
-    "mode", [0xFFFFFFFF, 2**63, -1, "0xffffffff", "9999", LONG, True, 3.5, None]
+    "mode",
+    [0xFFFFFFFF, 2**63, -1, "0xffffffff", "9999", LONG, True, 3.5, None],
+    ids=["0xffffffff", "2**63", "-1", "hex-string", "9999", "100k-string",
+         "True", "3.5", "None"],  # fmt: skip
 )
 def test_13_absurd_file_modes_fall_back_to_0644(mode):
     assert _mode_to_permissions(mode) == "0644"
