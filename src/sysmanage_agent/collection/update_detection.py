@@ -42,6 +42,9 @@ from src.sysmanage_agent.collection.update_detection_windows import (
 logger = logging.getLogger(__name__)
 
 
+_MANAGER_ALIASES = {"chocolatey": "choco", "pkg_add": "pkg", "homebrew": "brew"}
+
+
 class UpdateDetector:
     """
     Comprehensive update detector supporting multiple platforms
@@ -164,6 +167,10 @@ class UpdateDetector:
             # Auto-detect package manager if needed
             if package_manager == "auto":
                 package_manager = self._detect_best_package_manager()
+            # Plans name some managers by product rather than by installer
+            # ("chocolatey", "pkg_add"); without this they failed instantly
+            # with "Unsupported package manager".
+            package_manager = _MANAGER_ALIASES.get(package_manager, package_manager)
 
             # Delegate to platform-specific detector's installation methods
             # These methods should exist in the platform-specific detectors

@@ -54,6 +54,10 @@ from src.sysmanage_agent.operations.config_mgmt_operations import (
 from src.sysmanage_agent.operations.custom_metrics_operations import (
     CustomMetricsOperations,
 )
+from src.sysmanage_agent.operations.network_discovery_operations import (
+    NetworkDiscoveryOperations,
+)
+from src.sysmanage_agent.operations.malware_scan_operations import MalwareScanOperations
 from src.sysmanage_agent.operations.query_pack_operations import (
     QueryPackOperations,
 )
@@ -189,9 +193,11 @@ class SysManageAgent(
         self.system_ops = SystemOperations(self)
         self.script_ops = ScriptOperations(self)
         self.custom_metrics_ops = CustomMetricsOperations(self)
+        self.network_discovery_ops = NetworkDiscoveryOperations(self)
         self.child_host_ops = ChildHostOperations(self)
         self.config_mgmt_ops = ConfigMgmtOperations(self)
         self.query_pack_ops = QueryPackOperations(self)
+        self.malware_scan_ops = MalwareScanOperations(self)
 
         # Initialize diagnostic collector
         self.diagnostic_collector = DiagnosticCollector(self)
@@ -483,9 +489,8 @@ class SysManageAgent(
 
             async with aiohttp.ClientSession(
                 timeout=timeout, **endpoint.session_kwargs()
-            ) as session:
-                async with session.get(f"{http_url}/") as response:
-                    return response.status == 200
+            ) as session, session.get(f"{http_url}/") as response:
+                return response.status == 200
         except Exception as error:
             self.logger.debug("Server health check failed: %s", error)
             return False
@@ -716,8 +721,14 @@ class SysManageAgent(
         # Custom Metrics & Graphs Slice 3: load the persisted enabled set and
         # run the per-cadence scheduler as a background task.
         self.custom_metrics_ops.load_persisted_metrics()
+        # Phase 21.6: resume the server's last on/off decision (idempotent
+        # across reconnects -- the collector outlives the connection).
+        self.network_discovery_ops.load_persisted()
         custom_metrics_task = asyncio.create_task(
             self.custom_metrics_ops.run_metrics_loop()
+        )
+        network_discovery_task = asyncio.create_task(
+            self.network_discovery_ops.run_report_loop()
         )
 
         done, pending = await asyncio.wait(
@@ -733,6 +744,7 @@ class SysManageAgent(
             child_host_heartbeat_task,
             queue_cleanup_task,
             custom_metrics_task,
+            network_discovery_task,
         ]
         for task in background_tasks:
             task.cancel()
@@ -941,6 +953,8 @@ class SysManageAgent(
         is the whole feature: demoting the fleet to polling every time the server
         restarts would be worse than the problem it solves.
         """
+        # A rejected token must not be reused on the next attempt.
+        self.auth_helper.invalidate_auth_token()
         if self._transport_state.record_websocket_failure(error, time.monotonic()):
             self.logger.warning(
                 _(

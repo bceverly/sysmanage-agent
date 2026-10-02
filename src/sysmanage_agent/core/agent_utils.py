@@ -14,12 +14,13 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-import aiohttp
-
 from src.database.base import get_database_manager
+from src.database import run_ledger
 from src.database.models import Priority, ScriptExecution
 from src.i18n import N_, _
 from src.sysmanage_agent.collection.package_collection import PackageCollector
+from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.core import bsd_service_control, schedule_jitter
 from src.sysmanage_agent.operations import inflight_journal
 
 # Re-export async utilities for backwards compatibility
@@ -35,7 +36,6 @@ from src.sysmanage_agent.core.async_utils import (  # noqa: F401
 # were moved to ``agent_privileges`` to keep this module small; existing
 # imports and test patch targets (e.g. ``agent_utils.is_running_privileged``)
 # must keep resolving here.
-from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.core.agent_privileges import (  # noqa: F401
     _check_sudoers_privileges,
     _compute_running_privileged,
@@ -46,6 +46,10 @@ from src.sysmanage_agent.core.agent_privileges import (  # noqa: F401
     _test_sudo_access,
     is_running_privileged,
 )
+from src.sysmanage_agent.core.auth_helper import (  # noqa: F401 - re-export
+    AuthenticationHelper,
+)
+from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 # pylint: enable=unused-import
 
@@ -86,16 +90,20 @@ class UpdateChecker:
         self.logger.debug("Update checker started")
 
         update_check_interval = self.agent.config.get_update_check_interval()
-        last_check_time = asyncio.get_event_loop().time()
+        # Varied every time it is used, so a fleet started together drifts
+        # apart (Phase 22.1).
+        next_interval = schedule_jitter.jittered(update_check_interval)
 
         while self.agent.running:
             try:
-                current_time = asyncio.get_event_loop().time()
-
-                # Check if it's time for an update check
-                if current_time - last_check_time >= update_check_interval:
+                # Due by the PERSISTED last run (Phase 22.1): this task restarts
+                # with every connection, so a clock started here re-ran the
+                # check after every reconnect.  The attempt is recorded even if
+                # it fails, so a broken package manager is not hit every minute.
+                if run_ledger.is_due(run_ledger.UPDATE_CHECK, next_interval):
                     await self.perform_periodic_check()
-                    last_check_time = current_time
+                    run_ledger.mark_run(run_ledger.UPDATE_CHECK)
+                    next_interval = schedule_jitter.jittered(update_check_interval)
 
                 # Sleep for a shorter interval to check timing more frequently
                 await asyncio.sleep(
@@ -158,24 +166,32 @@ class PackageCollectionScheduler:
             self.logger.info("Package collection is disabled - scheduler will not run")
             return
 
-        # Run collection at startup if configured
-        if self.agent.config.is_package_collection_at_startup_enabled():
-            self.logger.info("Running initial package collection at startup")
-            await self.perform_package_collection()
-
         package_collection_interval = (
             self.agent.config.get_package_collection_interval()
         )
-        last_collection_time = asyncio.get_event_loop().time()
+
+        # Run collection at startup if configured -- and if it is due: this
+        # task restarts with every CONNECTION, so "at startup" used to mean
+        # "after every reconnect", re-fetching whole package catalogs (Windows:
+        # the public Chocolatey/winget APIs) each time (Phase 22.1).
+        if self.agent.config.is_package_collection_at_startup_enabled():
+            if run_ledger.is_due(
+                run_ledger.PACKAGE_COLLECTION, package_collection_interval
+            ):
+                self.logger.info("Running initial package collection at startup")
+                await self.perform_package_collection()
+                run_ledger.mark_run(run_ledger.PACKAGE_COLLECTION)
+            else:
+                self.logger.info("Package collection ran recently; not repeating it")
 
         while self.agent.running:
             try:
-                current_time = asyncio.get_event_loop().time()
-
-                # Check if it's time for package collection
-                if current_time - last_collection_time >= package_collection_interval:
+                # Due by the persisted last run, not a per-connection clock.
+                if run_ledger.is_due(
+                    run_ledger.PACKAGE_COLLECTION, package_collection_interval
+                ):
                     await self.perform_package_collection()
-                    last_collection_time = current_time
+                    run_ledger.mark_run(run_ledger.PACKAGE_COLLECTION)
 
                 # Sleep for a shorter interval to check timing more frequently
                 await asyncio.sleep(
@@ -192,39 +208,7 @@ class PackageCollectionScheduler:
                 continue
 
 
-class AuthenticationHelper:
-    """Handles authentication token management."""
-
-    def __init__(self, agent, logger: logging.Logger):
-        self.agent = agent
-        self.logger = logger
-
-    def build_auth_url(self) -> str:
-        """Build authentication URL from server config."""
-        return ServerEndpoint(self.agent.config).rest_url("/api/agent/auth")
-
-    async def get_auth_token(self) -> str:
-        """Get authentication token for WebSocket connection."""
-        endpoint = ServerEndpoint(self.agent.config)
-        auth_url = endpoint.rest_url("/api/agent/auth")
-
-        # Get hostname to send in header
-        system_hostname = socket.gethostname()
-
-        async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
-            headers = {"x-agent-hostname": system_hostname}
-
-            async with session.post(
-                auth_url, headers=headers, proxy=endpoint.proxy()
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("connection_token", "")
-
-                raise ConnectionError(
-                    _("Auth failed with status %s: %s")
-                    % (response.status, await response.text())
-                )
+MAX_COMMAND_NESTING = 4
 
 
 class MessageProcessor:
@@ -237,9 +221,15 @@ class MessageProcessor:
     async def handle_command(self, message: Dict[str, Any]):
         """Handle command from server and send response."""
         command_id = message.get("message_id")
-        command_data = message.get("data", {})
+        # A malformed command (data or parameters not a mapping) is answered
+        # with an error, never allowed to raise out of here (Lucky 13 #1).
+        command_data = message.get("data")
+        if not isinstance(command_data, dict):
+            command_data = {}
         command_type = command_data.get("command_type")
-        parameters = command_data.get("parameters", {})
+        parameters = command_data.get("parameters")
+        if not isinstance(parameters, dict):
+            parameters = {}
 
         self.logger.info(
             "Received command: %s with parameters: %s", command_type, parameters
@@ -255,7 +245,10 @@ class MessageProcessor:
             parameters["_message_id"] = command_id
 
         try:
-            result = await self._dispatch_command(command_type, parameters)
+            # The server asked: whatever this command reports goes out even if
+            # unchanged (send-on-change, server Phase 22.1).
+            with send_on_change.forced():
+                result = await self._dispatch_command(command_type, parameters)
         except Exception as error:
             result = {"success": False, "error": str(error)}
 
@@ -384,6 +377,8 @@ class MessageProcessor:
             "install_gpg_key": self.agent.install_gpg_key,
             "remove_gpg_key": self.agent.remove_gpg_key,
             "sync_custom_metrics": self.agent.sync_custom_metrics,
+            "configure_network_discovery": self.agent.configure_network_discovery,
+            "run_network_sweep": self.agent.run_network_sweep,
             "execute_command_sequence": self.agent.execute_command_sequence,
             "apply_deployment_plan": self.agent.apply_deployment_plan,
             # Phase 20.1: desired-state config profiles.  Bare reference, not
@@ -391,6 +386,9 @@ class MessageProcessor:
             # the parameters and would be dropped by one.
             "apply_config_profile": self.agent.apply_config_profile,
             "run_query_pack": self.agent.run_query_pack,
+            "run_malware_scan": self.agent.run_malware_scan,
+            "quarantine_file": self.agent.quarantine_file,
+            "restore_file": self.agent.restore_file,
             # Phase 10.2 step 7 close-out (2026-05-14): the legacy
             # "deploy_opentelemetry" / "remove_opentelemetry" /
             # "attach_to_graylog" handlers were removed when the
@@ -467,19 +465,24 @@ class MessageProcessor:
         return result
 
     async def _dispatch_command(
-        self, command_type: str, parameters: Dict[str, Any]
+        self, command_type: str, parameters: Dict[str, Any], depth: int = 0
     ) -> Dict[str, Any]:
         """Dispatch command to appropriate handler."""
-        # Handle generic_command wrapper - unwrap nested commands
+        # Handle generic_command wrapper - unwrap nested commands (one level is
+        # all the server sends; unbounded nesting is refused, Lucky 13 #1).
         if command_type == "generic_command":
+            if depth >= MAX_COMMAND_NESTING:
+                return {"success": False, "error": "generic_command nested too deeply"}
             nested_command_type = parameters.get("command_type")
-            nested_parameters = parameters.get("parameters", {})
+            nested_parameters = parameters.get("parameters")
+            if not isinstance(nested_parameters, dict):
+                nested_parameters = {}
             self.logger.debug(
                 f"Unwrapping generic_command: {nested_command_type} with params: {nested_parameters}"
             )
             if nested_command_type:
                 return await self._dispatch_command(
-                    nested_command_type, nested_parameters
+                    nested_command_type, nested_parameters, depth + 1
                 )
 
             return {
@@ -719,6 +722,10 @@ class MessageProcessor:
         try:
             self.logger.info("Executing %s for service: %s", action, service)
 
+            bsd = bsd_service_control.bsd_system()
+            if bsd:
+                return await self._bsd_service_control_action(bsd, action, service)
+
             cmd = self._build_service_control_cmd(action, service)
             if cmd is None:
                 # No supported service manager found on this host
@@ -728,19 +735,12 @@ class MessageProcessor:
             result = await run_command_async(cmd, timeout=30.0)
 
             if result.returncode == 0:
-                self.logger.info("Successfully %s service: %s", action, service)
-                return {
-                    "success": True,
-                    "message": f"Service {action} successful",
-                }
+                return self._service_ok(action, service)
 
             error_msg = (
                 result.stderr.strip() or result.stdout.strip() or "Unknown error"
             )
-            self.logger.error(
-                _("Failed to %s service %s: %s"), action, service, error_msg
-            )
-            return {"success": False, "error": error_msg}
+            return self._service_failed(action, service, error_msg)
 
         except asyncio.TimeoutError:
             error_msg = f"Service {action} timed out after 30 seconds"
@@ -763,9 +763,7 @@ class MessageProcessor:
 
         Detection order: systemctl (most Linux), rc-service/rc-update (OpenRC),
         launchctl (macOS), sc.exe (Windows). The first one found on PATH wins.
-        We do NOT use the BSD `service` command because its action vocabulary
-        (e.g. `service nginx onestart`) doesn't match what we accept here;
-        BSD support is a follow-up.
+        The BSDs never reach here: ``bsd_service_control`` handles them.
         """
         # systemctl handles all five actions natively
         systemctl_path = shutil.which("systemctl")
@@ -809,6 +807,37 @@ class MessageProcessor:
             return [sc_path] + mapping[action]
 
         return None
+
+    async def _bsd_service_control_action(
+        self, system: str, action: str, service: str
+    ) -> Dict[str, Any]:
+        """One action on FreeBSD/OpenBSD/NetBSD (see bsd_service_control)."""
+        if not bsd_service_control.valid_service(service):
+            return {"success": False, "error": f"Invalid service name: {service}"}
+        cmd = bsd_service_control.build_command(system, action, service)
+        if cmd is None:  # NetBSD enable/disable: an rc.conf edit, not a command
+            ok, error = bsd_service_control.netbsd_set_enabled(
+                service, action == "enable"
+            )
+            if ok:
+                return self._service_ok(action, service)
+            return self._service_failed(action, service, error)
+        result = await run_command_async(cmd, timeout=60.0)
+        output = f"{result.stdout}\n{result.stderr}"
+        if result.returncode == 0 or bsd_service_control.already_in_state(
+            action, output
+        ):
+            return self._service_ok(action, service)
+        error_msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+        return self._service_failed(action, service, error_msg)
+
+    def _service_ok(self, action: str, service: str) -> Dict[str, Any]:
+        self.logger.info("Successfully %s service: %s", action, service)
+        return {"success": True, "message": f"Service {action} successful"}
+
+    def _service_failed(self, action: str, service: str, error: str) -> Dict[str, Any]:
+        self.logger.error(_("Failed to %s service %s: %s"), action, service, error)
+        return {"success": False, "error": error}
 
     async def _collect_roles_after_service_change(self) -> None:
         """Trigger role collection after a service control operation to update status."""

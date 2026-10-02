@@ -26,7 +26,7 @@ class TestOSSystemUpdateDetection:
         self.linux_detector = LinuxUpdateDetector()
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
-    @patch("subprocess.run")
+    @patch("src.sysmanage_agent.collection.update_detection_windows_system.run_bounded")
     def test_detect_windows_system_updates_success(self, mock_run, mock_platform):
         """Test Windows system update detection with available updates."""
         mock_platform.return_value = "Windows"
@@ -89,7 +89,7 @@ class TestOSSystemUpdateDetection:
         )  # _format_size_mb returns float, not string
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
-    @patch("subprocess.run")
+    @patch("src.sysmanage_agent.collection.update_detection_windows_system.run_bounded")
     def test_detect_windows_system_updates_no_updates(self, mock_run, mock_platform):
         """Test Windows system update detection with no updates."""
         mock_platform.return_value = "Windows"
@@ -101,7 +101,7 @@ class TestOSSystemUpdateDetection:
         assert len(self.detector.available_updates) == 0
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
-    @patch("subprocess.run")
+    @patch("src.sysmanage_agent.collection.update_detection_windows_system.run_bounded")
     def test_detect_windows_system_updates_error(self, mock_run, mock_platform):
         """Test Windows system update detection error handling."""
         mock_platform.return_value = "Windows"
@@ -114,7 +114,7 @@ class TestOSSystemUpdateDetection:
         assert len(self.detector.available_updates) == 0
 
     @patch("src.sysmanage_agent.collection.update_detection.platform.system")
-    @patch("subprocess.run")
+    @patch("src.sysmanage_agent.collection.update_detection_windows_system.run_bounded")
     def test_detect_windows_system_updates_invalid_json(self, mock_run, mock_platform):
         """Test Windows system update detection with invalid JSON."""
         mock_platform.return_value = "Windows"
@@ -595,7 +595,15 @@ systemd/focal-updates 245.4-4ubuntu3.15 amd64 [upgradable from: 245.4-4ubuntu3.1
             mock_platform.return_value = platform_name
             detector = UpdateDetector()
 
-            with patch("subprocess.run", side_effect=Exception("Test exception")):
+            # Windows detection goes through run_bounded (its Windows branch
+            # uses Popen, which a subprocess.run mock would not intercept).
+            with (
+                patch("subprocess.run", side_effect=Exception("Test exception")),
+                patch(
+                    "src.sysmanage_agent.collection.update_detection_windows_system.run_bounded",
+                    side_effect=Exception("Test exception"),
+                ),
+            ):
                 # Should not raise exception
                 method = getattr(detector, method_name)
                 method()

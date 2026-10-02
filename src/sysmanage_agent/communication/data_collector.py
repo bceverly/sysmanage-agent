@@ -18,8 +18,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
 
+from src.database import run_ledger
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.core import schedule_jitter
 from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
 from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
 from src.sysmanage_agent.collection.process_collection import ProcessCollector
@@ -145,7 +148,18 @@ class DataCollector(DataCollectorSendersMixin):
         self.logger.info("Sending initial update check...")
 
         try:
-            update_result = await self.agent.check_updates()
+            # A package-manager refresh is expensive: on a reconnect run it only
+            # if it is due (or the server asked), not because we connected
+            # (Phase 22.1).
+            interval = self.agent.config.get_update_check_interval()
+            if not (
+                send_on_change.is_forced()
+                or run_ledger.is_due(run_ledger.UPDATE_CHECK, interval)
+            ):
+                self.logger.info("Update check ran recently; not repeating it")
+                update_result = {}
+            else:
+                update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
                 self.logger.info(
                     "Found %d available updates during initial check",
@@ -341,92 +355,64 @@ class DataCollector(DataCollectorSendersMixin):
 
         self.logger.debug("AGENT_DEBUG: Starting periodic data collection")
 
-        # Send software inventory update
-        try:
-            await self._send_software_inventory_update()
-        except Exception as error:
-            self.logger.error(
-                _("Error collecting/sending software inventory: %s"), error
-            )
-
-        # Send user access update
-        try:
-            await self._send_user_access_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending user access data: %s"), error)
-
-        # Send hardware update
-        try:
-            await self._send_hardware_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending hardware data: %s"), error)
-
-        # Send certificate update
-        try:
-            await self._send_certificate_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending certificate data: %s"), error)
-
-        # Send role update
-        try:
-            await self._send_role_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending role data: %s"), error)
-
-        # Send OS version update
-        try:
-            await self._send_os_version_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending OS version data: %s"), error)
-
-        # Send reboot status update
-        try:
-            await self._send_reboot_status_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending reboot status: %s"), error)
-
-        # Send third-party repository update
-        try:
-            await self._send_third_party_repository_update()
-        except Exception as error:
-            self.logger.error(
-                _("Error collecting/sending third-party repository data: %s"), error
-            )
-
-        # Send antivirus status update
-        try:
-            await self._send_antivirus_status_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending antivirus status: %s"), error)
-
-        # Send firewall status update
-        try:
-            await self._send_firewall_status_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending firewall status: %s"), error)
-
-        # Send Graylog status update
-        try:
-            await self._send_graylog_status_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending Graylog status: %s"), error)
-
-        # Send running-process snapshot
-        try:
-            await self._send_process_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending process data: %s"), error)
-
-        try:
-            await self._send_host_metrics_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending host metrics: %s"), error)
-
-        # Send child hosts (WSL/VM/container) status update
-        try:
-            await self.child_host_collector.send_child_hosts_update()
-        except Exception as error:
-            self.logger.error(_("Error collecting/sending child hosts data: %s"), error)
+        # Each snapshot is independent: one failing must not stop the rest.
+        steps = (
+            (
+                self._send_software_inventory_update,
+                _("Error collecting/sending software inventory: %s"),
+            ),
+            (
+                self._send_user_access_update,
+                _("Error collecting/sending user access data: %s"),
+            ),
+            (
+                self._send_hardware_update,
+                _("Error collecting/sending hardware data: %s"),
+            ),
+            (
+                self._send_certificate_update,
+                _("Error collecting/sending certificate data: %s"),
+            ),
+            (self._send_role_update, _("Error collecting/sending role data: %s")),
+            (
+                self._send_os_version_update,
+                _("Error collecting/sending OS version data: %s"),
+            ),
+            (
+                self._send_reboot_status_update,
+                _("Error collecting/sending reboot status: %s"),
+            ),
+            (
+                self._send_third_party_repository_update,
+                _("Error collecting/sending third-party repository data: %s"),
+            ),
+            (
+                self._send_antivirus_status_update,
+                _("Error collecting/sending antivirus status: %s"),
+            ),
+            (
+                self._send_firewall_status_update,
+                _("Error collecting/sending firewall status: %s"),
+            ),
+            (
+                self._send_graylog_status_update,
+                _("Error collecting/sending Graylog status: %s"),
+            ),
+            (self._send_process_update, _("Error collecting/sending process data: %s")),
+            (
+                self._send_host_metrics_update,
+                _("Error collecting/sending host metrics: %s"),
+            ),
+            (
+                self.child_host_collector.send_child_hosts_update,
+                _("Error collecting/sending child hosts data: %s"),
+            ),
+        )
+        for send, message in steps:
+            try:
+                await send()
+            except Exception as error:  # pylint: disable=broad-exception-caught
+                self.logger.error(message, error)
 
     async def data_collector(self):
         """Handle periodic data collection and sending."""
@@ -447,6 +433,9 @@ class DataCollector(DataCollectorSendersMixin):
 
         if self.agent.running and self.agent.connected:
             try:
+                # A moment's random wait, so a fleet reconnecting together
+                # (a server restart) does not collect together (Phase 22.1).
+                await asyncio.sleep(schedule_jitter.connect_splay())
                 self.logger.info("Initial periodic data collection (post-connect)")
                 await self._collect_and_send_periodic_data()
             except Exception as error:  # pylint: disable=broad-exception-caught
@@ -457,7 +446,7 @@ class DataCollector(DataCollectorSendersMixin):
 
         while self.agent.running:
             try:
-                await asyncio.sleep(data_collection_interval)
+                await asyncio.sleep(schedule_jitter.jittered(data_collection_interval))
                 await self._collect_and_send_periodic_data()
                 self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
             except asyncio.CancelledError:

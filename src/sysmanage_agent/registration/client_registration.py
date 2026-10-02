@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import text
 
 from src.database.base import get_db_session
+from src.database.host_identity import kept_host_token
 from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
@@ -305,42 +306,43 @@ class ClientRegistration:
             # ca_bundle for TLS-inspecting proxies, and only disables
             # verification when an administrator explicitly asks for it.
             endpoint = ServerEndpoint(self.config)
-            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
-                async with session.post(
-                    registration_url,
-                    json=basic_info,
-                    headers={"Content-Type": "application/json"},
-                    proxy=endpoint.proxy(),
-                ) as response:
+            async with aiohttp.ClientSession(
+                **endpoint.session_kwargs()
+            ) as session, session.post(
+                registration_url,
+                json=basic_info,
+                headers={"Content-Type": "application/json"},
+                proxy=endpoint.proxy(),
+            ) as response:
 
-                    if response.status in [200, 201]:
-                        response_data = await response.json()
-                        self.registration_data = response_data
-                        self.registered = True
+                if response.status in [200, 201]:
+                    response_data = await response.json()
+                    self.registration_data = response_data
+                    self.registered = True
 
-                        # Store authentication data in database
-                        host_id = response_data.get("id")
-                        host_token = response_data.get("host_token")
-                        if host_id:
-                            self._store_auth_data(host_id, host_token)
+                    # Store authentication data in database
+                    host_id = response_data.get("id")
+                    host_token = response_data.get("host_token")
+                    if host_id:
+                        self._store_auth_data(host_id, host_token)
 
-                        self.logger.info(
-                            "Successfully registered with server. Host ID: %s",
-                            host_id,
-                        )
-                        return True
-                    if response.status == 409:
-                        # Host already exists - this is OK
-                        self.logger.info("Host already registered with server")
-                        self.registered = True
-                        return True
-                    error_text = await response.text()
-                    self.logger.error(
-                        _("Registration failed with status %s: %s"),
-                        response.status,
-                        error_text,
+                    self.logger.info(
+                        "Successfully registered with server. Host ID: %s",
+                        host_id,
                     )
-                    return False
+                    return True
+                if response.status == 409:
+                    # Host already exists - this is OK
+                    self.logger.info("Host already registered with server")
+                    self.registered = True
+                    return True
+                error_text = await response.text()
+                self.logger.error(
+                    _("Registration failed with status %s: %s"),
+                    response.status,
+                    error_text,
+                )
+                return False
 
         except (
             Exception
@@ -440,6 +442,10 @@ class ClientRegistration:
         """Store authentication data in database."""
         try:
             with get_db_session() as session:
+                # Keep the token we already hold for this host when the reply
+                # omits it (the server returns it only to the registration
+                # that created the host).
+                host_token = host_token or kept_host_token(session, host_id)
                 # DELETE ALL ROWS - no questions asked
                 session.execute(text("DELETE FROM host_approval"))
 

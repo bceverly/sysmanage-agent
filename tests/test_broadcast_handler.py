@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from src.sysmanage_agent.communication.data_collector import DataCollector
 from src.sysmanage_agent.communication.message_handler import MessageHandler
 
 
@@ -20,8 +21,11 @@ def _make_handler():
     The handler's __init__ takes a sysmanage_agent reference; we mock
     everything it touches synchronously."""
     fake_agent = MagicMock()
-    fake_agent.data_collector = MagicMock()
-    fake_agent.data_collector.send_software_inventory_update = AsyncMock()
+    # spec'd: calling a collector method that does not exist must FAIL here.
+    # (The handler once called a public name that never existed; an unspec'd
+    # MagicMock invented it, so the broken refresh passed this test.)
+    fake_agent.data_collector = MagicMock(spec=DataCollector)
+    fake_agent.data_collector._send_software_inventory_update = AsyncMock()
     return MessageHandler(fake_agent), fake_agent
 
 
@@ -35,13 +39,13 @@ async def test_broadcast_refresh_inventory_calls_collector():
             "issued_by": "admin@sysmanage.org",
         }
     )
-    agent.data_collector.send_software_inventory_update.assert_awaited_once()
+    agent.data_collector._send_software_inventory_update.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_broadcast_banner_action_does_not_raise():
     handler, agent = _make_handler()
-    # Banner action must NOT call send_software_inventory_update.
+    # Banner action must NOT call _send_software_inventory_update.
     await handler._handle_broadcast_message(
         {
             "broadcast_id": "b2",
@@ -49,7 +53,7 @@ async def test_broadcast_banner_action_does_not_raise():
             "message": "scheduled maintenance",
         }
     )
-    agent.data_collector.send_software_inventory_update.assert_not_called()
+    agent.data_collector._send_software_inventory_update.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -67,7 +71,7 @@ async def test_broadcast_inventory_failure_logged_not_raised():
     swallow the exception and log it -- propagating would crash the
     receive loop and disconnect the agent."""
     handler, agent = _make_handler()
-    agent.data_collector.send_software_inventory_update = AsyncMock(
+    agent.data_collector._send_software_inventory_update = AsyncMock(
         side_effect=RuntimeError("collector exploded")
     )
     # Should NOT raise.

@@ -86,6 +86,10 @@ def _fact_coverage(config) -> Dict[str, Any]:
 # so every host would read as unknown-capability until the server caught up.
 CAPABILITY_SCHEMA_VERSION = 1
 
+# Advertised so the server can require this host's token from now on (its
+# Phase 22.0 ratchet): this agent keeps its credential (database/host_identity.py).
+PERSISTENT_TOKEN_CAPABILITY = "persistent_host_token"
+
 # Reason codes for an unavailable group.  Codes, not sentences: the server
 # owns the translation (see the module docstring).
 REASON_NO_HANDLER = "no_handler"
@@ -162,6 +166,11 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
         "ubuntu_pro_disable_service",
     ),
     "custom_metrics": ("sync_custom_metrics",),
+    # Phase 21.6: passive discovery of the devices on this host's segments.
+    "network_discovery": ("configure_network_discovery", "run_network_sweep"),
+    # Phase 21.3: malware scanning with the host's own ClamAV.  Its own group:
+    # a host can inventory and patch perfectly well with no scanner installed.
+    "malware": ("run_malware_scan", "quarantine_file", "restore_file"),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",
@@ -299,6 +308,9 @@ def build_capability_report(
         if missing:
             partial[group] = sorted(missing)
 
+    # Not a command group: a property of this agent the server acts on (it
+    # requires this host's token from now on -- the Phase 22.0 ratchet).
+    supported.append(PERSISTENT_TOKEN_CAPABILITY)
     return {
         "schema_version": CAPABILITY_SCHEMA_VERSION,
         "capabilities": sorted(supported),

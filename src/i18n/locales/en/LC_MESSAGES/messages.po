@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-28 12:13-0400\n"
+"POT-Creation-Date: 2026-09-30 15:33-0400\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,31 +16,31 @@ msgstr "Failed to create database directory %s: %s"
 msgid "Failed to create database tables: %s"
 msgstr "Failed to create database tables: %s"
 
-#: src/database/init.py:83
+#: src/database/init.py:138
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr "Failed to get database path from config: %s, using local fallback"
 
-#: src/database/init.py:173
+#: src/database/init.py:228
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s failed with return code %d"
 
-#: src/database/init.py:182
+#: src/database/init.py:238
 #, python-format
-msgid "Alembic %s timed out after 60 seconds"
-msgstr "Alembic %s timed out after 60 seconds"
+msgid "Alembic %s timed out after %d seconds"
+msgstr "Alembic %s timed out after %d seconds"
 
-#: src/database/init.py:185
+#: src/database/init.py:244
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "Failed to run alembic %s: %s"
 
-#: src/database/init.py:222
+#: src/database/init.py:284
 msgid "Failed to run database migrations"
 msgstr "Failed to run database migrations"
 
-#: src/database/init.py:232
+#: src/database/init.py:294
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "Failed to initialize database: %s"
@@ -114,9 +114,11 @@ msgstr "Failed to query Windows certificate store %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
@@ -471,6 +473,25 @@ msgstr "Error processing fwupd updates: %s"
 #: src/sysmanage_agent/collection/linux_update_detectors.py:398
 msgid "Unknown Device"
 msgstr "Unknown Device"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:215
+#, python-format
+msgid "Network discovery capture stopped: %s"
+msgstr "Network discovery capture stopped: %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:417
+#, python-format
+msgid "Network discovery raw capture unavailable: %s"
+msgstr "Network discovery raw capture unavailable: %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:441
+#, python-format
+msgid ""
+"Network discovery saw more than %d devices in one window; the rest were not "
+"recorded"
+msgstr ""
+"Network discovery saw more than %d devices in one window; the rest were not "
+"recorded"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:122
 msgid "Ubuntu Pro status check timed out"
@@ -869,17 +890,17 @@ msgstr "Failed to collect Microsoft Store apps: %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "Failed to collect winget packages: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:66
+#: src/sysmanage_agent/collection/update_detection.py:69
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Unsupported platform for update detection: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:135
+#: src/sysmanage_agent/collection/update_detection.py:138
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "Failed to detect available updates: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:182
+#: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
 #: src/sysmanage_agent/operations/package_operations.py:231
 #, python-format
@@ -1560,20 +1581,20 @@ msgstr "Could not read the outbound queue for polling"
 msgid "Could not mark polled message %s delivered"
 msgstr "Could not mark polled message %s delivered"
 
-#: src/sysmanage_agent/communication/http_polling.py:160
+#: src/sysmanage_agent/communication/http_polling.py:168
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "Error handling polled message %s"
 
-#: src/sysmanage_agent/communication/http_polling.py:176
+#: src/sysmanage_agent/communication/http_polling.py:184
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 
-#: src/sysmanage_agent/communication/http_polling.py:186
+#: src/sysmanage_agent/communication/http_polling.py:194
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1584,12 +1605,12 @@ msgstr ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 
-#: src/sysmanage_agent/communication/http_polling.py:201
+#: src/sysmanage_agent/communication/http_polling.py:209
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "Poll failed (%s); retrying in %ds"
 
-#: src/sysmanage_agent/communication/http_polling.py:212
+#: src/sysmanage_agent/communication/http_polling.py:220
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "Re-testing whether this network now allows WebSocket connections"
 
@@ -1619,7 +1640,8 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Could not parse message timestamp for stale check: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:359
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Host registration is pending approval. Will continue periodic attempts."
 
@@ -1635,12 +1657,12 @@ msgstr "Server failed to queue message: %s"
 #: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 
 #: src/sysmanage_agent/communication/message_handler.py:404
@@ -1797,126 +1819,137 @@ msgstr "Could not determine hostname, using fallback: %s"
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "In-flight journal reconciliation failed: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:53
+#: src/sysmanage_agent/core/agent_utils.py:55
 msgid "systemctl not found"
 msgstr "systemctl not found"
 
-#: src/sysmanage_agent/core/agent_utils.py:81
+#: src/sysmanage_agent/core/agent_utils.py:83
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "Error during periodic update check: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:109
+#: src/sysmanage_agent/core/agent_utils.py:111
 #, python-format
 msgid "Update checker error: %s"
 msgstr "Update checker error: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:147
+#: src/sysmanage_agent/core/agent_utils.py:149
 msgid "Package collection completed with some issues"
 msgstr "Package collection completed with some issues"
 
-#: src/sysmanage_agent/core/agent_utils.py:150
+#: src/sysmanage_agent/core/agent_utils.py:152
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "Error during package collection: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:189
+#: src/sysmanage_agent/core/agent_utils.py:191
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "Package collection scheduler error: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:225
-#, python-format
-msgid "Auth failed with status %s: %s"
-msgstr "Auth failed with status %s: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:333
+#: src/sysmanage_agent/core/agent_utils.py:300
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "Failed to build capability report: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:422
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "Script execution UUID %s already processed, skipping duplicate"
 
-#: src/sysmanage_agent/core/agent_utils.py:487
+#: src/sysmanage_agent/core/agent_utils.py:459
 msgid "Generic command missing nested command_type"
 msgstr "Generic command missing nested command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:499
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Unknown command type: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:558
+#: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Failed to queue script execution result: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Error checking execution UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:591
+#: src/sysmanage_agent/core/agent_utils.py:563
 msgid "No execution UUID provided, cannot track"
 msgstr "No execution UUID provided, cannot track"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Execution UUID %s already exists in database"
 
-#: src/sysmanage_agent/core/agent_utils.py:631
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Error storing execution UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:696
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Error in service control handler: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:717
+#: src/sysmanage_agent/core/agent_utils.py:801
+#: src/sysmanage_agent/core/agent_utils.py:808
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Failed to %s service %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Service control timeout for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:730
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Service control error for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:820
+#: src/sysmanage_agent/core/agent_utils.py:818
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Failed to update roles after service control: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:857
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Error in service status handler: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:900
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Service status timeout for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Service status error for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "Failed to queue synthetic command_result for in-flight journal: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:76
+#, python-format
+msgid "Auth refused by server: %s"
+msgstr "Auth refused by server: %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:77
+msgid "no connection token"
+msgstr "no connection token"
+
+#: src/sysmanage_agent/core/auth_helper.py:87
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "Auth failed with status %s: %s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2485,6 +2518,49 @@ msgstr "Could not persist IP forwarding setting: %s"
 msgid "UFW rule failed: %s - %s"
 msgstr "UFW rule failed: %s - %s"
 
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "The scan request has no run id."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "A malware scan is already running on this host."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "Malware scan failed: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "Quarantine of %s refused: %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "Restore of %s refused: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:133
+#, python-format
+msgid "Network discovery setting could not be saved: %s"
+msgstr "Network discovery setting could not be saved: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:161
+#, python-format
+msgid "Error sending network discovery report: %s"
+msgstr "Error sending network discovery report: %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:169
+#: src/sysmanage_agent/operations/network_discovery_operations.py:241
+msgid "Cannot send network discovery report: no host approval"
+msgstr "Cannot send network discovery report: no host approval"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:182
+#: src/sysmanage_agent/operations/network_discovery_operations.py:259
+msgid "Failed to send network discovery report"
+msgstr "Failed to send network discovery report"
+
 #: src/sysmanage_agent/operations/package_compliance_operations.py:78
 msgid "profile_id is required"
 msgstr "profile_id is required"
@@ -2591,13 +2667,13 @@ msgstr "Homebrew is already installed"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3377,6 +3453,9 @@ msgid "Error checking WSL support: %s"
 msgstr "Error checking WSL support: %s"
 
 #, python-format
+#~ msgid "Alembic %s timed out after 60 seconds"
+#~ msgstr "Alembic %s timed out after 60 seconds"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "pkgin list -u failed (code %d): %s"
 
@@ -3399,8 +3478,7 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
-#~ msgstr ""
-#~ "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+#~ msgstr "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3525,10 +3603,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Found %s package: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
-#~ msgstr ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgstr "Skipping duplicate role: %s with service %s (already have package %s)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3790,11 +3866,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Completed packages batch %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Collecting SSL certificates from system"
@@ -3892,8 +3968,7 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "Recovered %d stuck messages on connection establishment"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Creating outbound queue processing task from on_connection_established"
 
@@ -3904,10 +3979,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Outbound queue processor already running, not starting another"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
-#~ msgstr ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgstr "Creating inbound queue processing task from on_connection_established"
 
 #, python-format
 #~ msgid "Inbound queue processing task created successfully: %s"
@@ -4069,8 +4142,7 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Windows %s Event Log collected in %.2f seconds"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
-#~ msgstr ""
-#~ "Collecting Windows System Event Log (this may take 10-30 seconds)..."
+#~ msgstr "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
@@ -4404,11 +4476,9 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Registration received but approval pending"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4572,11 +4642,11 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5273,11 +5343,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Installing sshpass via apk..."
 
 #~ msgid ""
-#~ "Could not detect package manager to install sshpass. Please install "
-#~ "sshpass manually."
+#~ "Could not detect package manager to install sshpass. Please install sshpass "
+#~ "manually."
 #~ msgstr ""
-#~ "Could not detect package manager to install sshpass. Please install "
-#~ "sshpass manually."
+#~ "Could not detect package manager to install sshpass. Please install sshpass "
+#~ "manually."
 
 #~ msgid "Timeout while installing sshpass"
 #~ msgstr "Timeout while installing sshpass"
@@ -5337,3 +5407,7 @@ msgstr "Error checking WSL support: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPUs cannot exceed 64"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "Queued message %s is not readable JSON; not polling it"

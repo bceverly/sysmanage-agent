@@ -125,6 +125,26 @@ class TestMessageQueueManager:
         assert messages[2].message_id == low_msg_id
         assert messages[2].priority == Priority.LOW.value
 
+    def test_older_messages_go_first_within_a_priority(self, queue_manager):
+        """Same priority: oldest first.  (The sort once reversed BOTH keys,
+        so within a priority the newest message was sent first.)"""
+        ids = [
+            queue_manager.enqueue_message(
+                f"normal_{n}",
+                {"n": n},
+                QueueDirection.OUTBOUND,
+                priority=Priority.NORMAL,
+            )
+            for n in range(3)
+        ]
+        urgent = queue_manager.enqueue_message(
+            "urgent", {}, QueueDirection.OUTBOUND, priority=Priority.URGENT
+        )
+        messages = queue_manager.dequeue_messages(
+            QueueDirection.OUTBOUND, limit=10, priority_order=True
+        )
+        assert [m.message_id for m in messages] == [urgent] + ids
+
     def test_message_processing_lifecycle(self, queue_manager):
         """Test complete message processing lifecycle."""
         message_id = queue_manager.enqueue_message(

@@ -19,6 +19,8 @@ import websockets
 
 from src.database.queue_manager import MessageQueueManager
 from src.i18n import _
+from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.core import schedule_jitter
 from src.sysmanage_agent.collection import public_ip_fetcher
 from src.sysmanage_agent.communication.message_handler_queue import (
     MessageHandlerQueueMixin,
@@ -246,11 +248,10 @@ class MessageHandler(MessageHandlerQueueMixin):
 
             async with aiohttp.ClientSession(
                 timeout=timeout, **endpoint.session_kwargs()
-            ) as session:
-                async with session.get(
-                    f"{http_url}/", proxy=endpoint.proxy()
-                ) as response:
-                    return response.status == 200
+            ) as session, session.get(
+                f"{http_url}/", proxy=endpoint.proxy()
+            ) as response:
+                return response.status == 200
         except Exception as error:
             self.logger.debug("Server health check failed: %s", error)
             return False
@@ -456,20 +457,15 @@ class MessageHandler(MessageHandlerQueueMixin):
 
         if action == "refresh_inventory":
             try:
-                await self.agent.data_collector.send_software_inventory_update()
+                # The collector's method is the underscored one; the public
+                # name this used to call never existed, so the refresh was a
+                # caught AttributeError and a warning -- never a refresh.
+                # The server asked: send even if unchanged (Phase 22.1).
+                with send_on_change.forced():
+                    # pylint: disable-next=protected-access
+                    await self.agent.data_collector._send_software_inventory_update()
                 self.logger.info(
                     "Broadcast %s: software inventory refreshed", broadcast_id
-                )
-            except AttributeError:
-                # Older agent builds may not expose
-                # ``send_software_inventory_update``.  Best-effort:
-                # fall back to a no-op.
-                self.logger.warning(
-                    _(
-                        "Broadcast %s: inventory refresh requested but "
-                        "data_collector lacks send_software_inventory_update"
-                    ),
-                    broadcast_id,
                 )
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 self.logger.error(
@@ -718,7 +714,9 @@ class MessageHandler(MessageHandlerQueueMixin):
         ping_interval = self.agent.config.get_ping_interval()
         while self.agent.running:
             try:
-                await asyncio.sleep(ping_interval)
+                # +/-10%: a fleet that connected together must not heartbeat
+                # together forever (Phase 22.1).
+                await asyncio.sleep(schedule_jitter.jittered(ping_interval, 0.1))
                 if self.agent.running and self.agent.connected:
                     heartbeat = self.create_heartbeat_message()
                     success = await self.send_message(heartbeat)

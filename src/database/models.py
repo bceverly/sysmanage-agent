@@ -483,3 +483,18 @@ class CustomMetric(Base):
             f"name='{self.name}', interpreter='{self.interpreter}', "
             f"cadence_seconds={self.cadence_seconds})>"
         )
+
+
+class CollectionRun(Base):
+    """When each expensive collection last ran (server Phase 22.1).
+
+    Persisted so a reconnect -- or an agent restart -- runs only what is
+    overdue.  Without it every server restart made the whole fleet refresh its
+    package managers and re-fetch the Windows package catalogs at once.
+    See ``src/database/run_ledger.py``.
+    """
+
+    __tablename__ = "collection_run"
+
+    name = Column(String(64), primary_key=True)
+    last_run_at = Column(DateTime, nullable=False)

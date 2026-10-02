@@ -42,6 +42,7 @@ import platform
 import shutil
 from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
 
+from src.sysmanage_agent.collection import malware_scan
 from src.sysmanage_agent.operations import config_mgmt_locator
 
 # Reason codes.  Codes, not sentences: the SERVER owns the translation, so an
@@ -150,6 +151,8 @@ _REQUIRED_DISTROS: Dict[str, Tuple[Tuple[str, ...], str]] = {
 # asserting it never imports subprocess.
 _REQUIRED_LOCATORS: Dict[str, Tuple[Callable[..., bool], str]] = {
     "apply_config_profile": (config_mgmt_locator.is_available, REASON_MISSING_TOOL),
+    # clamscan.exe lives under Program Files (ClamAV / ClamWin), off the PATH.
+    "run_malware_scan": (malware_scan.is_available, REASON_MISSING_TOOL),
 }
 
 

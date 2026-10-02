@@ -14,36 +14,89 @@ This module handles installation of new packages on Windows systems:
 import logging
 import subprocess  # nosec B404
 from typing import Any, Dict
+from src.sysmanage_agent.core.bounded_subprocess import run_bounded
 
 logger = logging.getLogger(__name__)
+
+
+# winget exit codes meaning the package is already there: "no applicable
+# upgrade" (0x8A15002B) and "package already installed" (0x8A150061).
+_WINGET_ALREADY_INSTALLED = (0x8A15002B, 0x8A150061)
 
 
 class WindowsPackageInstallerMixin:
     """Mixin class for installing packages on Windows."""
 
     def _install_with_winget(self, package_name: str) -> Dict[str, Any]:
-        """Install package using winget package manager."""
+        """Install package using winget package manager.
+
+        Unattended: an exact id match, the source and package agreements
+        accepted up front (otherwise winget waits for a keypress nobody will
+        give), and "already installed / no newer version" counted as success
+        -- a deployment plan re-sent to an equipped host must not fail on it.
+        An installed package is left alone without running install at all:
+        on x13s (2026-09-30) ``winget install`` of an installed ClamAV exited
+        0x8A150001 with no message.
+        """
+        if self._winget_has(package_name):
+            return {
+                "success": True,
+                "version": "unknown",
+                "output": f"{package_name} is already installed",
+            }
         try:
-            result = subprocess.run(  # nosec B603, B607
-                ["winget", "install", "--id", package_name, "--silent"],
+            result = run_bounded(  # nosec B603, B607
+                [
+                    "winget", "install", "--id", package_name, "--exact",
+                    "--silent", "--accept-package-agreements",
+                    "--accept-source-agreements", "--disable-interactivity",
+                ],
                 capture_output=True,
                 text=True,
-                timeout=300,
-                check=True,
-            )
-
-            return {"success": True, "version": "unknown", "output": result.stdout}
-
-        except subprocess.CalledProcessError as error:
+                timeout=600,
+                check=False,
+            )  # fmt: skip
+        except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "error": f"Failed to install {package_name}: {error.stderr or error.stdout}",
+                "error": f"Installation of {package_name} timed out after 600 seconds",
             }
+        code = result.returncode & 0xFFFFFFFF
+        if result.returncode == 0 or code in _WINGET_ALREADY_INSTALLED:
+            return {"success": True, "version": "unknown", "output": result.stdout}
+        return {
+            "success": False,
+            "error": (
+                f"Failed to install {package_name} (winget exit 0x{code:08X}): "
+                f"{(result.stderr or result.stdout or '').strip()[-2000:]}"
+            ),
+        }
+
+    @staticmethod
+    def _winget_has(package_name: str) -> bool:
+        """Whether winget lists ``package_name`` (exact id) as installed."""
+        try:
+            result = run_bounded(  # nosec B603, B607
+                [
+                    "winget", "list", "--id", package_name, "--exact",
+                    "--accept-source-agreements", "--disable-interactivity",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )  # fmt: skip
+        except (OSError, subprocess.TimeoutExpired):
+            return False
+        return (
+            result.returncode == 0
+            and package_name.lower() in (result.stdout or "").lower()
+        )
 
     def _install_with_choco(self, package_name: str) -> Dict[str, Any]:
         """Install package using Chocolatey package manager."""
         try:
-            result = subprocess.run(  # nosec B603, B607
+            result = run_bounded(  # nosec B603, B607
                 ["choco", "install", package_name, "-y"],
                 capture_output=True,
                 text=True,

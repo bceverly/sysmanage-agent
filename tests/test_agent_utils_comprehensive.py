@@ -371,19 +371,50 @@ class TestAuthenticationHelperGetAuthToken:
 
     @pytest.mark.asyncio
     async def test_get_auth_token_empty_token(self):
-        """Test auth token retrieval with empty token in response."""
+        """A 200 with no token (an older server's rate-limit answer) must RAISE.
+
+        Returning "" opened a WebSocket with an empty token; its rejection read
+        as "this network blocks WebSockets" and demoted the agent to polling.
+        """
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={})  # No connection_token
+        mock_response.json = AsyncMock(
+            return_value={"error": "Rate limit exceeded", "retry_after": 900}
+        )
 
         mock_session_ctx = self._create_mock_session(mock_response)
 
         with patch("aiohttp.TCPConnector"):
             with patch("aiohttp.ClientSession", return_value=mock_session_ctx):
                 with patch("socket.gethostname", return_value="test-host"):
-                    result = await self.auth_helper.get_auth_token()
+                    with pytest.raises(ConnectionError):
+                        await self.auth_helper.get_auth_token()
 
-                    assert result == ""
+    @pytest.mark.asyncio
+    async def test_the_token_is_reused_until_near_expiry(self):
+        """One fetch per token lifetime, not per poll: fetching every 5s tripped
+        the server's 20-per-15-minutes connection limit."""
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(
+            return_value={"connection_token": "t1", "expires_in": 3600}
+        )
+        mock_session_ctx = self._create_mock_session(mock_response)
+
+        with patch("aiohttp.TCPConnector"), patch(
+            "aiohttp.ClientSession", return_value=mock_session_ctx
+        ) as session, patch("socket.gethostname", return_value="h"):
+            assert await self.auth_helper.get_auth_token() == "t1"
+            assert await self.auth_helper.get_auth_token() == "t1"
+            assert session.call_count == 1
+            # Past (expiry - margin): fetched again.
+            self.auth_helper._token_good_until = 0.0
+            await self.auth_helper.get_auth_token()
+            assert session.call_count == 2
+            # Rejected by the server: forgotten, fetched again.
+            self.auth_helper.invalidate_auth_token()
+            await self.auth_helper.get_auth_token()
+            assert session.call_count == 3
 
 
 class TestMessageProcessorServiceControl:
@@ -525,7 +556,12 @@ class TestMessageProcessorServiceControl:
     @pytest.mark.asyncio
     async def test_process_service_control_action_no_systemctl(self):
         """Test service control action when systemctl not found."""
-        with patch("shutil.which", return_value=None):
+        # The systemd/OpenRC/launchd/Windows path: on a BSD CI runner the
+        # BSD service control would take over (it needs no systemctl).
+        with patch("shutil.which", return_value=None), patch(
+            "src.sysmanage_agent.core.bsd_service_control.bsd_system",
+            return_value=None,
+        ):
             result = await self.processor._process_service_control_action(
                 "start", "nginx"
             )

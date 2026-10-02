@@ -612,3 +612,36 @@ class TestDatabaseCleanupActuallyRuns:
         assert (
             self._count(seeded_db, "host_approval") == 2
         ), "a healthy table must not lose rows"
+
+
+class TestInitialInventoryDoesNotBlockReceiving:
+    """x13s, 2026-09-30: the initial inventory was awaited inside the websocket
+    receive loop, so a wedged ``choco outdated`` stopped the agent receiving
+    ANY command for 20+ minutes while its heartbeats still went out."""
+
+    @pytest.mark.asyncio
+    async def test_the_handler_returns_while_the_inventory_is_still_running(
+        self, agent, mock_db_manager
+    ):
+        import asyncio  # pylint: disable=import-outside-toplevel
+
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def slow_inventory():
+            started.set()
+            await release.wait()
+
+        agent.send_initial_data_updates = Mock(side_effect=slow_inventory)
+        reg_manager = RegistrationManager(agent)
+        reg_manager.clear_stored_host_id = AsyncMock()
+        reg_manager.store_host_approval = AsyncMock()
+        message = {"host_id": str(uuid.uuid4()), "host_token": "t", "approved": True}
+
+        await asyncio.wait_for(reg_manager.handle_registration_success(message), 2)
+        await asyncio.wait_for(started.wait(), 2)
+        # A second confirmation while the first send runs does not double it.
+        await reg_manager.handle_registration_success(message)
+        assert agent.send_initial_data_updates.call_count == 1
+        release.set()
+        await asyncio.wait_for(reg_manager._initial_data_task, 2)

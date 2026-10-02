@@ -130,11 +130,19 @@ class GenericDeployment(GenericDeploymentPlanMixin):
         """
         path = file_spec["path"]
         content = file_spec["content"]
-        permissions = file_spec.get("permissions", "0644")
+        permissions = file_spec.get("permissions")
         owner_uid = file_spec.get("owner_uid", 0)
         owner_gid = file_spec.get("owner_gid", 0)
+        # No owner named: root by default, but see _write_atomic.
+        explicit_owner = "owner_uid" in file_spec or "owner_gid" in file_spec
         expected_sha256 = file_spec.get("expected_sha256")
         backup_requested = bool(file_spec.get("backup", False))
+        # "permissions" (octal string) wins; "mode" (int or octal string) is
+        # what the server's plan builders send.  It used to be ignored, so a
+        # 0o700 script or a 0o600 secret landed 0o644 -- world-readable in a
+        # shared temp directory (Lucky 13 #6 / #11, found 2026-10-02).
+        if permissions is None:
+            permissions = _mode_to_permissions(file_spec.get("mode"))
         mode = _parse_octal_mode(permissions)
 
         pre_err = self._verify_pre_write_hash(content, expected_sha256, path)
@@ -170,6 +178,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 owner_uid=owner_uid,
                 owner_gid=owner_gid,
                 dest_path=path,
+                explicit_owner=explicit_owner,
             )
             post_err = self._verify_post_write_hash(path, expected_sha256, backup_path)
             if post_err:
@@ -242,8 +251,15 @@ class GenericDeployment(GenericDeploymentPlanMixin):
         owner_uid: int,
         owner_gid: int,
         dest_path: str,
+        explicit_owner: bool = True,
     ) -> None:
         """Write `content` to a sibling temp file, chmod/chown, then rename in place.
+
+        With no owner named in the spec (``explicit_owner`` False) and an
+        unprivileged agent that can write ``parent_dir`` itself, the file stays
+        the agent's: escalating just to make it root's would leave an
+        owner-only (0o700) script the agent can no longer read, and owning a
+        file in a directory it can already write grants the agent nothing.
 
         Falls back to ``sudo install`` when the agent process can't write to
         ``parent_dir`` directly (e.g. ``/etc/apt/sources.list.d/`` on a host
@@ -298,7 +314,14 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             # the agent typically runs as LocalSystem or the configured
             # service account).
             if hasattr(os, "chown"):
-                os.chown(tmp_path, owner_uid, owner_gid)
+                try:
+                    os.chown(tmp_path, owner_uid, owner_gid)
+                except PermissionError:
+                    if explicit_owner:
+                        raise
+                    self.logger.debug(
+                        "No owner requested for %s; leaving it the agent's", dest_path
+                    )
             # ``os.replace`` rather than ``os.rename``: rename refuses
             # to overwrite an existing destination on Windows
             # (WinError 183), which breaks every re-deploy.  replace
@@ -377,6 +400,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 str(owner_uid),
                 "-g",
                 str(owner_gid),
+                "--",  # end of options: a path can never be read as one
                 staged_path,
                 dest_path,
             ]
@@ -690,6 +714,22 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             await self.agent.send_message(message)
         except Exception as exc:
             self.logger.warning(_("Failed to send progress message: %s"), exc)
+
+
+def _mode_to_permissions(mode: Any) -> str:
+    """A plan's ``mode`` (int like 0o700, or octal string) as "0700"; "0644"
+    when absent or unusable."""
+    if isinstance(mode, bool) or mode is None:
+        return "0644"
+    if isinstance(mode, int):
+        return f"0{mode & 0o7777:o}" if 0 <= mode <= 0o7777 else "0644"
+    if isinstance(mode, str):
+        try:
+            value = int(mode, 8)
+        except ValueError:
+            return "0644"
+        return f"0{value:o}" if 0 <= value <= 0o7777 else "0644"
+    return "0644"
 
 
 def _parse_octal_mode(permissions: Any) -> int:

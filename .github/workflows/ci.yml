@@ -67,6 +67,14 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov pytest-asyncio
 
+    - name: MITRE "Lucky 13" unforgivable vulnerabilities (Christey 2007)
+      run: |
+        # Steve Christey (MITRE), "Unforgivable Vulnerabilities", 2007:
+        # https://cwe.mitre.org/documents/unforgivable_vulns/unforgivable.pdf
+        # Its own step so a regression is named here, not buried in the full
+        # suite (which runs these too).  See tests/lucky13/conftest.py.
+        python -m pytest tests/lucky13 -m lucky13 -v --tb=short -p no:cacheprovider
+
     - name: Run backend tests
       run: |
         python -m pytest tests/ -v -n auto --dist=loadfile --cov=src --cov=main --cov-report=xml --cov-report=term-missing

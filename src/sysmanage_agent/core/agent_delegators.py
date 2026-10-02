@@ -392,6 +392,28 @@ class MiscDelegator:
         """Replace the agent's custom-metric set with the server's set."""
         return await self.custom_metrics_ops.sync_custom_metrics(parameters)
 
+    async def configure_network_discovery(
+        self, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Turn passive network discovery on or off (Phase 21.6)."""
+        return await self.network_discovery_ops.configure_network_discovery(parameters)
+
+    async def run_malware_scan(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Run a malware scan (Phase 21.3)."""
+        return await self.malware_scan_ops.run_malware_scan(parameters)
+
+    async def quarantine_file(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Quarantine a detected file (Phase 21.3 S4)."""
+        return await self.malware_scan_ops.quarantine_file(parameters)
+
+    async def restore_file(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Restore a quarantined file (Phase 21.3 S4)."""
+        return await self.malware_scan_ops.restore_file(parameters)
+
+    async def run_network_sweep(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Sweep one on-link network on the server's request (Phase 21.6 S4)."""
+        return await self.network_discovery_ops.run_network_sweep(parameters)
+
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Collect system diagnostics and send to server."""
         return await self.diagnostic_collector.collect_diagnostics(parameters)

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-28 12:13-0400\n"
+"POT-Creation-Date: 2026-09-30 15:33-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,33 +16,33 @@ msgstr "Échec de la création du répertoire de base de données %s : %s"
 msgid "Failed to create database tables: %s"
 msgstr "Échec de la création des tables de base de données : %s"
 
-#: src/database/init.py:83
+#: src/database/init.py:138
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr ""
 "Échec de l'obtention du chemin de BD depuis la config : %s, utilisation du "
 "repli local"
 
-#: src/database/init.py:173
+#: src/database/init.py:228
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s a échoué avec le code de retour %d"
 
-#: src/database/init.py:182
+#: src/database/init.py:238
 #, python-format
-msgid "Alembic %s timed out after 60 seconds"
-msgstr "Alembic %s a expiré après 60 secondes"
+msgid "Alembic %s timed out after %d seconds"
+msgstr "Alembic %s a expiré après %d secondes"
 
-#: src/database/init.py:185
+#: src/database/init.py:244
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "Échec de l'exécution d'alembic %s : %s"
 
-#: src/database/init.py:222
+#: src/database/init.py:284
 msgid "Failed to run database migrations"
 msgstr "Échec de l'exécution des migrations de base de données"
 
-#: src/database/init.py:232
+#: src/database/init.py:294
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "Échec de l’initialisation de la base de données : %s"
@@ -484,6 +484,25 @@ msgstr "Erreur lors du traitement des mises à jour fwupd : %s"
 msgid "Unknown Device"
 msgstr "Périphérique Inconnu"
 
+#: src/sysmanage_agent/collection/network_discovery_collection.py:215
+#, python-format
+msgid "Network discovery capture stopped: %s"
+msgstr "Découverte réseau : capture arrêtée : %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:417
+#, python-format
+msgid "Network discovery raw capture unavailable: %s"
+msgstr "Découverte réseau : capture brute indisponible : %s"
+
+#: src/sysmanage_agent/collection/network_discovery_collection.py:441
+#, python-format
+msgid ""
+"Network discovery saw more than %d devices in one window; the rest were not "
+"recorded"
+msgstr ""
+"La découverte réseau a vu plus de %d appareils dans une fenêtre ; les autres"
+" n'ont pas été enregistrés"
+
 #: src/sysmanage_agent/collection/os_info_collection.py:122
 msgid "Ubuntu Pro status check timed out"
 msgstr "Délai dépassé pour la vérification du statut Ubuntu Pro"
@@ -883,18 +902,18 @@ msgstr "Échec de la collecte des applications Microsoft Store : %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "Échec de la collecte des paquets winget : %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:66
+#: src/sysmanage_agent/collection/update_detection.py:69
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr ""
 "Plateforme non prise en charge pour la détection des mises à jour : %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:135
+#: src/sysmanage_agent/collection/update_detection.py:138
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "Échec de la détection des mises à jour disponibles : %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:182
+#: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:246
 #: src/sysmanage_agent/operations/package_operations.py:231
 #, python-format
@@ -1587,12 +1606,12 @@ msgstr "Impossible de lire la file de sortie pour le polling"
 msgid "Could not mark polled message %s delivered"
 msgstr "Impossible de marquer le message pollé %s comme délivré"
 
-#: src/sysmanage_agent/communication/http_polling.py:160
+#: src/sysmanage_agent/communication/http_polling.py:168
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "Erreur lors du traitement du message pollé %s"
 
-#: src/sysmanage_agent/communication/http_polling.py:176
+#: src/sysmanage_agent/communication/http_polling.py:184
 msgid ""
 "Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
 " must complete first."
@@ -1600,7 +1619,7 @@ msgstr ""
 "Impossible d’utiliser le récours HTTP : cet agent n’a pas d’identifiant "
 "d’hôte stocké. L’inscription doit être complètement effectuée en premier."
 
-#: src/sysmanage_agent/communication/http_polling.py:186
+#: src/sysmanage_agent/communication/http_polling.py:194
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1612,12 +1631,12 @@ msgstr ""
 "pouvant atteindre quelques secondes. Autoriser les mises à niveau vers %s "
 "pour restaurer une livraison immédiate."
 
-#: src/sysmanage_agent/communication/http_polling.py:201
+#: src/sysmanage_agent/communication/http_polling.py:209
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "Le polling a échoué (%s) ; nouvelle tentative dans %ds"
 
-#: src/sysmanage_agent/communication/http_polling.py:212
+#: src/sysmanage_agent/communication/http_polling.py:220
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr ""
 "Vérification répétition de savoir si ce réseau permet maintenant les "
@@ -1844,128 +1863,139 @@ msgstr "Impossible de déterminer le nom d'hôte, utilisation du plan B : %s"
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "La réconciliation du journal en vol a échoué : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:53
+#: src/sysmanage_agent/core/agent_utils.py:55
 msgid "systemctl not found"
 msgstr "systemctl introuvable"
 
-#: src/sysmanage_agent/core/agent_utils.py:81
+#: src/sysmanage_agent/core/agent_utils.py:83
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "Erreur lors du contrôle d'actualisation périodique : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:109
+#: src/sysmanage_agent/core/agent_utils.py:111
 #, python-format
 msgid "Update checker error: %s"
 msgstr "Erreur du vérificateur de mises à jour : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:147
+#: src/sysmanage_agent/core/agent_utils.py:149
 msgid "Package collection completed with some issues"
 msgstr "Collecte de paquets terminée avec quelques problèmes"
 
-#: src/sysmanage_agent/core/agent_utils.py:150
+#: src/sysmanage_agent/core/agent_utils.py:152
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "Erreur lors de la collecte des paquets : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:189
+#: src/sysmanage_agent/core/agent_utils.py:191
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "Erreur du planificateur de collecte de paquets : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:225
-#, python-format
-msgid "Auth failed with status %s: %s"
-msgstr "Authentification échouée avec le statut %s: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:333
+#: src/sysmanage_agent/core/agent_utils.py:300
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "Échec de la construction du rapport des capacités : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:422
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID d'exécution de script %s déjà traité, doublon ignoré"
 
-#: src/sysmanage_agent/core/agent_utils.py:487
+#: src/sysmanage_agent/core/agent_utils.py:459
 msgid "Generic command missing nested command_type"
 msgstr "Commande générique manquant du command_type imbriqué"
 
-#: src/sysmanage_agent/core/agent_utils.py:499
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Type de commande inconnu : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:558
+#: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Échec de la collecte des paquets Homebrew : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Erreur lors de la vérification de l'exécution UUID : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:591
+#: src/sysmanage_agent/core/agent_utils.py:563
 msgid "No execution UUID provided, cannot track"
 msgstr "Aucun UUID d'exécution fourni, impossible de suivre"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:578
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "L'UUID d'exécution %s existe déjà dans la base de données"
 
-#: src/sysmanage_agent/core/agent_utils.py:631
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Erreur lors du stockage de l'exécution UUID : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:696
+#: src/sysmanage_agent/core/agent_utils.py:668
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Erreur dans le gestionnaire de contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:741
+#: src/sysmanage_agent/core/agent_utils.py:717
+#: src/sysmanage_agent/core/agent_utils.py:801
+#: src/sysmanage_agent/core/agent_utils.py:808
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Échec de %s sur le service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Délai dépassé pour le contrôle de service de %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:730
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Erreur de contrôle de service pour %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:820
+#: src/sysmanage_agent/core/agent_utils.py:818
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Échec de la mise à jour des rôles après le contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:857
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Erreur dans le gestionnaire d'état de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:900
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Délai dépassé pour l'état du service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Erreur d'état de service pour %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
 "Échec de la mise en file d'attente du command_result synthétique pour le "
 "journal en vol : %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:76
+#, python-format
+msgid "Auth refused by server: %s"
+msgstr "Authentification refusée par le serveur : %s"
+
+#: src/sysmanage_agent/core/auth_helper.py:77
+msgid "no connection token"
+msgstr "aucun jeton de connexion"
+
+#: src/sysmanage_agent/core/auth_helper.py:87
+#, python-format
+msgid "Auth failed with status %s: %s"
+msgstr "Authentification échouée avec le statut %s: %s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2541,6 +2571,50 @@ msgstr "Impossible de persister la configuration d'envoi IP : %s"
 #, python-format
 msgid "UFW rule failed: %s - %s"
 msgstr "Rœgle UFW échouée : %s - %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:45
+msgid "The scan request has no run id."
+msgstr "La demande d'analyse ne contient aucun identifiant d'exécution."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:48
+msgid "A malware scan is already running on this host."
+msgstr "Une analyse antimalware est déjà en cours sur cet hôte."
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:55
+#, python-format
+msgid "Malware scan failed: %s"
+msgstr "Échec de l'analyse antimalware : %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:85
+#, python-format
+msgid "Quarantine of %s refused: %s"
+msgstr "Mise en quarantaine de %s refusée : %s"
+
+#: src/sysmanage_agent/operations/malware_scan_operations.py:99
+#, python-format
+msgid "Restore of %s refused: %s"
+msgstr "Restauration de %s refusée : %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:133
+#, python-format
+msgid "Network discovery setting could not be saved: %s"
+msgstr "Le paramètre de découverte réseau n'a pas pu être enregistré : %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:161
+#, python-format
+msgid "Error sending network discovery report: %s"
+msgstr "Erreur lors de l'envoi du rapport de découverte réseau : %s"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:169
+#: src/sysmanage_agent/operations/network_discovery_operations.py:241
+msgid "Cannot send network discovery report: no host approval"
+msgstr ""
+"Impossible d'envoyer le rapport de découverte réseau : hôte non approuvé"
+
+#: src/sysmanage_agent/operations/network_discovery_operations.py:182
+#: src/sysmanage_agent/operations/network_discovery_operations.py:259
+msgid "Failed to send network discovery report"
+msgstr "Échec de l'envoi du rapport de découverte réseau"
 
 #: src/sysmanage_agent/operations/package_compliance_operations.py:78
 msgid "profile_id is required"
@@ -3451,6 +3525,9 @@ msgid "Error checking WSL support: %s"
 msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #, python-format
+#~ msgid "Alembic %s timed out after 60 seconds"
+#~ msgstr "Alembic %s a expiré après 60 secondes"
+
 #~ msgid "pkgin list -u failed (code %d): %s"
 #~ msgstr "Échec de pkgin list -u (code %d) : %s"
 
@@ -5418,3 +5495,7 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "Les CPU ne peuvent pas dépasser 64"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "Le message en file d'attente %s n'est pas du JSON lisible ; il n'est pas envoyé par interrogation"

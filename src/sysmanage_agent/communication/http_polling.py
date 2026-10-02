@@ -38,6 +38,7 @@ tolerated forever.
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from typing import Any, Dict, List
 
@@ -81,6 +82,40 @@ class HttpPollingTransport:
             self.logger.exception(_("Could not read the stored host_id for polling"))
             return None
 
+    @property
+    def _queue(self):
+        """The agent's outbound queue -- it lives on the message handler.
+
+        This used to read ``self.agent.queue_manager``, which does not exist:
+        the AttributeError was caught and logged, so every poll went out with
+        ``messages: []`` and a polling agent never delivered anything.
+        """
+        return self.agent.message_handler.queue_manager
+
+    @staticmethod
+    def _poll_entry(item) -> Dict[str, Any]:
+        """One queued envelope as the poll endpoint takes it.
+
+        The queue stores the whole WebSocket envelope as JSON; the endpoint
+        wants its ``message_type`` and ``data``.  A few messages carry their
+        fields at the top level instead of under ``data`` (command
+        acknowledgments, script results) -- those fields become the data.
+        """
+        envelope = json.loads(item.message_data)
+        if isinstance(envelope.get("data"), dict):
+            data = envelope["data"]
+        else:
+            data = {
+                key: value
+                for key, value in envelope.items()
+                if key not in ("message_type", "message_id", "timestamp", "data")
+            }
+        return {
+            "message_type": item.message_type,
+            "data": data,
+            "message_id": item.message_id,
+        }
+
     def _collect_outbound(self) -> List[Dict[str, Any]]:
         """Take queued agent->server messages off the local queue."""
         from src.database.queue_manager import (  # noqa: PLC0415
@@ -88,7 +123,7 @@ class HttpPollingTransport:
         )
 
         try:
-            queued = self.agent.queue_manager.dequeue_messages(
+            queued = self._queue.dequeue_messages(
                 direction=QueueDirection.OUTBOUND, limit=MAX_OUTBOUND_PER_POLL
             )
         except Exception:  # pylint: disable=broad-except
@@ -97,13 +132,15 @@ class HttpPollingTransport:
 
         messages = []
         for item in queued:
-            messages.append(
-                {
-                    "message_type": item.message_type,
-                    "data": item.message_data,
-                    "message_id": item.message_id,
-                }
-            )
+            try:
+                messages.append(self._poll_entry(item))
+            except (TypeError, ValueError):
+                # Loud: an unreadable row would otherwise block nothing and
+                # vanish silently.  Leave it queued for the WebSocket path.
+                self.logger.error(
+                    _("Queued message %s is not readable JSON; not polling it"),
+                    item.message_id,
+                )
         return messages
 
     def _mark_delivered(self, messages: List[Dict[str, Any]]) -> None:
@@ -114,7 +151,7 @@ class HttpPollingTransport:
         """
         for message in messages:
             try:
-                self.agent.queue_manager.mark_completed(message["message_id"])
+                self._queue.mark_completed(message["message_id"])
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception(
                     _("Could not mark polled message %s delivered"),
@@ -124,13 +161,21 @@ class HttpPollingTransport:
     async def _post(self, session, endpoint, host_id, outbound):
         url = endpoint.rest_url("/api/agent/poll")
         token = await self.agent.get_auth_token()
+        # The connection token proves "an agent"; the host token proves WHICH
+        # host -- the server refuses a poll without it.
+        host_token = await self.agent.get_stored_host_token()
         payload = {"host_id": host_id, "messages": outbound}
         async with session.post(
             url,
             json=payload,
-            headers={"Authorization": f"Bearer {token}"},
+            headers={
+                "Authorization": f"Bearer {token}",
+                "X-Host-Token": host_token or "",
+            },
             proxy=endpoint.proxy(),
         ) as response:
+            if response.status == 401:
+                self.agent.auth_helper.invalidate_auth_token()
             if response.status != 200:
                 body = (await response.text())[:200]
                 raise ConnectionError(f"poll returned HTTP {response.status}: {body}")

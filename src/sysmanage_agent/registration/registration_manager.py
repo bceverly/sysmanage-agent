@@ -17,9 +17,12 @@ from typing import Any, Dict, Optional
 import aiohttp
 from sqlalchemy import text
 
+from src.database import run_ledger
 from src.database.base import get_database_manager
+from src.database.host_identity import kept_host_token
 from src.database.models import HostApproval
 from src.i18n import _
+from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 # ONE definition of "corrupt", shared by the count and the delete below.
@@ -57,6 +60,8 @@ class RegistrationManager:
         self.agent = agent_instance
         self.logger = agent_instance.logger
         self.config = agent_instance.config
+        # The running initial-inventory send (see _start_initial_data_updates).
+        self._initial_data_task: Optional[asyncio.Task] = None
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
@@ -116,18 +121,19 @@ class RegistrationManager:
             endpoint = ServerEndpoint(self.config)
             fingerprint_url = endpoint.rest_url("/api/certificates/server-fingerprint")
 
-            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
-                async with session.get(
-                    fingerprint_url, proxy=endpoint.proxy()
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        server_fingerprint = data.get("fingerprint")
-                        self.logger.info(
-                            "Retrieved server fingerprint for validation: %s",
-                            "***REDACTED***" if server_fingerprint else "None",
-                        )
-                        # We'll store it when we get the full cert data
+            async with aiohttp.ClientSession(
+                **endpoint.session_kwargs()
+            ) as session, session.get(
+                fingerprint_url, proxy=endpoint.proxy()
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    server_fingerprint = data.get("fingerprint")
+                    self.logger.info(
+                        "Retrieved server fingerprint for validation: %s",
+                        "***REDACTED***" if server_fingerprint else "None",
+                    )
+                    # We'll store it when we get the full cert data
 
         except Exception as error:
             self.logger.error(
@@ -149,6 +155,24 @@ class RegistrationManager:
         )
         return False
 
+    def _start_initial_data_updates(self) -> None:
+        """Send the initial inventory in the BACKGROUND.
+
+        This runs from the websocket receive loop, which reads no further
+        server message until the handler returns.  Awaiting the whole
+        inventory here (OS, hardware, software, an update check that shells
+        out to winget/choco/Windows Update) blocked every command for as long
+        as that took -- on x13s (2026-09-30) a wedged ``choco outdated`` kept
+        the agent from receiving ANY command for 20+ minutes while its
+        heartbeats still went out.  A send already in flight is not doubled.
+        """
+        if self._initial_data_task is not None and not self._initial_data_task.done():
+            self.logger.info("Initial inventory send already running; not repeating")
+            return
+        self._initial_data_task = asyncio.create_task(
+            self.agent.send_initial_data_updates()
+        )
+
     async def handle_registration_success(self, message: Dict[str, Any]) -> None:
         """Handle registration success notification from server."""
         try:
@@ -161,6 +185,16 @@ class RegistrationManager:
             host_id = message.get("host_id")
             host_token = message.get("host_token")
             approved = message.get("approved", False)
+
+            # Read the token we hold BEFORE anything clears the row: the
+            # server no longer repeats it (Phase 22.0).
+            host_token = host_token or self._kept_token(host_id)
+            # A different identity is, to the server, a different host: tell
+            # it everything again rather than only what changed (Phase 22.1).
+            previous = self.get_stored_host_id_sync()
+            if host_id and previous and str(previous) != str(host_id):
+                send_on_change.gate.reset()
+                run_ledger.forget(run_ledger.UPDATE_CHECK)
 
             if (host_id or host_token) and approved:
                 self.logger.info(
@@ -179,7 +213,7 @@ class RegistrationManager:
                 self.logger.info(
                     "Registration confirmed, sending initial inventory data..."
                 )
-                await self.agent.send_initial_data_updates()
+                self._start_initial_data_updates()
 
             elif host_id or host_token:
                 self.logger.info(
@@ -207,6 +241,11 @@ class RegistrationManager:
             host_id = data.get("host_id")
             approval_status = data.get("approval_status", "approved")
             certificate = data.get("certificate")
+
+            # Newly approved: the server has seen none of this host's reports
+            # in approved form yet -- send everything (Phase 22.1).
+            send_on_change.gate.reset()
+            run_ledger.forget(run_ledger.UPDATE_CHECK)
 
             self.logger.info(
                 "Received host approval notification: host_id=%s, status=%s",
@@ -254,6 +293,18 @@ class RegistrationManager:
             self.logger.error(_("Error clearing host approval records: %s"), error)
             raise
 
+    def _kept_token(self, host_id) -> Optional[str]:
+        """The token already stored for ``host_id`` (None on any error)."""
+        try:
+            session = get_database_manager().get_session()
+            try:
+                return kept_host_token(session, host_id)
+            finally:
+                session.close()
+        except Exception:  # pylint: disable=broad-exception-caught
+            self.logger.error(_("Error retrieving stored credentials"))
+            return None
+
     async def store_host_approval(  # NOSONAR - async required by interface
         self,
         host_id: str,
@@ -269,6 +320,9 @@ class RegistrationManager:
             db_manager = get_database_manager()
             session = db_manager.get_session()
             try:
+                # Keep the token we already hold for this host when the
+                # message omits it (server Phase 22.0 sends it only once).
+                host_token = host_token or kept_host_token(session, host_id)
                 # CRITICAL: Delete ALL existing host approval records first
                 # This ensures we only ever have ONE record, preventing old host_id caching issues
                 deleted_count = session.query(HostApproval).delete()

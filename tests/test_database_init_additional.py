@@ -12,6 +12,7 @@ import sys
 from unittest.mock import Mock, patch
 
 from src.database.init import (
+    ALEMBIC_TIMEOUT_SECONDS,
     get_database_path_from_config,
     initialize_database,
     run_alembic_migration,
@@ -223,7 +224,7 @@ class TestDatabaseInitAdditional:
             assert call_args[1]["cwd"] == "/path/to"
             assert call_args[1]["capture_output"] is True
             assert call_args[1]["text"] is True
-            assert call_args[1]["timeout"] == 60
+            assert call_args[1]["timeout"] == ALEMBIC_TIMEOUT_SECONDS
             assert call_args[1]["check"] is False
             # Check that it used sys.executable -m alembic (not hardcoded python3)
             assert call_args[0][0] == [
