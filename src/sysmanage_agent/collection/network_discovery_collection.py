@@ -280,11 +280,16 @@ class _MulticastListener(threading.Thread):
 
     @staticmethod
     def _open(group: str, port: int, local_ips: List[str]):
+        # nosemgrep: python.lang.security.audit.network.bind.avoid-bind-to-all-interfaces
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             if hasattr(socket, "SO_REUSEPORT"):
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            # A passive mDNS/SSDP listener must bind the wildcard address on
+            # the multicast port to receive group traffic (binding the group
+            # address fails on Windows); it only reads, and joins only the
+            # mDNS/SSDP groups below.
             sock.bind(("", port))
             for local in local_ips:
                 membership = socket.inet_aton(group) + socket.inet_aton(local)

@@ -95,6 +95,8 @@ def _install_netbsd_rc_script(
         return False, f"no rc.d script for {service} in {rc_d} or {examples}"
     shutil.copyfile(example, target)
     # Root runs rc.d scripts; nobody else needs to read or run this one.
+    # 0o700 is owner-only -- the restrictive end of what the rule looks for.
+    # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
     os.chmod(target, 0o700)
     return True, ""
 
