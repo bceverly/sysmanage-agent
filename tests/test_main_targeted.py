@@ -147,8 +147,10 @@ class TestMainTargeted:
 
         # Verify the method calls the right components
         agent.registration.get_system_info.assert_called_once()
+        # No logging config pushed yet: no fingerprint (server 22.2).
         agent.create_message.assert_called_once_with(
-            "system_info", {"os": "Linux", "arch": "x86_64"}
+            "system_info",
+            {"os": "Linux", "arch": "x86_64", "logging_config_digest": None},
         )
 
     @patch("main.is_running_privileged")

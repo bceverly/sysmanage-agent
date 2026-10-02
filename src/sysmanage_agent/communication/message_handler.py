@@ -19,9 +19,8 @@ import websockets
 
 from src.database.queue_manager import MessageQueueManager
 from src.i18n import _
-from src.sysmanage_agent.communication import send_on_change
-from src.sysmanage_agent.core import schedule_jitter
 from src.sysmanage_agent.collection import public_ip_fetcher
+from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.communication.message_handler_queue import (
     MessageHandlerQueueMixin,
 )
@@ -29,7 +28,9 @@ from src.sysmanage_agent.communication.message_logging_helpers import (
     log_child_host_received,
     log_duplicate_message,
 )
+from src.sysmanage_agent.core import schedule_jitter
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.core.logging_digest import config_digest
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.core.version import get_agent_version
 
@@ -143,6 +144,10 @@ class MessageHandler(MessageHandlerQueueMixin):
     def create_system_info_message(self):
         """Create system info message."""
         system_info = self.agent.registration.get_system_info()
+        # Server 22.2: lets the server skip re-pushing an unchanged config.
+        system_info["logging_config_digest"] = config_digest(
+            getattr(self.agent, "_logging_overrides", None)
+        )
         return self.create_message("system_info", system_info)
 
     def create_heartbeat_message(self):

@@ -45,6 +45,7 @@ from src.sysmanage_agent.core.agent_utils import (
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.communication.http_polling import HttpPollingTransport
 from src.sysmanage_agent.communication.transport_fallback import TransportState
+from src.sysmanage_agent.core.logging_digest import config_digest
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
 from src.sysmanage_agent.operations.child_host_ops_stub import ChildHostOperations
@@ -472,6 +473,10 @@ class SysManageAgent(
     def create_system_info_message(self):
         """Create system info message."""
         system_info = self.registration.get_system_info()
+        # Server 22.2: lets the server skip re-pushing an unchanged config.
+        system_info["logging_config_digest"] = config_digest(
+            getattr(self, "_logging_overrides", None)
+        )
         return self.create_message("system_info", system_info)
 
     async def _check_server_health(self) -> bool:
@@ -794,7 +799,10 @@ class SysManageAgent(
             300,
         )
         jitter = 0.5 + (secrets.randbelow(1000) / 1000.0)
-        reconnect_interval *= jitter
+        # A 429 from /agent/auth carries how long to wait (Phase 22.2).
+        reconnect_interval = max(
+            reconnect_interval * jitter, self.auth_helper.wait_hint()
+        )
 
         self.logger.info(
             "Reconnecting in %.1f seconds (attempt %d)",

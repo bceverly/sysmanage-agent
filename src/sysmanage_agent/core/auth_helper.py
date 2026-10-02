@@ -9,6 +9,7 @@ that module past the 1000-line limit.
 """
 
 import logging
+import secrets
 import socket
 import time
 from typing import Optional
@@ -17,6 +18,21 @@ import aiohttp
 
 from src.i18n import _
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
+
+
+class AuthRateLimited(ConnectionError):
+    """The server said "too many attempts; come back in ``retry_after`` s"."""
+
+    def __init__(self, retry_after: float, detail: str):
+        super().__init__(detail)
+        self.retry_after = retry_after
+
+
+def _retry_after(response, default: float = 60.0) -> float:
+    try:
+        return max(1.0, float(response.headers.get("Retry-After", default)))
+    except (TypeError, ValueError):
+        return default
 
 
 class AuthenticationHelper:
@@ -31,6 +47,28 @@ class AuthenticationHelper:
         self.logger = logger
         self._token: Optional[str] = None
         self._token_good_until = 0.0
+        # Server Phase 22.2: after a 429 the reconnect waits at least this
+        # long (the server's Retry-After plus jitter, so a refused crowd does
+        # not come back in the same second).
+        self._not_before = 0.0
+
+    def wait_hint(self) -> float:
+        """Seconds the server asked us to wait before the next attempt."""
+        return max(0.0, self._not_before - time.monotonic())
+
+    def _identity_headers(self) -> dict:
+        """Who we are, for the server's per-host connection limit (Phase
+        22.2): behind NAT every agent shares one address, so a per-address
+        limit locked out the 21st.  Absent before registration."""
+        headers = {}
+        try:
+            host_id = self.agent.get_stored_host_id_sync()
+            host_token = self.agent.get_stored_host_token_sync()
+        except Exception:  # pylint: disable=broad-exception-caught
+            return headers
+        if host_id and host_token:
+            headers = {"x-host-id": str(host_id), "x-host-token": str(host_token)}
+        return headers
 
     def invalidate_auth_token(self) -> None:
         """Forget the cached token (the server rejected it, or it rotated)."""
@@ -60,6 +98,7 @@ class AuthenticationHelper:
 
         async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
             headers = {"x-agent-hostname": system_hostname}
+            headers.update(self._identity_headers())
 
             async with session.post(
                 auth_url, headers=headers, proxy=endpoint.proxy()
@@ -83,6 +122,15 @@ class AuthenticationHelper:
                     )
                     return token
 
+                if response.status == 429:
+                    spread = 1.0 + secrets.randbelow(201) / 1000.0  # 1.0 - 1.2
+                    wait = _retry_after(response) * spread
+                    self._not_before = time.monotonic() + wait
+                    raise AuthRateLimited(
+                        wait,
+                        _("Auth failed with status %s: %s")
+                        % (response.status, await response.text()),
+                    )
                 raise ConnectionError(
                     _("Auth failed with status %s: %s")
                     % (response.status, await response.text())
