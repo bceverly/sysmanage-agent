@@ -84,7 +84,7 @@ sed -i "s|^source=\"|source=\"\n\tsysmanage-agent-$VERSION.tar.gz|" APKBUILD
 
 # Fix ownership
 chown -R builder:builder /home/builder
-chmod 777 "$DISTDIR"
+chmod 755 "$DISTDIR"  # owner (builder) writes; never world-writable (CWE-276)
 chown -R builder:builder "$DISTDIR"
 
 # Generate signing key (for local builds)

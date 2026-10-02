@@ -96,10 +96,12 @@ class TestUpdateChecker:
 
         # Mock event loop time to trigger immediate update
         with patch("asyncio.get_event_loop") as mock_loop:
+            # Start at 0, then past the interval -- past its LARGEST jittered
+            # value (3600 x 1.2, Phase 22.1), or the draw decides the test.
             mock_loop.return_value.time.side_effect = [
                 0,
-                3700,
-            ]  # Start at 0, then past interval
+                3600 * 1.2 + 1,
+            ]
 
             # Make the loop exit after one iteration
             call_count = 0

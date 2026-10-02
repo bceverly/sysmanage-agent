@@ -17,9 +17,10 @@ from typing import Any, Dict, List, Tuple
 
 from src.database.base import get_database_manager
 from src.database.models import InstallationRequestTracking
+from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations import package_installation_helpers
-from src.i18n import _
+from src.sysmanage_agent.operations.package_name_guard import package_name_problem
 
 _DEBIAN_FRONTEND_ENV = "DEBIAN_FRONTEND=noninteractive"
 _DEBCONF_SEEN_ENV = "DEBCONF_NONINTERACTIVE_SEEN=true"
@@ -58,6 +59,11 @@ def _validate_uninstall_packages(
         if not package_name:
             logger.warning(_("Skipping package with no name"))
             failed_packages.append({"package": package, "error": _("No package name")})
+            continue
+        problem = package_name_problem(package_name)
+        if problem:
+            logger.warning("Refusing package %r: %s", package_name, problem)
+            failed_packages.append({"package": package, "error": problem})
             continue
         valid_packages.append(package)
     return valid_packages, failed_packages

@@ -810,7 +810,9 @@ class TestDataCollectorLoop:
             side_effect=Exception("Collection error")
         )
 
-        with patch("asyncio.sleep", side_effect=[None, asyncio.CancelledError()]):
+        # Sleeps: the post-connect splay (Phase 22.1), the loop interval,
+        # then cancellation.
+        with patch("asyncio.sleep", side_effect=[None, None, asyncio.CancelledError()]):
             # Should return on error, not raise
             await collector.data_collector()
 

@@ -22,6 +22,7 @@ from typing import Any, Dict
 
 from src.database.models import Priority, QueueDirection
 from src.i18n import _
+from src.sysmanage_agent.communication import send_on_change
 
 
 class MessageHandlerQueueMixin:
@@ -71,6 +72,13 @@ class MessageHandlerQueueMixin:
         elif message_type == "error":
             priority = Priority.URGENT
 
+        # Send-on-change (server Phase 22.1): an unchanged snapshot report is
+        # not queued at all.  See communication/send_on_change.py.
+        send, fingerprint = send_on_change.gate.decide(message)
+        if not send:
+            self.logger.debug("Unchanged %s not sent (send-on-change)", message_type)
+            return message.get("message_id")
+
         # Run blocking database operation in thread to avoid blocking event loop
         message_id = await asyncio.to_thread(
             self.queue_manager.enqueue_message,
@@ -80,6 +88,9 @@ class MessageHandlerQueueMixin:
             priority=priority,
             correlation_id=correlation_id,
         )
+        # Remembered only once queued, so a failed queue never suppresses
+        # the next attempt.
+        send_on_change.gate.record(message_type, fingerprint)
 
         self.logger.info(
             "Queued outbound message: %s (ID: %s)", message_type, message_id

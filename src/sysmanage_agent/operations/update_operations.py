@@ -12,8 +12,10 @@ import concurrent.futures
 import logging
 from typing import Any, Dict
 
-from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.database import run_ledger
 from src.i18n import _
+from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.sysmanage_agent.operations.package_name_guard import package_name_problem
 
 
 class UpdateOperations:
@@ -59,6 +61,9 @@ class UpdateOperations:
 
             # Send update information to server
             await self.agent.send_message(update_message)
+            # Recorded however the check was triggered (timer, connect,
+            # server command), so a reconnect does not repeat it (Phase 22.1).
+            run_ledger.mark_run(run_ledger.UPDATE_CHECK)
 
             return {
                 "success": True,
@@ -110,6 +115,19 @@ class UpdateOperations:
         except Exception as error:
             self.logger.error(_("Failed to start updates: %s"), error)
             return {"success": False, "error": str(error)}
+
+    def _drop_unsafe_names(self, packages: list) -> list:
+        """Refuse names a package manager would read as an option or a file."""
+        kept = []
+        for package in packages:
+            problem = package_name_problem(package.get("name"))
+            if problem:
+                self.logger.warning(
+                    "Refusing package %r: %s", package.get("name"), problem
+                )
+                continue
+            kept.append(package)
+        return kept
 
     def _validate_packages_from_list(self, packages_list: list) -> list:
         """Validate packages from new format (packages array with bundle_id)."""
@@ -253,6 +271,7 @@ class UpdateOperations:
                     package_names, package_managers, update_detector
                 )
 
+            valid_packages = self._drop_unsafe_names(valid_packages)
             if not valid_packages:
                 self.logger.error(_("No valid packages found for update"))
                 return

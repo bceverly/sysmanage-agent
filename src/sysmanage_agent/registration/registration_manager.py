@@ -17,10 +17,12 @@ from typing import Any, Dict, Optional
 import aiohttp
 from sqlalchemy import text
 
+from src.database import run_ledger
 from src.database.base import get_database_manager
 from src.database.host_identity import kept_host_token
 from src.database.models import HostApproval
 from src.i18n import _
+from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 # ONE definition of "corrupt", shared by the count and the delete below.
@@ -187,6 +189,12 @@ class RegistrationManager:
             # Read the token we hold BEFORE anything clears the row: the
             # server no longer repeats it (Phase 22.0).
             host_token = host_token or self._kept_token(host_id)
+            # A different identity is, to the server, a different host: tell
+            # it everything again rather than only what changed (Phase 22.1).
+            previous = self.get_stored_host_id_sync()
+            if host_id and previous and str(previous) != str(host_id):
+                send_on_change.gate.reset()
+                run_ledger.forget(run_ledger.UPDATE_CHECK)
 
             if (host_id or host_token) and approved:
                 self.logger.info(
@@ -233,6 +241,11 @@ class RegistrationManager:
             host_id = data.get("host_id")
             approval_status = data.get("approval_status", "approved")
             certificate = data.get("certificate")
+
+            # Newly approved: the server has seen none of this host's reports
+            # in approved form yet -- send everything (Phase 22.1).
+            send_on_change.gate.reset()
+            run_ledger.forget(run_ledger.UPDATE_CHECK)
 
             self.logger.info(
                 "Received host approval notification: host_id=%s, status=%s",

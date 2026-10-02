@@ -18,8 +18,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
 
+from src.database import run_ledger
 from src.i18n import _
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
+from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.core import schedule_jitter
 from src.sysmanage_agent.operations.firewall_collector import FirewallCollector
 from src.sysmanage_agent.collection.graylog_collector import GraylogCollector
 from src.sysmanage_agent.collection.process_collection import ProcessCollector
@@ -145,7 +148,18 @@ class DataCollector(DataCollectorSendersMixin):
         self.logger.info("Sending initial update check...")
 
         try:
-            update_result = await self.agent.check_updates()
+            # A package-manager refresh is expensive: on a reconnect run it only
+            # if it is due (or the server asked), not because we connected
+            # (Phase 22.1).
+            interval = self.agent.config.get_update_check_interval()
+            if not (
+                send_on_change.is_forced()
+                or run_ledger.is_due(run_ledger.UPDATE_CHECK, interval)
+            ):
+                self.logger.info("Update check ran recently; not repeating it")
+                update_result = {}
+            else:
+                update_result = await self.agent.check_updates()
             if update_result.get("total_updates", 0) > 0:
                 self.logger.info(
                     "Found %d available updates during initial check",
@@ -419,6 +433,9 @@ class DataCollector(DataCollectorSendersMixin):
 
         if self.agent.running and self.agent.connected:
             try:
+                # A moment's random wait, so a fleet reconnecting together
+                # (a server restart) does not collect together (Phase 22.1).
+                await asyncio.sleep(schedule_jitter.connect_splay())
                 self.logger.info("Initial periodic data collection (post-connect)")
                 await self._collect_and_send_periodic_data()
             except Exception as error:  # pylint: disable=broad-exception-caught
@@ -429,7 +446,7 @@ class DataCollector(DataCollectorSendersMixin):
 
         while self.agent.running:
             try:
-                await asyncio.sleep(data_collection_interval)
+                await asyncio.sleep(schedule_jitter.jittered(data_collection_interval))
                 await self._collect_and_send_periodic_data()
                 self.logger.debug("AGENT_DEBUG: Periodic data collection completed")
             except asyncio.CancelledError:

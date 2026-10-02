@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: release test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local translate translate-dry translate-check
+.PHONY: test-lucky13 release test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local translate translate-dry translate-check
 
 # Default target
 help:
@@ -13,6 +13,7 @@ help:
 	@echo ""
 	@echo "Development targets:"
 	@echo "  make test          - Run all unit tests"
+	@echo "  make test-lucky13  - MITRE Lucky 13 unforgivable-vulnerability checks (also in make security)"
 	@echo "  make lint          - Run Python linting"
 	@echo "  make format-python - Format Python code"
 	@echo "  make setup         - Install development dependencies"
@@ -943,8 +944,14 @@ endif
 	@echo "  https://platform.safetycli.com/codebases/sysmanage-agent/findings?branch=main"
 
 # Comprehensive security analysis - all tools  
-security-full: security-python security-secrets
+security-full: security-python security-secrets test-lucky13
 	@echo "[OK] Comprehensive security analysis completed!"
+
+# MITRE "Lucky 13" unforgivable vulnerabilities (Christey 2007) -- the same
+# check CI runs as its own step.  See tests/lucky13/conftest.py.
+test-lucky13: setup-venv
+	@echo "=== MITRE Lucky 13 (Unforgivable Vulnerabilities) ==="
+	@$(PYTHON) -m pytest tests/lucky13 -m lucky13 -v --tb=short -p no:cacheprovider
 
 # Python security analysis (Bandit + Safety)
 security-python: setup-venv

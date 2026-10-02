@@ -15,10 +15,12 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from src.database.base import get_database_manager
+from src.database import run_ledger
 from src.database.models import Priority, ScriptExecution
 from src.i18n import N_, _
 from src.sysmanage_agent.collection.package_collection import PackageCollector
-from src.sysmanage_agent.core import bsd_service_control
+from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.core import bsd_service_control, schedule_jitter
 from src.sysmanage_agent.operations import inflight_journal
 
 # Re-export async utilities for backwards compatibility
@@ -88,16 +90,20 @@ class UpdateChecker:
         self.logger.debug("Update checker started")
 
         update_check_interval = self.agent.config.get_update_check_interval()
-        last_check_time = asyncio.get_event_loop().time()
+        # Varied every time it is used, so a fleet started together drifts
+        # apart (Phase 22.1).
+        next_interval = schedule_jitter.jittered(update_check_interval)
 
         while self.agent.running:
             try:
-                current_time = asyncio.get_event_loop().time()
-
-                # Check if it's time for an update check
-                if current_time - last_check_time >= update_check_interval:
+                # Due by the PERSISTED last run (Phase 22.1): this task restarts
+                # with every connection, so a clock started here re-ran the
+                # check after every reconnect.  The attempt is recorded even if
+                # it fails, so a broken package manager is not hit every minute.
+                if run_ledger.is_due(run_ledger.UPDATE_CHECK, next_interval):
                     await self.perform_periodic_check()
-                    last_check_time = current_time
+                    run_ledger.mark_run(run_ledger.UPDATE_CHECK)
+                    next_interval = schedule_jitter.jittered(update_check_interval)
 
                 # Sleep for a shorter interval to check timing more frequently
                 await asyncio.sleep(
@@ -160,24 +166,32 @@ class PackageCollectionScheduler:
             self.logger.info("Package collection is disabled - scheduler will not run")
             return
 
-        # Run collection at startup if configured
-        if self.agent.config.is_package_collection_at_startup_enabled():
-            self.logger.info("Running initial package collection at startup")
-            await self.perform_package_collection()
-
         package_collection_interval = (
             self.agent.config.get_package_collection_interval()
         )
-        last_collection_time = asyncio.get_event_loop().time()
+
+        # Run collection at startup if configured -- and if it is due: this
+        # task restarts with every CONNECTION, so "at startup" used to mean
+        # "after every reconnect", re-fetching whole package catalogs (Windows:
+        # the public Chocolatey/winget APIs) each time (Phase 22.1).
+        if self.agent.config.is_package_collection_at_startup_enabled():
+            if run_ledger.is_due(
+                run_ledger.PACKAGE_COLLECTION, package_collection_interval
+            ):
+                self.logger.info("Running initial package collection at startup")
+                await self.perform_package_collection()
+                run_ledger.mark_run(run_ledger.PACKAGE_COLLECTION)
+            else:
+                self.logger.info("Package collection ran recently; not repeating it")
 
         while self.agent.running:
             try:
-                current_time = asyncio.get_event_loop().time()
-
-                # Check if it's time for package collection
-                if current_time - last_collection_time >= package_collection_interval:
+                # Due by the persisted last run, not a per-connection clock.
+                if run_ledger.is_due(
+                    run_ledger.PACKAGE_COLLECTION, package_collection_interval
+                ):
                     await self.perform_package_collection()
-                    last_collection_time = current_time
+                    run_ledger.mark_run(run_ledger.PACKAGE_COLLECTION)
 
                 # Sleep for a shorter interval to check timing more frequently
                 await asyncio.sleep(
@@ -194,6 +208,9 @@ class PackageCollectionScheduler:
                 continue
 
 
+MAX_COMMAND_NESTING = 4
+
+
 class MessageProcessor:
     """Handles WebSocket message processing."""
 
@@ -204,9 +221,15 @@ class MessageProcessor:
     async def handle_command(self, message: Dict[str, Any]):
         """Handle command from server and send response."""
         command_id = message.get("message_id")
-        command_data = message.get("data", {})
+        # A malformed command (data or parameters not a mapping) is answered
+        # with an error, never allowed to raise out of here (Lucky 13 #1).
+        command_data = message.get("data")
+        if not isinstance(command_data, dict):
+            command_data = {}
         command_type = command_data.get("command_type")
-        parameters = command_data.get("parameters", {})
+        parameters = command_data.get("parameters")
+        if not isinstance(parameters, dict):
+            parameters = {}
 
         self.logger.info(
             "Received command: %s with parameters: %s", command_type, parameters
@@ -222,7 +245,10 @@ class MessageProcessor:
             parameters["_message_id"] = command_id
 
         try:
-            result = await self._dispatch_command(command_type, parameters)
+            # The server asked: whatever this command reports goes out even if
+            # unchanged (send-on-change, server Phase 22.1).
+            with send_on_change.forced():
+                result = await self._dispatch_command(command_type, parameters)
         except Exception as error:
             result = {"success": False, "error": str(error)}
 
@@ -439,19 +465,24 @@ class MessageProcessor:
         return result
 
     async def _dispatch_command(
-        self, command_type: str, parameters: Dict[str, Any]
+        self, command_type: str, parameters: Dict[str, Any], depth: int = 0
     ) -> Dict[str, Any]:
         """Dispatch command to appropriate handler."""
-        # Handle generic_command wrapper - unwrap nested commands
+        # Handle generic_command wrapper - unwrap nested commands (one level is
+        # all the server sends; unbounded nesting is refused, Lucky 13 #1).
         if command_type == "generic_command":
+            if depth >= MAX_COMMAND_NESTING:
+                return {"success": False, "error": "generic_command nested too deeply"}
             nested_command_type = parameters.get("command_type")
-            nested_parameters = parameters.get("parameters", {})
+            nested_parameters = parameters.get("parameters")
+            if not isinstance(nested_parameters, dict):
+                nested_parameters = {}
             self.logger.debug(
                 f"Unwrapping generic_command: {nested_command_type} with params: {nested_parameters}"
             )
             if nested_command_type:
                 return await self._dispatch_command(
-                    nested_command_type, nested_parameters
+                    nested_command_type, nested_parameters, depth + 1
                 )
 
             return {

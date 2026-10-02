@@ -485,3 +485,14 @@ def pytest_runtest_teardown(item, nextitem):
     # Same guard on the teardown side (see pytest_runtest_setup).
     _close_orphaned_log_handlers()
     _gc_collect_quiet()
+
+
+@pytest.fixture(autouse=True)
+def _fresh_send_on_change_gate():
+    """The send-on-change gate is process-wide; one test's reports must not
+    make another's look unchanged."""
+    from src.sysmanage_agent.communication import send_on_change
+
+    send_on_change.gate.reset()
+    yield
+    send_on_change.gate.reset()

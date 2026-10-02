@@ -264,19 +264,15 @@ class TestValidatePackages:
         assert len(failed) == 1
 
     def test_validate_packages_whitespace_package_name(self):
-        """Test validation with whitespace-only package name."""
-        # Note: The implementation treats non-empty whitespace as valid
-        # This tests current behavior - whitespace strings are truthy in Python
+        """A whitespace-only name is refused (package_name_guard, Lucky 13)."""
         packages = [
             {"package_name": "   ", "package_manager": "apt"},
         ]
 
         valid, failed = validate_packages(packages, self.logger)
 
-        # Whitespace-only strings are truthy and pass validation
-        # (This may be undesirable behavior to fix in the implementation)
-        assert len(valid) == 1
-        assert len(failed) == 0
+        assert len(valid) == 0
+        assert len(failed) == 1
 
     def test_validate_packages_none_package_name(self):
         """Test validation with None package name."""

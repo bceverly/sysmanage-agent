@@ -187,6 +187,28 @@ SysManage Agent implements multiple layers of security:
 
 **📖 For complete security documentation, visit [sysmanage.org/docs/security/](https://sysmanage.org/docs/security/)**
 
+### MITRE "Lucky 13" (Unforgivable Vulnerabilities)
+
+We test explicitly for the thirteen weakness classes in Steve Christey's MITRE paper [Unforgivable Vulnerabilities](https://cwe.mitre.org/documents/unforgivable_vulns/unforgivable.pdf) (2007): flaws so well documented and so easy to find that shipping one is unforgivable. The agent runs as root / SYSTEM and acts on the server's commands, so the checks focus on what a privileged process must never do and on refusing hostile values in those commands:
+
+| # | Class (CWE) | What this repository checks |
+|---|---|---|
+| 1 | Buffer overflow (120) | 100 KB strings, null and wrong-type fields in commands are answered with an error, never crash the agent; nested commands are depth-limited |
+| 2 | XSS (79) | The agent produces no HTML at all |
+| 3 | Directory traversal (23) | Package names cannot be `../..`, `/full/path` or `./local.deb`; hostnames are validated |
+| 4 | Remote file inclusion (98) | No `eval`/`exec`/dynamic imports/pickle/unsafe YAML on received data |
+| 5 | SQL injection (89) | No SQL built from strings; package names cannot smuggle options (`-o ...`) or shell metacharacters |
+| 6 | World-writable files (276) | Code, installers and packaging never make a file world-writable; deployed files keep the mode the server asked for |
+| 7 | Direct request (425) | Not applicable: the agent serves no requests (checked in the server) |
+| 8 | `authenticated=1` (472) | Not applicable: the agent accepts no logins (checked in the server) |
+| 9 | Home-grown crypto (327) | No weak or home-made crypto; no `random` where a secret is involved |
+| 10 | Privilege escalation via Help (271) | The privileged agent never launches a browser, help viewer or shell UI |
+| 11 | Symlink following (61) | No predictable `/tmp` names; a symlink planted at a deploy path is replaced, never followed |
+| 12 | Hard-coded / default password (259) | No credential ships in any agent config or in the code |
+| 13 | Integer overflow (190) | `0xffffffff`, `2**63` and negative values in names and file modes are refused |
+
+Exceptions are recorded with their reasons in `tests/lucky13/`. Run the checks with `make test-lucky13` (also part of `make security` and `make test`); CI runs them as their own step on every push.
+
 ## Privileged Execution
 
 The agent requires elevated privileges for certain system management operations, particularly package management. Cross-platform privileged runner scripts are included:
