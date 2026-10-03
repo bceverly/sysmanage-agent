@@ -45,6 +45,7 @@ from typing import Any, Dict, List
 import aiohttp
 
 from src.i18n import _
+from src.sysmanage_agent.core import backoff
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 # Outbound messages sent per poll.  Matches the server's per-poll ceiling so a
@@ -238,16 +239,22 @@ class HttpPollingTransport:
 
         try:
             async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
+                failures = 0
                 while not state.should_retest_websocket(time.monotonic()):
                     try:
                         interval = await self.poll_once(session, endpoint, host_id)
+                        failures = 0
                     except Exception as error:  # pylint: disable=broad-except
+                        # Full jitter, growing with each failure (server Phase
+                        # 22.1): a flat 15 s had every polling agent retry a
+                        # restarting server in step.
+                        interval = backoff.full_jitter(ERROR_POLL_INTERVAL, failures)
+                        failures += 1
                         self.logger.warning(
                             _("Poll failed (%s); retrying in %ds"),
                             error,
-                            ERROR_POLL_INTERVAL,
+                            interval,
                         )
-                        interval = ERROR_POLL_INTERVAL
                     await asyncio.sleep(interval)
         finally:
             self.agent.connected = False

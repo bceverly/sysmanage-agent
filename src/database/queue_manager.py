@@ -17,6 +17,7 @@ from sqlalchemy import and_, asc, func, or_, text
 
 from src.i18n import _
 from src.sysmanage_agent.utils.verbosity_logger import get_logger
+from src.sysmanage_agent.core import backoff
 
 from .base import get_database_manager
 from .models import (
@@ -298,10 +299,12 @@ class MessageQueueManager:
             if retry and message.retry_count < message.max_retries:
                 # Reset to pending for retry with exponential backoff
                 message.status = QueueStatus.PENDING.value
-                # Schedule retry with exponential backoff
-                backoff_seconds = min(
-                    60 * (2 ** (message.retry_count - 1)), 3600
-                )  # Max 1 hour
+                # Exponential with full jitter, at most an hour (server Phase
+                # 22.1): messages that failed together -- a server outage --
+                # must not all retry in the same second.
+                backoff_seconds = round(
+                    backoff.full_jitter(60, message.retry_count - 1, ceiling=3600)
+                )
                 message.scheduled_at = datetime.now(timezone.utc) + timedelta(
                     seconds=backoff_seconds
                 )

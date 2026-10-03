@@ -11,7 +11,6 @@ SysManage server using WebSockets with concurrent send/receive operations.
 import asyncio
 import logging
 import os
-import secrets
 import ssl
 import sys
 import time
@@ -44,7 +43,11 @@ from src.sysmanage_agent.core.agent_utils import (
 )
 from src.sysmanage_agent.core.config import ConfigManager
 from src.sysmanage_agent.communication.http_polling import HttpPollingTransport
-from src.sysmanage_agent.communication.transport_fallback import TransportState
+from src.sysmanage_agent.communication.transport_fallback import (
+    TransportState,
+    retry_after_seconds,
+)
+from src.sysmanage_agent.core import backoff
 from src.sysmanage_agent.core.logging_digest import config_digest
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 from src.sysmanage_agent.diagnostics.diagnostic_collector import DiagnosticCollector
@@ -794,14 +797,13 @@ class SysManageAgent(
             self.logger.info("Auto-reconnect disabled, exiting...")
             return False
 
-        reconnect_interval = min(
-            base_reconnect_interval * (2 ** min(self.connection_failures, 6)),
-            300,
-        )
-        jitter = 0.5 + (secrets.randbelow(1000) / 1000.0)
-        # A 429 from /agent/auth carries how long to wait (Phase 22.2).
-        reconnect_interval = max(
-            reconnect_interval * jitter, self.auth_helper.wait_hint()
+        # Full jitter; a wide first window after the server closed cleanly;
+        # at least what the server asked for (server Phase 22.1 / 22.2).
+        reconnect_interval = backoff.reconnect_delay(
+            base_reconnect_interval,
+            self.connection_failures,
+            clean_close=getattr(self, "_last_close_clean", False),
+            hint=max(self.auth_helper.wait_hint(), getattr(self, "_retry_after", 0.0)),
         )
 
         self.logger.info(
@@ -815,18 +817,14 @@ class SysManageAgent(
     async def _establish_websocket_connection(self):
         """Establish a WebSocket connection and run agent tasks."""
         if not await self._check_server_health():
-            self.logger.warning("Server health check failed, waiting before retry...")
-            await asyncio.sleep(5)
-            return
+            # Through the reconnect backoff: a flat 5 s retry, and recorded as a
+            # WebSocket success, had the fleet probing a down server in step.
+            raise backoff.ServerUnavailable("server health check failed")
 
         if self.needs_registration:
             self.logger.info("Re-registration required, attempting to register...")
             if not await self.registration.register_with_retry():
-                self.logger.error(
-                    "Failed to re-register with server. Will retry on next connection attempt."
-                )
-                await asyncio.sleep(10)
-                return
+                raise backoff.ServerUnavailable("re-registration failed")
             self.needs_registration = False
             self.logger.info("Re-registration successful")
 
@@ -899,7 +897,7 @@ class SysManageAgent(
         await self._start_background_services()
 
         self.logger.info("Registering with SysManage server...")
-        if not await self.registration.register_with_retry():
+        if not await self.registration.register_with_retry(forever=True):
             self.logger.error(_("Failed to register with server. Exiting."))
             return
 
@@ -963,6 +961,8 @@ class SysManageAgent(
         """
         # A rejected token must not be reused on the next attempt.
         self.auth_helper.invalidate_auth_token()
+        self._last_close_clean = backoff.is_clean_close(error)
+        self._retry_after = retry_after_seconds(error)
         if self._transport_state.record_websocket_failure(error, time.monotonic()):
             self.logger.warning(
                 _(

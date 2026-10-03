@@ -26,12 +26,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-# Acceptable jitter band:  the implementation multiplies the base
-# exponential by a uniform [0.5, 1.5).  Tests assert the captured
-# sleep duration falls inside [exp * 0.5, exp * 1.5].
-_JITTER_LO = 0.5
-_JITTER_HI = 1.5
-
 
 @pytest.fixture
 def reconnect_agent(agent):
@@ -53,75 +47,42 @@ def reconnect_agent(agent):
 
 @pytest.mark.integration
 class TestReconnectBackoffMath:
-    """The backoff formula from main.py:732-737:
+    """Full jitter (server Phase 22.1, ``core/backoff.py``): each wait is
+    uniform in [1 s, min(300 s, max(base, 1 s) x 2^failures)].  The old
+    x U(0.5, 1.5) band kept a fleet that failed together in clumps."""
 
-        interval = min(base * 2 ** min(failures, 6), 300) * jitter
-
-    where jitter ∈ [0.5, 1.5).  These tests pin the contract."""
-
-    @pytest.mark.asyncio
-    async def test_first_failure_uses_short_delay(self, reconnect_agent):
-        """1 failure → base * 2 * jitter ≈ 0.01 to 0.03 seconds."""
-        with patch("main.asyncio.sleep", new_callable=AsyncMock) as sleep_mock:
-            proceed = await reconnect_agent._handle_connection_error(
-                base_reconnect_interval=0.01
-            )
-        assert proceed is True
-        assert reconnect_agent.connection_failures == 1
-        slept = sleep_mock.call_args.args[0]
-        # failures=1 → exp = 0.01 * 2 = 0.02; with jitter [0.5, 1.5)
-        # → expected ∈ [0.01, 0.03)
-        assert _JITTER_LO * 0.02 <= slept < _JITTER_HI * 0.02
-
-    @pytest.mark.asyncio
-    async def test_backoff_grows_exponentially(self, reconnect_agent):
-        """Walk the failure counter 1..6 and verify each step is
-        roughly 2x the previous (modulo jitter)."""
+    @staticmethod
+    async def _delays(agent, base, failures, samples=200):
         delays = []
         with patch("main.asyncio.sleep", new_callable=AsyncMock) as sleep_mock:
-            for _ in range(6):
-                await reconnect_agent._handle_connection_error(
-                    base_reconnect_interval=0.01
-                )
+            for _ in range(samples):
+                agent.connection_failures = failures - 1
+                await agent._handle_connection_error(base_reconnect_interval=base)
                 delays.append(sleep_mock.call_args.args[0])
-        assert reconnect_agent.connection_failures == 6
-        # Each step's lower bound (delay * 0.5) must exceed the previous
-        # step's upper bound (delay * 1.5 / 2) -- IF the implementation is
-        # truly exponential.  Express it without jitter assumptions:
-        # successive expected values are 0.02, 0.04, 0.08, 0.16, 0.32, 0.64
-        exp_centers = [0.02, 0.04, 0.08, 0.16, 0.32, 0.64]
-        for actual, center in zip(delays, exp_centers):
-            assert _JITTER_LO * center <= actual < _JITTER_HI * center, (
-                f"step delay {actual:.4f}s not in jitter band around {center:.4f}s "
-                f"-- exponential backoff may have regressed"
-            )
+        return delays
 
     @pytest.mark.asyncio
-    async def test_exponent_caps_at_six(self, reconnect_agent):
-        """failures=10 should yield the same expected delay as
-        failures=6 (the implementation caps the exponent)."""
-        # Drive failures up to 10 directly, then call once more.
-        reconnect_agent.connection_failures = 10
-        with patch("main.asyncio.sleep", new_callable=AsyncMock) as sleep_mock:
-            await reconnect_agent._handle_connection_error(base_reconnect_interval=0.01)
-        slept = sleep_mock.call_args.args[0]
-        # Expected center: 0.01 * 2**6 = 0.64 (the cap).  Note:  the
-        # 300-second outer cap doesn't engage here because base is small.
-        assert _JITTER_LO * 0.64 <= slept < _JITTER_HI * 0.64
+    async def test_first_failure_waits_within_the_first_window(self, reconnect_agent):
+        delays = await self._delays(reconnect_agent, 5.0, 1)
+        assert reconnect_agent.connection_failures == 1
+        assert all(1.0 <= d <= 10.0 for d in delays)  # 5 x 2^1
 
     @pytest.mark.asyncio
-    async def test_outer_cap_at_300_seconds(self, reconnect_agent):
-        """A pathologically large base must be capped at 300 s before
-        jitter, so the post-jitter result is < 300 * 1.5 = 450 s."""
-        reconnect_agent.connection_failures = 6
-        with patch("main.asyncio.sleep", new_callable=AsyncMock) as sleep_mock:
-            await reconnect_agent._handle_connection_error(
-                base_reconnect_interval=10000.0
-            )
-        slept = sleep_mock.call_args.args[0]
-        # Pre-jitter would be 10000 * 64 = 640000; capped at 300.
-        # Post-jitter ∈ [150, 450].
-        assert 150.0 <= slept < 450.0
+    async def test_the_window_grows_exponentially(self, reconnect_agent):
+        early = await self._delays(reconnect_agent, 5.0, 1)
+        later = await self._delays(reconnect_agent, 5.0, 4)
+        assert max(early) <= 10.0 < max(later) <= 80.0
+
+    @pytest.mark.asyncio
+    async def test_a_crowd_spreads_over_the_whole_window(self, reconnect_agent):
+        """Agents that failed in the same second must not return together."""
+        delays = await self._delays(reconnect_agent, 5.0, 4)
+        assert min(delays) < 20.0 and max(delays) > 60.0
+
+    @pytest.mark.asyncio
+    async def test_capped_at_300_seconds(self, reconnect_agent):
+        delays = await self._delays(reconnect_agent, 10000.0, 11, samples=50)
+        assert all(1.0 <= d <= 300.0 for d in delays)
 
 
 @pytest.mark.integration

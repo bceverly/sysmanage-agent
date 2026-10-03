@@ -828,3 +828,28 @@ class TestDataCollectorLoop:
                 await collector.data_collector()
 
         assert collector._collect_and_send_periodic_data.called
+
+    @pytest.mark.asyncio
+    async def test_first_collection_waits_for_a_busy_servers_window(self, mock_agent):
+        """Server 22.2: a held first-report moment delays the post-connect
+        collection too, not only the registration burst."""
+        from src.sysmanage_agent.core import schedule_jitter
+
+        collector = DataCollector(mock_agent)
+        collector._collect_and_send_periodic_data = AsyncMock()
+        schedule_jitter.hold_initial_reports(400)
+        sleeps = []
+
+        async def fake_sleep(seconds):
+            sleeps.append(seconds)
+            if len(sleeps) == 3:
+                raise asyncio.CancelledError()
+
+        with patch("asyncio.sleep", fake_sleep), patch.object(
+            schedule_jitter, "connect_splay", return_value=10.0
+        ):
+            with pytest.raises(asyncio.CancelledError):
+                await collector.data_collector()
+        # the splay, then the rest of the hold, then the 5-minute loop
+        assert sleeps[0] == 10.0 and 395 < sleeps[1] <= 400
+        assert collector._collect_and_send_periodic_data.await_count == 1

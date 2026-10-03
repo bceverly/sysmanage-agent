@@ -26,12 +26,21 @@ ignores fields that change on every collection without carrying information
     sample per 15 minutes anyway.
 
 Always sent: anything the server ASKED for (a command or a refresh broadcast
-runs inside ``forced()``), everything after the agent's identity changes
-(``reset()``), and everything after an agent restart (the memory is in-process
-on purpose: a fresh process tells the server everything once).
+runs inside ``forced()``) and everything after the agent's identity changes
+(``reset()``).
+
+The memory survives an agent RESTART (server Phase 22.2): it is kept in the
+agent's database (``src/database/sent_reports.py``).  It used to be in-process
+on purpose -- a fresh process told the server everything once -- but at fleet
+scale that is every agent's full inventory at once whenever the fleet is
+upgraded or rebooted, the burst the 10,000-agent storm could not drain.  The
+24-hour resend still bounds how stale the server can get, and timestamps are
+wall-clock now, so they mean something after a restart (a clock that went
+backwards makes a report due, never overdue-forever).
 
 A report is remembered only after it was queued (``record``), so a failed
-queue never suppresses the next attempt.
+queue never suppresses the next attempt; the queue itself is in the agent's
+database too, so a queued report survives a restart and is delivered.
 """
 
 import contextlib
@@ -119,10 +128,22 @@ def digest(message: Dict[str, Any]) -> str:
 class SnapshotGate:
     """Remembers, per report type, what was last queued and when."""
 
-    def __init__(self, clock=time.monotonic):
+    def __init__(self, clock=time.time, store=None):
         self._clock = clock
+        self._store = store  # sent_reports (persisted), or None (memory only)
         self._last: Dict[str, Tuple[str, float]] = {}
+        self._loaded = store is None
         self._lock = threading.Lock()
+
+    def _ensure_loaded(self) -> None:
+        if self._loaded:
+            return
+        persisted = self._store.load()
+        with self._lock:
+            if not self._loaded:
+                for message_type, value in persisted.items():
+                    self._last.setdefault(message_type, value)
+                self._loaded = True
 
     def decide(self, message: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """``(send, digest)`` for this report; ``digest`` is what to
@@ -133,12 +154,15 @@ class SnapshotGate:
         fingerprint = digest(message)
         if _forced.get():
             return True, fingerprint
+        self._ensure_loaded()
         with self._lock:
             previous = self._last.get(message_type)
         if previous is None:
             return True, fingerprint
         last_digest, last_at = previous
         age = self._clock() - last_at
+        if age < 0:
+            return True, fingerprint  # the clock went backwards: resend
         if message_type == "host_metrics":
             return age >= SAMPLE_INTERVAL, fingerprint
         resend_after = (
@@ -149,13 +173,25 @@ class SnapshotGate:
     def record(self, message_type: str, fingerprint: Optional[str]) -> None:
         if fingerprint is None:
             return
+        now = self._clock()
         with self._lock:
-            self._last[message_type] = (fingerprint, self._clock())
+            self._last[message_type] = (fingerprint, now)
+        if self._store is not None:
+            self._store.save(message_type, fingerprint, now)
 
     def reset(self) -> None:
         """Forget everything: the next collection sends every report."""
         with self._lock:
             self._last.clear()
+            self._loaded = True  # nothing to load: the memory was just wiped
+        if self._store is not None:
+            self._store.clear()
 
 
-gate = SnapshotGate()
+def _persisted_store():
+    from src.database import sent_reports  # pylint: disable=import-outside-toplevel
+
+    return sent_reports
+
+
+gate = SnapshotGate(store=_persisted_store())

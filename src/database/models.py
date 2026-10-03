@@ -498,3 +498,18 @@ class CollectionRun(Base):
 
     name = Column(String(64), primary_key=True)
     last_run_at = Column(DateTime, nullable=False)
+
+
+class SentReport(Base):
+    """What each snapshot report last sent, and when (server Phase 22.2).
+
+    Persists the send-on-change memory (``communication/send_on_change.py``)
+    so an agent RESTART -- a fleet-wide upgrade, a reboot -- sends only what
+    changed instead of every report again.  See ``src/database/sent_reports.py``.
+    """
+
+    __tablename__ = "sent_report"
+
+    message_type = Column(String(64), primary_key=True)
+    digest = Column(String(64), nullable=True)
+    sent_at = Column(DateTime, nullable=False)

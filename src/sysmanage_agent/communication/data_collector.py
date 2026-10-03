@@ -436,6 +436,10 @@ class DataCollector(DataCollectorSendersMixin):
                 # A moment's random wait, so a fleet reconnecting together
                 # (a server restart) does not collect together (Phase 22.1).
                 await asyncio.sleep(schedule_jitter.connect_splay())
+                # ...and no earlier than a busy server asked (server 22.2).
+                held = schedule_jitter.initial_reports_wait()
+                if held > 0:
+                    await asyncio.sleep(held)
                 self.logger.info("Initial periodic data collection (post-connect)")
                 await self._collect_and_send_periodic_data()
             except Exception as error:  # pylint: disable=broad-exception-caught

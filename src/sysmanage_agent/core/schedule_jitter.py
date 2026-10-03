@@ -15,6 +15,7 @@ waits a random moment instead of firing with everyone else's.
 """
 
 import random
+import time
 
 # Spread of an ordinary interval: +/-20% (heartbeats use less).
 SPREAD = 0.2
@@ -32,3 +33,21 @@ def jittered(seconds: float, spread: float = SPREAD) -> float:
 def connect_splay(limit: float = CONNECT_SPLAY_SECONDS) -> float:
     """How long to wait before the first collection after a connect."""
     return random.uniform(0.0, limit)  # nosec B311 - spreading load, not security
+
+
+# When a busy server asked us to spread our first reports (server 22.2
+# ``initial_report_window_seconds``), the moment we picked inside its window:
+# the registration burst and the first post-connect collection both wait for
+# it.  Monotonic seconds; 0 = no wait.
+_initial_reports_at = 0.0
+
+
+def hold_initial_reports(delay: float) -> None:
+    """Hold the first reports of this connection for ``delay`` seconds."""
+    global _initial_reports_at  # pylint: disable=global-statement
+    _initial_reports_at = time.monotonic() + max(0.0, delay)
+
+
+def initial_reports_wait() -> float:
+    """Seconds left until the first reports may go (0 = now)."""
+    return max(0.0, _initial_reports_at - time.monotonic())

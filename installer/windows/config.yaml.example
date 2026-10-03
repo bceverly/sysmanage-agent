@@ -57,7 +57,7 @@ client:
 
   # Registration retry settings
   registration_retry_interval: 30  # seconds between registration attempts
-  max_registration_retries: 10     # maximum number of retry attempts (-1 for infinite)
+  max_registration_retries: 10     # attempts per re-registration (startup retries until it succeeds)
 
   # Update check settings
   update_check_interval: 3600      # seconds between update checks (default: 1 hour)

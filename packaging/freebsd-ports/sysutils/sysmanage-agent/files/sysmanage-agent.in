@@ -86,7 +86,12 @@ export SYSMANAGE_LOG_DIR="${sysmanage_agent_logdir}"
 # above invites, would have got a service that silently refused to start.  The
 # SERVER port hit this for real on 2026-08-10; fixed in both for the same
 # reason.
-command_args="-c -p ${pidfile} \
+#
+# ``-f``: stdin/stdout/stderr to /dev/null.  Without it the agent stays attached
+# to whoever ran ``service sysmanage_agent start``: over ssh the session never
+# returns.  Found on the server port 2026-10-02 (same daemon flags).  The agent
+# writes its own log to sysmanage_agent_logdir.
+command_args="-f -c -p ${pidfile} \
     %%PYTHON_CMD%% %%PREFIX%%/libexec/sysmanage-agent/main.py"
 
 run_rc_command "$1"

@@ -19,6 +19,7 @@ from src.database.base import get_db_session
 from src.database.host_identity import kept_host_token
 from src.database.models import HostApproval
 from src.i18n import _
+from src.sysmanage_agent.core import backoff
 from src.sysmanage_agent.collection.hardware_collection import HardwareCollector
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
 from src.sysmanage_agent.core.capabilities import build_capability_report
@@ -350,15 +351,23 @@ class ClientRegistration:
             self.logger.error(_("Error during registration: %s"), error)
             return False
 
-    async def register_with_retry(self) -> bool:
+    async def register_with_retry(self, forever: bool = False) -> bool:
         """
-        Register with server using configured retry settings.
+        Register with server, backing off between attempts.
+
+        Each wait is fully jittered and doubles up to five minutes (server
+        Phase 22.1): a flat interval had a fleet that failed together retry
+        together.  ``forever`` (the agent's startup) ignores
+        ``client.max_registration_retries``: giving up meant exiting into the
+        service manager's flat 10 s restart, a fixed-interval retry loop for
+        the whole fleet while the server was down.
 
         Returns:
-            True if registration eventually succeeds, False if max retries exceeded
+            True when registration succeeds; False when the configured attempts
+            are used up (never with ``forever``).
         """
         retry_interval = self.config.get_registration_retry_interval()
-        max_retries = self.config.get_max_registration_retries()
+        max_retries = -1 if forever else self.config.get_max_registration_retries()
 
         attempt = 0
         while max_retries == -1 or attempt < max_retries:
@@ -380,10 +389,11 @@ class ClientRegistration:
                 )
                 return False
 
+            delay = backoff.full_jitter(retry_interval, attempt - 1)
             self.logger.warning(
-                _("Registration failed, retrying in %s seconds..."), retry_interval
+                _("Registration failed, retrying in %s seconds..."), round(delay)
             )
-            await asyncio.sleep(retry_interval)
+            await asyncio.sleep(delay)
 
         return False
 

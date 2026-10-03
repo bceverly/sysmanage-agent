@@ -10,6 +10,7 @@ including authentication tokens, host approval status, and certificate handling.
 """
 
 import asyncio
+import secrets
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
@@ -23,6 +24,7 @@ from src.database.host_identity import kept_host_token
 from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.core import schedule_jitter
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
 
 # ONE definition of "corrupt", shared by the count and the delete below.
@@ -43,6 +45,9 @@ _CORRUPT_HOST_ID = " OR ".join(
         "host_id IS NULL",
     )
 )
+# The longest the server may ask us to wait before the first reports.
+MAX_INITIAL_REPORT_WINDOW = 3600.0
+
 _COUNT_CORRUPT_SQL = "SELECT COUNT(*) FROM host_approval WHERE " + _CORRUPT_HOST_ID
 _DELETE_CORRUPT_SQL = "DELETE FROM host_approval WHERE " + _CORRUPT_HOST_ID
 
@@ -155,7 +160,7 @@ class RegistrationManager:
         )
         return False
 
-    def _start_initial_data_updates(self) -> None:
+    def _start_initial_data_updates(self, window: float = 0.0) -> None:
         """Send the initial inventory in the BACKGROUND.
 
         This runs from the websocket receive loop, which reads no further
@@ -165,13 +170,28 @@ class RegistrationManager:
         as that took -- on x13s (2026-09-30) a wedged ``choco outdated`` kept
         the agent from receiving ANY command for 20+ minutes while its
         heartbeats still went out.  A send already in flight is not doubled.
+
+        ``window``: a busy server asks connecting agents to start at a random
+        moment within this many seconds (Phase 22.2), so a fleet reconnecting
+        at once does not queue its whole inventory in the same minute.
         """
         if self._initial_data_task is not None and not self._initial_data_task.done():
             self.logger.info("Initial inventory send already running; not repeating")
             return
+        delay = _splay(window)
+        # The post-connect collection waits for the same moment.
+        schedule_jitter.hold_initial_reports(delay)
         self._initial_data_task = asyncio.create_task(
-            self.agent.send_initial_data_updates()
+            self._send_initial_data_after(delay)
         )
+
+    async def _send_initial_data_after(self, delay: float) -> None:
+        if delay > 0:
+            self.logger.info(
+                "Server is busy; sending the initial inventory in %.0f seconds", delay
+            )
+            await asyncio.sleep(delay)
+        await self.agent.send_initial_data_updates()
 
     async def handle_registration_success(self, message: Dict[str, Any]) -> None:
         """Handle registration success notification from server."""
@@ -213,7 +233,9 @@ class RegistrationManager:
                 self.logger.info(
                     "Registration confirmed, sending initial inventory data..."
                 )
-                self._start_initial_data_updates()
+                self._start_initial_data_updates(
+                    message.get("initial_report_window_seconds", 0)
+                )
 
             elif host_id or host_token:
                 self.logger.info(
@@ -596,3 +618,14 @@ class RegistrationManager:
         except Exception as error:
             self.logger.warning(_("Error during database cleanup: %s"), error)
             # Don't raise - this is best-effort cleanup
+
+
+def _splay(window) -> float:
+    """A random moment in the server's suggested window (0 = now)."""
+    try:
+        window = min(float(window or 0), MAX_INITIAL_REPORT_WINDOW)
+    except (TypeError, ValueError):
+        return 0.0
+    if window <= 0:
+        return 0.0
+    return secrets.SystemRandom().uniform(0.0, window)

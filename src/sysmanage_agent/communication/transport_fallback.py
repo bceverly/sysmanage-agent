@@ -37,6 +37,11 @@ only on evidence, and re-tested so a fixed proxy is noticed.
 
 from __future__ import annotations
 
+import re
+from typing import Optional
+
+from src.sysmanage_agent.core.backoff import jittered
+
 # Failure signatures that mean "this network will not carry a WebSocket".
 #
 # Matched against the exception TYPE NAME and message rather than by catching
@@ -67,6 +72,48 @@ TRANSIENT_SIGNATURES = (
 )
 
 
+# A 429 or 5xx on the upgrade is the SERVER saying "not now" -- overloaded,
+# restarting, rate-limiting -- not a network that forbids WebSockets.  Counted
+# as structural (it is an ``InvalidStatus``), it pushed agents onto 5-second
+# polling for 15 minutes and turned a short overload into a sustained one
+# (server Phase 22.1).  Transient: back off, honoring Retry-After.
+_STATUS_IN_MESSAGE = re.compile(r"http (\d{3})")
+
+
+def _status_and_headers(error: BaseException):
+    """The HTTP status (and headers) of a rejected upgrade, if any.  websockets
+    15 puts them on ``error.response``; older versions on the error itself."""
+    response = getattr(error, "response", None)
+    status = getattr(response, "status_code", None) or getattr(
+        error, "status_code", None
+    )
+    headers = getattr(response, "headers", None) or getattr(error, "headers", None)
+    if status is None:
+        match = _STATUS_IN_MESSAGE.search(str(error).lower())
+        status = int(match.group(1)) if match else None
+    return status, headers
+
+
+def server_busy_status(error: BaseException) -> Optional[int]:
+    """429 or 5xx when the server refused the upgrade for now, else None."""
+    status, _headers = _status_and_headers(error)
+    if isinstance(status, int) and (status == 429 or 500 <= status <= 599):
+        return status
+    return None
+
+
+def retry_after_seconds(error: BaseException) -> float:
+    """The server's Retry-After on a refused upgrade (seconds), or 0."""
+    if server_busy_status(error) is None:
+        return 0.0
+    _status, headers = _status_and_headers(error)
+    try:
+        value = headers.get("Retry-After") if headers is not None else None
+        return max(0.0, float(value)) if value is not None else 0.0
+    except (TypeError, ValueError, AttributeError):
+        return 0.0
+
+
 def is_structural_websocket_failure(error: BaseException) -> bool:
     """Is this failure a network policy rather than a transient fault?
 
@@ -83,6 +130,8 @@ def is_structural_websocket_failure(error: BaseException) -> bool:
     haystack = f"{name} {message}"
 
     if any(sig in haystack for sig in TRANSIENT_SIGNATURES):
+        return False
+    if server_busy_status(error) is not None:
         return False
     return any(sig in haystack for sig in STRUCTURAL_SIGNATURES)
 
@@ -109,6 +158,7 @@ class TransportState:
         self.using_http_fallback = False
         self._structural_failures = 0
         self._fell_back_at = None
+        self._retest_after = jittered(self.RETEST_AFTER_SECONDS)
 
     def record_websocket_failure(self, error: BaseException, now: float) -> bool:
         """Note a failed WebSocket attempt; return True if we should now poll."""
@@ -137,8 +187,11 @@ class TransportState:
         """Is it time to see whether the network started allowing WebSockets?"""
         if not self.using_http_fallback or self._fell_back_at is None:
             return False
-        return (now - self._fell_back_at) >= self.RETEST_AFTER_SECONDS
+        return (now - self._fell_back_at) >= self._retest_after
 
     def mark_retested(self, now: float) -> None:
-        """Record that a re-test just happened, so the next one waits again."""
+        """Record that a re-test just happened, so the next one waits again
+        -- a different while each time, so agents that fell back together
+        (one proxy change) do not re-test together (server Phase 22.1)."""
         self._fell_back_at = now
+        self._retest_after = jittered(self.RETEST_AFTER_SECONDS)

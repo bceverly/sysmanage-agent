@@ -324,6 +324,7 @@ class TestRegistrationSuccess:
             host_id, "approved", host_token="token-123"
         )
         assert agent.registration_confirmed is True
+        await reg_manager._initial_data_task  # pylint: disable=protected-access
         agent.send_initial_data_updates.assert_called_once()
 
     @pytest.mark.asyncio

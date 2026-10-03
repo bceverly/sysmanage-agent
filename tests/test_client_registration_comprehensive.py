@@ -442,7 +442,24 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
                 assert result is True
                 assert mock_register.call_count == 3
                 assert mock_sleep.call_count == 2
-                mock_sleep.assert_called_with(30)  # retry_interval
+                # Full jitter (server Phase 22.1): first wait in [1, 30],
+                # second in [1, 60] -- the window doubles from retry_interval.
+                first, second = (c.args[0] for c in mock_sleep.call_args_list)
+                assert 1 <= first <= 30 and 1 <= second <= 60
+
+    @pytest.mark.asyncio
+    async def test_register_forever_ignores_the_retry_limit(self):
+        """The agent's startup never gives up: exiting meant the service
+        manager's flat 10 s restart, the fleet retrying in step."""
+        with patch.object(
+            self.client_reg, "register_with_server", new_callable=AsyncMock
+        ) as mock_register:
+            mock_register.side_effect = [False] * 12 + [True]
+            with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                result = await self.client_reg.register_with_retry(forever=True)
+        assert result is True
+        assert mock_register.call_count == 13  # well past max_retries
+        assert all(c.args[0] <= 300 for c in mock_sleep.call_args_list)
 
     @pytest.mark.asyncio
     async def test_register_with_retry_max_retries_exceeded(self):

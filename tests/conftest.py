@@ -493,6 +493,22 @@ def _fresh_send_on_change_gate():
     make another's look unchanged."""
     from src.sysmanage_agent.communication import send_on_change
 
+    # Memory only in tests: the persisted store (server 22.2) is exercised by
+    # its own tests against a real database.
+    store = send_on_change.gate._store  # pylint: disable=protected-access
+    send_on_change.gate._store = None  # pylint: disable=protected-access
     send_on_change.gate.reset()
     yield
     send_on_change.gate.reset()
+    send_on_change.gate._store = store  # pylint: disable=protected-access
+
+
+@pytest.fixture(autouse=True)
+def _no_initial_report_hold():
+    """A held first-report moment (server 22.2) is process-wide; one test's
+    must not make another's collection wait."""
+    from src.sysmanage_agent.core import schedule_jitter
+
+    schedule_jitter._initial_reports_at = 0.0  # pylint: disable=protected-access
+    yield
+    schedule_jitter._initial_reports_at = 0.0  # pylint: disable=protected-access

@@ -43,7 +43,25 @@ export SYSMANAGE_LOG_DIR="${sysmanage_agent_logdir}"
 # Command to execute
 command="/usr/pkg/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"
 command_args=""
-command_interpreter="/bin/sh"
+# The wrapper execs Python, so the running agent is the interpreter, not
+# /bin/sh: rc.subr finds it by this name (status / stop).
+procname="/usr/pkg/bin/python3.12"
+start_cmd="sysmanage_agent_start"
+# NetBSD's rc.subr runs ``command`` in the FOREGROUND and expects it to
+# daemonize itself; the agent does not, so ``service sysmanage_agent start`` never
+# returned and no pidfile was written (status and stop could not find the
+# process).  Same class of defect as FreeBSD's ``daemon`` without ``-f``
+# (2026-10-03).  Start it in the background here, stdin from /dev/null and
+# output to the log, and record its pid: ``exec`` keeps that pid the
+# agent's Python process's own.  Validated on NetBSD 10.1: the old
+# script hung ``service start``; this one returns, and status / restart /
+# stop work.
+sysmanage_agent_start()
+{
+	echo "Starting ${name}."
+	su -m ${sysmanage_agent_user} -c "exec ${command} \
+	    </dev/null >>${sysmanage_agent_logfile} 2>&1 & echo \$! > ${pidfile}"
+}
 
 pidfile="${sysmanage_agent_pidfile}"
 required_files="${sysmanage_agent_config}"
