@@ -132,16 +132,17 @@ def test_the_websocket_is_retested_so_a_fixed_proxy_is_noticed():
     state.record_websocket_failure(error, now=0)
     state.record_websocket_failure(error, now=0)
 
+    # The retest interval is jittered +/-20% (22.1) so a fleet that fell back
+    # together does not retest together: check the window's edges.
+    earliest = TransportState.RETEST_AFTER_SECONDS * 0.8
+    latest = TransportState.RETEST_AFTER_SECONDS * 1.2
     assert state.should_retest_websocket(now=60) is False
-    assert (
-        state.should_retest_websocket(now=TransportState.RETEST_AFTER_SECONDS + 1)
-        is True
-    )
+    assert state.should_retest_websocket(now=earliest - 1) is False
+    assert state.should_retest_websocket(now=latest + 1) is True
 
-    state.mark_retested(now=TransportState.RETEST_AFTER_SECONDS + 1)
+    state.mark_retested(now=latest + 1)
     assert (
-        state.should_retest_websocket(now=TransportState.RETEST_AFTER_SECONDS + 2)
-        is False
+        state.should_retest_websocket(now=latest + 2) is False
     ), "re-testing must reset the clock, not re-fire every cycle"
 
 

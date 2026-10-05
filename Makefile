@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: test-lucky13 release test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local translate translate-dry translate-check
+.PHONY: lint-license-headers lint-license-headers-fix test-lucky13 release test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local translate translate-dry translate-check
 
 # Default target
 help:
@@ -15,6 +15,8 @@ help:
 	@echo "  make test          - Run all unit tests"
 	@echo "  make test-lucky13  - MITRE Lucky 13 unforgivable-vulnerability checks (also in make security)"
 	@echo "  make lint          - Run Python linting"
+	@echo "  make lint-license-headers - Copyright + license header on every source file"
+	@echo "  make lint-license-headers-fix - Add missing headers / bump a stale year"
 	@echo "  make format-python - Format Python code"
 	@echo "  make setup         - Install development dependencies"
 	@echo "  make clean         - Clean test artifacts and cache"
@@ -662,6 +664,16 @@ release:
 
 # File-length gate: no source file may exceed 1000 lines (scripts/ exempt).
 # Uniform across all SysManage repos; complements pylint max-module-lines.
+# License-header gate: every source file carries our copyright notice and
+# THIS repository's license (AGPL here; proprietary in Pro+, never crossed).
+# The fix target adds missing headers and bumps a stale end year; a header
+# naming the wrong license is reported for a person to correct.
+lint-license-headers:
+	@$(PYTHON) scripts/check_license_headers.py
+
+lint-license-headers-fix:
+	@$(PYTHON) scripts/check_license_headers.py --fix
+
 lint-file-length:
 	@echo "Checking file lengths (max 1000 lines; scripts/ + generated i18n exempt)..."
 ifeq ($(OS),Windows_NT)
@@ -692,7 +704,7 @@ endif
 lint-freebsd-port:
 	@$(PYTHON) scripts/check_freebsd_port.py
 
-lint: lint-file-length format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-check-english i18n-strict i18n-markup translate-check lint-version lint-freebsd-port
+lint: lint-file-length lint-license-headers format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-check-english i18n-strict i18n-markup translate-check lint-version lint-freebsd-port
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
