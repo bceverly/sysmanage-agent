@@ -17,6 +17,7 @@ from sqlalchemy import text
 
 from src.database.base import get_db_session
 from src.database.host_identity import kept_host_token
+from src.database import registration_nonce
 from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.core import backoff
@@ -43,6 +44,25 @@ try:
 except ImportError:
     AIOHTTP_AVAILABLE = False
     print(_("⚠️  WARNING: aiohttp not available, registration will be skipped"))
+
+
+# Registration fields that are secrets: logged as present, never as values.
+# Every field used to be logged verbatim -- the registration key and the
+# enrollment token included, despite the comments promising otherwise.
+SECRET_REGISTRATION_FIELDS = (
+    "registration_key",
+    "enrollment_token",
+    "auto_approve_token",
+    "registration_nonce",
+)
+
+
+def _loggable(registration: Dict[str, Any]) -> Dict[str, Any]:
+    """``registration`` with the secret fields' values replaced."""
+    return {
+        key: ("<redacted>" if key in SECRET_REGISTRATION_FIELDS and value else value)
+        for key, value in registration.items()
+    }
 
 
 class ClientRegistration:
@@ -182,6 +202,10 @@ class ClientRegistration:
             # which leak information about the secret.
             self.logger.info("Including registration_key in registration data")
 
+        # Server Phase 22: the same random value on every attempt, so a retry
+        # whose first reply was lost still gets this host's credential.
+        basic_info["registration_nonce"] = registration_nonce.get_or_create()
+
         # Phase 13.1: tenant enrollment token.  When supplied via config
         # (security.enrollment_token), a multi-tenant server validates +
         # consumes it, creates this host's record in the token's tenant
@@ -269,9 +293,12 @@ class ClientRegistration:
 
         return system_info
 
-    async def register_with_server(self) -> bool:
+    async def register_with_server(self, send_nonce: bool = True) -> bool:
         """
         Register the client with the SysManage server.
+
+        ``send_nonce``: False on the one retry made when a server older than
+        idempotent registration rejects the field (422).
 
         Returns:
             True if registration successful, False otherwise
@@ -286,13 +313,14 @@ class ClientRegistration:
 
         # Use minimal registration data
         basic_info = self.get_basic_registration_info()
+        if not send_nonce:
+            basic_info.pop("registration_nonce", None)
 
         self.logger.info("Attempting to register with server at %s", registration_url)
         self.logger.info("=== Minimal Registration Data Being Sent ===")
-        for key, value in basic_info.items():
+        for key, value in _loggable(basic_info).items():
             self.logger.info("  %s: %s", key, value)
         self.logger.info("=== End Registration Data ===")
-        self.logger.debug("Registration data: %s", basic_info)
 
         try:
             # SECURITY: this block used to disable certificate verification
@@ -338,6 +366,18 @@ class ClientRegistration:
                     self.registered = True
                     return True
                 error_text = await response.text()
+                if (
+                    response.status == 422
+                    and send_nonce
+                    and "registration_nonce" in error_text
+                ):
+                    # A server older than idempotent registration forbids the
+                    # unknown field: register without it, as before.
+                    self.logger.info(
+                        "Server does not accept registration_nonce; "
+                        "registering without it"
+                    )
+                    return await self.register_with_server(send_nonce=False)
                 self.logger.error(
                     _("Registration failed with status %s: %s"),
                     response.status,

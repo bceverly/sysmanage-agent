@@ -513,3 +513,19 @@ class SentReport(Base):
     message_type = Column(String(64), primary_key=True)
     digest = Column(String(64), nullable=True)
     sent_at = Column(DateTime, nullable=False)
+
+
+class RegistrationNonce(Base):
+    """The random value this agent registers with (server Phase 22).
+
+    Sent with every registration attempt.  When the reply to the attempt that
+    created the host is lost, the server recognizes the retry by this value
+    and sends the host's id and token again; without it the agent was refused
+    on every connect.  One row.  See ``src/database/registration_nonce.py``.
+    """
+
+    __tablename__ = "registration_nonce"
+
+    id = Column(Integer, primary_key=True)
+    nonce = Column(String(128), nullable=False)
+    created_at = Column(DateTime, nullable=False)

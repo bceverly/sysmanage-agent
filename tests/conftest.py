@@ -512,3 +512,14 @@ def _no_initial_report_hold():
     schedule_jitter._initial_reports_at = 0.0  # pylint: disable=protected-access
     yield
     schedule_jitter._initial_reports_at = 0.0  # pylint: disable=protected-access
+
+
+@pytest.fixture(autouse=True)
+def _no_real_registration_nonce(request):
+    """The registration nonce (server Phase 22) lives in the agent's database;
+    tests never touch a real one.  Its own tests use a temp database."""
+    if request.node.get_closest_marker("real_registration_nonce"):
+        yield
+        return
+    with patch("src.database.registration_nonce.get_or_create", return_value="n" * 43):
+        yield

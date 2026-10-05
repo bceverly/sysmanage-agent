@@ -86,6 +86,7 @@ logging:
                 "message_type",
                 "message_id",
                 "timestamp",
+                "registration_nonce",  # server Phase 22: idempotent registration
             }
             assert set(basic_info.keys()) == expected_fields
 
@@ -400,6 +401,7 @@ logging:
                 "message_type",
                 "message_id",
                 "timestamp",
+                "registration_nonce",  # server Phase 22: idempotent registration
             }
             assert set(sent_data.keys()) == expected_fields
             assert sent_data["message_type"] == "registration_request"
