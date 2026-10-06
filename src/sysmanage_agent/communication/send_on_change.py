@@ -63,6 +63,18 @@ SNAPSHOT_TYPES = frozenset({
     "process_status_update", "host_metrics",
 })  # fmt: skip
 
+# A newer report of these types replaces a still-queued older one (22.1):
+# each is the whole current state, so after an outage only the newest is
+# worth sending.  Not host_metrics -- every sample is a point on a chart --
+# and never a paginated type (a batch is many messages of one type).
+SUPERSEDING_TYPES = (SNAPSHOT_TYPES - {"host_metrics"}) | {"heartbeat"}
+
+
+def supersedes(message_type: str) -> bool:
+    """Does a new ``message_type`` message replace a pending older one?"""
+    return message_type in SUPERSEDING_TYPES
+
+
 # Fields that change on every collection without carrying information.
 VOLATILE = frozenset({
     "timestamp", "collection_timestamp", "collected_at", "detection_timestamp",

@@ -75,6 +75,7 @@ class MessageQueueManager:
         max_retries: int = 3,
         correlation_id: str = None,
         reply_to: str = None,
+        supersede: bool = False,
     ) -> str:
         """
         Add a message to the queue.
@@ -89,6 +90,10 @@ class MessageQueueManager:
             max_retries: Maximum retry attempts
             correlation_id: Optional correlation ID for request/response tracking
             reply_to: Optional message ID this is replying to
+            supersede: Drop still-pending messages of the same type and
+                direction first, in the same transaction (server Phase 22.1):
+                for full-snapshot reports only the newest matters, and an
+                agent offline for hours used to send every one it queued.
 
         Returns:
             str: Message ID of queued message
@@ -106,6 +111,20 @@ class MessageQueueManager:
         serialized_data = json.dumps(message_data, default=str)
 
         with self.get_session() as session:
+            if supersede:
+                dropped = (
+                    session.query(MessageQueue)
+                    .filter(
+                        MessageQueue.direction == direction,
+                        MessageQueue.message_type == message_type,
+                        MessageQueue.status == QueueStatus.PENDING.value,
+                    )
+                    .delete(synchronize_session=False)
+                )
+                if dropped:
+                    logger.debug(
+                        "Superseded %d pending %s message(s)", dropped, message_type
+                    )
             queue_item = MessageQueue(
                 message_id=message_id,
                 direction=direction,

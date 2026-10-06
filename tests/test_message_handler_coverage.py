@@ -55,6 +55,7 @@ class TestMessageHandler(
             direction=QueueDirection.OUTBOUND,
             priority=Priority.HIGH,
             correlation_id=None,
+            supersede=True,  # a newer heartbeat replaces a queued one (22.1)
         )
 
     @pytest.mark.asyncio
@@ -74,6 +75,7 @@ class TestMessageHandler(
             direction=QueueDirection.OUTBOUND,
             priority=Priority.HIGH,
             correlation_id="corr-123",
+            supersede=False,
         )
 
     @pytest.mark.asyncio
@@ -91,6 +93,7 @@ class TestMessageHandler(
             direction=QueueDirection.OUTBOUND,
             priority=Priority.HIGH,
             correlation_id=None,
+            supersede=False,
         )
 
     @pytest.mark.asyncio
@@ -114,6 +117,7 @@ class TestMessageHandler(
             direction=QueueDirection.OUTBOUND,
             priority=Priority.URGENT,
             correlation_id=None,
+            supersede=False,
         )
 
     @pytest.mark.asyncio
@@ -131,6 +135,7 @@ class TestMessageHandler(
             direction=QueueDirection.OUTBOUND,
             priority=Priority.URGENT,
             correlation_id=None,
+            supersede=False,
         )
 
     @pytest.mark.asyncio
@@ -148,6 +153,7 @@ class TestMessageHandler(
             direction=QueueDirection.OUTBOUND,
             priority=Priority.NORMAL,  # Default priority
             correlation_id=None,
+            supersede=False,
         )
 
     @pytest.mark.asyncio
@@ -165,6 +171,7 @@ class TestMessageHandler(
             direction=QueueDirection.OUTBOUND,
             priority=Priority.NORMAL,
             correlation_id=None,
+            supersede=False,
         )
 
     @patch("asyncio.create_task")

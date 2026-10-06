@@ -337,6 +337,28 @@ def _ops(collector=None):
 
 
 class TestOperations:
+    @pytest.mark.asyncio
+    async def test_report_waits_are_jittered(self, home):
+        """Server Phase 22.1: the loop restarts with every connection, so a
+        fixed wait kept every observer reporting in the same second after a
+        server restart."""
+        import asyncio  # pylint: disable=import-outside-toplevel
+
+        operations = _ops()
+        operations.interval = 300
+        waits = []
+
+        async def fake_sleep(seconds):
+            waits.append(seconds)
+            if len(waits) >= 30:
+                raise asyncio.CancelledError()
+
+        with patch.object(ops.asyncio, "sleep", fake_sleep):
+            with pytest.raises(asyncio.CancelledError):
+                await operations.run_report_loop()
+        assert all(240 <= w <= 360 for w in waits)
+        assert len({round(w, 3) for w in waits}) > 20
+
     def test_off_until_the_server_says_otherwise(self, home):
         operations = _ops()
         operations.load_persisted()

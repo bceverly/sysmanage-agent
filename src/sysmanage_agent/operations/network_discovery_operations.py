@@ -36,6 +36,7 @@ from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.collection import network_sweep
+from src.sysmanage_agent.core import schedule_jitter
 from src.sysmanage_agent.collection.network_discovery_collection import (
     NetworkDiscoveryCollector,
     local_interfaces,
@@ -149,9 +150,12 @@ class NetworkDiscoveryOperations:
         Runs per connection (the agent recreates its tasks on reconnect); the
         collector itself keeps listening across reconnects, so a bounced
         WebSocket loses no sightings -- they arrive with the next report.
+        Each wait is jittered (server Phase 22.1): the loop restarts with
+        every connection, so after a server restart every observer reported
+        in the same second from then on.
         """
         while True:
-            await asyncio.sleep(self.interval)
+            await asyncio.sleep(schedule_jitter.jittered(self.interval))
             if not (self.enabled and self.collector.running):
                 continue
             try:

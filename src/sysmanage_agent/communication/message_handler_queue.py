@@ -87,6 +87,7 @@ class MessageHandlerQueueMixin:
             direction=QueueDirection.OUTBOUND,
             priority=priority,
             correlation_id=correlation_id,
+            supersede=send_on_change.supersedes(message_type),
         )
         # Remembered only once queued, so a failed queue never suppresses
         # the next attempt.
