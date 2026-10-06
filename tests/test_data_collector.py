@@ -850,6 +850,8 @@ class TestDataCollectorLoop:
         ):
             with pytest.raises(asyncio.CancelledError):
                 await collector.data_collector()
-        # the splay, then the rest of the hold, then the 5-minute loop
-        assert sleeps[0] == 10.0 and 395 < sleeps[1] <= 400
+        # the splay, then the rest of the hold, then the 5-minute loop.  On
+        # Windows the monotonic clock may not tick between hold and wait, and
+        # (m + 400) - m rounds to 400.00000000000006: allow float slack.
+        assert sleeps[0] == 10.0 and 395 < sleeps[1] <= 400 + 1e-6
         assert collector._collect_and_send_periodic_data.await_count == 1

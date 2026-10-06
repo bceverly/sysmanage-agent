@@ -104,7 +104,9 @@ def test_the_hold_counts_down_and_resets():
 
     assert sj.initial_reports_wait() == 0.0
     sj.hold_initial_reports(30)
-    assert 29 < sj.initial_reports_wait() <= 30
+    # + 1e-6: Windows' coarse monotonic clock can leave (m + 30) - m a float
+    # rounding above 30.
+    assert 29 < sj.initial_reports_wait() <= 30 + 1e-6
     sj.hold_initial_reports(0)  # a quiet server on the next connect
     assert sj.initial_reports_wait() == 0.0
 
@@ -122,4 +124,4 @@ async def test_registration_holds_the_post_connect_collection_too():
     ):
         await manager.handle_registration_success(_approved())
         await manager._initial_data_task  # pylint: disable=protected-access
-    assert 499 < sj.initial_reports_wait() <= 500
+    assert 499 < sj.initial_reports_wait() <= 500 + 1e-6  # float slack, as above
