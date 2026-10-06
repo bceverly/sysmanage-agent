@@ -10,14 +10,19 @@ This module handles the collection of available packages from Windows package ma
 
 import json
 import logging
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import defusedxml.ElementTree as DET  # secure parser for fromstring()
 
+from src.database.models import AvailablePackage
 from src.i18n import _
 from src.sysmanage_agent.collection.package_collector_base import BasePackageCollector
+from src.sysmanage_agent.core.schedule_jitter import jittered
 
 if TYPE_CHECKING:
     # Type-only import -- only mypy / pyright evaluates this block;
@@ -30,6 +35,74 @@ if TYPE_CHECKING:
     import xml.etree.ElementTree as ET  # nosec B405  # noqa: N811  # nosemgrep: python.lang.security.use-defused-xml.use-defused-xml
 
 logger = logging.getLogger(__name__)
+
+# Phase 22.1: every Windows agent pages through the PUBLIC winget and
+# Chocolatey catalogs -- about 360 + 100 requests (winget answers 12 packages a
+# page whatever the limit asks for).  Behind one NAT a site's agents are one
+# client to those services, so the fetch is paced, honors a rate limit, and a
+# catalog fetched within PUBLIC_CATALOG_MAX_AGE is reused (the server asks
+# for the catalog again on its own schedule; the catalog does not change by
+# the hour).  A fetch that does not finish is a failure: the previous catalog
+# is kept, never replaced by part of one.
+PUBLIC_CATALOG_MAX_AGE = timedelta(hours=24)
+PAGE_DELAY_SECONDS = 0.5  # pause between pages, +/-40%
+PAGE_DELAY_SPREAD = 0.4
+RATE_LIMIT_STATUSES = (429, 503)
+MAX_ATTEMPTS = 4  # per page, rate-limit waits included
+MAX_RETRY_WAIT_SECONDS = 300
+MAX_PAGES = 2000  # a runaway pager (no Total, never an empty page) stops here
+
+
+class CatalogIncomplete(Exception):
+    """A public catalog could not be fetched in full."""
+
+
+def _retry_after_seconds(error: urllib.error.HTTPError, attempt: int) -> float:
+    """How long to wait after a rate-limit answer: the server's Retry-After
+    (seconds) when it gives one, else a jittered backoff; never more than
+    MAX_RETRY_WAIT_SECONDS."""
+    header = error.headers.get("Retry-After") if error.headers else None
+    try:
+        wait = float(header) if header is not None else None
+    except ValueError:
+        wait = None  # an HTTP date: back off instead
+    if wait is None:
+        wait = jittered(15 * (2**attempt), 0.25)
+    return max(1.0, min(wait, MAX_RETRY_WAIT_SECONDS))
+
+
+def _fetch_public(url: str) -> bytes:
+    """GET one page of a public catalog: HTTPS only, retried after a rate
+    limit (429/503) or a dropped connection; raises CatalogIncomplete when
+    the page cannot be had."""
+    validated_url = _validate_https_url(url)
+    for attempt in range(MAX_ATTEMPTS):
+        req = urllib.request.Request(validated_url)  # nosec B310
+        req.add_header("User-Agent", "SysManage-Agent/1.0")
+        try:
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
+                return response.read()
+        except urllib.error.HTTPError as error:
+            error.close()  # it holds the response; release it before waiting
+            if error.code not in RATE_LIMIT_STATUSES or attempt == MAX_ATTEMPTS - 1:
+                raise CatalogIncomplete(f"HTTP {error.code} for {url}") from error
+            wait = _retry_after_seconds(error, attempt)
+            logger.warning(
+                "Catalog server answered HTTP %d; waiting %.0f s before retrying",
+                error.code,
+                wait,
+            )
+            time.sleep(wait)
+        except (urllib.error.URLError, OSError) as error:
+            if attempt == MAX_ATTEMPTS - 1:
+                raise CatalogIncomplete(f"{error} for {url}") from error
+            time.sleep(5 * (attempt + 1))
+    raise CatalogIncomplete(f"no answer for {url}")  # pragma: no cover
+
+
+def _pause_between_pages() -> None:
+    time.sleep(jittered(PAGE_DELAY_SECONDS, PAGE_DELAY_SPREAD))
 
 
 def _validate_https_url(url: str) -> str:
@@ -71,86 +144,87 @@ class WindowsPackageCollector(BasePackageCollector):
 
         return total_collected
 
+    def _catalog_age(self, manager: str) -> Optional[timedelta]:
+        """How old the stored catalog for ``manager`` is; None if there is
+        none (or it cannot be read -- then it is fetched)."""
+        try:
+            with self.db_manager.get_session() as session:
+                newest = (
+                    session.query(AvailablePackage.collection_date)
+                    .filter(AvailablePackage.package_manager == manager)
+                    .order_by(AvailablePackage.collection_date.desc())
+                    .first()
+                )
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            logger.warning("Could not read the stored %s catalog: %s", manager, error)
+            return None
+        if not newest or newest[0] is None:
+            return None
+        collected = newest[0]
+        if collected.tzinfo is None:
+            collected = collected.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) - collected
+
+    def _collect_public_catalog(
+        self, manager: str, fetch, error_message: str, empty_message: str
+    ) -> int:
+        """Fetch and store one public catalog -- unless a fresh one is
+        stored, or the fetch does not finish (then the stored one is kept).
+        ``error_message`` (one ``%s``) and ``empty_message`` are translated."""
+        age = self._catalog_age(manager)
+        if age is not None and age < PUBLIC_CATALOG_MAX_AGE:
+            kept = len(self.get_packages_for_manager(manager))
+            logger.info(
+                "%s catalog fetched %.1f hours ago; reusing its %d packages",
+                manager,
+                age.total_seconds() / 3600,
+                kept,
+            )
+            return kept
+        try:
+            packages = fetch()
+        except CatalogIncomplete as error:
+            logger.warning(error_message, error)
+            logger.info("Keeping the previous %s catalog", manager)
+            return 0
+        if not packages:
+            logger.warning(empty_message)
+            return 0
+        logger.info("Collected %d packages from the %s catalog", len(packages), manager)
+        return self._store_packages(manager, packages)
+
     def _collect_winget_packages(self) -> int:
         """Collect packages from Windows Package Manager (winget) via REST API."""
-        try:
-            logger.info("Fetching winget catalog via REST API")
-
-            api_url = "https://api.winget.run/v2/packages"
-            packages = self._collect_winget_pages(api_url)
-
-            if packages:
-                logger.info(
-                    "Successfully collected %d packages from winget REST API",
-                    len(packages),
-                )
-                return self._store_packages("winget", packages)
-
-            logger.warning(_("No packages collected from winget REST API"))
-            return 0
-
-        except Exception as error:
-            logger.exception(
-                _("Error collecting winget packages via REST API: %s"), error
-            )
-            return 0
+        return self._collect_public_catalog(
+            "winget",
+            lambda: self._collect_winget_pages("https://api.winget.run/v2/packages"),
+            _("Error collecting winget packages via REST API: %s"),
+            _("No packages collected from winget REST API"),
+        )
 
     def _collect_winget_pages(self, api_url: str) -> List[Dict[str, str]]:
-        """Collect all pages of winget packages from the REST API.
-
-        Iterates through paginated API responses until all packages are fetched
-        or an error occurs.
-        """
-        packages = []
-        page = 1
-
-        while True:
-            try:
-                url = f"{api_url}?page={page}&limit=100"
-                data = self._collect_winget_api_page(url)
-
-                if not data or "Packages" not in data:
-                    break
-
-                page_packages = data.get("Packages", [])
-                if not page_packages:
-                    break
-
-                packages.extend(self._parse_winget_api_packages(page_packages))
-
-                # Check if there are more pages
-                total = data.get("Total", 0)
-                if 0 < total <= len(packages):
-                    break
-
-                page += 1
-
-            except Exception as error:
-                logger.exception(
-                    _(
-                        "Error fetching winget page %d (collected %d packages so far): %s"
-                    ),
-                    page,
-                    len(packages),
-                    str(error),
-                )
-                break
-
-        return packages
+        """Every page of the winget catalog, paced; raises CatalogIncomplete
+        if any page cannot be fetched or read."""
+        packages: List[Dict[str, str]] = []
+        for page in range(1, MAX_PAGES + 1):
+            if page > 1:
+                _pause_between_pages()
+            data = self._collect_winget_api_page(f"{api_url}?page={page}&limit=100")
+            page_packages = data.get("Packages") if isinstance(data, dict) else None
+            if not page_packages:
+                return packages
+            packages.extend(self._parse_winget_api_packages(page_packages))
+            total = data.get("Total", 0)
+            if 0 < total <= len(packages):
+                return packages
+        raise CatalogIncomplete(f"winget catalog longer than {MAX_PAGES} pages")
 
     def _collect_winget_api_page(self, url: str) -> dict:
-        """Fetch a single page of winget packages from the REST API.
-
-        Validates the URL scheme, makes the HTTP request, and returns the
-        parsed JSON response.
-        """
-        validated_url = _validate_https_url(url)
-        req = urllib.request.Request(validated_url)  # nosec B310
-        req.add_header("User-Agent", "SysManage-Agent/1.0")
-
-        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-        with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
-            return json.loads(response.read().decode("utf-8"))
+        """One page of the winget REST API, parsed."""
+        try:
+            return json.loads(_fetch_public(url).decode("utf-8"))
+        except ValueError as error:
+            raise CatalogIncomplete(f"unreadable winget page: {error}") from error
 
     def _parse_winget_api_packages(
         self, page_packages: List[dict]
@@ -178,72 +252,41 @@ class WindowsPackageCollector(BasePackageCollector):
         return packages
 
     def _collect_chocolatey_packages(self) -> int:
-        """Collect packages from Chocolatey community repository API."""
-        try:
-            logger.info("Fetching Chocolatey catalog via community repository API")
-
-            api_url = "https://community.chocolatey.org/api/v2/Packages()"
-            packages = self._collect_chocolatey_pages(api_url)
-
-            if packages:
-                logger.info(
-                    "Successfully collected %d packages from Chocolatey community repository",
-                    len(packages),
-                )
-                return self._store_packages("chocolatey", packages)
-
-            logger.warning(
-                _("No packages collected from Chocolatey community repository")
-            )
-            return 0
-
-        except Exception as error:
-            logger.exception(
-                _("Error collecting Chocolatey packages via API: %s"), error
-            )
-            return 0
+        """Collect packages from the Chocolatey community repository API."""
+        return self._collect_public_catalog(
+            "chocolatey",
+            lambda: self._collect_chocolatey_pages(
+                "https://community.chocolatey.org/api/v2/Packages()"
+            ),
+            _("Error collecting Chocolatey packages via API: %s"),
+            _("No packages collected from Chocolatey community repository"),
+        )
 
     def _collect_chocolatey_pages(self, api_url: str) -> List[Dict[str, str]]:
-        """Collect all pages of Chocolatey packages from the OData API.
-
-        Iterates through paginated OData responses until all packages are
-        fetched or an error occurs.
-        """
-        packages = []
-        skip = 0
+        """Every page of the Chocolatey OData feed, paced; raises
+        CatalogIncomplete if any page cannot be fetched or read."""
+        packages: List[Dict[str, str]] = []
         top = 100
-
-        while True:
+        for page in range(MAX_PAGES):
+            if page:
+                _pause_between_pages()
+            url = f"{api_url}?$skip={len(packages)}&$top={top}&$orderby=Id"
             try:
-                url = f"{api_url}?$skip={skip}&$top={top}&$orderby=Id"
-                xml_data = self._collect_chocolatey_api_page(url)
-
-                entries = self._parse_chocolatey_xml_entries(xml_data)
-                if not entries:
-                    break
-
-                packages.extend(entries)
-                skip += len(entries)
-
-            except Exception as error:
-                logger.warning(_("Error fetching page at skip %d: %s"), skip, error)
-                break
-
-        return packages
+                entries = self._parse_chocolatey_xml_entries(
+                    self._collect_chocolatey_api_page(url)
+                )
+            except DET.ParseError as error:
+                raise CatalogIncomplete(
+                    f"unreadable Chocolatey page: {error}"
+                ) from error
+            if not entries:
+                return packages
+            packages.extend(entries)
+        raise CatalogIncomplete(f"Chocolatey catalog longer than {MAX_PAGES} pages")
 
     def _collect_chocolatey_api_page(self, url: str) -> str:
-        """Fetch a single page of Chocolatey packages from the OData API.
-
-        Validates the URL scheme, makes the HTTP request, and returns the
-        raw XML response as a string.
-        """
-        validated_url = _validate_https_url(url)
-        req = urllib.request.Request(validated_url)  # nosec B310
-        req.add_header("User-Agent", "SysManage-Agent/1.0")
-
-        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-        with urllib.request.urlopen(req, timeout=30) as response:  # nosec B310
-            return response.read().decode("utf-8")
+        """One page of the Chocolatey OData API, as XML text."""
+        return _fetch_public(url).decode("utf-8")
 
     def _parse_chocolatey_xml_entries(self, xml_data: str) -> List[Dict[str, str]]:
         """Parse Chocolatey OData XML response into a list of package dicts.

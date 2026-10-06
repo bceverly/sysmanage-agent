@@ -313,6 +313,10 @@ org.gimp.GIMP	GNU Image Manipulation Program	2.10.34	stable	gimp
         with patch(
             "src.sysmanage_agent.collection.package_collector_base.get_database_manager",
             return_value=mock_db_manager[0],
+        ), patch(
+            "src.sysmanage_agent.collection.package_collector_windows._pause_between_pages"
+        ), patch.object(
+            WindowsPackageCollector, "_catalog_age", return_value=None
         ):
             windows_collector = WindowsPackageCollector()
 
@@ -385,6 +389,10 @@ org.gimp.GIMP	GNU Image Manipulation Program	2.10.34	stable	gimp
         with patch(
             "src.sysmanage_agent.collection.package_collector_base.get_database_manager",
             return_value=mock_db_manager[0],
+        ), patch(
+            "src.sysmanage_agent.collection.package_collector_windows._pause_between_pages"
+        ), patch.object(
+            WindowsPackageCollector, "_catalog_age", return_value=None
         ):
             windows_collector = WindowsPackageCollector()
 
