@@ -186,6 +186,9 @@ def test_outbound_retries_are_jittered(tmp_path):
     before = datetime.now(timezone.utc).replace(tzinfo=None)
     for message_id in ids:
         assert manager.mark_failed(message_id, "server down")
+    # Marking 40 rows takes seconds on a slow Windows runner, and each row's
+    # delay is counted from its OWN mark_failed, so allow for the loop.
+    elapsed = (datetime.now(timezone.utc).replace(tzinfo=None) - before).total_seconds()
     from src.database.models import (
         MessageQueue,
     )  # pylint: disable=import-outside-toplevel
@@ -196,5 +199,5 @@ def test_outbound_retries_are_jittered(tmp_path):
             for row in session.query(MessageQueue).all()
         ]
     manager.db_manager.close()
-    assert all(0 <= w <= 61 for w in waits)  # first retry: within a minute
+    assert all(0 <= w <= 61 + elapsed for w in waits)  # first retry: within a minute
     assert len({round(w) for w in waits}) > 20  # spread, not all at 60 s
