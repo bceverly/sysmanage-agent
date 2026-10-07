@@ -20,8 +20,15 @@
     <!-- Ensure only one version is installed at a time -->
     <!-- Use afterInstallValidate to fully uninstall old version before installing new one -->
     <!-- This prevents file locking issues with running service -->
+    <!-- AllowSameVersionUpgrades: Windows Installer compares only the first
+         THREE version fields, and releases often differ only in the fourth
+         (3.9.0.26 -> 3.9.0.27).  Without this, MajorUpgrade treats such a
+         release as "the same version", does not remove the old one, and the
+         two install side by side: found 2026-10-07 with the server repo's
+         canary MSI on a real Windows ARM64 machine (same element here). -->
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
-                  Schedule="afterInstallValidate" />
+                  Schedule="afterInstallValidate"
+                  AllowSameVersionUpgrades="yes" />
 
     <!--
       Force ARP DisplayVersion to the full 4-segment string.

@@ -50,8 +50,10 @@ GH_TAGNAME=	v${DISTVERSION}
 # both services one account would mean a web-application compromise yields
 # root, so the two ports must not share a user.
 #
-# 255 was free in ports/UIDs and ports/GIDs alongside the server's 253 as of
-# 2026-08-10; portmgr may reassign either, which is routine.
+# Use 403 in ports/UIDs and ports/GIDs: the 255 chosen on 2026-08-10 is
+# upstream's _i2pd (checked against cgit ports/UIDs on 2026-10-07).  402
+# (server), 403 (agent) and 404 (canary) were free that day; portmgr may
+# reassign them, which is routine.  Re-check before submitting.
 USERS=		sysmanage-agent
 GROUPS=		sysmanage-agent
 
