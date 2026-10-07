@@ -94,7 +94,7 @@ def _fetch_public(url: str) -> bytes:
                 wait,
             )
             time.sleep(wait)
-        except (urllib.error.URLError, OSError) as error:
+        except OSError as error:  # URLError is an OSError
             if attempt == MAX_ATTEMPTS - 1:
                 raise CatalogIncomplete(f"{error} for {url}") from error
             time.sleep(5 * (attempt + 1))

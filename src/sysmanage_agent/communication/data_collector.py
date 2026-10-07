@@ -145,8 +145,14 @@ class DataCollector(DataCollectorSendersMixin):
 
     async def _send_initial_update_check(self):
         """Send initial update check and collect certificates and roles."""
-        self.logger.info("Sending initial update check...")
+        await self._initial_update_check()
+        # Allow time for update check to complete before collecting certificates
+        await asyncio.sleep(2)
+        await self._initial_certificates()
+        await self._initial_roles()
 
+    async def _initial_update_check(self):
+        self.logger.info("Sending initial update check...")
         try:
             # A package-manager refresh is expensive: on a reconnect run it only
             # if it is due (or the server asked), not because we connected
@@ -170,11 +176,8 @@ class DataCollector(DataCollectorSendersMixin):
         except Exception as error:
             self.logger.error(_("Failed to perform initial update check: %s"), error)
 
-        # Allow time for update check to complete before collecting certificates
-        await asyncio.sleep(2)
-
+    async def _initial_certificates(self):
         self.logger.info("Collecting initial certificate data...")
-
         try:
             certificate_result = await self.collect_certificates()
             if certificate_result.get("success", False):
@@ -194,6 +197,7 @@ class DataCollector(DataCollectorSendersMixin):
                 _("Failed to perform initial certificate collection: %s"), error
             )
 
+    async def _initial_roles(self):
         try:
             role_result = await self.collect_roles()
             if role_result.get("success", False):
@@ -424,26 +428,9 @@ class DataCollector(DataCollectorSendersMixin):
         # which is why fresh installs show "OS Updated: never" on the
         # server even hours after the agent connected.  Poll briefly
         # (1s interval, 60s ceiling) and then fire the first collect.
-        for _tick in range(60):
-            if not self.agent.running:
-                return
-            if self.agent.connected:
-                break
-            await asyncio.sleep(1)
-
-        if self.agent.running and self.agent.connected:
-            try:
-                # A moment's random wait, so a fleet reconnecting together
-                # (a server restart) does not collect together (Phase 22.1).
-                await asyncio.sleep(schedule_jitter.connect_splay())
-                # ...and no earlier than a busy server asked (server 22.2).
-                held = schedule_jitter.initial_reports_wait()
-                if held > 0:
-                    await asyncio.sleep(held)
-                self.logger.info("Initial periodic data collection (post-connect)")
-                await self._collect_and_send_periodic_data()
-            except Exception as error:  # pylint: disable=broad-exception-caught
-                self.logger.error(_("Initial data collection error: %s"), error)
+        if not await self._wait_for_connection(60):
+            return
+        await self._initial_periodic_collection()
 
         # Send periodic data updates every 5 minutes
         data_collection_interval = 300  # 5 minutes
@@ -461,6 +448,32 @@ class DataCollector(DataCollectorSendersMixin):
                 self.logger.error(_("Data collector error: %s"), error)
                 # Don't break the loop on non-critical errors, but return to trigger reconnection
                 return
+
+    async def _wait_for_connection(self, seconds: int) -> bool:
+        """Poll once a second until connected; False if the agent stopped."""
+        for _tick in range(seconds):
+            if not self.agent.running:
+                return False
+            if self.agent.connected:
+                break
+            await asyncio.sleep(1)
+        return True
+
+    async def _initial_periodic_collection(self):
+        if not (self.agent.running and self.agent.connected):
+            return
+        try:
+            # A moment's random wait, so a fleet reconnecting together
+            # (a server restart) does not collect together (Phase 22.1).
+            await asyncio.sleep(schedule_jitter.connect_splay())
+            # ...and no earlier than a busy server asked (server 22.2).
+            held = schedule_jitter.initial_reports_wait()
+            if held > 0:
+                await asyncio.sleep(held)
+            self.logger.info("Initial periodic data collection (post-connect)")
+            await self._collect_and_send_periodic_data()
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.error(_("Initial data collection error: %s"), error)
 
     async def child_host_heartbeat(self):
         """Delegate to child_host_collector for frequent child host status updates."""

@@ -324,8 +324,13 @@ class RegistrationManager:
             finally:
                 session.close()
         except Exception:  # pylint: disable=broad-exception-caught
-            self.logger.error(_("Error retrieving stored credentials"))
+            self._log_credentials_unreadable()
             return None
+
+    def _log_credentials_unreadable(self) -> None:
+        # One literal, so the gettext extractor still finds it (a constant
+        # passed to _() would drop out of the catalogs).
+        self.logger.error(_("Error retrieving stored credentials"))
 
     async def store_host_approval(  # NOSONAR - async required by interface
         self,
@@ -445,7 +450,7 @@ class RegistrationManager:
                 session.close()
 
         except Exception:
-            self.logger.error(_("Error retrieving stored credentials"))
+            self._log_credentials_unreadable()
             return None
 
     def get_stored_host_id_sync(self) -> Optional[str]:
@@ -502,7 +507,7 @@ class RegistrationManager:
                 session.close()
 
         except Exception:
-            self.logger.error(_("Error retrieving stored credentials"))
+            self._log_credentials_unreadable()
             return None
 
     def get_host_approval_from_db(self):
