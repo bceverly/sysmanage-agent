@@ -24,6 +24,10 @@ def get_platform():
     return system
 
 
+# Requirements are installed with --upgrade --upgrade-strategy eager: plain
+# `pip install -r` leaves an installed package alone while it still meets its
+# (usually unpinned) requirement, so a local venv kept vulnerable versions CI
+# never sees.  `make security` (scripts/check_python_deps.py) checks the result.
 def install_packages_with_env(packages, env_vars=None):
     """Install packages with optional environment variables."""
     if env_vars is None:
@@ -94,18 +98,25 @@ def main():
     # Standard dev dependencies live in requirements-dev.txt so the same
     # pins (notably black) apply locally and in CI.  Keep this script as
     # the entry point for platform-specific extras (grpcio/semgrep below).
-    print("\n=== Installing standard development dependencies ===")
-    if not install_packages_with_env(["-r", "requirements-dev.txt"]):
-        print("ERROR: Failed to install standard dependencies")
+    # Both files go through ONE resolver run: two eager-upgrade passes let
+    # the second silently undo the first wherever the files disagree (black
+    # 26.3.1 -> 26.10.0 every run), so `make security` saw a stale venv no
+    # matter how often install-dev ran.  One pass reports the conflict.
+    print("\n=== Installing requirements-dev.txt + requirements.txt ===")
+    if not install_packages_with_env(
+        [
+            "--upgrade",
+            "--upgrade-strategy",
+            "eager",
+            "-r",
+            "requirements-dev.txt",
+            "-r",
+            "requirements.txt",
+        ]
+    ):
+        print("ERROR: Failed to install development dependencies")
         sys.exit(1)
-    print("✓ Standard dependencies installed")
-
-    # Install requirements.txt
-    print("\n=== Installing requirements.txt ===")
-    if not install_packages_with_env(["-r", "requirements.txt"]):
-        print("ERROR: Failed to install requirements.txt")
-        sys.exit(1)
-    print("✓ requirements.txt installed")
+    print("✓ Development dependencies installed")
 
     # Handle platform-specific packages
     if system in ["netbsd", "openbsd"]:

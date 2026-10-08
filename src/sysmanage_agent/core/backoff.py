@@ -54,8 +54,9 @@ def with_hint(delay: float, hint: float) -> float:
     return delay
 
 
-def reconnect_delay(base: float, failures: int, clean_close: bool = False,
-                    hint: float = 0.0) -> float:  # fmt: skip
+def reconnect_delay(
+    base: float, failures: int, clean_close: bool = False, hint: float = 0.0
+) -> float:
     """How long to wait before reconnecting after ``failures`` failures."""
     delay = full_jitter(base, failures)
     if clean_close and failures <= 1:

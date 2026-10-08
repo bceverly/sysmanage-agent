@@ -1007,6 +1007,9 @@ endif
 	@$(PYTHON) -m pip list | grep -E "(cryptography|aiohttp|black|bandit|websockets|PyYAML|SQLAlchemy|alembic)" || echo "Package list completed"
 endif
 	@echo ""
+	@echo "Running the dependency gate (requirements met + pip-audit of this environment)..."
+	@$(PYTHON) scripts/check_python_deps.py
+	@echo ""
 	@echo "Note: Check Safety web UI at https://platform.safetycli.com/codebases/sysmanage-agent/findings?branch=main"
 	@echo "      for specific version upgrade recommendations when vulnerabilities are found."
 	@echo "[OK] Python security analysis completed"

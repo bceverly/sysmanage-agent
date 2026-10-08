@@ -99,8 +99,10 @@ def test_the_server_asking_always_gets_it(dbm):
 
 
 def test_an_unreadable_store_sends_everything():
-    with patch("src.database.sent_reports.get_database_manager",
-               side_effect=RuntimeError("db locked")):  # fmt: skip
+    with patch(
+        "src.database.sent_reports.get_database_manager",
+        side_effect=RuntimeError("db locked"),
+    ):
         gate = SnapshotGate(clock=_Clock(), store=sent_reports)
         assert _send(gate) is True  # fails open, and the record does not raise
         assert _send(gate) is False  # this process still remembers

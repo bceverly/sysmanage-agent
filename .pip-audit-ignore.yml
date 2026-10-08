@@ -1,0 +1,19 @@
+# Reviewed pip-audit exceptions for `make security` (scripts/check_python_deps.py).
+#
+# Every entry needs an id and a reason; an optional expires date makes the
+# ignore FAIL the gate once it has passed, so an exception gets re-checked
+# instead of outliving the reason for it.  Same format in every SysManage
+# repository.
+#
+# vulnerabilities:
+#   - id: CVE-2026-12345
+#     reason: "why it does not apply here, or why it cannot be fixed yet"
+#     expires: 2026-12-31
+
+vulnerabilities:
+  # nltk arrives through `safety` (the dependency scanner) and never runs in
+  # the agent; its model-artifact APIs bypass NLTK's path sandbox and no fixed
+  # release exists.  Same exception, same reasoning as Pro+.
+  - id: CVE-2026-81726
+    reason: "nltk path-sandbox bypass, no fix published; dev-tooling only (safety), never runs in the agent"
+    expires: 2026-12-31

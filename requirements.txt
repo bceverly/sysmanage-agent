@@ -56,7 +56,13 @@ alembic>=1.16.5
 #   Mako  -- pulled by alembic (migration templates).  PYSEC-2026-2617 fixed in 1.3.12.
 #   idna  -- pulled by aiohttp (via yarl) for hostname handling.  PYSEC-2026-215
 #           fixed in 3.15.
-Mako>=1.4.2  # CVE-2026-102991 (Windows drive-letter path traversal)
+#   Mako 1.4.2 also fixes CVE-2026-102991 (a Windows drive-letter path
+#           traversal) but needs Python >=3.10, which the 3.9 leg and EL9's
+#           system Python cannot meet.  The floor stays at 1.3.12 (bare: runtime
+#           pins carry no markers, see agent-prod-deps note); every 3.10+
+#           install -- CI, `make install-dev`, the Windows MSI's bundled 3.13 --
+#           still resolves the latest 1.4.x, and the fix is Windows-only.
+Mako>=1.3.12
 idna>=3.15
 
 # packaging -- imported directly by
@@ -83,8 +89,10 @@ babel>=2.12.0  # pybabel CLI for i18n-validate
 # which requires Python >=3.10.  Older patched releases for 3.9 don't
 # exist -- so we install black ONLY on Py 3.10+, and skip it on Py 3.9.
 # The 3.9 CI jobs run ``pip install`` + ``pytest`` but not ``make lint``;
-# lint runs on 3.10+ only.
-black>=26.3.1; python_version >= '3.10'
+# lint runs on 3.10+ only.  Exactly the requirements-dev.txt pin: a looser
+# spec here let `make install-dev` upgrade black past it on its second pass,
+# so `make security` reported the venv stale forever (2026-10-08).
+black==26.3.1; python_version >= '3.10'
 pylint>=3.0.0
 isort>=5.12.0
 bandit>=1.8.6
@@ -95,6 +103,12 @@ safety>=3.6.1,<4.0.0
 # is fine because the agent doesn't ship pip-audit (see Makefile).
 semgrep>=1.162.0; python_version >= '3.10'
 semgrep>=1.95.0,<1.137; python_version < '3.10'
+# `make security` audits the installed environment with pip-audit (3.10+ leg,
+# where semgrep's tomli pin is compatible); see scripts/check_python_deps.py.
+pip-audit>=2.10.0; python_version >= '3.10'
+# starlette arrives through semgrep -> mcp -> sse-starlette (dev tooling only);
+# 0.52.x has PYSEC-2026-161/248/249/2280/2281, all fixed by 1.3.1.
+starlette>=1.3.1; python_version >= '3.10'
 typer>=0.9.0,<0.24.0
 # pytest 9.x (which carries the PYSEC tmp-dir advisory fix) requires Python
 # >=3.10, so the agent's 3.9 CI leg can't install it.  On 3.10+ we take the
@@ -114,8 +128,8 @@ coverage>=7.0.0
 # urllib3 2.7 dropped Python 3.9, so the 3.9 leg can't take >=2.7.0 (its ceiling
 # is the 2.6.x line).  Split like aiohttp/pytest: latest fix on 3.10+, highest
 # 3.9-compatible secure release on 3.9.  PYSEC-2026-141/142 (pulled by
-# requests/semgrep/selenium).  Scanners run on the 3.10+ leg, which takes >=2.7.0.
-urllib3>=2.7.0; python_version >= '3.10'
+# requests/semgrep/selenium).  Scanners run on the 3.10+ leg, which takes >=2.8.0.
+urllib3>=2.8.0; python_version >= '3.10'  # 2.7.0: PYSEC-2026-4175..4177
 urllib3>=2.5.0,<2.7; python_version < '3.10'
 # ujson's PYSEC fix (5.13.0) and Authlib's (1.7.2) both require Python >=3.10, so
 # pin them ONLY on the 3.10+ leg -- where the dependency scanners actually run.  On

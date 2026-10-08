@@ -286,6 +286,21 @@ def run_lint(version: str) -> int:
     return result.returncode
 
 
+def show_plan(current, want, derived: bool) -> None:
+    """The current version (highest tag) and the one about to be released."""
+    shown = "v" + ".".join(str(p) for p in current) if current else "(no tags yet)"
+    kind = "auto-increment" if derived else "explicit"
+    print(f"Current version:  {shown}")
+    print(f"Next version:     v{'.'.join(str(p) for p in want)}  ({kind})")
+    if derived:
+        print("                  (pass VERSION=x.y.z.w to start a new series)")
+    elif current is not None and want <= current:
+        print(
+            f"WARNING: v{'.'.join(str(p) for p in want)} is not above the current "
+            f"{shown}."
+        )
+
+
 def main() -> int:
     """Entry point."""
     parser = argparse.ArgumentParser(
@@ -317,6 +332,8 @@ def main() -> int:
 
     skip_lint = args.skip_lint
     derived = False
+    tags = known_tags()
+    current = max(tags) if tags else None
     if args.version:
         version = args.version.lstrip("v")
         want = parse_version(version)
@@ -333,20 +350,15 @@ def main() -> int:
         # is exactly the reasoning that stops holding after the next edit.
         version = ".".join(str(part) for part in want)
     else:
-        tags = known_tags()
-        if not tags:
+        if current is None:
             return fail(
                 "no existing version tag to increment from.",
                 "Pass an explicit version: make release VERSION=1.0.0.0",
             )
-        highest = max(tags)
-        want = highest[:-1] + (highest[-1] + 1,)
+        want = current[:-1] + (current[-1] + 1,)
         version = ".".join(str(p) for p in want)
         derived = True
-        print(
-            f"Auto-increment: v{'.'.join(str(p) for p in highest)} -> v{version}  "
-            f"(pass VERSION=x.y.z.w to start a new series)"
-        )
+    show_plan(current, want, derived)
 
     tag = f"v{version}"
     message = args.message or f"Release {tag}"
@@ -355,14 +367,20 @@ def main() -> int:
     if guard:
         return guard
 
-    # A bare `make release` now publishes.  Confirm the derived number when a
-    # human is watching -- one keystroke, and it makes a mistyped/tab-completed
-    # `make release` recoverable instead of a pushed tag and a full CI run.
-    if derived and not args.dry_run and not args.yes and sys.stdin.isatty():
-        answer = input(f"Release v{version} from this branch? [Y/n] ").strip().lower()
-        if answer and not answer.startswith("y"):
-            print("Aborted; nothing was changed.")
-            return 1
+    # Pushing the tag publishes, so every release -- auto-derived OR explicit --
+    # is confirmed by a person, and only an explicit "y" proceeds (Enter means
+    # no).  Unattended runs must say so with YES=1 rather than slipping through
+    # because there was no terminal to ask (modeled on milsurp's release.sh).
+    if not args.dry_run and not args.yes:
+        if not sys.stdin.isatty():
+            return fail(
+                "refusing to release without confirmation: there is no terminal to ask.",
+                "Pass YES=1 to release unattended.",
+            )
+        answer = input(f"Release {tag}? [y/N] ").strip().lower()
+        if answer not in ("y", "yes"):
+            print("Stopped; nothing was changed.")
+            return 0
 
     if args.dry_run:
         has_markers = (REPO_ROOT / "scripts" / "check_version_drift.py").exists()

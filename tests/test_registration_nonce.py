@@ -9,6 +9,7 @@ retry whose first reply was lost gets the host's credential instead of being
 refused forever.  Real database (a temp SQLite file) for the store.
 """
 
+from contextlib import ExitStack
 import logging
 import os
 import tempfile
@@ -139,11 +140,24 @@ async def test_an_older_server_that_rejects_the_nonce_is_retried_without_it(capl
     endpoint.rest_url.return_value = "https://server/api/host/register"
     endpoint.session_kwargs.return_value = {}
     endpoint.proxy.return_value = None
-    with patch("aiohttp.ClientSession", side_effect=lambda **_: _Session(responses, bodies)), \
-            patch.object(registration, "get_basic_registration_info", side_effect=lambda: dict(info)), \
-            patch.object(registration, "_store_auth_data"), \
-            patch.object(cr, "ServerEndpoint", return_value=endpoint), \
-            caplog.at_level(logging.INFO):  # fmt: skip
+    # ExitStack, not a parenthesized `with`: the agent still supports Python 3.9.
+    with ExitStack() as stack:
+        stack.enter_context(
+            patch(
+                "aiohttp.ClientSession",
+                side_effect=lambda **_: _Session(responses, bodies),
+            )
+        )
+        stack.enter_context(
+            patch.object(
+                registration,
+                "get_basic_registration_info",
+                side_effect=lambda: dict(info),
+            )
+        )
+        stack.enter_context(patch.object(registration, "_store_auth_data"))
+        stack.enter_context(patch.object(cr, "ServerEndpoint", return_value=endpoint))
+        stack.enter_context(caplog.at_level(logging.INFO))
         assert await registration.register_with_server() is True
     assert "registration_nonce" in bodies[0]
     assert "registration_nonce" not in bodies[1]
