@@ -90,7 +90,7 @@ msgstr "कैर्टिफिकेट एकलेक्ट करने म
 #: src/sysmanage_agent/collection/certificate_collection.py:287
 #, python-format
 msgid "Timeout extracting certificates from keychain: %s"
-msgstr "समयबाहुल्यता: कीचन में प्रमाणपत्र निकालने में %s"
+msgstr "कीचेन से सर्टिफिकेट निकालने में टाइमआउट हुआ: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:411
 #, python-format
@@ -254,7 +254,7 @@ msgstr "BSD स्टोरेज जानकारी प्राप्त �
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "बीएसडी नेटवर्क जानकारी प्राप्त करने में विफल रहा: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -274,7 +274,7 @@ msgstr "Linux स्टोरेज जानकारी प्राप्त 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "सॉफ़्टवेयर इन्वेंटरी एकत्र करना विफल: %s"
+msgstr "लिनक्स नेटवर्क जानकारी प्राप्त करने में विफल रहा: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -419,7 +419,7 @@ msgstr "फ़ेडोरा जारी अद्यतन लागू क�
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
+msgstr "ओपनएसयूएस रिलीज़ अपग्रेड लागू करने में विफल: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -721,7 +721,7 @@ msgstr "winget REST API से कोई पैकेज एकत्रित �
 #: src/sysmanage_agent/collection/package_collector_windows.py:94
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
-msgstr "apt पैकेज एकत्र करना विफल: %s"
+msgstr "विंगेट पैकेजों को REST API के माध्यम से एकत्र करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:131
 #, python-format
@@ -764,7 +764,7 @@ msgstr "PID %d समाप्त करते समय अनुमति अ�
 #: src/sysmanage_agent/collection/public_ip_fetcher.py:184
 #, python-format
 msgid "public_ip_refresh_service iteration failed: %s"
-msgstr "public_ip_refresh_service इतरेशन की सफलतापूर्वक प्रवर्धन फ़ाइल: %s"
+msgstr "public_ip_refresh_service का आइटेरेशन विफल रहा: %s"
 
 #: src/sysmanage_agent/collection/role_detection.py:161
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:79
@@ -990,12 +990,7 @@ msgstr "syspatch कमांड टाईम-आउट हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:675
 msgid "syspatch timed out after 10 minutes"
-msgstr ""
-"syspatch \\u0928\\u093e\\u0930 \\u0924\\u0947 \\u0915\\u094b \\u0926\\u0940 "
-"\\u092a\\u09c1\\u0982\\u0995\\u093e \\u0924\\u0947 "
-"\\u092a\\u09b0\\u09bf\\u09af\\u09cd \\u0926\\u0941\\u0938\\u093e "
-"\\u092c\\u094d\\u0930\\u0947\\u0915\\u094d\\u0930\\u0928 "
-"\\u091a\\u093f\\u0932\\u094b"
+msgstr "syspatch 10 मिनटों के बाद टाइमआउट हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:820
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
@@ -1064,10 +1059,7 @@ msgstr "macOS अपग्रेड विफल हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:503
 msgid "macOS upgrade timed out after 2 hours"
-msgstr ""
-"macOS upgrade \\u0928\\u093e\\u0930 \\u0924\\u0947 \\u0915\\u094b "
-"\\u0926\\u0940 \\u092a\\u09c1\\u0982\\u0995\\u093e \\u0924\\u0947 "
-"\\u092a\\u09b0\\u09bf\\u09af\\u09cd"
+msgstr "macOS अपग्रेड 2 घंटों के बाद टाइमआउट हो गया"
 
 #: src/sysmanage_agent/collection/update_detection_macos.py:603
 #, python-format
@@ -1511,7 +1503,7 @@ msgstr "सामान्य उपयोगकर्ता पहुंच ड
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:101
 msgid "Failed to send periodic hardware data"
-msgstr "संतत हार्डवेअर डेटा भेजने में विफल"
+msgstr "हार्डवेयर डेटा को नियमित अंतराल पर भेजने में विफलता"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:121
 #, python-format
@@ -1582,7 +1574,7 @@ msgstr "प्रस्तुत पॉलिंग के लिए stored host
 
 #: src/sysmanage_agent/communication/http_polling.py:95
 msgid "Could not read the outbound queue for polling"
-msgstr "प्रस्तुत पॉलिंग के लिए बाहरी क्यू को पढ़ने में विफलता"
+msgstr "आउटबाउंड क्यू को पढ़ने में असमर्थ थे पोलिंग के लिए"
 
 #: src/sysmanage_agent/communication/http_polling.py:120
 #, python-format
@@ -1592,7 +1584,7 @@ msgstr "पुलिश्ड मेसेज %s को delivered अंकि�
 #: src/sysmanage_agent/communication/http_polling.py:168
 #, python-format
 msgid "Error handling polled message %s"
-msgstr "पुलिश्ड मेसेज %s के हाथांकन में त्रुटि"
+msgstr "पोल किए गए संदेश %s को संसाधित करने में त्रुटि"
 
 #: src/sysmanage_agent/communication/http_polling.py:184
 msgid ""
@@ -1628,12 +1620,12 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:182
 #, python-format
 msgid "Failed to queue message: %s"
-msgstr "मासेज को क्यू में रखने में विफलता: %s"
+msgstr "मैसेज क्यू में डालने में विफल रहा: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:220
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
-msgstr "मासेज के लिए कमांड अक्सरेडीकेशन को क्यू करने में विफलता: %s"
+msgstr "कमांड की पहचान के लिए संदेश को क्यू में विफल रहा: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:228
 #, python-format
@@ -1688,7 +1680,7 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:415
 #, python-format
 msgid "Error clearing stored host_id: %s"
-msgstr "संग्रीहित होस्ट ID को स्पष्ट करने में विफल: %s"
+msgstr "संग्रहीत होस्ट_आईडी को साफ़ करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:469
 #, python-format
@@ -1702,12 +1694,12 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:476
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
-msgstr "बेµटा %s: सेजेन चात्शी ॥॰: %s"
+msgstr "प्रसारण %s: इन्वेंटरी रीफ़्रेश विफल: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
-msgstr "बेµटा %s: प्साॆ '%s' -- दें"
+msgstr "ब्रॉडकास्ट %s: अज्ञात कार्रवाई '%s' -- नजरअंदाज किया गया"
 
 #: src/sysmanage_agent/communication/message_handler.py:569
 msgid ""
@@ -1764,7 +1756,7 @@ msgstr "इनबॉउंड क्वी स्ट्रोक प्रोस
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "संदेश को प्रोसेसिंग के रूप में चिह्नित किया गया: %s"
+msgstr "इनबाउंड मैसेज %s को प्रोसेसिंग के रूप में मार्क नहीं किया जा सकता"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1793,7 +1785,7 @@ msgstr "क्यू संदेश %s को प्रोसेस करन�
 #: src/sysmanage_agent/communication/message_handler_queue.py:355
 #, python-format
 msgid "Error recovering stuck messages: %s"
-msgstr "स्टक कीड़ों को बाहर निकलने में त्रुटि: %s"
+msgstr "स्टिक मैसेज को रिकवर करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:386
 #, python-format
@@ -1808,7 +1800,7 @@ msgstr "आंतरिक कार्यक्रम प्रोसेसि�
 #: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
-msgstr "क्वेयू संदेशों की कटाई पूर्ण हुई: %s"
+msgstr "क्वेयू संदेशों का प्रूनिंग पूर्ण हुआ: %s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:42
 #, python-format
@@ -1832,7 +1824,7 @@ msgstr "फ्लाइट में जर्नल रिकंसिलिए
 
 #: src/sysmanage_agent/core/agent_utils.py:55
 msgid "systemctl not found"
-msgstr "systemctl शेट्वो"
+msgstr "systemctl नहीं मिला"
 
 #: src/sysmanage_agent/core/agent_utils.py:83
 #, python-format
@@ -1881,7 +1873,7 @@ msgstr "अज्ञात कमांड प्रकार: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Homebrew पैकेज एकत्र करना विफल: %s"
+msgstr "स्क्रिप्ट एक्ज़ीक्यूशन परिणाम को क्यू में फेल हुआ: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -1963,7 +1955,7 @@ msgstr "कोई कनेक्शन टोकन नहीं"
 #: src/sysmanage_agent/core/auth_helper.py:87
 #, python-format
 msgid "Auth failed with status %s: %s"
-msgstr "प्रवीणता विफल हुई साइटस्टेस्टस: %s: %s"
+msgstr "प्रमाणीकरण असफल हुआ स्थिति %s के साथ: %s"
 
 #: src/sysmanage_agent/core/config.py:75
 #, python-format
@@ -2056,7 +2048,7 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 #: src/sysmanage_agent/diagnostics/diagnostic_collector.py:796
 #, python-format
 msgid "Error collecting error logs: %s"
-msgstr "शिफ्ट लॉगों का एकलेक्ट करने में त्रुटि: %s"
+msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
 msgid "Homebrew is not installed"
@@ -2133,7 +2125,7 @@ msgstr "पाठक डाइरेक्टरी पहले से ही �
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:302
 msgid "Repository cloned successfully"
-msgstr "पाठक को सफलतापूर्वक क्लोन किया गया"
+msgstr "रिपॉजिटरी सफलतापूर्वक क्लोन की गई"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
 #, python-format
@@ -2243,7 +2235,7 @@ msgstr "अज्ञात चरण प्रकार: %s"
 #: src/sysmanage_agent/operations/generic_deployment.py:567
 #, python-format
 msgid "Command sequence step %d/%d failed: %s - %s"
-msgstr "कोपस्ाित होजेन %d/%d: %s - %s"
+msgstr "कमांड सीक्वेंस स्टेप %d/%d गिरा हुआ: %s - %s"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:618
 msgid "Empty shell command"
@@ -2269,12 +2261,12 @@ msgstr "FileNotFoundError: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment_plan.py:521
 msgid "timeout"
-msgstr "समय समाप्त"
+msgstr "टाइमआउट"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:120
 #, python-format
 msgid "Could not create GNUPGHOME %s for user %s: %s"
-msgstr "\\u00c9\\u00bav \\u00e0 cr\\u00e9er GNUPGHOME %s pour l'utilisateur %s: %s"
+msgstr "उपयोगकर्ता %s के लिए GNUPGHOME %s बनाने में असमर्थ: %s"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:224
 msgid "Missing required parameter 'armored_key'"
@@ -2303,7 +2295,7 @@ msgstr ""
 #: src/sysmanage_agent/operations/gpg_operations.py:276
 #, python-format
 msgid "fingerprint %s not present after import"
-msgstr "प्रिंटफिन्गरप्रिंट %s इम्पोर्ट के बाद पेजेंट नहीं है"
+msgstr "फिंगरप्रिंट %s आयात करने के बाद भी उपस्थित नहीं है"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:352
 msgid "Missing required parameter 'fingerprint'"
@@ -2339,12 +2331,12 @@ msgstr "उपयोक्ता '%s' के लिए GNUPGHOME की तै�
 #: src/sysmanage_agent/operations/hostname_operations.py:20
 #, python-format
 msgid "Hostname changed to %s"
-msgstr "बेट्वो चोमेन %s"
+msgstr "होस्टनेम बदला गया से %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:21
 #, python-format
 msgid "Failed to set runtime hostname: %s"
-msgstr "बे स्को शेटेन है: %s"
+msgstr "रनटाइम होस्टनेम सेट करने में विफल: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:45
 msgid "No hostname specified"
@@ -2421,7 +2413,9 @@ msgstr "होस्टनेम परिवर्तन पुष्टि क
 #: src/sysmanage_agent/operations/inflight_journal.py:327
 #: src/sysmanage_agent/operations/inflight_journal.py:328
 msgid "agent restart while plan was in-flight; subprocess killed"
-msgstr "योजना चलते समय एजेंट पुनः प्रारंभ हुआ; उपप्रक्रिया समाप्त"
+msgstr ""
+"एजेंट पुनः आरंभ होने के दौरान योजना उड़ान में थी; उप-प्रक्रिया हत्या कर दी "
+"गई"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:26
 #: src/sysmanage_agent/operations/windows_repository_operations.py:176
@@ -2431,19 +2425,19 @@ msgstr "रिपॉजिटरी जोड़ने में विफल: %
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:27
 msgid "Repository file not found"
-msgstr "बेट्वो चोमेन देरे ज्वे"
+msgstr "रिपॉजिटरी फ़ाइल नहीं मिली"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:28
 msgid "Repository removed successfully"
-msgstr "बेट्वो चोमेन शेट्वो"
+msgstr "रिपॉजिटरी सफलतापूर्वक हटा दी गई"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:29
 msgid "Repository enabled successfully"
-msgstr "बेट्वो चोमेन शेट्वो"
+msgstr "रिपॉजिटरी सफलतापूर्वक सक्षम किया गया"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:30
 msgid "Repository disabled successfully"
-msgstr "बेट्वो चोमेन शेट्वो"
+msgstr "रिपॉजिटरी सफलतापूर्वक अक्षम की गई"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:252
 #, python-format
@@ -2477,7 +2471,7 @@ msgstr "YUM अवस्थाएँ की सूची बनाने मे�
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:457
 msgid "Manual YUM repository addition not yet implemented"
-msgstr "हस्तकारण YUM रिपोज़िटरी की वृद्धि एनपीई नहीं प्रभावी है"
+msgstr "यूएम के मैनुअल रिपॉजिटरी जोड़ना अभी तक लागू नहीं किया गया"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:491
 #, python-format
@@ -2487,7 +2481,7 @@ msgstr "YUM अनुभाग जोड़ने में त्रुटि: 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:519
 #, python-format
 msgid "Error deleting YUM repository: %s"
-msgstr "यम साइप्स रिपोज़िटरी को हटाने में त्रुटि: %s"
+msgstr "YUM रिपॉजिटरी को हटाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:535
 #, python-format
@@ -2516,7 +2510,7 @@ msgstr "Zypper अनुभाग जोड़ने में त्रुट�
 #: src/sysmanage_agent/operations/linux_repository_operations.py:675
 #, python-format
 msgid "Error deleting Zypper repository: %s"
-msgstr "जिप्पर रिपोज़िटरी को हटाने में त्रुटि: %s"
+msgstr "Zypper रिपॉजिटरी को हटाने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/linux_repository_operations.py:691
 #, python-format
@@ -2526,7 +2520,7 @@ msgstr "Zypper रिपोज़िट्री वायर करने म�
 #: src/sysmanage_agent/operations/linux_repository_operations.py:710
 #, python-format
 msgid "Error disabling Zypper repository: %s"
-msgstr "जिप्पर रिपोज़िटरी को डिसेबल करने में त्रुटि: %s"
+msgstr "Zypper रिपॉजिटरी को अक्षम करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/lxd_firewall_helper.py:83
 #, python-format
@@ -2612,7 +2606,7 @@ msgstr "इनस्टॉलेशन प्रक्रिया की नि
 #: src/sysmanage_agent/operations/package_installation_helpers.py:107
 #: src/sysmanage_agent/operations/package_operations.py:59
 msgid "Skipping package with no name"
-msgstr "नाम के बिना पैकेज छोड़ा जा रहा है"
+msgstr "पैकेज को छोड़ रहा है जिसका कोई नाम नहीं है"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:108
 #: src/sysmanage_agent/operations/package_operations.py:60
@@ -2621,11 +2615,11 @@ msgstr "कोई पैकेज नाम नहीं"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:20
 msgid "Installation failed"
-msgstr "सेबीन्शी कों"
+msgstr "स्थापना असफल हो गई"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:21
 msgid "Installation timed out after 5 minutes"
-msgstr "सेबीन्शी चोमेन 5 है।"
+msgstr "स्थापना 5 मिनटों के बाद टाइम आउट हो गई"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:103
 msgid "Package manager name is required"
@@ -2798,12 +2792,13 @@ msgstr "apt-get remove के दौरान अपवाद: %s"
 #: src/sysmanage_agent/operations/package_operations.py:623
 #, python-format
 msgid "Failed to queue installation completion for request %s"
-msgstr "अनुरोध %s के लिए स्थापना पूर्ण होने की संकेतस्थल टीका करने में विफलता"
+msgstr ""
+"अनुरोध %s के लिए इंस्टॉलेशन पूर्ण होने की सूचना कतार में डालने में विफल"
 
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "पार्टीशन का पता लगाने में त्रुटि: %s"
+msgstr "स्थापना पूर्णता कतार में त्रुटि: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -2834,7 +2829,7 @@ msgstr "क्वेरी पैक चलाने में विफल र�
 #: src/sysmanage_agent/operations/repository_operations.py:19
 #, python-format
 msgid "Unsupported distribution: %s"
-msgstr "बेट्वो: %s सेबी चोमेन"
+msgstr "समर्थित वितरण नहीं: %s"
 
 #: src/sysmanage_agent/operations/repository_operations.py:103
 #, python-format
@@ -2848,7 +2843,7 @@ msgstr "Linux वितरण का पता लगाने में त्�
 
 #: src/sysmanage_agent/operations/repository_operations.py:183
 msgid "Repository identifier is required"
-msgstr "पाठक पहचानकर्ता आवश्यक है"
+msgstr "रिपॉजिटरी पहचानकर्ता आवश्यक है"
 
 #: src/sysmanage_agent/operations/repository_operations.py:207
 #, python-format
@@ -2890,7 +2885,7 @@ msgstr "अक्षम करने के लिए कोई रिपॉज�
 #: src/sysmanage_agent/operations/repository_operations.py:388
 #, python-format
 msgid "Disabled %d of %d repositories"
-msgstr "%d / %d रिपॉजिटरी अक्षम"
+msgstr "अक्षम की गईं: %d / %d रिपॉजिटरी"
 
 #: src/sysmanage_agent/operations/repository_operations.py:393
 #, python-format
@@ -3333,7 +3328,7 @@ msgstr "%s प्रयासों के बाद रिगिस्टर �
 #: src/sysmanage_agent/registration/client_registration.py:382
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
-msgstr "सेजेन ॥॰, मोंप्रो %s जेन..."
+msgstr "पंजीकरण असफल हुआ, %s सेकंड में फिर से प्रयास कर रहा है..."
 
 #: src/sysmanage_agent/registration/client_registration.py:437
 #, python-format
@@ -3419,7 +3414,7 @@ msgstr "होस्ट स्वीकृति संदेश प्रक्
 #: src/sysmanage_agent/registration/registration_manager.py:506
 #, python-format
 msgid "Error clearing host approval records: %s"
-msgstr "होस्ट पहचान रिकॉर्ड्स को स्पष्ट करने में विफल: %s"
+msgstr "होस्ट अनुमोदन रिकॉर्ड साफ़ करने में त्रुटि: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:308
 #, python-format
@@ -3478,6 +3473,12 @@ msgstr "WSL स्थिति जाँच में समयबाहुल�
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL समर्थन की जाँच में त्रुटि: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"कतार में संदेश %s पढ़ने योग्य JSON नहीं है; इसे पोलिंग से नहीं भेजा जा रहा "
+"है"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5295,7 +5296,3 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU 64 से अधिक नहीं हो सकते"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "कतार में संदेश %s पढ़ने योग्य JSON नहीं है; इसे पोलिंग से नहीं भेजा जा रहा है"

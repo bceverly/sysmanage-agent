@@ -243,3 +243,7 @@ sbom/
 # sysmanage-agent-vendor-$VERSION.tar.gz, so nothing is lost by ignoring it.
 # Untracked-but-not-ignored meant a stray build swept 24 wheels into a commit.
 vendor/
+
+# Working file of scripts/i18n_verify.py (the last run's rejects); the ledger
+# itself, .i18n-verified, IS tracked.
+.i18n-verify-failures.json

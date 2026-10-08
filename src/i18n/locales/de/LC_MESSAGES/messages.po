@@ -261,9 +261,7 @@ msgstr "Fehler beim Abrufen von BSD-Speicheraufteilungsinformationen: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr ""
-"Fehler beim Erfassen des Software-Inventars: %sagent.yaml oder ./sysmanage-"
-"agent.yaml"
+msgstr "Fehler beim Abrufen von BSD-Netzwerkinformationen: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -283,7 +281,7 @@ msgstr "Fehler beim Abrufen von Linux-Speicheraufteilungsinformationen: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "Fehler beim Erfassen des Software-Inventars: %s"
+msgstr "Fehler beim Abrufen von Linux-Netzwerkinformationen: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -427,7 +425,7 @@ msgstr "Fehlschlag beim Anwenden einer Fedora-Release-Aktualisierung: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "Fehler beim Senden der initialen Datenaktualisierungen: %s"
+msgstr "Fehler beim Anwenden der openSUSE-Release-Aktualisierung: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -1281,7 +1279,7 @@ msgstr "WSL Shutdown hat nicht-null zurückgegeben: %s"
 #: src/sysmanage_agent/communication/child_host_collector.py:209
 #: src/sysmanage_agent/wsl/keepalive.py:188
 msgid "WSL shutdown timed out"
-msgstr "WSL-Absturz nach Timeout"
+msgstr "WSL-Abschaltvorgang ist abgelaufen"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:211
 #: src/sysmanage_agent/wsl/keepalive.py:190
@@ -1779,7 +1777,7 @@ msgstr "Fehler im Eingangs-Warteschlangen-Prozessor: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "Nachricht als verarbeitend markiert: %s"
+msgstr "Konnte die eingehende Nachricht %s nicht als verarbeitet markieren"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1902,7 +1900,7 @@ msgstr "Unbekannter Befehlstyp: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Fehler beim Sammeln der Homebrew-Pakete: %s"
+msgstr "Fehler beim Einreihen des Skriptausführungsresultats: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -3502,6 +3500,12 @@ msgstr "WSL-Statusabfrage nach Timeout"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"Die Nachricht %s in der Warteschlange ist kein lesbares JSON; sie wird nicht"
+" per Polling gesendet"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5421,7 +5425,3 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPUs dürfen 64 nicht überschreiten"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "Die Nachricht %s in der Warteschlange ist kein lesbares JSON; sie wird nicht per Polling gesendet"

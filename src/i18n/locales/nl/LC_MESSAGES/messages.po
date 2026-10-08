@@ -256,7 +256,7 @@ msgstr "Mislukt om BSD-opslaginformatie op te halen: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
+msgstr "Kon geen BSD netwerkinformatie ophalen: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -276,7 +276,7 @@ msgstr "Mislukt om Linux-opslaginformatie op te halen: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "Fout bij verzamelen software-inventaris: %s"
+msgstr "Kon geen Linux netwerkinformatie ophalen: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -419,7 +419,7 @@ msgstr "Mislukt om Fedora release upgrade toe te passen: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "Verzenden van initiële gegevens mislukt: %s"
+msgstr "Kon openSUSE release-upgrade niet toepassen: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -1764,7 +1764,7 @@ msgstr "Fout in binnenkomende wachtrijverwerker: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "Bericht gemarkeerd als verwerking: %s"
+msgstr "Kon inkomende bericht niet als verwerkt merken: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1881,7 +1881,7 @@ msgstr "Onbekend opdrachttype: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Fout bij verzamelen Homebrew-pakketten: %s"
+msgstr "Kon scriptuitvoerresultaat niet in de wachtrij plaatsen: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2803,7 +2803,7 @@ msgstr ""
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "Fout bij detecteren van partities: %s"
+msgstr "Fout bij het wachten op installatievoltooiing: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3283,7 +3283,7 @@ msgstr "Commando niet gevonden: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:788
 #, python-format
 msgid "Command execution failed: %s"
-msgstr "Processor detectie-fallback mislukt: %s"
+msgstr "Opdrachtuitvoering mislukt: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:39
 #, python-format
@@ -3476,6 +3476,12 @@ msgstr "Timeout bij controle van WSL-status"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"Bericht %s in de wachtrij is geen leesbare JSON; het wordt niet via polling "
+"verzonden"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5302,7 +5308,3 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU's mogen niet meer dan 64 zijn"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "Bericht %s in de wachtrij is geen leesbare JSON; het wordt niet via polling verzonden"

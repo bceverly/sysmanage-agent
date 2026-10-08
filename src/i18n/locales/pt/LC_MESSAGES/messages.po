@@ -255,7 +255,7 @@ msgstr "Falha ao obter informações de armazenamento BSD: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "Falha ao coletar inventário de software: %s"
+msgstr "Falha ao obter informações de rede BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -275,7 +275,7 @@ msgstr "Falha ao obter informações de armazenamento Linux: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "Falha ao coletar inventário de software: %s"
+msgstr "Falha ao obter informações de rede Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -418,7 +418,7 @@ msgstr "Falha ao aplicar upgrade de release Fedora: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "Falha ao enviar atualizações de dados iniciais: %s"
+msgstr "Falha ao aplicar o upgrade de lançamento do openSUSE: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -721,7 +721,7 @@ msgstr "Nenhum pacote coletado da API REST do winget"
 #: src/sysmanage_agent/collection/package_collector_windows.py:94
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
-msgstr "Falha ao coletar pacotes apt: %s"
+msgstr "Erro ao coletar pacotes winget via API REST: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:131
 #, python-format
@@ -1879,7 +1879,7 @@ msgstr "Tipo de comando desconhecido: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Falha ao coletar pacotes Homebrew: %s"
+msgstr "Falha ao colocar em fila o resultado da execução do script: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2263,7 +2263,7 @@ msgstr "FileNotFoundError: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment_plan.py:521
 msgid "timeout"
-msgstr "tempo esgotado"
+msgstr "tempo de espera"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:120
 #, python-format
@@ -2800,7 +2800,7 @@ msgstr "Falha ao enfileirar conclusão da instalação para solicitação %s"
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "Erro ao detectar partições: %s"
+msgstr "Erro na fila de instalação concluída: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3279,7 +3279,7 @@ msgstr "Comando não encontrado: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:788
 #, python-format
 msgid "Command execution failed: %s"
-msgstr "Falha na detecção alternativa do processador: %s"
+msgstr "A execução do comando falhou: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:39
 #, python-format
@@ -3469,6 +3469,11 @@ msgstr "Verificação do status do WSL falhou por tempo excedido"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Erro ao verificar suporte WSL: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"A mensagem na fila %s não é JSON legível; não será enviada por sondagem"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5318,7 +5323,3 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "As CPUs não podem exceder 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "A mensagem na fila %s não é JSON legível; não será enviada por sondagem"

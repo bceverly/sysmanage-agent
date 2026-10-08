@@ -252,7 +252,7 @@ msgstr "無法取得BSD儲存裝置資訊：%s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "收集軟體清單失敗：%s"
+msgstr "無法取得 BSD 網路資訊：%s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -272,7 +272,7 @@ msgstr "無法取得Linux儲存裝置資訊：%s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "收集軟體清單失敗：%s"
+msgstr "無法取得 Linux 網路資訊：%s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -1733,7 +1733,7 @@ msgstr "進口隊列處理器中發生錯誤：%s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "訊息已標記為處理中：%s"
+msgstr "無法標記進站訊息 %s 為處理中"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1847,7 +1847,7 @@ msgstr "未知的命令類型：%s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "收集 Homebrew 軟體包失敗：%s"
+msgstr "無法將腳本執行結果排隊：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -1922,7 +1922,7 @@ msgstr "伺服器拒絕了驗證：%s"
 
 #: src/sysmanage_agent/core/auth_helper.py:77
 msgid "no connection token"
-msgstr "無連線權杖"
+msgstr "無連接令牌"
 
 #: src/sysmanage_agent/core/auth_helper.py:87
 #, python-format
@@ -2253,7 +2253,7 @@ msgstr "gpg 引入失敗 (rc=%s)：%s"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:268
 msgid "Key imported and verified present"
-msgstr "金鑰已導入並驗證存在"
+msgstr "密鑰已進口並驗證通過"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:270
 msgid "gpg import returned success but fingerprint not found"
@@ -2758,7 +2758,7 @@ msgstr "將安裝完成請求加入佇列失敗：%s"
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "偵測分割區時發生錯誤: %s"
+msgstr "安裝完成排隊錯誤：%s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3426,6 +3426,10 @@ msgstr "WSL 狀態檢查超時"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "檢查 WSL 支持時出錯：%s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "佇列中的訊息 %s 不是可讀的 JSON；不會透過輪詢傳送"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5217,7 +5221,3 @@ msgstr "檢查 WSL 支持時出錯：%s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU 不能超過 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "佇列中的訊息 %s 不是可讀的 JSON；不會透過輪詢傳送"

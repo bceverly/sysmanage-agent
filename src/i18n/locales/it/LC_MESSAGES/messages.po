@@ -260,7 +260,7 @@ msgstr ""
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "Errore nella raccolta dell'inventario software: %s"
+msgstr "Impossibile ottenere le informazioni di rete BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -281,7 +281,7 @@ msgstr ""
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "Errore nella raccolta dell'inventario software: %s"
+msgstr "Impossibile ottenere le informazioni di rete Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -1779,7 +1779,8 @@ msgstr "Errore nel processore della coda in ingresso: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "Messaggio contrassegnato come in elaborazione: %s"
+msgstr ""
+"Impossibile contrassegnare il messaggio in entrata %s come in elaborazione"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1897,7 +1898,9 @@ msgstr "Tipo di comando sconosciuto: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Errore nella raccolta dei pacchetti Homebrew: %s"
+msgstr ""
+"Fallito il tentativo di mettere in coda il risultato dell'esecuzione dello "
+"script: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2826,7 +2829,7 @@ msgstr "Impossibile inserire l'installazione completata per la richiesta %s"
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "Errore nel rilevamento delle partizioni: %s"
+msgstr "Errore nella messa in coda della conclusione dell'installazione: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3311,7 +3314,7 @@ msgstr "Comando non trovato: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:788
 #, python-format
 msgid "Command execution failed: %s"
-msgstr "Rilevamento processore alternativo non riuscito: %s"
+msgstr "Esecuzione del comando fallita: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:39
 #, python-format
@@ -3504,6 +3507,12 @@ msgstr "Timeout durante il controllo dello stato di WSL"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Errore durante il controllo del supporto WSL: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"Il messaggio in coda %s non è JSON leggibile; non viene inviato tramite "
+"polling"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5354,7 +5363,3 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "Le CPU non possono superare 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "Il messaggio in coda %s non è JSON leggibile; non viene inviato tramite polling"

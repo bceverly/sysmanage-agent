@@ -264,7 +264,7 @@ msgstr "Échec de l’obtention des informations stockage BSD : %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "Échec de la collecte de l'inventaire logiciel : %s"
+msgstr "Échec de la récupération des informations réseau BSD : %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -284,7 +284,7 @@ msgstr "Échec de l’obtention des informations stockage Linux : %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "Échec de la collecte de l'inventaire logiciel : %s"
+msgstr "Échec de la récupération des informations réseau Linux : %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -428,7 +428,8 @@ msgstr "Échec de l'application de la mise à niveau Fedora : %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "Échec de l'envoi des données initiales : %s"
+msgstr ""
+"Échec de l'application de la mise à niveau de la version openSUSE : %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -731,7 +732,7 @@ msgstr "Aucun paquet collecté depuis winget REST API"
 #: src/sysmanage_agent/collection/package_collector_windows.py:94
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
-msgstr "Échec de la collecte des paquets apt : %s"
+msgstr "Erreur lors de la collecte des packages winget via l'API REST : %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:131
 #, python-format
@@ -1913,7 +1914,8 @@ msgstr "Type de commande inconnu : %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Échec de la collecte des paquets Homebrew : %s"
+msgstr ""
+"Échec de la mise en file d'attente du résultat de l'exécution du script : %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -3523,6 +3525,12 @@ msgstr "Vérification de l'état WSL a échoué après un temps d'attente"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Erreur lors de la vérification du support WSL : %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"Le message en file d'attente %s n'est pas du JSON lisible ; il n'est pas "
+"envoyé par interrogation"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5495,7 +5503,3 @@ msgstr "Erreur lors de la vérification du support WSL : %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "Les CPU ne peuvent pas dépasser 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "Le message en file d'attente %s n'est pas du JSON lisible ; il n'est pas envoyé par interrogation"

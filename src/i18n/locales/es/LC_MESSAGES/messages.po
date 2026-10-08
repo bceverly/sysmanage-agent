@@ -256,7 +256,7 @@ msgstr "No se pudo obtener información de almacenamiento BSD: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "Error al recopilar inventario de software: %s"
+msgstr "Error al obtener información de red BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -276,7 +276,7 @@ msgstr "No se pudo obtener información de almacenamiento Linux: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "Error al recopilar inventario de software: %s"
+msgstr "Error al obtener información de red Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -420,7 +420,7 @@ msgstr "Falló al aplicar la actualización de lanzamiento Fedora: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "Error al enviar datos iniciales: %s"
+msgstr "Error al aplicar la actualización de lanzamiento openSUSE: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -1587,7 +1587,7 @@ msgstr "No se pudo leer el host_id almacenado para la consulta"
 
 #: src/sysmanage_agent/communication/http_polling.py:95
 msgid "Could not read the outbound queue for polling"
-msgstr "No se pudo leer la cola de salida para la consulta"
+msgstr "No se pudo leer la cola de salida para el sondeo"
 
 #: src/sysmanage_agent/communication/http_polling.py:120
 #, python-format
@@ -1774,7 +1774,7 @@ msgstr "Error en el procesador de la cola de entrada: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "Mensaje marcado como procesando: %s"
+msgstr "No se pudo marcar el mensaje entrante %s como en procesamiento"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1890,7 +1890,7 @@ msgstr "Tipo de comando desconocido: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Error al recopilar paquetes Homebrew: %s"
+msgstr "Error al poner en cola el resultado de ejecución del script: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2279,7 +2279,7 @@ msgstr "FileNotFoundError: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment_plan.py:521
 msgid "timeout"
-msgstr "tiempo agotado"
+msgstr "tiempo de espera"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:120
 #, python-format
@@ -3182,7 +3182,7 @@ msgstr "Error al enviar resultados de actualización después de %d intentos"
 
 #: src/sysmanage_agent/operations/update_operations.py:234
 msgid "Could not send fresh update list - not connected"
-msgstr "No se puede enviar mensaje: no conectado al servidor"
+msgstr "No se pudo enviar la lista de actualizaciones frescas - no conectado"
 
 #: src/sysmanage_agent/operations/update_operations.py:257
 msgid "No valid packages found for update"
@@ -3494,6 +3494,10 @@ msgstr "Comprobación de estado de WSL con tiempo de espera excedido"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Error al comprobar el soporte WSL: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "El mensaje en cola %s no es JSON legible; no se envía por sondeo"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5424,7 +5428,3 @@ msgstr "Error al comprobar el soporte WSL: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "Las CPU no pueden exceder 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "El mensaje en cola %s no es JSON legible; no se envía por sondeo"

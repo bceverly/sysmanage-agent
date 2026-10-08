@@ -71,3 +71,6 @@ re:[A-Za-z]+Error: %s
 # (de "Zeitüberschreitung" etc.), so this is scoped to `it` rather than
 # blessing the English everywhere.
 it: re:timeout
+# A Python exception class name in front of its message argument: the
+# class name is an identifier, the same in every locale (2026-10-08).
+re:^[A-Z]\w*(Error|Exception): %s$

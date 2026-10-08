@@ -252,7 +252,7 @@ msgstr "BSD 스토리지 정보를 가져오는 데 실패했습니다: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "소프트웨어 인벤토리 수집 실패: %s"
+msgstr "BSD 네트워크 정보 가져오기 실패: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -272,7 +272,7 @@ msgstr "Linux 스토리지 정보를 가져오는 데 실패했습니다: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "소프트웨어 인벤토리 수집 실패: %s"
+msgstr "Linux 네트워크 정보 가져오기 실패: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -1569,7 +1569,7 @@ msgstr "폴링용으로 저장된 host_id를 읽을 수 없습니다"
 
 #: src/sysmanage_agent/communication/http_polling.py:95
 msgid "Could not read the outbound queue for polling"
-msgstr "출력 대기열을 읽을 수 없습니다"
+msgstr "아웃바운드 큐를 읽을 수 없습니다. 폴링 중"
 
 #: src/sysmanage_agent/communication/http_polling.py:120
 #, python-format
@@ -1784,7 +1784,7 @@ msgstr "인바운드 큐 처리 작업 생성 실패: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:501
 #, python-format
 msgid "Error pruning completed queue messages: %s"
-msgstr "오류로 인해 완료된 대기열 메시지 제거가 실패했습니다: %s"
+msgstr "완료된 큐 메시지 정리 중 오류: %s"
 
 #: src/sysmanage_agent/communication/message_logging_helpers.py:42
 #, python-format
@@ -1855,7 +1855,7 @@ msgstr "알 수 없는 명령 유형: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Homebrew 패키지 수집 실패: %s"
+msgstr "스크립트 실행 결과 큐에 오류 발생: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2766,7 +2766,7 @@ msgstr "요청 %s에 대한 설치 완료를 대기열에 추가하는데 실패
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "파티션 감지 오류: %s"
+msgstr "설치 완료 큐에 오류 발생: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3434,6 +3434,10 @@ msgstr "WSL 상태 확인이 시간 초과되었습니다"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL 지원 확인 오류: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "대기열의 메시지 %s은(는) 읽을 수 있는 JSON이 아닙니다. 폴링으로 보내지 않습니다"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5223,7 +5227,3 @@ msgstr "WSL 지원 확인 오류: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU는 64개를 초과할 수 없습니다"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "대기열의 메시지 %s은(는) 읽을 수 있는 JSON이 아닙니다. 폴링으로 보내지 않습니다"

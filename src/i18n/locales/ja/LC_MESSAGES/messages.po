@@ -252,7 +252,7 @@ msgstr "BSD ストレージ情報の取得に失敗しました: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "ソフトウェアインベントリの収集に失敗しました：%s"
+msgstr "BSD ネットワーク情報の取得に失敗しました: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -272,7 +272,7 @@ msgstr "Linux ストレージ情報の取得に失敗しました: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "ソフトウェアインベントリの収集に失敗しました：%s"
+msgstr "Linux ネットワーク情報の取得に失敗しました: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -714,7 +714,7 @@ msgstr "winget REST API からパッケージが収集されませんでした"
 #: src/sysmanage_agent/collection/package_collector_windows.py:94
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
-msgstr "aptパッケージの収集に失敗しました：%s"
+msgstr "REST API を使用して winget パッケージの収集中にエラーが発生しました: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:131
 #, python-format
@@ -1569,7 +1569,7 @@ msgstr "ポーリング用の保存された host_id を読み込めませんで
 
 #: src/sysmanage_agent/communication/http_polling.py:95
 msgid "Could not read the outbound queue for polling"
-msgstr "出力キューを読み込めませんでした"
+msgstr "アウトバウンドキューの読み取りができませんでした (ポーリング用)"
 
 #: src/sysmanage_agent/communication/http_polling.py:120
 #, python-format
@@ -1855,7 +1855,7 @@ msgstr "不明なコマンドタイプ: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Homebrewパッケージの収集に失敗しました：%s"
+msgstr "スクリプト実行結果のキューイングに失敗しました: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2766,7 +2766,7 @@ msgstr "要求 %s のインストール完了をキューに追加できませ�
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "パーティション検出エラー: %s"
+msgstr "インストール完了のキューイングに失敗しました: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3245,7 +3245,7 @@ msgstr "%sコマンドが見つかりません"
 #: src/sysmanage_agent/operations/user_account_operations.py:788
 #, python-format
 msgid "Command execution failed: %s"
-msgstr "プロセッサ検出フォールバックが失敗しました: %s"
+msgstr "コマンドの実行に失敗しました: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:39
 #, python-format
@@ -3434,6 +3434,10 @@ msgstr "WSL ステータスチェックがタイムアウトしました"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL 対応のチェックに失敗しました：%s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "キュー内のメッセージ %s は読み取り可能な JSON ではありません。ポーリングでは送信しません"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5221,7 +5225,3 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU は 64 を超えることはできません"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "キュー内のメッセージ %s は読み取り可能な JSON ではありません。ポーリングでは送信しません"

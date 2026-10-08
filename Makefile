@@ -98,6 +98,8 @@ help:
 	@echo "  make i18n-compile      - Compile .po into the runtime .mo (installers depend on this)"
 	@echo "  make i18n-strip-fuzzy  - Turn every fuzzy entry into a clean untranslated gap"
 	@echo "  make i18n-strict       - Catch English-identical, stale and wrong-language values"
+	@echo "  make i18n-verify       - Every translation proven (ledger + deterministic checks)"
+	@echo "  make i18n-verify-run   - Verify unledgered translations (needs SERVICE=)"
 	@echo "  make i18n-markup       - Markup/structure gate (tags and entities must survive translation)"
 	@echo "  make i18n-markup-fix   - Requeue and refill values that fail the markup gate"
 	@echo "  make i18n-check-english - Deterministic, network-free placeholder-integrity gate"
@@ -754,6 +756,21 @@ i18n-markup: setup-venv
 	@$(PYTHON) scripts/i18n_check_markup.py
 	@echo "[OK] i18n markup gate passed"
 
+# Translation verifier (scripts/i18n_verify.py).  i18n-strict and its siblings
+# each catch one KIND of bad translation found in the past; this one asks the
+# opposite question -- has every translated value been PROVEN good?  It fails
+# on any value that is not in the ledger (.i18n-verified) for its exact
+# English + translation, or that fails the deterministic checks
+# (scripts/i18n_quality.py: English left in, list literals, pipeline markers,
+# broken placeholders).  i18n-verify-run fills the ledger and needs the GPU
+# translation service; `make translate` runs it on what it writes.
+i18n-verify: setup-venv
+	@echo "=== i18n verify (every translation proven, not merely defect-free) ==="
+	@$(PYTHON) scripts/i18n_verify.py
+
+i18n-verify-run: setup-venv
+	@$(PYTHON) scripts/i18n_verify.py --service "$(SERVICE)"
+
 i18n-strict: setup-venv
 	@echo "=== i18n strict (English-identical) ==="
 	@$(PYTHON) scripts/i18n_strict.py
@@ -781,6 +798,7 @@ SERVICE ?= $(or $(TRANSLATION_SERVICE_URL),http://localhost:8765)
 translate: setup-venv
 	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib
 	@$(PYTHON) scripts/translate_i18n.py --service "$(SERVICE)" --fail-on-gaps
+	@$(MAKE) --no-print-directory i18n-verify-run SERVICE="$(SERVICE)"
 
 translate-dry: setup-venv
 	@$(PYTHON) -c "import polib" $(NULL_REDIRECT) || $(PYTHON) -m pip install --quiet polib

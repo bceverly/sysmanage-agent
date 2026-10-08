@@ -257,7 +257,7 @@ msgstr "Не удалось получить информацию о храни�
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "Не удалось собрать инвентарь ПО: %s"
+msgstr "Не удалось получить информацию о сети BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -277,7 +277,7 @@ msgstr "Не удалось получить информацию о храни�
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "Не удалось собрать инвентарь ПО: %s"
+msgstr "Не удалось получить информацию о сети Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -420,7 +420,7 @@ msgstr "Не удалось применить обновление выпуск
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "Ошибка отправки начальных обновлений данных: %s"
+msgstr "Не удалось применить обновление релиза openSUSE: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -722,7 +722,7 @@ msgstr "Из winget REST API не собрано пакетов"
 #: src/sysmanage_agent/collection/package_collector_windows.py:94
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
-msgstr "Не удалось собрать пакеты apt: %s"
+msgstr "Ошибка при сборке пакетов winget через REST API: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:131
 #, python-format
@@ -1774,7 +1774,7 @@ msgstr "Ошибка в процессоре входной очереди: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "Сообщение отмечено как обрабатываемое: %s"
+msgstr "Не удалось пометить входящее сообщение %s как обрабатываемое"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1892,7 +1892,7 @@ msgstr "Неизвестный тип команды: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "Не удалось собрать пакеты Homebrew: %s"
+msgstr "Не удалось добавить в очередь результат выполнения скрипта: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2810,7 +2810,7 @@ msgstr "Не удалось добавить завершение установ
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "Ошибка обнаружения разделов: %s"
+msgstr "Ошибка при добавлении установки в очередь завершения: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3290,7 +3290,7 @@ msgstr "Команда не найдена: %s"
 #: src/sysmanage_agent/operations/user_account_operations.py:788
 #, python-format
 msgid "Command execution failed: %s"
-msgstr "Резервное определение процессора не удалось: %s"
+msgstr "Выполнение команды не удалось: %s"
 
 #: src/sysmanage_agent/operations/windows_repository_operations.py:39
 #, python-format
@@ -3479,6 +3479,12 @@ msgstr "Проверка статуса WSL не удалась в течени�
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Ошибка проверки поддержки WSL: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"Сообщение %s в очереди не является читаемым JSON; оно не отправляется через "
+"опрос"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5312,7 +5318,3 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "Процессоров не может быть больше 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "Сообщение %s в очереди не является читаемым JSON; оно не отправляется через опрос"

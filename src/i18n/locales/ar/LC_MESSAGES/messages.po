@@ -254,7 +254,7 @@ msgstr "فشل في الحصول على معلومات التخزين BSD: %s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %ssysmanage-agent.yaml"
+msgstr "فشل في الحصول على معلومات شبكة BSD: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -274,7 +274,7 @@ msgstr "فشل في الحصول على معلومات التخزين Linux: %s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "فشل في جمع جرد البرمجيات: %s"
+msgstr "فشل في الحصول على معلومات شبكة Linux: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -417,7 +417,7 @@ msgstr "فشل في تطبيق تحديث الإصدار Fedora: %s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "فشل في إرسال تحديثات البيانات الأولية: %s"
+msgstr "فشل تطبيق ترقية إصدار openSUSE: %s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -1147,7 +1147,7 @@ msgstr "لفشل تقصي تحديثات Windows: %s"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:46
 msgid "Windows Update detection timed out"
-msgstr "لفشل تقصي تحديثات Windows بعد انتهاء الوقت المحدد"
+msgstr "كشف تحديث Windows انتهى بوقت غير كافٍ"
 
 #: src/sysmanage_agent/collection/update_detection_windows_system.py:49
 #, python-format
@@ -1571,7 +1571,7 @@ msgstr "لا يمكن قراءة host_id المخزن للتحقق منها"
 
 #: src/sysmanage_agent/communication/http_polling.py:95
 msgid "Could not read the outbound queue for polling"
-msgstr "لا يمكن قراءة صفوف الإرسال للتحقق منها"
+msgstr "تعذر قراءة قائمة الرسائل الصادرة للتحقق منها"
 
 #: src/sysmanage_agent/communication/http_polling.py:120
 #, python-format
@@ -1749,7 +1749,7 @@ msgstr "خطأ في معالج طابور الواردات: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "تم وضع علامة على الرسالة كقيد المعالجة: %s"
+msgstr "تعذر وضع علامة على رسالة الوارد %s كقيد المعالجة"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1854,7 +1854,7 @@ msgstr "تمت معالجة UUID تنفيذ النص البرمجي %s بالف�
 
 #: src/sysmanage_agent/core/agent_utils.py:459
 msgid "Generic command missing nested command_type"
-msgstr "الأمر العام مفقود command_type المتداخل"
+msgstr "الأمر العام مفقود نوع الأمر المتداخل"
 
 #: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
@@ -1864,7 +1864,7 @@ msgstr "نوع أمر غير معروف: %s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "فشل في جمع حزم Homebrew: %s"
+msgstr "فشل في وضع علامة على نتيجة تنفيذ النص البرمجي كقيد: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2247,7 +2247,7 @@ msgstr " FileNotFoundError: %s"
 
 #: src/sysmanage_agent/operations/generic_deployment_plan.py:521
 msgid "timeout"
-msgstr "انتهت المهلة"
+msgstr "انتهاء المهلة"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:120
 #, python-format
@@ -2778,7 +2778,7 @@ msgstr "فشل في ترتيب اكتمال التثبيت لطلب %s"
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "خطأ في اكتشاف الأقسام: %s"
+msgstr "خطأ في وضع علامة على إكمال تثبيت: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3446,6 +3446,12 @@ msgstr "لفشل فحص حالة WSL بعد انتهاء الوقت المحدد
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "خطأ في التحقق من دعم WSL: %s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr ""
+"الرسالة %s في قائمة الانتظار ليست JSON قابلة للقراءة؛ لن يتم إرسالها عبر "
+"الاستطلاع"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5277,7 +5283,3 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "لا يمكن أن تتجاوز وحدات المعالجة المركزية 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "الرسالة %s في قائمة الانتظار ليست JSON قابلة للقراءة؛ لن يتم إرسالها عبر الاستطلاع"

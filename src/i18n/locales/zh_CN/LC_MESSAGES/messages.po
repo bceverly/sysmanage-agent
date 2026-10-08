@@ -252,7 +252,7 @@ msgstr "获取BSD存储信息失败：%s"
 #: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
 #, python-format
 msgid "Failed to get BSD network info: %s"
-msgstr "收集软件清单失败：%s"
+msgstr "获取 BSD 网络信息失败：%s"
 
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:171
 #, python-format
@@ -272,7 +272,7 @@ msgstr "获取Linux存储信息失败：%s"
 #: src/sysmanage_agent/collection/hardware_collector_linux.py:454
 #, python-format
 msgid "Failed to get Linux network info: %s"
-msgstr "收集软件清单失败：%s"
+msgstr "获取 Linux 网络信息失败：%s"
 
 #: src/sysmanage_agent/collection/hardware_collector_macos.py:134
 #, python-format
@@ -415,7 +415,7 @@ msgstr "应用 Fedora 发行版升级失败：%s"
 #: src/sysmanage_agent/collection/linux_update_applicators.py:441
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
-msgstr "发送初始数据更新失败：%s"
+msgstr "应用 openSUSE 发布升级失败：%s"
 
 #: src/sysmanage_agent/collection/linux_update_detectors.py:62
 #, python-format
@@ -1734,7 +1734,7 @@ msgstr "入队处理器中出现错误：%s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:174
 #, python-format
 msgid "Could not mark inbound message %s as processing"
-msgstr "消息已标记为处理中：%s"
+msgstr "无法标记入站消息 %s 为处理中"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:204
 #, python-format
@@ -1848,7 +1848,7 @@ msgstr "未知的命令类型：%s"
 #: src/sysmanage_agent/core/agent_utils.py:530
 #, python-format
 msgid "Failed to queue script execution result: %s"
-msgstr "收集 Homebrew 软件包失败：%s"
+msgstr "脚本执行结果无法队列：%s"
 
 #: src/sysmanage_agent/core/agent_utils.py:549
 #, python-format
@@ -2759,7 +2759,7 @@ msgstr "为请求队列安装完成失败：%s"
 #: src/sysmanage_agent/operations/package_operations.py:628
 #, python-format
 msgid "Error queueing installation completion: %s"
-msgstr "检测分区时出错: %s"
+msgstr "安装完成时出错队列：%s"
 
 #: src/sysmanage_agent/operations/package_operations.py:684
 #, python-format
@@ -3427,6 +3427,10 @@ msgstr "WSL 状态检查超时"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "检查WSL支持时出错：%s"
+
+#: src/sysmanage_agent/communication/http_polling.py
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "队列中的消息 %s 不是可读的 JSON；不会通过轮询发送"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -5222,7 +5226,3 @@ msgstr "检查WSL支持时出错：%s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU 不能超过 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "队列中的消息 %s 不是可读的 JSON；不会通过轮询发送"
