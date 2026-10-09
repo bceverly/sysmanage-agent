@@ -27,7 +27,7 @@ Verification has two layers:
 
   2. Model-backed (the translation service on the GPU box, ``POST
      /verify/batch``): a multilingual embedding must place the translation
-     next to its source (bge-m3 cosine >= 0.75 passes, < 0.40 fails), and
+     next to its source (bge-m3 cosine >= 0.65 passes, < 0.40 fails), and
      anything between goes to a single-item judge asked one question -- does
      this say what the source says?  Calibrated 2026-10-08: the embedding
      separates a translation from another key's text (swapped pairs never
