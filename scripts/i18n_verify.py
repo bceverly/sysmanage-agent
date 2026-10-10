@@ -83,6 +83,15 @@ SAVE_EVERY = 60.0  # seconds between ledger saves, so an interrupted run resumes
 # A locale directory can hold other JSON (sysmanage-docs kept an analysis dump
 # beside its locale files); only names shaped like a locale are translations.
 _LOCALE = re.compile(r"^[a-z]{2}(?:_[A-Z]{2})?$")
+# The 13 locales the product ships (and the translation service accepts).  A
+# bundle can carry others -- the Pro+ alerting bundle held 73 leftover strings
+# each in pl, tr and a bare zh -- which no user can select; they are reported,
+# not verified (the service answers 400 for them).
+SUPPORTED = frozenset("ar de es fr hi it ja ko nl pt ru zh_CN zh_TW".split())
+
+
+# (surface, locale) -> values skipped because the product does not ship it.
+UNSUPPORTED: Counter = Counter()
 
 
 class Value(NamedTuple):
@@ -171,6 +180,9 @@ def translated_values(allow) -> Iterator[Value]:
     sources.append(_plugin_values())
     for stream in sources:
         for item in stream:
+            if item.lang not in SUPPORTED:
+                UNSUPPORTED[(item.surface, item.lang)] += 1
+                continue
             val = item.value
             if isinstance(val, str):
                 if not val.strip() or val.startswith(strict.TODO):
@@ -239,7 +251,17 @@ def classify(allow, ledger) -> Tuple[List[Tuple[Value, str]], List[Value]]:
     return failed, pending
 
 
+def _note_unsupported() -> None:
+    if UNSUPPORTED:
+        found = ", ".join(
+            f"{surface} {lang} ({n})"
+            for (surface, lang), n in sorted(UNSUPPORTED.items())
+        )
+        print(f"note: not verified, locale not shipped: {found}", file=sys.stderr)
+
+
 def _report(failed, pending, deterministic_only, limit) -> int:
+    _note_unsupported()
     if failed:
         print(
             f"\nFAILED deterministic checks -- {len(failed)} value(s):", file=sys.stderr
@@ -355,6 +377,21 @@ def _run_batches(service, by_lang, total, ledger, model_failed) -> Optional[int]
     return done
 
 
+def _sibling_ledgers() -> Dict[str, Dict[str, str]]:
+    """The other SysManage repositories' ledgers, when checked out beside this one."""
+    out = {}
+    for sibling in sorted(REPO.parent.iterdir()):
+        path = sibling / LEDGER.name
+        if sibling != REPO and sibling.name.startswith("sysmanage") and path.is_file():
+            entries = {}
+            for line in path.read_text(encoding="utf-8").splitlines():
+                parts = line.split("\t", 2)
+                if len(parts) >= 3:
+                    entries[f"{parts[0]}:{parts[1]}"] = parts[2]
+            out[sibling.name] = entries
+    return out
+
+
 def do_verify(service: str, allow, limit: int) -> int:
     ledger = load_ledger()
     failed, pending = classify(allow, ledger)
@@ -363,10 +400,26 @@ def do_verify(service: str, allow, limit: int) -> int:
     unique: "OrderedDict[str, Value]" = OrderedDict()
     for item in pending:
         unique.setdefault(ident(item), item)
+    # The same (locale, English, translation) already verified in a sibling
+    # repository is the same verdict: the digest covers exactly that triple.
+    # Mostly short UI labels ("Grade" -> "Cijfer"), which are precisely what
+    # the embedding and the judge handle worst (2026-10-10).
+    reused = 0
+    for name, sibling in _sibling_ledgers().items():
+        for key in list(unique):
+            how = sibling.get(key)
+            if how and key not in ledger:
+                ledger[key] = f"{how.split(' ', 1)[0]} (verified in {name})"
+                del unique[key]
+                reused += 1
+    if reused:
+        save_ledger(ledger)
+        print(f"reused {reused} verdict(s) from sibling repositories")
     by_lang: Dict[str, List[Value]] = defaultdict(list)
     for item in unique.values():
         by_lang[item.lang].append(item)
     total = len(unique)
+    _note_unsupported()
     print(
         f"{len(failed)} deterministic failure(s); verifying {total} value(s) "
         f"({len(pending)} before de-duplication) against {service}"
@@ -473,22 +526,39 @@ def do_requeue() -> int:
 
 
 def do_accept(lang: str, key: str, reason: str, allow) -> int:
-    if not reason.strip():
+    return do_accept_many([{"lang": lang, "key": key, "reason": reason}], allow)
+
+
+def do_accept_many(decisions: List[dict], allow) -> int:
+    """Record human overrides: ``[{"lang", "key", "reason"}, ...]``.
+
+    One scan of the repository for any number of decisions -- a review of a
+    few hundred rejects is one call, not a few hundred full scans.
+    """
+    if any(not str(d.get("reason", "")).strip() for d in decisions):
         print(
-            "--accept needs --reason: an override is a reviewed decision.",
+            "Every acceptance needs a reason: an override is a reviewed decision.",
             file=sys.stderr,
         )
         return 1
+    wanted = {
+        (d["lang"], d["key"]): " ".join(str(d["reason"]).split()) for d in decisions
+    }
     ledger = load_ledger()
-    hits = [i for i in translated_values(allow) if i.lang == lang and i.key == key]
-    if not hits:
-        print(f"No translated value for {lang} {key}.", file=sys.stderr)
-        return 1
-    for item in hits:
-        ledger[ident(item)] = "human " + " ".join(reason.split())
-        print(f"accepted {item.surface} {lang} {key}: {str(item.value)[:80]!r}")
+    found = set()
+    for item in translated_values(allow):
+        reason = wanted.get((item.lang, item.key))
+        if reason is not None:
+            ledger[ident(item)] = "human " + reason
+            found.add((item.lang, item.key))
+            print(
+                f"accepted {item.surface} {item.lang} {item.key}: {str(item.value)[:70]!r}"
+            )
     save_ledger(ledger)
-    return 0
+    missing = sorted(set(wanted) - found)
+    for lang, key in missing:
+        print(f"No translated value for {lang} {key}.", file=sys.stderr)
+    return 1 if missing else 0
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -504,6 +574,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--requeue", action="store_true")
     parser.add_argument("--accept", nargs=2, metavar=("LOCALE", "KEY"))
     parser.add_argument("--reason", default="")
+    parser.add_argument(
+        "--accept-file",
+        help='JSON list of {"lang", "key", "reason"}: many --accept decisions at once',
+    )
     parser.add_argument("--limit", type=int, default=10)
     args = parser.parse_args(argv)
 
@@ -512,6 +586,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         return do_requeue()
     if args.accept:
         return do_accept(args.accept[0], args.accept[1], args.reason, allow)
+    if args.accept_file:
+        decisions = json.loads(Path(args.accept_file).read_text(encoding="utf-8"))
+        return do_accept_many(decisions, allow)
     if args.service:
         if not args.service.lower().startswith(("http://", "https://")):
             print("--service must be an http:// or https:// URL", file=sys.stderr)

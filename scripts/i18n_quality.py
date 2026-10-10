@@ -58,11 +58,11 @@ FUNCTION_WORDS = frozenset(
 # (or), "was"; German "in", "will" (wants), "was" (what); and so on.  Without
 # these exclusions correct Dutch and German fail.
 SHARED_WORDS = {
-    "nl": {"is", "in", "of", "an", "was", "on", "been", "has", "have", "what"},
+    "nl": {"is", "in", "of", "an", "was", "on", "been", "has", "have", "what", "we"},
     "de": {"in", "an", "will", "was", "also", "so"},
     "it": {"in", "come", "as", "do", "all"},
     "es": {"as", "do", "has"},
-    "pt": {"as", "do", "on"},
+    "pt": {"as", "do", "on", "so"},
     "fr": {"on", "as", "an", "or", "but"},
 }
 
@@ -79,7 +79,12 @@ _NOT_PROSE = re.compile(
     r"|\S*[/_.=]\S*",
     re.S,
 )
-_WORD = re.compile(r"[A-Za-z]+")
+# A WORD is a run of letters in any script, so accented words stay whole:
+# with [A-Za-z]+ Spanish "Análisis" split into "An" + "lisis" and Portuguese
+# "até" became "at", and correct translations were refused (2026-10-09).
+# Hyphen-joined runs ("Man-in-the-Middle", "Trust-on-First-Use") are one
+# word -- an English term kept whole, not prose left untranslated.
+_WORD = re.compile(r"[^\W\d_]+(?:-[^\W\d_]+)*")
 
 PLACEHOLDER = re.compile(
     r"\{\{\s*[\w.]+\s*\}\}|\{[A-Za-z_]\w*\}|%\(\w+\)[sd]|%[sd]|\$\{\w+\}"
@@ -123,6 +128,11 @@ def problem(lang: str, source: str, value) -> Optional[str]:
         want = sorted(placeholders(source).elements())
         have = sorted(placeholders(value).elements())
         return f"placeholders {have} do not match the source's {want}"
+    if ("\u2013" in value or "\u2014" in value) and not (
+        "\u2013" in source or "\u2014" in source
+    ):
+        # ASCII hyphens only, in every repository and every locale.
+        return "an en or em dash (use ASCII: ' -- ' where the English has it)"
     hits = english_words(lang, value)
     if len(hits) >= ENGLISH_HIT_LIMIT:
         return "untranslated English: " + " ".join(hits[:6])
