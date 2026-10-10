@@ -376,6 +376,8 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         },
     },
     "profile": {
+        # The user's own profile page: there it IS a person's details.
+        "except_keys": ["userProfile.*"],
         "canonical": {
             "de": "Profil",
             "nl": "profiel",
@@ -455,6 +457,12 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
     # Every forbidden form below was written by the service and found by the
     # verifier's human review; none has an innocent reading when the English
     # contains the term.
+    "advisory": {
+        # A published SECURITY notice, measured 2026-10-10 rendered as
+        # "warnings" / "alerts" in the sysmanage frontend navigation.
+        "canonical": {"zh_CN": "安全公告", "zh_TW": "安全公告"},
+        "forbid": {"de": ["Warnungen"], "zh_CN": ["预警"], "zh_TW": ["警示"]},
+    },
     "idempotent": {
         "canonical": {"zh_CN": "幂等", "zh_TW": "冪等", "ja": "冪等"},
         # The SIMPLIFIED character in a Traditional Chinese catalog.

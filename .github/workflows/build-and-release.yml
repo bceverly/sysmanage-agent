@@ -4039,6 +4039,11 @@ jobs:
           MSI_URL: ${{ steps.render.outputs.msi_url }}
           MSI_URL_ARM64: ${{ steps.render.outputs.msi_url_arm64 }}
           WINGET_PKGS_TOKEN: ${{ secrets.WINGET_PKGS_TOKEN }}
+          # Authenticates the api.github.com read of komac's latest release so it
+          # doesn't hit the 60-req/hr UNauthenticated limit, which is shared
+          # across Actions runner IPs and returns 403 (v3.10.0.5, 2026-10-10).
+          # Same fix as the sysmanage repo's winget step.
+          GH_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if [ "$MODE" != "publish" ]; then
@@ -4159,7 +4164,20 @@ jobs:
           # hyphenated full name so naming flips (gnu↔musl) don't
           # break this again.  ``setup`` is excluded so we don't match
           # the Windows installer variant.
-          KOMAC_URL=$(curl -fsSL https://api.github.com/repos/russellbanks/Komac/releases/latest \
+          # Fetch + parse in two steps so a 403/empty body surfaces as a clear
+          # error here; authenticated (=> 1000 req/hr) with retries.
+          KOMAC_API="https://api.github.com/repos/russellbanks/Komac/releases/latest"
+          AUTH_HEADER=()
+          if [ -n "${GH_API_TOKEN:-}" ]; then
+            AUTH_HEADER=(-H "Authorization: Bearer ${GH_API_TOKEN}")
+          fi
+          if ! KOMAC_JSON=$(curl -sSfL --retry 3 --retry-delay 5 \
+              -H "Accept: application/vnd.github+json" \
+              "${AUTH_HEADER[@]}" "$KOMAC_API"); then
+            echo "::error::Could not query the komac latest-release API (HTTP error / rate limit)."
+            exit 1
+          fi
+          KOMAC_URL=$(printf '%s' "$KOMAC_JSON" \
             | grep -oE '"browser_download_url": "[^"]+\.tar\.gz"' \
             | cut -d'"' -f4 \
             | grep -iE 'linux' \
@@ -4167,11 +4185,11 @@ jobs:
             | grep -viE 'setup' \
             | head -1)
           if [ -z "$KOMAC_URL" ]; then
-            echo "::error::Could not resolve latest komac linux-x86_64 musl tarball URL"
+            echo "::error::Could not resolve latest komac linux-x86_64 tarball URL"
             exit 1
           fi
           echo "Downloading $KOMAC_URL"
-          curl -fsSL -o /tmp/komac.tar.gz "$KOMAC_URL"
+          curl -fsSL --retry 3 --retry-delay 5 -o /tmp/komac.tar.gz "$KOMAC_URL"
           mkdir -p /tmp/komac-bin
           tar xzf /tmp/komac.tar.gz -C /tmp/komac-bin
           KOMAC=$(find /tmp/komac-bin -type f -name komac | head -1)

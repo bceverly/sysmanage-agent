@@ -706,7 +706,7 @@ endif
 lint-freebsd-port:
 	@$(PYTHON) scripts/check_freebsd_port.py
 
-lint: lint-file-length lint-license-headers format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-check-english i18n-strict i18n-markup translate-check lint-version lint-freebsd-port
+lint: lint-file-length lint-license-headers format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-check-english i18n-strict i18n-verify i18n-markup translate-check lint-version lint-freebsd-port
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)

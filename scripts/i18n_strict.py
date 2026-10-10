@@ -508,7 +508,7 @@ def check_po(surface, allow):
     return english, wrong
 
 
-def glossary_hits(src: str, value: str, lang: str):
+def glossary_hits(src: str, value: str, lang: str, key: str = ""):
     """(term, forbidden form) pairs where a translation took the wrong sense.
 
     Deny-first ON PURPOSE.  Requiring the canonical word instead would mean
@@ -530,6 +530,11 @@ def glossary_hits(src: str, value: str, lang: str):
         if not pat.search(src):
             continue
         spec = i18n_glossary.TERMS.get(term, {})
+        # Keys where the EVERYDAY sense is the right one -- "profile" on the
+        # user's own profile page is a person's details, not a configuration
+        # profile (2026-10-10).
+        if key and any(fnmatch.fnmatch(key, g) for g in spec.get("except_keys", ())):
+            continue
         # A value carrying the agreed word is right BY DEFINITION, whatever
         # else it contains.  Checking this first is what lets Arabic مضيف pass
         # while still catching a bare الضيوف.
@@ -560,7 +565,7 @@ def gather_glossary():
                 for msgid, msgstr in read_po(path).items():
                     if msgstr.startswith(TODO):
                         continue
-                    for term, bad in glossary_hits(msgid, msgstr, lang):
+                    for term, bad in glossary_hits(msgid, msgstr, lang, msgid):
                         out.append(
                             (surface["name"], lang, path, msgid, msgid, term, bad)
                         )
@@ -576,7 +581,7 @@ def gather_glossary():
                 src = en.get(key)
                 if src is None or value.startswith(TODO) or not value.strip():
                     continue
-                for term, bad in glossary_hits(src, value, lang):
+                for term, bad in glossary_hits(src, value, lang, key):
                     out.append((surface["name"], lang, path, key, src, term, bad))
     return out
 
