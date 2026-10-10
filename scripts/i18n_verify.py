@@ -359,6 +359,11 @@ def _run_batches(service, by_lang, total, ledger, model_failed) -> Optional[int]
             for item, res in zip(chunk, results):
                 if res.get("ok"):
                     ledger[ident(item)] = "model"
+                elif res.get("retry"):
+                    # The service could not judge it this time (a timeout
+                    # under load): no verdict either way, so the next run
+                    # picks it up again.
+                    continue
                 else:
                     model_failed[ident(item)] = res.get("reason") or "rejected"
             done += len(chunk)
