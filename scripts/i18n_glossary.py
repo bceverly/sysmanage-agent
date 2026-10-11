@@ -142,6 +142,9 @@ GLOSSARY: Dict[str, str] = {
     "host": "a managed computer or server. NOT a guest, and NOT a person who "
     "receives visitors",
     "child host": "a virtual machine or container running on a managed host",
+    "machine": "the physical (or virtual) computer an operating system runs "
+    "on; several hosts can share one (multi-boot). NOT machinery. In "
+    "'machine translation' or 'machine-readable' it keeps its usual sense",
     "parent host": "the machine a child host runs on",
     "fleet": "all the machines under management, taken as a group. NOT ships, "
     "and NOT a convoy of vehicles",
@@ -149,6 +152,9 @@ GLOSSARY: Dict[str, str] = {
     "or a representative",
     "inventory": "a NAMED SET OF HOSTS selected for work. NOT warehouse "
     "stock, goods, or supplies on hand",
+    "asset tag": "an organization's inventory number that identifies one "
+    "physical machine, often printed on a label stuck to it. NOT a price tag, "
+    "NOT a hashtag, and NOT a host tag (a grouping label)",
     "tag": "a label attached to hosts for grouping. NOT a price tag",
     "site": "a location that groups hosts. NOT a building plot, and NOT a " "web site",
     "tenant": "one customer's isolated data within a shared installation. NOT "

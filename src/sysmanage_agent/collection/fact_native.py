@@ -586,9 +586,18 @@ def build_system_info(collector) -> List[Dict[str, Any]]:
     """
     info = collector.get_hardware_info() or {}
     memory_mb = info.get("memory_total_mb")
+    # The machine identity (Phase 23.2).  osquery prints the SMBIOS UUID in
+    # upper case; the hardware report keeps the canonical lower-case form.
+    identity = info.get("hardware_identity") or {}
+    uuid = identity.get("system_uuid")
     return [
         {
             "hostname": platform.node() or None,
+            "uuid": uuid.upper() if uuid else None,
+            "hardware_vendor": identity.get("vendor"),
+            "hardware_model": identity.get("model"),
+            "hardware_serial": identity.get("system_serial"),
+            "board_serial": identity.get("board_serial"),
             "cpu_type": platform.machine() or None,
             "cpu_brand": info.get("cpu_model"),
             "cpu_physical_cores": info.get("cpu_cores"),

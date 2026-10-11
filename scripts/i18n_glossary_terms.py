@@ -463,6 +463,12 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         "canonical": {"zh_CN": "安全公告", "zh_TW": "安全公告"},
         "forbid": {"de": ["Warnungen"], "zh_CN": ["预警"], "zh_TW": ["警示"]},
     },
+    "machine": {
+        # Measured 2026-10-11: de "Maschineller Link" (a machine-MADE link).
+        # Only the measured phrase: the adjective itself is right in
+        # "maschinell übersetzt" (machine-translated).
+        "forbid": {"de": ["Maschineller Link"]},
+    },
     "idempotent": {
         "canonical": {"zh_CN": "幂等", "zh_TW": "冪等", "ja": "冪等"},
         # The SIMPLIFIED character in a Traditional Chinese catalog.

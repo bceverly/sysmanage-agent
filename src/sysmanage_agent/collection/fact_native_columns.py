@@ -32,9 +32,12 @@ NATIVE_COLUMNS: Dict[str, Tuple[str, ...]] = {
     "groups": _cols("gid groupname"),
     "user_groups": _cols("uid gid"),
     "os_version": _cols("name version build platform platform_like codename arch"),
+    # uuid / serials come from the machine identity (Phase 23.2); on Linux and
+    # NetBSD they need privileged mode and are NULL without it, as in osquery.
     "system_info": _cols(
-        "hostname cpu_type cpu_brand cpu_physical_cores cpu_logical_cores"
-        " physical_memory"
+        "hostname uuid cpu_type cpu_brand cpu_physical_cores cpu_logical_cores"
+        " physical_memory hardware_vendor hardware_model hardware_serial"
+        " board_serial"
     ),
     "interface_addresses": _cols("interface address mask broadcast point_to_point"),
     "mounts": _cols(

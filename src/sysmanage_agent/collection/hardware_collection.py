@@ -23,6 +23,7 @@ from src.sysmanage_agent.collection.hardware_collector_macos import (
 from src.sysmanage_agent.collection.hardware_collector_windows import (
     HardwareCollectorWindows,
 )
+from src.sysmanage_agent.collection.hardware_identity import collect_identity
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,29 @@ class HardwareCollector:
         raise AttributeError(
             f"'{type(self).__name__}' object has no attribute '{name}'"
         )
+
+    def _hardware_identity(self) -> Dict[str, Any]:
+        """The machine identity, or a report that says why there is none.
+
+        Separately guarded: an identity failure must not cost the rest of the
+        hardware report."""
+        try:
+            return collect_identity(self.system)
+        except Exception as error:  # pylint: disable=broad-except
+            logger.warning("Hardware identity collection failed: %s", error)
+            return {
+                "system_uuid": None,
+                "system_serial": None,
+                "board_serial": None,
+                "vendor": None,
+                "model": None,
+                "match_key": None,
+                "status": {
+                    "system_uuid": "failed",
+                    "system_serial": "failed",
+                    "board_serial": "failed",
+                },
+            }
 
     def get_hardware_info(self) -> Dict[str, Any]:
         """Get comprehensive hardware information formatted for database storage."""
@@ -112,6 +136,10 @@ class HardwareCollector:
                 "network_interfaces": (
                     network_info if isinstance(network_info, list) else []
                 ),
+                # Which PHYSICAL machine this is (Phase 23.2): the asset tag
+                # belongs to it, not to this OS.  Grouping only -- never a
+                # credential.
+                "hardware_identity": self._hardware_identity(),
             }
 
             return hardware_data

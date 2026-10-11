@@ -298,6 +298,38 @@ def mock_os_operations():
 
 
 @pytest.fixture(autouse=True)
+def _isolated_run_ledger(request):
+    """Give every test an empty, in-memory run ledger.
+
+    ``run_ledger`` persists "when did X last run" in the agent database, and a
+    test that does not mock that database reaches the REAL one on the machine
+    running the suite -- reading what a dev agent recorded (so "is an update
+    check due?" depends on the developer's laptop, and two tests passed in CI
+    and failed locally, 2026-10-11) and, worse, writing into it.  The ledger's
+    own tests patch a temporary database and test the real storage; they are
+    left alone.
+    """
+    if request.module.__name__.endswith("test_run_ledger"):
+        yield
+        return
+    from src.database import (  # pylint: disable=import-outside-toplevel
+        run_ledger,
+    )
+
+    runs = {}
+    with patch.object(run_ledger, "last_run", side_effect=runs.get), patch.object(
+        run_ledger,
+        "mark_run",
+        side_effect=lambda name, when=None: runs.__setitem__(
+            name, when or run_ledger._now()  # pylint: disable=protected-access
+        ),
+    ), patch.object(
+        run_ledger, "forget", side_effect=lambda name: runs.pop(name, None)
+    ):
+        yield runs
+
+
+@pytest.fixture(autouse=True)
 def cleanup_temp_files():
     """Automatically clean up any temporary files created during tests."""
     yield

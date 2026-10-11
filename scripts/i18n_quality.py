@@ -71,14 +71,46 @@ ENGLISH_HIT_LIMIT = 2
 # Stripped before counting: code, markup, placeholders, URLs, quoted text (a
 # quoted log line or UI label is SUPPOSED to stay English) and path-, flag- or
 # identifier-shaped tokens.
+#
+# Linear by construction, not by careful regex (CodeQL py/polynomial-redos,
+# 2026-10-11): <code>/<pre> spans are removed with str.find, every regex
+# alternative below is delimited by a class that excludes its own opening
+# character, and path-shaped tokens are dropped by splitting on whitespace.
+_SPANS = (("<code>", "</code>"), ("<pre>", "</pre>"))
 _NOT_PROSE = re.compile(
-    r"<code>.*?</code>|<pre>.*?</pre>|<[^>]+>"
-    r"|\{\{[^}]+\}\}|\{[A-Za-z_]\w*\}|%\(\w+\)[sd]|%[sd]|\$\{\w+\}|&\w+;"
+    r"<[^<>]+>"
+    r"|\{\{[^{}]+\}\}|\{[A-Za-z_]\w*\}|%\(\w+\)[sd]|%[sd]|\$\{\w+\}|&\w+;"
     r"|https?://\S+|`[^`]*`"
-    r"|\"[^\"]*\"|“[^”]*”|„[^“”]*[“”]|«[^»]*»|「[^」]*」|『[^』]*』"
-    r"|\S*[/_.=]\S*",
-    re.S,
+    r"|\"[^\"]*\"|“[^“”]*”|„[^„“”]*[“”]|«[^«»]*»|「[^「」]*」|『[^『』]*』"
 )
+_PATHLIKE = frozenset("/_.=")
+
+
+def _strip_spans(text: str) -> str:
+    """Remove every <code>...</code> and <pre>...</pre> span, in one pass each."""
+    for opening, closing in _SPANS:
+        out, pos = [], 0
+        while True:
+            start = text.find(opening, pos)
+            if start < 0:
+                break
+            end = text.find(closing, start + len(opening))
+            if end < 0:
+                break  # unclosed: leave the rest as prose, as the regex did
+            out.append(text[pos:start])
+            out.append(" ")
+            pos = end + len(closing)
+        out.append(text[pos:])
+        text = "".join(out)
+    return text
+
+
+def _prose(value: str) -> str:
+    """``value`` with everything that is allowed to stay English removed."""
+    text = _NOT_PROSE.sub(" ", _strip_spans(value))
+    return " ".join(t for t in text.split() if not _PATHLIKE.intersection(t))
+
+
 # A WORD is a run of letters in any script, so accented words stay whole:
 # with [A-Za-z]+ Spanish "Análisis" split into "An" + "lisis" and Portuguese
 # "até" became "at", and correct translations were refused (2026-10-09).
@@ -101,7 +133,7 @@ def english_words(lang: str, value: str) -> List[str]:
     if lang == "en":
         return []
     allowed = SHARED_WORDS.get(lang.split("_")[0], set())
-    text = _NOT_PROSE.sub(" ", value)
+    text = _prose(value)
     return [
         w
         for w in _WORD.findall(text)
