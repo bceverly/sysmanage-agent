@@ -50,6 +50,18 @@ from i18n_glossary_terms import ALIASES, TERMS  # noqa: F401
 # ---------------------------------------------------------------------------
 NEVER_TRANSLATE: Tuple[str, ...] = (
     "SysManage",
+    # Operating systems: measured 2026-10-11 as "VrijBSD", "ФриБСД", "自由 BSD",
+    # "フリーBSD", "Линукс".  NOT "Windows": "Maintenance Windows" is a feature
+    # whose name must be translated, and this list is case-sensitive only.
+    "Linux",
+    "macOS",
+    "FreeBSD",
+    "OpenBSD",
+    "NetBSD",
+    "Ubuntu",
+    "Debian",
+    "Fedora",
+    "SMBIOS",
     "OpenBAO",
     "osquery",
     "YARA",
