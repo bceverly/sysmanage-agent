@@ -156,6 +156,8 @@ GLOSSARY: Dict[str, str] = {
     "physical machine, often printed on a label stuck to it. NOT a price tag, "
     "NOT a hashtag, and NOT a host tag (a grouping label)",
     "tag": "a label attached to hosts for grouping. NOT a price tag",
+    "untagged": "having no tag (label) assigned yet. Translate the meaning; "
+    "do NOT transliterate the English word",
     "site": "a location that groups hosts. NOT a building plot, and NOT a " "web site",
     "tenant": "one customer's isolated data within a shared installation. NOT "
     "someone who rents property",
@@ -185,6 +187,9 @@ GLOSSARY: Dict[str, str] = {
     "dry run": "a SIMULATION that reports what WOULD change while changing "
     "nothing. NOT operating something while dry",
     "check mode": "a dry run: report what would change, change nothing",
+    "import": "reading data from a file into SysManage. NOT importing goods "
+    "across a border",
+    "export": "writing data out of SysManage to a file. NOT exporting goods",
     "playbook": "a reusable automation script",
     "remediation": "an action that repairs a detected problem",
     "assignment": "binding a profile to the hosts it applies to",
@@ -403,6 +408,7 @@ _PATTERNS = _patterns()
 # Word characters for forbidden-form boundaries: \w plus the Devanagari and
 # Arabic blocks, which include their combining marks.
 _WORDCHAR = r"[\w\u0900-\u097F\u0600-\u06FF\u0750-\u077F]"
+_HANGUL = re.compile(r"[\uac00-\ud7af]")
 _CJK = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
 
 
@@ -418,7 +424,13 @@ def forbidden_matcher(form: str) -> re.Pattern:
 
     CJK has no boundaries to find, so those fall back to substring -- safe
     there, because 在庫 and 艦隊 are not morphemes of anything we ship.
+
+    Korean is the exception: words ARE space-separated, with particles glued
+    to the END (수출은, 수출을).  So a left boundary only -- without it the
+    forbidden 수입 (trade imports) matched 필수입니다, "is required".
     """
+    if _HANGUL.search(form):
+        return re.compile(rf"(?<![\uac00-\ud7af]){re.escape(form)}")
     if _CJK.search(form):
         return re.compile(re.escape(form))
     # Not \b: Python treats combining marks (Devanagari vowel signs, Arabic

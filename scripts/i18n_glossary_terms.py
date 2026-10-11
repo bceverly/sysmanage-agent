@@ -57,16 +57,20 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         # Every one of these means a GUEST or a party host -- the inversion
         # that shipped in Phase 20.
         "forbid": {
-            "nl": ["gast", "gasten"],
             "ar": ["الضيوف", "ضيوف"],
             "de": ["Gastgeber"],
             "fr": ["animateur", "invité"],
             # NOT "anfitrión"/"anfitrião": Spanish and Portuguese genuinely
             # use them for a host SYSTEM (sistema anfitrión). Only the guest
             # words are the inversion.
-            "es": ["invitado"],
+            "es": ["invitado", "hospedero", "hospederos"],  # lodgers
             "it": ["ospite"],
+            # NOT "servidor": pt values rendering host as server were measured
+            # (2026-10-11), but most host sentences also say "server", so the
+            # word has an innocent reading and is fixed by hand instead.
             "pt": ["convidado"],
+            # The VERB "to host"; measured as the plural noun 2026-10-11.
+            "nl": ["gast", "gasten", "hosten"],
         },
     },
     "inventory": {
@@ -411,12 +415,33 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         # Literally "running while dry".
         "forbid": {
             "de": ["Trockenlauf", "Trockener Lauf"],
-            "nl": ["droogloop"],
             "zh_CN": ["干跑"],
-            "fr": ["exécution sèche", "course sèche"],
+            "fr": ["exécution sèche", "course sèche", "simulation sèche"],
             "ar": ["تجربة جافة"],
             "it": ["corsa a secco"],
+            # Measured 2026-10-11 (asset tag import preview).
+            "nl": ["droogloop", "droge loop"],
+            "ko": ["건조 실행"],
+            "hi": ["सूखा रन"],
+            "ru": ["сухой запуск"],
+            "pt": ["simulação seca"],
+            "zh_TW": ["乾跑"],
         },
+    },
+    "air-gap": {
+        # ko "공기 간격" is "an interval of air" (11 docs values, 2026-10-11).
+        # "공기 격리" is a calque but readable, and widespread; not forbidden.
+        "canonical": {"ko": "에어갭"},
+        "forbid": {"ko": ["공기 간격"]},
+    },
+    "import": {
+        # Reading DATA from a file.  Measured 2026-10-11: trade imports.
+        "canonical": {"ko": "가져오기", "zh_CN": "导入", "zh_TW": "匯入"},
+        "forbid": {"ko": ["수입"], "zh_TW": ["進口"], "zh_CN": ["进口"]},
+    },
+    "export": {
+        "canonical": {"ko": "내보내기", "zh_CN": "导出", "zh_TW": "匯出"},
+        "forbid": {"ko": ["수출"], "zh_TW": ["出口"], "zh_CN": ["出口"]},
     },
     "erratum": {
         # An erratum is a PATCH NOTICE. Every forbidden form below means
@@ -462,6 +487,22 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         # "warnings" / "alerts" in the sysmanage frontend navigation.
         "canonical": {"zh_CN": "安全公告", "zh_TW": "安全公告"},
         "forbid": {"de": ["Warnungen"], "zh_CN": ["预警"], "zh_TW": ["警示"]},
+    },
+    "asset tag": {
+        # Phase 23.2, 2026-10-11.  One rendering per language across the
+        # four repos; nl "Actie-tag" (an action tag) measured from the service.
+        "canonical": {
+            "de": "Asset-Tag",
+            "nl": "asset tag",
+            "hi": "एसेट टैग",
+            "fr": "étiquette d'actif",
+            "it": "etichetta dell'asset",
+        },
+        "forbid": {"nl": ["actie-tag", "actietag"]},
+    },
+    "untagged": {
+        # Measured 2026-10-11: hi transliterated the English word.
+        "forbid": {"hi": ["अटैग्ड"]},
     },
     "machine": {
         # Measured 2026-10-11: de "Maschineller Link" (a machine-MADE link).

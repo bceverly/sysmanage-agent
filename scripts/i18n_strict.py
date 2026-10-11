@@ -508,6 +508,30 @@ def check_po(surface, allow):
     return english, wrong
 
 
+def _spans(pattern: "re.Pattern", text: str):
+    return [m.span() for m in pattern.finditer(text)]
+
+
+def _wrong_sense(spec, lang: str, value: str):
+    """Forbidden forms in ``value`` that the agreed word does not excuse."""
+    canonical = spec.get("canonical", {}).get(lang)
+    canon = _spans(re.compile(re.escape(canonical), re.I), value) if canonical else []
+    found = {}
+    for bad in spec.get("forbid", {}).get(lang, ()):
+        kept = [
+            (start, end)
+            for start, end in _spans(i18n_glossary.forbidden_matcher(bad), value)
+            if not any(cs <= start and end <= ce for cs, ce in canon)
+        ]
+        if kept:
+            found[bad] = kept
+    bad_spans = [span for spans in found.values() for span in spans]
+    excused = any(
+        all(ce <= start or end <= cs for start, end in bad_spans) for cs, ce in canon
+    )
+    return [] if excused else list(found)
+
+
 def glossary_hits(src: str, value: str, lang: str, key: str = ""):
     """(term, forbidden form) pairs where a translation took the wrong sense.
 
@@ -536,14 +560,14 @@ def glossary_hits(src: str, value: str, lang: str, key: str = ""):
         if key and any(fnmatch.fnmatch(key, g) for g in spec.get("except_keys", ())):
             continue
         # A value carrying the agreed word is right BY DEFINITION, whatever
-        # else it contains.  Checking this first is what lets Arabic مضيف pass
-        # while still catching a bare الضيوف.
-        canonical = spec.get("canonical", {}).get(lang)
-        if canonical and canonical.lower() in value.lower():
-            continue
-        for bad in spec.get("forbid", {}).get(lang, ()):
-            if i18n_glossary.forbidden_matcher(bad).search(value):
-                hits.append((term, bad))
+        # else it contains -- but only where the agreed word stands OUTSIDE
+        # the forbidden match.  Inside it, the canonical is just a substring
+        # of the wrong word: nl "Hosten" contains "host", fr "Simulation
+        # sèche" contains "simulation" (both shipped, 2026-10-11).
+        # The reverse also happens: ja canonical エラータ CONTAINS the
+        # forbidden エラー, and a forbidden match inside the agreed word is
+        # no match at all.  So compare spans, not substrings.
+        hits.extend((term, bad) for bad in _wrong_sense(spec, lang, value))
     return hits
 
 
