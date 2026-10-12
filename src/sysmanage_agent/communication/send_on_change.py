@@ -60,7 +60,7 @@ SNAPSHOT_TYPES = frozenset({
     "reboot_status_update", "third_party_repository_update",
     "antivirus_status_update", "firewall_status_update", "graylog_status_update",
     "child_host_list_update", "fips_compliance_update", "package_updates_update",
-    "process_status_update", "host_metrics",
+    "process_status_update", "host_metrics", "time_status_update",
 })  # fmt: skip
 
 # A newer report of these types replaces a still-queued older one (22.1):
@@ -79,6 +79,9 @@ def supersedes(message_type: str) -> bool:
 VOLATILE = frozenset({
     "timestamp", "collection_timestamp", "collected_at", "detection_timestamp",
     "message_id", "host_token",
+    # 23.3: the time service's own offset estimate moves on every read; the
+    # server measures the offset itself, so this alone is not a change.
+    "reported_offset_ms",
 })  # fmt: skip
 
 # Per process: what identifies it (its CPU and memory figures do not).

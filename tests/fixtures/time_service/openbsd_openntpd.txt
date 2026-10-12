@@ -1,0 +1,17 @@
+
+$ ntpctl -s status   (rc=0)
+5/5 peers valid, constraint offset -2s, clock synced, stratum 3
+
+$ ntpctl -s peers   (rc=0)
+peer
+   wt tl st  next  poll          offset       delay      jitter
+162.159.200.1 time.cloudflare.com
+    1 10  3  831s 1575s         0.392ms    22.349ms     1.220ms
+192.33.96.102 from pool pool.ntp.org
+    1 10  1  660s 1648s        -0.996ms   130.672ms     4.745ms
+81.94.123.16 from pool pool.ntp.org
+    1 10  2  573s 1577s        -1.742ms   126.776ms     5.801ms
+46.22.24.205 from pool pool.ntp.org
+ *  1 10  2  687s 1566s         0.480ms   131.419ms     3.062ms
+83.228.204.112 from pool pool.ntp.org
+    1 10  2 1405s 1631s         2.138ms   115.393ms     2.599ms

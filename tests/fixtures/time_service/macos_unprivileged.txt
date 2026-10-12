@@ -1,0 +1,6 @@
+
+$ systemsetup -getusingnetworktime   (rc=0)
+You need administrator access to run this tool... exiting!
+
+$ sntp time.cloudflare.com   (rc=0)
++0.210165 +/- 0.033903 time.cloudflare.com 162.159.200.1

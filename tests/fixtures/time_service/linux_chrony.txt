@@ -1,0 +1,36 @@
+
+$ chronyc -n tracking   (rc=0)
+Reference ID    : 5BBD5B71 (91.189.91.113)
+Stratum         : 3
+Ref time (UTC)  : Mon Oct 12 11:56:10 2026
+System time     : 0.000204694 seconds fast of NTP time
+Last offset     : +0.000019218 seconds
+RMS offset      : 0.000273787 seconds
+Frequency       : 10.835 ppm fast
+Residual freq   : +0.000 ppm
+Skew            : 0.025 ppm
+Root delay      : 0.074049488 seconds
+Root dispersion : 0.002698662 seconds
+Update interval : 1039.8 seconds
+Leap status     : Normal
+
+$ chronyc -n sources   (rc=0)
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^+ 185.125.190.122               2  10   377    83  +1521us[+1521us] +/-   59ms
+^+ 185.125.190.123               2  10   377   954   -185us[ -167us] +/-   54ms
+^+ 91.189.91.112                 2  10   377   887   +820us[ +839us] +/-   38ms
+^* 91.189.91.113                 2  10   377   400   +608us[ +628us] +/-   40ms
+^- 185.125.190.121               2  10   377   301   -965us[ -965us] +/-   54ms
+
+$ timedatectl show-timesync --all   (rc=1)
+Command requires systemd-timesyncd.service, but it is not available: The name org.freedesktop.timesync1 was not provided by any .service files
+
+$ timedatectl show   (rc=0)
+Timezone=Etc/UTC
+LocalRTC=no
+CanNTP=yes
+NTP=yes
+NTPSynchronized=yes
+TimeUSec=Mon 2026-10-12 12:02:50 UTC
+RTCTimeUSec=Mon 2026-10-12 12:02:50 UTC

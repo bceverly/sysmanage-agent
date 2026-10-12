@@ -1,0 +1,23 @@
+
+$ timedatectl show-timesync --all   (rc=0)
+LinkNTPServers=
+SystemNTPServers=
+RuntimeNTPServers=
+FallbackNTPServers=ntp.ubuntu.com
+ServerName=ntp.ubuntu.com
+ServerAddress=185.125.190.56
+RootDistanceMaxUSec=5s
+PollIntervalMinUSec=32s
+PollIntervalMaxUSec=34min 8s
+PollIntervalUSec=34min 8s
+NTPMessage={ Leap=0, Version=4, Mode=4, Stratum=2, Precision=-25, RootDelay=7.934ms, RootDispersion=1.235ms, Reference=1D586304, OriginateTimestamp=Mon 2026-10-12 07:57:43 EDT, ReceiveTimestamp=Mon 2026-10-12 07:57:43 EDT, TransmitTimestamp=Mon 2026-10-12 07:57:43 EDT, DestinationTimestamp=Mon 2026-10-12 07:57:43 EDT, Ignored=no, PacketCount=201, Jitter=11.522ms }
+Frequency=397761
+
+$ timedatectl show   (rc=0)
+Timezone=America/Indiana/Indianapolis
+LocalRTC=no
+CanNTP=yes
+NTP=yes
+NTPSynchronized=yes
+TimeUSec=Mon 2026-10-12 08:02:49 EDT
+RTCTimeUSec=Mon 2026-10-12 08:02:49 EDT

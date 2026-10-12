@@ -1,0 +1,31 @@
+
+$ ntpq -n -c rv   (rc=0)
+associd=0 status=0668 leap_none, sync_ntp, 6 events, no_sys_peer,
+version="ntpd 4.2.8p18-a (1)", processor="amd64",
+system="FreeBSD/14.4-RELEASE-p8", leap=00, stratum=2, precision=-23,
+rootdelay=106.260, rootdisp=24.873, refid=45.83.233.200,
+reftime=ee7748ec.00ea6b81  Mon, Oct 12 2026  7:54:20.003,
+clock=ee774aed.5a2dc3b2  Mon, Oct 12 2026  8:02:53.352, peer=19961,
+tc=10, mintc=3, offset=+1.088953, frequency=+8.601, sys_jitter=0.285210,
+clk_jitter=3.618, clk_wander=0.043, tai=37, leapsec=201701010000,
+expire=202612280000
+
+$ ntpq -n -p   (rc=0)
+remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+ 0.freebsd.pool. .POOL.          16 p    -   64    0    0.000   +0.000   0.000
+ 2.freebsd.pool. .POOL.          16 p    -   64    0    0.000   +0.000   0.000
++178.239.19.62   10.1.105.4       2 u  519 1024   17  105.003   +1.048   0.540
+*45.83.233.200   .GPS.            1 u  513 1024   17  106.260   +1.209   1.421
++162.159.200.1   10.211.8.4       3 u  497 1024   17   20.598   +0.902   0.834
+-83.228.204.112  193.134.29.11    2 u  479 1024   17  116.483   +1.866   0.946
+#141.144.241.16  195.145.119.188  2 u  520 1024   17  119.938   -0.871   3.445
++141.227.139.58  .PPS.            1 u  514 1024   17  103.460   +1.367   0.877
+#156.106.214.52  84.16.67.12      2 u  506 1024   17  158.589  +14.805   0.711
++91.199.218.19   124.216.164.14   2 u  524 1024   17  126.802   +1.088   0.725
+#178.194.85.120  206.85.199.93    2 u  600 1024    7  123.575   +3.112   2.246
+
+$ sntp time.cloudflare.com   (rc=0)
+ntpd 4.2.8p18-a (1)
+kod_init_kod_db(): Cannot open KoD db file /var/db/ntp-kod: No such file or directory
+2026-10-12 08:02:53.568494 (+0400) +0.000694 +/- 0.008545 time.cloudflare.com 162.159.200.123 s3 no-leap

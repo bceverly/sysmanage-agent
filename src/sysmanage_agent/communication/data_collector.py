@@ -408,6 +408,10 @@ class DataCollector(DataCollectorSendersMixin):
                 _("Error collecting/sending host metrics: %s"),
             ),
             (
+                self._send_time_status_update,
+                _("Error collecting/sending clock status: %s"),
+            ),
+            (
                 self.child_host_collector.send_child_hosts_update,
                 _("Error collecting/sending child hosts data: %s"),
             ),

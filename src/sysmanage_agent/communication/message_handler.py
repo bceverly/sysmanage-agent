@@ -10,6 +10,7 @@ Provides reliable message delivery with queue-based persistence and message proc
 import asyncio
 import json
 import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -21,6 +22,7 @@ from src.database.queue_manager import MessageQueueManager
 from src.i18n import _
 from src.sysmanage_agent.collection import public_ip_fetcher
 from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.communication.clock_probe import ClockProbe
 from src.sysmanage_agent.communication.message_handler_queue import (
     MessageHandlerQueueMixin,
 )
@@ -60,6 +62,8 @@ class MessageHandler(MessageHandlerQueueMixin):
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
         self.queue_manager = MessageQueueManager()
+        # The agent's half of the server's clock-offset measurement (23.3).
+        self.clock_probe = ClockProbe()
 
         # Queue processing state
         self.queue_processor_running = False
@@ -573,10 +577,14 @@ class MessageHandler(MessageHandlerQueueMixin):
                     )
                     raise websockets.ConnectionClosed(None, None)
                 message = await ws.recv()
+                # Stamped BEFORE parsing: parse time is the host's, not the
+                # network's, and must not count against the clock (23.3).
+                received_wall, received_mono = time.time(), time.monotonic()
                 self.logger.debug("Received: %s", message)
 
                 try:
                     data = json.loads(message)
+                    self.clock_probe.received(data, received_wall, received_mono)
                     should_exit = await self._dispatch_received_message(data)
                     if should_exit:
                         return

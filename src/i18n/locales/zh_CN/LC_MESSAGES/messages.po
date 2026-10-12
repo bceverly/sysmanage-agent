@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 15:33-0400\n"
+"POT-Creation-Date: 2026-10-12 08:22-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,31 +16,31 @@ msgstr "创建数据库目录 %s 失败：%s"
 msgid "Failed to create database tables: %s"
 msgstr "创建数据库表失败：%s"
 
-#: src/database/init.py:138
+#: src/database/init.py:151
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr "从配置获取数据库路径失败：%s，使用本地回退"
 
-#: src/database/init.py:228
+#: src/database/init.py:241
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s 失败，返回码 %d"
 
-#: src/database/init.py:238
+#: src/database/init.py:251
 #, python-format
 msgid "Alembic %s timed out after %d seconds"
 msgstr "Alembic %s 在 %d 秒后超时"
 
-#: src/database/init.py:244
+#: src/database/init.py:257
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "运行 alembic %s 失败：%s"
 
-#: src/database/init.py:284
+#: src/database/init.py:297
 msgid "Failed to run database migrations"
 msgstr "运行数据库迁移失败"
 
-#: src/database/init.py:294
+#: src/database/init.py:307
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "初始化数据库失败：%s"
@@ -50,17 +50,17 @@ msgstr "初始化数据库失败：%s"
 msgid "Corrupt UUID in database: %s"
 msgstr "数据库中存在损坏的 UUID: %s"
 
-#: src/database/queue_manager.py:321
+#: src/database/queue_manager.py:345
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "消息 %s 在 %d 次尝试后永久失败：%s"
 
-#: src/database/queue_manager.py:516
+#: src/database/queue_manager.py:540
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "反序列化消息 %s 失败：%s"
 
-#: src/database/queue_manager.py:583
+#: src/database/queue_manager.py:607
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr "消息 %s (类型: %s) 超过最大重试次数，标记为失败"
@@ -70,7 +70,7 @@ msgstr "消息 %s (类型: %s) 超过最大重试次数，标记为失败"
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  无法访问 {config_dir}，回退到 {fallback_dir}"
 
-#: src/sysmanage_agent/collection/antivirus_collection.py:66
+#: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
 msgid "Error detecting antivirus: %s"
 msgstr "检测防病毒软件时出错：%s"
@@ -81,7 +81,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "收集证书不支持的平台：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:930
+#: src/sysmanage_agent/communication/data_collector.py:940
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "收集证书时出错：%s"
@@ -221,15 +221,15 @@ msgstr "读取 rsyslog 配置 %s 时出错：%s"
 msgid "Error reading syslog-ng config: %s"
 msgstr "读取syslog-ng配置时出错：%s"
 
-#: src/sysmanage_agent/collection/hardware_collection.py:48
-#: src/sysmanage_agent/collection/hardware_collection.py:64
+#: src/sysmanage_agent/collection/hardware_collection.py:49
+#: src/sysmanage_agent/collection/hardware_collection.py:88
 #: src/sysmanage_agent/operations/system_control.py:346
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
 msgstr "软件清单不支持的平台：%s"
 
-#: src/sysmanage_agent/collection/hardware_collection.py:121
+#: src/sysmanage_agent/collection/hardware_collection.py:149
 #, python-format
 msgid "Failed to collect hardware information: %s"
 msgstr "收集软件清单失败：%s"
@@ -476,12 +476,12 @@ msgstr "未知设备"
 msgid "Network discovery capture stopped: %s"
 msgstr "网络发现：捕获已停止：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:417
+#: src/sysmanage_agent/collection/network_discovery_collection.py:422
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "网络发现：无法进行原始捕获：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:441
+#: src/sysmanage_agent/collection/network_discovery_collection.py:446
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -624,7 +624,7 @@ msgid ""
 msgstr "在有 dnf 可用的主机上跳过 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包装器）"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
-#: src/sysmanage_agent/collection/package_collector_windows.py:69
+#: src/sysmanage_agent/collection/package_collector_windows.py:142
 #, python-format
 msgid "Failed to collect packages from %s: %s"
 msgstr "从 %s 收集软件包失败：%s"
@@ -707,33 +707,23 @@ msgstr "未找到 Homebrew 命令"
 msgid "Error collecting Homebrew packages: %s"
 msgstr "收集 Homebrew 软件包时出错：%s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:89
-msgid "No packages collected from winget REST API"
-msgstr "未从 winget REST API 收集到任何软件包"
-
-#: src/sysmanage_agent/collection/package_collector_windows.py:94
+#: src/sysmanage_agent/collection/package_collector_windows.py:201
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
 msgstr "收集 apt 软件包失败：%s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:131
-#, python-format
-msgid "Error fetching winget page %d (collected %d packages so far): %s"
-msgstr "获取 winget 页 %d 时出错（目前已收集 %d 个软件包）：%s"
-
-#: src/sysmanage_agent/collection/package_collector_windows.py:196
-msgid "No packages collected from Chocolatey community repository"
-msgstr "未从 Chocolatey 社区仓库收集到任何软件包"
-
 #: src/sysmanage_agent/collection/package_collector_windows.py:202
+msgid "No packages collected from winget REST API"
+msgstr "未从 winget REST API 收集到任何软件包"
+
+#: src/sysmanage_agent/collection/package_collector_windows.py:261
 #, python-format
 msgid "Error collecting Chocolatey packages via API: %s"
 msgstr "通过API收集Chocolatey软件包时出错：%s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:229
-#, python-format
-msgid "Error fetching page at skip %d: %s"
-msgstr "在跳过 %d 处获取页面时出错：%s"
+#: src/sysmanage_agent/collection/package_collector_windows.py:262
+msgid "No packages collected from Chocolatey community repository"
+msgstr "未从 Chocolatey 社区仓库收集到任何软件包"
 
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
@@ -892,8 +882,8 @@ msgid "Failed to detect available updates: %s"
 msgstr "检测可用更新失败：%s"
 
 #: src/sysmanage_agent/collection/update_detection.py:189
-#: src/sysmanage_agent/operations/package_installation_helpers.py:246
-#: src/sysmanage_agent/operations/package_operations.py:231
+#: src/sysmanage_agent/operations/package_installation_helpers.py:252
+#: src/sysmanage_agent/operations/package_operations.py:237
 #, python-format
 msgid "Failed to install package %s: %s"
 msgstr "安装软件包 %s 失败：%s"
@@ -965,31 +955,31 @@ msgstr "检查 OpenBSD 网站上的更新时失败：%s"
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "检测 OpenBSD 版本升级失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:656
+#: src/sysmanage_agent/collection/update_detection_bsd.py:684
 msgid "syspatch command failed"
 msgstr "syspatch 命令失败"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:658
-#: src/sysmanage_agent/collection/update_detection_bsd.py:679
+#: src/sysmanage_agent/collection/update_detection_bsd.py:686
+#: src/sysmanage_agent/collection/update_detection_bsd.py:707
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "应用 syspatch 更新失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:669
+#: src/sysmanage_agent/collection/update_detection_bsd.py:697
 msgid "syspatch command timed out"
 msgstr "syspatch 命令超时"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:675
+#: src/sysmanage_agent/collection/update_detection_bsd.py:703
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch 超时，超过 10 分钟"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:820
+#: src/sysmanage_agent/collection/update_detection_bsd.py:848
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "不支持的包管理器: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:876
+#: src/sysmanage_agent/collection/update_detection_bsd.py:904
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -1135,26 +1125,26 @@ msgstr "检测 Chocolatey 更新失败：%s"
 msgid "Failed to detect Scoop updates: %s"
 msgstr "检测 Scoop 更新失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:40
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:41
 #, python-format
 msgid "Windows Update detection failed: %s"
 msgstr "Windows 更新检测失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:46
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:47
 msgid "Windows Update detection timed out"
 msgstr "Windows 更新检测超时"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:49
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:50
 #, python-format
 msgid "Failed to detect Windows system updates: %s"
 msgstr "检测 Windows 系统更新失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:135
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:136
 #, python-format
 msgid "Failed to parse Windows Update output: %s"
 msgstr "解析Windows更新输出失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:250
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:251
 #, python-format
 msgid "Failed to detect Windows version upgrades: %s"
 msgstr "检测 Windows 版本升级失败：%s"
@@ -1294,298 +1284,316 @@ msgstr "发送子主机数据失败"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:429
+#: src/sysmanage_agent/communication/data_collector.py:416
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "收集/发送子主机数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:80
+#: src/sysmanage_agent/communication/data_collector.py:83
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "发送初始数据更新失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:157
+#: src/sysmanage_agent/communication/data_collector.py:177
 #, python-format
 msgid "Failed to perform initial update check: %s"
 msgstr "执行初始更新检查失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:177
+#: src/sysmanage_agent/communication/data_collector.py:194
 #, python-format
 msgid "Certificate collection failed: %s"
 msgstr "证书收集失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:180
+#: src/sysmanage_agent/communication/data_collector.py:197
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
 msgstr "执行初始证书收集失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:196
+#: src/sysmanage_agent/communication/data_collector.py:214
 #, python-format
 msgid "Role collection failed: %s"
 msgstr "角色收集失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:198
+#: src/sysmanage_agent/communication/data_collector.py:216
 #, python-format
 msgid "Failed to perform initial role collection: %s"
 msgstr "执行初始角色收集失败：%s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector.py:207
+#: src/sysmanage_agent/communication/data_collector.py:225
 #, python-format
 msgid "Failed to send initial third-party repository data: %s"
 msgstr "发送初始第三方存储库数据失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:215
+#: src/sysmanage_agent/communication/data_collector.py:233
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
 msgstr "发送初始防火墙状态数据失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:223
+#: src/sysmanage_agent/communication/data_collector.py:241
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
 msgstr "发送初始Graylog状态数据失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:230
+#: src/sysmanage_agent/communication/data_collector.py:248
 #, python-format
 msgid "Failed to send initial process data: %s"
 msgstr "发送初始进程数据失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:236
+#: src/sysmanage_agent/communication/data_collector.py:254
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
 msgstr "发送初始子主机数据失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:255
+#: src/sysmanage_agent/communication/data_collector.py:273
 #, python-format
 msgid "Failed to update OS version: %s"
 msgstr "更新操作系统版本失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:277
+#: src/sysmanage_agent/communication/data_collector.py:295
 #, python-format
 msgid "Failed to update hardware: %s"
 msgstr "更新硬件失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:299
+#: src/sysmanage_agent/communication/data_collector.py:317
 #, python-format
 msgid "Failed to update user access: %s"
 msgstr "更新用户访问时失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:308
+#: src/sysmanage_agent/communication/data_collector.py:326
 #, python-format
 msgid "Error collecting processes: %s"
 msgstr "收集进程时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:315
+#: src/sysmanage_agent/communication/data_collector.py:333
 msgid "Missing required parameter: pid"
 msgstr "缺少必需参数：pid"
 
-#: src/sysmanage_agent/communication/data_collector.py:319
+#: src/sysmanage_agent/communication/data_collector.py:337
 #, python-format
 msgid "Invalid pid: %s"
 msgstr "无效的 pid：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:333
+#: src/sysmanage_agent/communication/data_collector.py:351
 #, python-format
 msgid "Failed to refresh processes after kill: %s"
 msgstr "终止后刷新进程失败：%s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/data_collector.py:349
+#: src/sysmanage_agent/communication/data_collector.py:366
 #, python-format
 msgid "Error collecting/sending software inventory: %s"
 msgstr "收集/发送软件清单时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:356
+#: src/sysmanage_agent/communication/data_collector.py:370
 #, python-format
 msgid "Error collecting/sending user access data: %s"
 msgstr "收集/发送用户访问数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:362
+#: src/sysmanage_agent/communication/data_collector.py:374
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
 msgstr "收集/发送硬件数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:368
+#: src/sysmanage_agent/communication/data_collector.py:378
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
 msgstr "收集/发送证书数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:374
+#: src/sysmanage_agent/communication/data_collector.py:380
 #, python-format
 msgid "Error collecting/sending role data: %s"
 msgstr "收集/发送角色数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:380
+#: src/sysmanage_agent/communication/data_collector.py:383
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
 msgstr "收集/发送操作系统版本数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:386
+#: src/sysmanage_agent/communication/data_collector.py:387
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
 msgstr "收集/发送重启状态时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:393
+#: src/sysmanage_agent/communication/data_collector.py:391
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
 msgstr "收集/发送第三方仓库数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:400
+#: src/sysmanage_agent/communication/data_collector.py:395
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
 msgstr "收集/发送防病毒状态时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:406
+#: src/sysmanage_agent/communication/data_collector.py:399
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
 msgstr "收集/发送防火墙状态时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:412
+#: src/sysmanage_agent/communication/data_collector.py:403
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
 msgstr "收集/发送 Graylog 状态时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:418
+#: src/sysmanage_agent/communication/data_collector.py:405
 #, python-format
 msgid "Error collecting/sending process data: %s"
 msgstr "收集/发送进程数据时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:423
+#: src/sysmanage_agent/communication/data_collector.py:408
 #, python-format
 msgid "Error collecting/sending host metrics: %s"
 msgstr "收集/发送主机指标时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:453
+#: src/sysmanage_agent/communication/data_collector.py:412
 #, python-format
-msgid "Initial data collection error: %s"
-msgstr "初始数据收集错误: %s"
+msgid "Error collecting/sending clock status: %s"
+msgstr "收集/发送时钟状态出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:468
+#: src/sysmanage_agent/communication/data_collector.py:452
 #, python-format
 msgid "Data collector error: %s"
 msgstr "数据收集器错误：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:693
+#: src/sysmanage_agent/communication/data_collector.py:480
+#, python-format
+msgid "Initial data collection error: %s"
+msgstr "初始数据收集错误: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:703
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "收集可用包时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:802
+#: src/sysmanage_agent/communication/data_collector.py:812
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "发送包差异时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:881
+#: src/sysmanage_agent/communication/data_collector.py:891
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "为批次%s发送分页包时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:976
+#: src/sysmanage_agent/communication/data_collector.py:986
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "收集角色时出错：%s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:53
+#: src/sysmanage_agent/communication/data_collector_senders.py:54
 msgid "Failed to send periodic software inventory data"
 msgstr "无法发送定期软件清单数据"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:77
+#: src/sysmanage_agent/communication/data_collector_senders.py:78
 msgid "Failed to send periodic user access data"
 msgstr "发送定期用户访问数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:101
+#: src/sysmanage_agent/communication/data_collector_senders.py:102
 msgid "Failed to send periodic hardware data"
 msgstr "发送定期硬件数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:121
+#: src/sysmanage_agent/communication/data_collector_senders.py:122
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "周期性证书收集失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:141
+#: src/sysmanage_agent/communication/data_collector_senders.py:142
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "周期性角色收集失败：%s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:165
+#: src/sysmanage_agent/communication/data_collector_senders.py:166
 msgid "Failed to send periodic OS version data"
 msgstr "发送定期操作系统版本数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:186
+#: src/sysmanage_agent/communication/data_collector_senders.py:187
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "收集第三方仓库失败：%s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector_senders.py:220
+#: src/sysmanage_agent/communication/data_collector_senders.py:221
 msgid "Failed to send third-party repository data"
 msgstr "发送第三方仓库数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:252
+#: src/sysmanage_agent/communication/data_collector_senders.py:253
 msgid "Failed to send antivirus status data"
 msgstr "发送防病毒状态数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:255
+#: src/sysmanage_agent/communication/data_collector_senders.py:256
 msgid "Cannot send antivirus status data: no host approval"
 msgstr "无法发送防病毒软件状态数据：没有主机批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:289
+#: src/sysmanage_agent/communication/data_collector_senders.py:290
 msgid "Failed to send firewall status data"
 msgstr "发送防火墙状态数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:291
+#: src/sysmanage_agent/communication/data_collector_senders.py:292
 msgid "Cannot send firewall status data: no host approval"
 msgstr "无法发送防火墙状态数据：没有主机批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:323
+#: src/sysmanage_agent/communication/data_collector_senders.py:324
 msgid "Failed to send Graylog status data"
 msgstr "发送Graylog状态数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:325
+#: src/sysmanage_agent/communication/data_collector_senders.py:326
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "无法发送Graylog状态数据：没有主机批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:333
+#: src/sysmanage_agent/communication/data_collector_senders.py:334
 msgid "Cannot send process data: no host approval"
 msgstr "无法发送进程数据：主机未批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:363
+#: src/sysmanage_agent/communication/data_collector_senders.py:364
 msgid "Failed to send process status data"
 msgstr "发送进程状态数据失败"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:374
+#: src/sysmanage_agent/communication/data_collector_senders.py:375
 msgid "Cannot send host metrics: no host approval"
 msgstr "无法发送主机指标：主机未获批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:386
+#: src/sysmanage_agent/communication/data_collector_senders.py:387
 msgid "Failed to send host metrics"
 msgstr "发送主机指标失败"
 
-#: src/sysmanage_agent/communication/http_polling.py:81
+#: src/sysmanage_agent/communication/data_collector_senders.py:400
+msgid "Cannot send clock status: no host approval"
+msgstr "无法发送时钟状态：没有主机审批"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:407
+msgid "Failed to send clock status"
+msgstr "发送时钟状态失败"
+
+#: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
 msgstr "无法读取用于轮询的存储host_id"
 
-#: src/sysmanage_agent/communication/http_polling.py:95
+#: src/sysmanage_agent/communication/http_polling.py:131
 msgid "Could not read the outbound queue for polling"
 msgstr "无法读取外发队列以进行轮询"
 
-#: src/sysmanage_agent/communication/http_polling.py:120
+#: src/sysmanage_agent/communication/http_polling.py:142
+#, python-format
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "队列中的消息 %s 不是可读的 JSON；不会通过轮询发送"
+
+#: src/sysmanage_agent/communication/http_polling.py:158
 #, python-format
 msgid "Could not mark polled message %s delivered"
 msgstr "无法标记已轮询的消息%s为已送达"
 
-#: src/sysmanage_agent/communication/http_polling.py:168
+#: src/sysmanage_agent/communication/http_polling.py:206
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "处理轮询消息%s时出错"
 
-#: src/sysmanage_agent/communication/http_polling.py:184
+#: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
 "Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
 " must complete first."
 msgstr "无法使用HTTP备用方案：此代理没有存储的host_id。必须先完成注册。"
 
-#: src/sysmanage_agent/communication/http_polling.py:194
+#: src/sysmanage_agent/communication/http_polling.py:232
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1594,55 +1602,55 @@ msgid ""
 msgstr ""
 "使用HTTP轮询代替WebSocket：此网络拒绝了WebSocket升级。命令将延迟几秒钟到达。允许WebSocket升级到%s以恢复即时交付。"
 
-#: src/sysmanage_agent/communication/http_polling.py:209
+#: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "轮询失败（%s）；将在%d秒后重试"
 
-#: src/sysmanage_agent/communication/http_polling.py:220
+#: src/sysmanage_agent/communication/http_polling.py:264
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "重新测试此网络是否现在允许WebSocket连接"
 
-#: src/sysmanage_agent/communication/message_handler.py:182
+#: src/sysmanage_agent/communication/message_handler.py:193
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "队列消息失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:220
+#: src/sysmanage_agent/communication/message_handler.py:231
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "为消息队列命令确认失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:228
+#: src/sysmanage_agent/communication/message_handler.py:239
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "为%s队列命令确认时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:268
+#: src/sysmanage_agent/communication/message_handler.py:278
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "服务器错误 [%s]：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:321
+#: src/sysmanage_agent/communication/message_handler.py:331
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "无法解析消息时间戳以进行过期检查：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:359
+#: src/sysmanage_agent/communication/message_handler.py:369
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr "主机注册正在等待审批。将定期尝试继续。"
 
-#: src/sysmanage_agent/communication/message_handler.py:364
+#: src/sysmanage_agent/communication/message_handler.py:374
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "服务器报告消息中缺少主机名。这是一个错误。"
 
-#: src/sysmanage_agent/communication/message_handler.py:367
+#: src/sysmanage_agent/communication/message_handler.py:377
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "服务器无法将消息加入队列：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:391
+#: src/sysmanage_agent/communication/message_handler.py:401
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -1652,130 +1660,123 @@ msgstr ""
 "服务器报告主机未注册 (第 %(n)d/%(limit)d 次警告) -- 重新连接时不丢弃 "
 "host_id，以便服务器可以从其租户索引中重新解析此主机；如果问题持续，则将重新注册。"
 
-#: src/sysmanage_agent/communication/message_handler.py:404
+#: src/sysmanage_agent/communication/message_handler.py:414
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr "主机未注册状态已持久化 (%(n)d 次警告) -- 将该主机视为真正消失；清除存储的 host_id 并重新注册。"
 
-#: src/sysmanage_agent/communication/message_handler.py:415
+#: src/sysmanage_agent/communication/message_handler.py:425
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "清除存储的host_id时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:469
-#, python-format
-msgid ""
-"Broadcast %s: inventory refresh requested but data_collector lacks "
-"send_software_inventory_update"
-msgstr "广播 %s：请求刷新清单，但 data_collector 缺少 send_software_inventory_update"
-
-#: src/sysmanage_agent/communication/message_handler.py:476
+#: src/sysmanage_agent/communication/message_handler.py:481
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "广播 %s：清单刷新失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:486
+#: src/sysmanage_agent/communication/message_handler.py:491
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "广播 %s: 不支持的操作 '%s' -- 忽略"
 
-#: src/sysmanage_agent/communication/message_handler.py:569
+#: src/sysmanage_agent/communication/message_handler.py:574
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr "消息接收器：WebSocket 由于并发断开连接被清除；退出接收循环以允许重新连接"
 
-#: src/sysmanage_agent/communication/message_handler.py:584
+#: src/sysmanage_agent/communication/message_handler.py:593
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "收到无效的 JSON 数据：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:586
+#: src/sysmanage_agent/communication/message_handler.py:595
 #, python-format
 msgid "Error processing message: %s"
 msgstr "处理消息时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:599
+#: src/sysmanage_agent/communication/message_handler.py:608
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: 消息接收错误：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:651
+#: src/sysmanage_agent/communication/message_handler.py:660
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "未知消息类型：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:727
+#: src/sysmanage_agent/communication/message_handler.py:738
 msgid "Heartbeat failed, connection may be lost"
 msgstr "心跳失败，连接可能丢失"
 
-#: src/sysmanage_agent/communication/message_handler.py:736
+#: src/sysmanage_agent/communication/message_handler.py:747
 #, python-format
 msgid "Message sender error: %s"
 msgstr "消息发送者错误: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:752
+#: src/sysmanage_agent/communication/message_handler.py:763
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "关闭消息处理器时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:98
+#: src/sysmanage_agent/communication/message_handler_queue.py:110
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "从 queue_outbound_message 队列创建任务失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:164
+#: src/sysmanage_agent/communication/message_handler_queue.py:176
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "入队处理器中出现错误：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:174
+#: src/sysmanage_agent/communication/message_handler_queue.py:186
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "无法标记入站消息 %s 为处理中"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:204
+#: src/sysmanage_agent/communication/message_handler_queue.py:216
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "处理传入消息 %s 时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:220
+#: src/sysmanage_agent/communication/message_handler_queue.py:232
 msgid "Cannot send message: not connected to server"
 msgstr "无法发送消息：未连接到服务器"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:228
+#: src/sysmanage_agent/communication/message_handler_queue.py:245
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "直接发送消息失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:287
+#: src/sysmanage_agent/communication/message_handler_queue.py:304
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "队列处理器中出现错误：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:329
+#: src/sysmanage_agent/communication/message_handler_queue.py:346
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "处理队列消息 %s 时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:355
+#: src/sysmanage_agent/communication/message_handler_queue.py:372
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "恢复滞留消息时出错：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:386
+#: src/sysmanage_agent/communication/message_handler_queue.py:403
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "创建出站队列处理任务失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:410
+#: src/sysmanage_agent/communication/message_handler_queue.py:427
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "创建入站队列处理任务失败：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:501
+#: src/sysmanage_agent/communication/message_handler_queue.py:518
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "删除已完成队列消息时出错：%s"
@@ -1798,134 +1799,133 @@ msgstr "无法确定主机名，使用备用名称：%s"
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "飞行日志对账失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:55
+#: src/sysmanage_agent/core/agent_utils.py:57
 msgid "systemctl not found"
 msgstr "未找到systemctl"
 
-#: src/sysmanage_agent/core/agent_utils.py:83
+#: src/sysmanage_agent/core/agent_utils.py:85
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "周期性更新检查过程中出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:111
+#: src/sysmanage_agent/core/agent_utils.py:117
 #, python-format
 msgid "Update checker error: %s"
 msgstr "更新检查器错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:149
+#: src/sysmanage_agent/core/agent_utils.py:155
 msgid "Package collection completed with some issues"
 msgstr "软件包收集完成，但存在一些问题"
 
-#: src/sysmanage_agent/core/agent_utils.py:152
+#: src/sysmanage_agent/core/agent_utils.py:158
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "包收集过程中出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:191
+#: src/sysmanage_agent/core/agent_utils.py:205
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "软件包收集调度器错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:300
+#: src/sysmanage_agent/core/agent_utils.py:326
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "构建能力报告失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:422
+#: src/sysmanage_agent/core/agent_utils.py:448
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "脚本执行 UUID %s 已处理，跳过重复"
 
-#: src/sysmanage_agent/core/agent_utils.py:459
+#: src/sysmanage_agent/core/agent_utils.py:490
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少嵌套的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:471
+#: src/sysmanage_agent/core/agent_utils.py:502
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令类型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:530
+#: src/sysmanage_agent/core/agent_utils.py:561
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "脚本执行结果无法队列：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:549
+#: src/sysmanage_agent/core/agent_utils.py:580
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "检查执行UUID时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:563
+#: src/sysmanage_agent/core/agent_utils.py:594
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供执行 UUID，无法跟踪"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "执行 UUID %s 已存在于数据库中"
 
-#: src/sysmanage_agent/core/agent_utils.py:603
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存储执行 UUID 时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:668
+#: src/sysmanage_agent/core/agent_utils.py:699
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服务控制处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:717
-#: src/sysmanage_agent/core/agent_utils.py:801
-#: src/sysmanage_agent/core/agent_utils.py:808
-#, python-format
-msgid "Failed to %s service %s: %s"
-msgstr "对服务 %s 执行 %s 失败：%s"
-
-#: src/sysmanage_agent/core/agent_utils.py:724
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服务控制超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:730
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服务控制错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:818
+#: src/sysmanage_agent/core/agent_utils.py:839
+#, python-format
+msgid "Failed to %s service %s: %s"
+msgstr "对服务 %s 执行 %s 失败：%s"
+
+#: src/sysmanage_agent/core/agent_utils.py:849
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服务控制后更新角色失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:857
+#: src/sysmanage_agent/core/agent_utils.py:888
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服务状态处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:900
+#: src/sysmanage_agent/core/agent_utils.py:931
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服务状态超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:910
+#: src/sysmanage_agent/core/agent_utils.py:941
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服务状态错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:958
+#: src/sysmanage_agent/core/agent_utils.py:989
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "无法将合成的 command_result 加入正在执行的日志队列：%s"
 
-#: src/sysmanage_agent/core/auth_helper.py:76
+#: src/sysmanage_agent/core/auth_helper.py:115
 #, python-format
 msgid "Auth refused by server: %s"
 msgstr "服务器拒绝了身份验证：%s"
 
-#: src/sysmanage_agent/core/auth_helper.py:77
+#: src/sysmanage_agent/core/auth_helper.py:116
 msgid "no connection token"
 msgstr "无连接令牌"
 
-#: src/sysmanage_agent/core/auth_helper.py:87
+#: src/sysmanage_agent/core/auth_helper.py:131
+#: src/sysmanage_agent/core/auth_helper.py:135
 #, python-format
 msgid "Auth failed with status %s: %s"
 msgstr "身份验证失败，状态为%s: %s"
@@ -2183,39 +2183,39 @@ msgstr "收集防火墙状态时出错：%s"
 msgid "No files provided"
 msgstr "未提供文件"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:473
+#: src/sysmanage_agent/operations/generic_deployment.py:497
 #, python-format
 msgid "Rolled back %s from backup %s after failed deployment"
 msgstr "从备份 %s 恢复了 %s（部署失败后）"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:480
+#: src/sysmanage_agent/operations/generic_deployment.py:504
 #, python-format
 msgid "Rollback failed for %s from %s: %s"
 msgstr "回滚失败，从 %s 回滚到 %s 失败：%s"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:509
+#: src/sysmanage_agent/operations/generic_deployment.py:533
 msgid "No steps provided"
 msgstr "没有提供步骤"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:546
+#: src/sysmanage_agent/operations/generic_deployment.py:570
 #, python-format
 msgid "Unknown step type: %s"
 msgstr "未知的步骤类型：%s"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:567
+#: src/sysmanage_agent/operations/generic_deployment.py:591
 #, python-format
 msgid "Command sequence step %d/%d failed: %s - %s"
 msgstr "命令序列步骤 %d/%d 失败: %s - %s"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:618
+#: src/sysmanage_agent/operations/generic_deployment.py:642
 msgid "Empty shell command"
 msgstr "空的 shell 命令"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:658
+#: src/sysmanage_agent/operations/generic_deployment.py:682
 msgid "Empty wait_condition command"
 msgstr "空的 wait_condition 命令"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:692
+#: src/sysmanage_agent/operations/generic_deployment.py:716
 #, python-format
 msgid "Failed to send progress message: %s"
 msgstr "发送进度消息失败：%s"
@@ -2518,23 +2518,23 @@ msgstr "隔离 %s 被拒绝：%s"
 msgid "Restore of %s refused: %s"
 msgstr "恢复 %s 被拒绝：%s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:133
+#: src/sysmanage_agent/operations/network_discovery_operations.py:134
 #, python-format
 msgid "Network discovery setting could not be saved: %s"
 msgstr "无法保存网络发现设置：%s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:161
+#: src/sysmanage_agent/operations/network_discovery_operations.py:165
 #, python-format
 msgid "Error sending network discovery report: %s"
 msgstr "发送网络发现报告时出错：%s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:169
-#: src/sysmanage_agent/operations/network_discovery_operations.py:241
+#: src/sysmanage_agent/operations/network_discovery_operations.py:173
+#: src/sysmanage_agent/operations/network_discovery_operations.py:245
 msgid "Cannot send network discovery report: no host approval"
 msgstr "无法发送网络发现报告：主机未获批准"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:182
-#: src/sysmanage_agent/operations/network_discovery_operations.py:259
+#: src/sysmanage_agent/operations/network_discovery_operations.py:186
+#: src/sysmanage_agent/operations/network_discovery_operations.py:263
 msgid "Failed to send network discovery report"
 msgstr "发送网络发现报告失败"
 
@@ -2556,23 +2556,23 @@ msgstr "收集已安装包失败：%s"
 msgid "package inventory collection failed: %s"
 msgstr "软件包清单收集失败：%s"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:54
+#: src/sysmanage_agent/operations/package_installation_helpers.py:55
 #, python-format
 msgid "Failed to store installation request: %s"
 msgstr "存储安装请求失败：%s"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:85
+#: src/sysmanage_agent/operations/package_installation_helpers.py:86
 #, python-format
 msgid "Failed to update installation tracking record: %s"
 msgstr "更新安装跟踪记录失败：%s"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:107
-#: src/sysmanage_agent/operations/package_operations.py:59
+#: src/sysmanage_agent/operations/package_installation_helpers.py:108
+#: src/sysmanage_agent/operations/package_operations.py:60
 msgid "Skipping package with no name"
 msgstr "跳过没有名称的软件包"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:108
-#: src/sysmanage_agent/operations/package_operations.py:60
+#: src/sysmanage_agent/operations/package_installation_helpers.py:109
+#: src/sysmanage_agent/operations/package_operations.py:61
 msgid "No package name"
 msgstr "无软件包名称"
 
@@ -2676,103 +2676,103 @@ msgid "Scoop installed successfully"
 msgstr "Scoop 安装成功"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/package_operations.py:121
+#: src/sysmanage_agent/operations/package_operations.py:127
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
 msgstr "%s 软件包管理器未实现卸载"
 
-#: src/sysmanage_agent/operations/package_operations.py:154
+#: src/sysmanage_agent/operations/package_operations.py:160
 #, python-format
 msgid "Failed to update uninstall tracking record: %s"
 msgstr "更新卸载跟踪记录失败：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:173
+#: src/sysmanage_agent/operations/package_operations.py:179
 msgid "No package name specified"
 msgstr "未指定软件包名称"
 
-#: src/sysmanage_agent/operations/package_operations.py:263
-#: src/sysmanage_agent/operations/package_operations.py:371
+#: src/sysmanage_agent/operations/package_operations.py:269
+#: src/sysmanage_agent/operations/package_operations.py:377
 msgid "No request_id specified"
 msgstr "未指定 request_id"
 
-#: src/sysmanage_agent/operations/package_operations.py:268
+#: src/sysmanage_agent/operations/package_operations.py:274
 msgid "No packages specified for installation"
 msgstr "未指定要安装的软件包"
 
-#: src/sysmanage_agent/operations/package_operations.py:347
+#: src/sysmanage_agent/operations/package_operations.py:353
 #, python-format
 msgid "Failed to send installation completion to server: %s"
 msgstr "向服务器发送安装完成信息失败：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:376
+#: src/sysmanage_agent/operations/package_operations.py:382
 msgid "No packages specified for uninstallation"
 msgstr "未指定要卸载的软件包"
 
-#: src/sysmanage_agent/operations/package_operations.py:473
+#: src/sysmanage_agent/operations/package_operations.py:479
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "向服务器发送卸载完成信息失败：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:482
+#: src/sysmanage_agent/operations/package_operations.py:488
 msgid "No packages to install"
 msgstr "没有要安装的软件包"
 
-#: src/sysmanage_agent/operations/package_operations.py:528
+#: src/sysmanage_agent/operations/package_operations.py:534
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get 安装失败：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:533
+#: src/sysmanage_agent/operations/package_operations.py:539
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "使用apt-get安装软件包时出错：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:536
+#: src/sysmanage_agent/operations/package_operations.py:542
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "apt-get install 期间出现异常：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:543
+#: src/sysmanage_agent/operations/package_operations.py:549
 msgid "No packages to uninstall"
 msgstr "没有要卸载的软件包"
 
-#: src/sysmanage_agent/operations/package_operations.py:574
+#: src/sysmanage_agent/operations/package_operations.py:580
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove 失败: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:579
+#: src/sysmanage_agent/operations/package_operations.py:585
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "使用 apt-get 卸载包时失败：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:582
+#: src/sysmanage_agent/operations/package_operations.py:588
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "apt-get remove 期间出现异常：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:623
+#: src/sysmanage_agent/operations/package_operations.py:629
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr "为请求队列安装完成失败：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:628
+#: src/sysmanage_agent/operations/package_operations.py:634
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "安装完成时出错队列：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:684
+#: src/sysmanage_agent/operations/package_operations.py:690
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "发送软件包安装状态更新失败：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:757
+#: src/sysmanage_agent/operations/package_operations.py:763
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "运行包更新时出错：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:766
+#: src/sysmanage_agent/operations/package_operations.py:772
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3079,58 +3079,58 @@ msgstr "检查重启状态时失败：%s"
 msgid "Failed to send reboot status update: %s"
 msgstr "发送重启状态更新失败：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:69
+#: src/sysmanage_agent/operations/update_operations.py:74
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "检查更新时失败：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:94
+#: src/sysmanage_agent/operations/update_operations.py:99
 msgid "No packages specified for update"
 msgstr "未指定要更新的软件包"
 
-#: src/sysmanage_agent/operations/update_operations.py:107
+#: src/sysmanage_agent/operations/update_operations.py:112
 msgid "Updates started in background"
 msgstr "后台开始更新"
 
-#: src/sysmanage_agent/operations/update_operations.py:111
+#: src/sysmanage_agent/operations/update_operations.py:116
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "启动更新失败：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:151
+#: src/sysmanage_agent/operations/update_operations.py:169
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "未指定包管理器用于 %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:183
+#: src/sysmanage_agent/operations/update_operations.py:201
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "无法确定 %s 的软件包管理器"
 
-#: src/sysmanage_agent/operations/update_operations.py:196
+#: src/sysmanage_agent/operations/update_operations.py:214
 msgid "Failed to send update results, will retry..."
 msgstr "发送更新结果失败，将重试..."
 
-#: src/sysmanage_agent/operations/update_operations.py:206
+#: src/sysmanage_agent/operations/update_operations.py:224
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d 次尝试后发送更新结果失败"
 
-#: src/sysmanage_agent/operations/update_operations.py:234
+#: src/sysmanage_agent/operations/update_operations.py:252
 msgid "Could not send fresh update list - not connected"
 msgstr "无法发送新的更新列表 - 未连接"
 
-#: src/sysmanage_agent/operations/update_operations.py:257
+#: src/sysmanage_agent/operations/update_operations.py:276
 msgid "No valid packages found for update"
 msgstr "未找到有效的更新包"
 
-#: src/sysmanage_agent/operations/update_operations.py:282
+#: src/sysmanage_agent/operations/update_operations.py:301
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "批量操作后未能重新扫描更新：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:286
+#: src/sysmanage_agent/operations/update_operations.py:305
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "后台更新进程失败：%s"
@@ -3263,50 +3263,50 @@ msgstr "添加Windows存储库 %s失败：%s"
 msgid "Error adding Windows repository: %s"
 msgstr "添加Windows仓库时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:43
+#: src/sysmanage_agent/registration/client_registration.py:46
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  警告：aiohttp 不可用，将跳过注册"
 
-#: src/sysmanage_agent/registration/client_registration.py:278
+#: src/sysmanage_agent/registration/client_registration.py:307
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp 不可用，跳过注册"
 
-#: src/sysmanage_agent/registration/client_registration.py:339
+#: src/sysmanage_agent/registration/client_registration.py:382
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "注册失败，状态为：%s：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:348
+#: src/sysmanage_agent/registration/client_registration.py:391
 #, python-format
 msgid "Error during registration: %s"
 msgstr "注册过程中出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:377
+#: src/sysmanage_agent/registration/client_registration.py:428
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "尝试注册后失败：%s次"
 
-#: src/sysmanage_agent/registration/client_registration.py:382
+#: src/sysmanage_agent/registration/client_registration.py:434
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "注册失败，%s 秒后重试..."
 
-#: src/sysmanage_agent/registration/client_registration.py:437
+#: src/sysmanage_agent/registration/client_registration.py:489
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "加载存储的认证数据时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:456
+#: src/sysmanage_agent/registration/client_registration.py:512
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "存储认证数据时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:469
+#: src/sysmanage_agent/registration/client_registration.py:525
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "获取存储的host_id时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:484
+#: src/sysmanage_agent/registration/client_registration.py:540
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "获取存储的批准数据时出错：%s"
@@ -3333,84 +3333,83 @@ msgstr "来自未知来源的无效 JSON 公告"
 msgid "Error listening for announcements: %s"
 msgstr "监听通告时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:90
+#: src/sysmanage_agent/registration/registration_manager.py:100
 msgid "Host not yet approved for certificate retrieval"
 msgstr "主机尚未获得证书检索批准"
 
-#: src/sysmanage_agent/registration/registration_manager.py:94
+#: src/sysmanage_agent/registration/registration_manager.py:104
 #, python-format
 msgid "Failed to fetch certificates: HTTP %s"
 msgstr "获取证书时出错：HTTP %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:99
+#: src/sysmanage_agent/registration/registration_manager.py:109
 #, python-format
 msgid "Error fetching certificates: %s"
 msgstr "获取证书时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:134
+#: src/sysmanage_agent/registration/registration_manager.py:145
 #, python-format
 msgid "Failed to get server fingerprint: %s"
 msgstr "获取服务器指纹失败：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:145
+#: src/sysmanage_agent/registration/registration_manager.py:156
 msgid "Certificate-based authentication requires manual host approval"
 msgstr "基于证书的身份验证需要手动主机批准"
 
-#: src/sysmanage_agent/registration/registration_manager.py:148
+#: src/sysmanage_agent/registration/registration_manager.py:159
 msgid "Please approve this host in the SysManage web interface"
 msgstr "请在 SysManage 网页界面中批准此主机"
 
-#: src/sysmanage_agent/registration/registration_manager.py:200
+#: src/sysmanage_agent/registration/registration_manager.py:256
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "处理注册成功通知时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:233
+#: src/sysmanage_agent/registration/registration_manager.py:294
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "处理主机批准通知时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:254
-#: src/sysmanage_agent/registration/registration_manager.py:506
+#: src/sysmanage_agent/registration/registration_manager.py:315
+#: src/sysmanage_agent/registration/registration_manager.py:587
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "清除主机批准记录时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:308
+#: src/sysmanage_agent/registration/registration_manager.py:333
+msgid "Error retrieving stored credentials"
+msgstr "检索已存储凭据时出错"
+
+#: src/sysmanage_agent/registration/registration_manager.py:389
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "在数据库中存储主机批准时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:340
+#: src/sysmanage_agent/registration/registration_manager.py:421
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "获取存储的 host_id 时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:372
-#: src/sysmanage_agent/registration/registration_manager.py:429
-msgid "Error retrieving stored credentials"
-msgstr "检索已存储凭据时出错"
-
-#: src/sysmanage_agent/registration/registration_manager.py:401
+#: src/sysmanage_agent/registration/registration_manager.py:482
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "同步检索已存储 host_id 时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:454
+#: src/sysmanage_agent/registration/registration_manager.py:535
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "获取主机批准时出错：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:508
+#: src/sysmanage_agent/registration/registration_manager.py:589
 msgid "Continuing despite cleanup error..."
 msgstr "尽管出现清理错误，仍继续进行……"
 
-#: src/sysmanage_agent/registration/registration_manager.py:529
+#: src/sysmanage_agent/registration/registration_manager.py:610
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "在 host_approval 表中发现 %d 个损坏条目，正在清理..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:543
+#: src/sysmanage_agent/registration/registration_manager.py:624
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "数据库清理过程中出错：%s"
@@ -3428,9 +3427,29 @@ msgstr "WSL 状态检查超时"
 msgid "Error checking WSL support: %s"
 msgstr "检查WSL支持时出错：%s"
 
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "队列中的消息 %s 不是可读的 JSON；不会通过轮询发送"
+#, python-format
+#~ msgid "Error collecting/sending time status: %s"
+#~ msgstr "收集/发送时间状态时出错：%s"
+
+#~ msgid "Cannot send time status: no host approval"
+#~ msgstr "无法发送时间状态：没有主机审批"
+
+#~ msgid "Failed to send time status"
+#~ msgstr "发送时间状态失败"
+
+#, python-format
+#~ msgid "Error fetching winget page %d (collected %d packages so far): %s"
+#~ msgstr "获取 winget 页 %d 时出错（目前已收集 %d 个软件包）：%s"
+
+#, python-format
+#~ msgid "Error fetching page at skip %d: %s"
+#~ msgstr "在跳过 %d 处获取页面时出错：%s"
+
+#, python-format
+#~ msgid ""
+#~ "Broadcast %s: inventory refresh requested but data_collector lacks "
+#~ "send_software_inventory_update"
+#~ msgstr "广播 %s：请求刷新清单，但 data_collector 缺少 send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"

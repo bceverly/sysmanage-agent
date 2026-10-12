@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 15:33-0400\n"
+"POT-Creation-Date: 2026-10-12 08:22-0400\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -16,31 +16,31 @@ msgstr "Failed to create database directory %s: %s"
 msgid "Failed to create database tables: %s"
 msgstr "Failed to create database tables: %s"
 
-#: src/database/init.py:138
+#: src/database/init.py:151
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr "Failed to get database path from config: %s, using local fallback"
 
-#: src/database/init.py:228
+#: src/database/init.py:241
 #, python-format
 msgid "Alembic %s failed with return code %d"
 msgstr "Alembic %s failed with return code %d"
 
-#: src/database/init.py:238
+#: src/database/init.py:251
 #, python-format
 msgid "Alembic %s timed out after %d seconds"
 msgstr "Alembic %s timed out after %d seconds"
 
-#: src/database/init.py:244
+#: src/database/init.py:257
 #, python-format
 msgid "Failed to run alembic %s: %s"
 msgstr "Failed to run alembic %s: %s"
 
-#: src/database/init.py:284
+#: src/database/init.py:297
 msgid "Failed to run database migrations"
 msgstr "Failed to run database migrations"
 
-#: src/database/init.py:294
+#: src/database/init.py:307
 #, python-format
 msgid "Failed to initialize database: %s"
 msgstr "Failed to initialize database: %s"
@@ -50,17 +50,17 @@ msgstr "Failed to initialize database: %s"
 msgid "Corrupt UUID in database: %s"
 msgstr "Corrupt UUID in database: %s"
 
-#: src/database/queue_manager.py:321
+#: src/database/queue_manager.py:345
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "Message %s permanently failed after %d attempts: %s"
 
-#: src/database/queue_manager.py:516
+#: src/database/queue_manager.py:540
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Failed to deserialize message %s: %s"
 
-#: src/database/queue_manager.py:583
+#: src/database/queue_manager.py:607
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr "Message %s (type: %s) exceeded max retries, marked as failed"
@@ -70,7 +70,7 @@ msgstr "Message %s (type: %s) exceeded max retries, marked as failed"
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 
-#: src/sysmanage_agent/collection/antivirus_collection.py:66
+#: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
 msgid "Error detecting antivirus: %s"
 msgstr "Error detecting antivirus: %s"
@@ -81,7 +81,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "Unsupported platform for certificate collection: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:930
+#: src/sysmanage_agent/communication/data_collector.py:940
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "Error collecting certificates: %s"
@@ -114,11 +114,9 @@ msgstr "Failed to query Windows certificate store %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 msgstr ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
@@ -223,15 +221,15 @@ msgstr "Error reading rsyslog config %s: %s"
 msgid "Error reading syslog-ng config: %s"
 msgstr "Error reading syslog-ng config: %s"
 
-#: src/sysmanage_agent/collection/hardware_collection.py:48
-#: src/sysmanage_agent/collection/hardware_collection.py:64
+#: src/sysmanage_agent/collection/hardware_collection.py:49
+#: src/sysmanage_agent/collection/hardware_collection.py:88
 #: src/sysmanage_agent/operations/system_control.py:346
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
 msgstr "Unsupported platform: %s"
 
-#: src/sysmanage_agent/collection/hardware_collection.py:121
+#: src/sysmanage_agent/collection/hardware_collection.py:149
 #, python-format
 msgid "Failed to collect hardware information: %s"
 msgstr "Failed to collect hardware information: %s"
@@ -479,12 +477,12 @@ msgstr "Unknown Device"
 msgid "Network discovery capture stopped: %s"
 msgstr "Network discovery capture stopped: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:417
+#: src/sysmanage_agent/collection/network_discovery_collection.py:422
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "Network discovery raw capture unavailable: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:441
+#: src/sysmanage_agent/collection/network_discovery_collection.py:446
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -631,7 +629,7 @@ msgstr ""
 "RHEL/Fedora 8+)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
-#: src/sysmanage_agent/collection/package_collector_windows.py:69
+#: src/sysmanage_agent/collection/package_collector_windows.py:142
 #, python-format
 msgid "Failed to collect packages from %s: %s"
 msgstr "Failed to collect packages from %s: %s"
@@ -714,33 +712,23 @@ msgstr "Homebrew command not found"
 msgid "Error collecting Homebrew packages: %s"
 msgstr "Error collecting Homebrew packages: %s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:89
-msgid "No packages collected from winget REST API"
-msgstr "No packages collected from winget REST API"
-
-#: src/sysmanage_agent/collection/package_collector_windows.py:94
+#: src/sysmanage_agent/collection/package_collector_windows.py:201
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
 msgstr "Error collecting winget packages via REST API: %s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:131
-#, python-format
-msgid "Error fetching winget page %d (collected %d packages so far): %s"
-msgstr "Error fetching winget page %d (collected %d packages so far): %s"
-
-#: src/sysmanage_agent/collection/package_collector_windows.py:196
-msgid "No packages collected from Chocolatey community repository"
-msgstr "No packages collected from Chocolatey community repository"
-
 #: src/sysmanage_agent/collection/package_collector_windows.py:202
+msgid "No packages collected from winget REST API"
+msgstr "No packages collected from winget REST API"
+
+#: src/sysmanage_agent/collection/package_collector_windows.py:261
 #, python-format
 msgid "Error collecting Chocolatey packages via API: %s"
 msgstr "Error collecting Chocolatey packages via API: %s"
 
-#: src/sysmanage_agent/collection/package_collector_windows.py:229
-#, python-format
-msgid "Error fetching page at skip %d: %s"
-msgstr "Error fetching page at skip %d: %s"
+#: src/sysmanage_agent/collection/package_collector_windows.py:262
+msgid "No packages collected from Chocolatey community repository"
+msgstr "No packages collected from Chocolatey community repository"
 
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
@@ -901,8 +889,8 @@ msgid "Failed to detect available updates: %s"
 msgstr "Failed to detect available updates: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:189
-#: src/sysmanage_agent/operations/package_installation_helpers.py:246
-#: src/sysmanage_agent/operations/package_operations.py:231
+#: src/sysmanage_agent/operations/package_installation_helpers.py:252
+#: src/sysmanage_agent/operations/package_operations.py:237
 #, python-format
 msgid "Failed to install package %s: %s"
 msgstr "Failed to install package %s: %s"
@@ -974,31 +962,31 @@ msgstr "Failed to check OpenBSD website for updates: %s"
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "Failed to detect OpenBSD version upgrades: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:656
+#: src/sysmanage_agent/collection/update_detection_bsd.py:684
 msgid "syspatch command failed"
 msgstr "syspatch command failed"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:658
-#: src/sysmanage_agent/collection/update_detection_bsd.py:679
+#: src/sysmanage_agent/collection/update_detection_bsd.py:686
+#: src/sysmanage_agent/collection/update_detection_bsd.py:707
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "Failed to apply syspatch updates: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:669
+#: src/sysmanage_agent/collection/update_detection_bsd.py:697
 msgid "syspatch command timed out"
 msgstr "syspatch command timed out"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:675
+#: src/sysmanage_agent/collection/update_detection_bsd.py:703
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch timed out after 10 minutes"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:820
+#: src/sysmanage_agent/collection/update_detection_bsd.py:848
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "Unsupported package manager: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:876
+#: src/sysmanage_agent/collection/update_detection_bsd.py:904
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -1144,26 +1132,26 @@ msgstr "Failed to detect Chocolatey updates: %s"
 msgid "Failed to detect Scoop updates: %s"
 msgstr "Failed to detect Scoop updates: %s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:40
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:41
 #, python-format
 msgid "Windows Update detection failed: %s"
 msgstr "Windows Update detection failed: %s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:46
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:47
 msgid "Windows Update detection timed out"
 msgstr "Windows Update detection timed out"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:49
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:50
 #, python-format
 msgid "Failed to detect Windows system updates: %s"
 msgstr "Failed to detect Windows system updates: %s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:135
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:136
 #, python-format
 msgid "Failed to parse Windows Update output: %s"
 msgstr "Failed to parse Windows Update output: %s"
 
-#: src/sysmanage_agent/collection/update_detection_windows_system.py:250
+#: src/sysmanage_agent/collection/update_detection_windows_system.py:251
 #, python-format
 msgid "Failed to detect Windows version upgrades: %s"
 msgstr "Failed to detect Windows version upgrades: %s"
@@ -1303,298 +1291,316 @@ msgstr "Failed to send child hosts data"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:429
+#: src/sysmanage_agent/communication/data_collector.py:416
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "Error collecting/sending child hosts data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:80
+#: src/sysmanage_agent/communication/data_collector.py:83
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "Failed to send initial data updates: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:157
+#: src/sysmanage_agent/communication/data_collector.py:177
 #, python-format
 msgid "Failed to perform initial update check: %s"
 msgstr "Failed to perform initial update check: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:177
+#: src/sysmanage_agent/communication/data_collector.py:194
 #, python-format
 msgid "Certificate collection failed: %s"
 msgstr "Certificate collection failed: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:180
+#: src/sysmanage_agent/communication/data_collector.py:197
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
 msgstr "Failed to perform initial certificate collection: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:196
+#: src/sysmanage_agent/communication/data_collector.py:214
 #, python-format
 msgid "Role collection failed: %s"
 msgstr "Role collection failed: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:198
+#: src/sysmanage_agent/communication/data_collector.py:216
 #, python-format
 msgid "Failed to perform initial role collection: %s"
 msgstr "Failed to perform initial role collection: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:207
+#: src/sysmanage_agent/communication/data_collector.py:225
 #, python-format
 msgid "Failed to send initial third-party repository data: %s"
 msgstr "Failed to send initial third-party repository data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:215
+#: src/sysmanage_agent/communication/data_collector.py:233
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
 msgstr "Failed to send initial firewall status data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:223
+#: src/sysmanage_agent/communication/data_collector.py:241
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
 msgstr "Failed to send initial Graylog status data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:230
+#: src/sysmanage_agent/communication/data_collector.py:248
 #, python-format
 msgid "Failed to send initial process data: %s"
 msgstr "Failed to send initial process data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:236
+#: src/sysmanage_agent/communication/data_collector.py:254
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
 msgstr "Failed to send initial child hosts data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:255
+#: src/sysmanage_agent/communication/data_collector.py:273
 #, python-format
 msgid "Failed to update OS version: %s"
 msgstr "Failed to update OS version: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:277
+#: src/sysmanage_agent/communication/data_collector.py:295
 #, python-format
 msgid "Failed to update hardware: %s"
 msgstr "Failed to update hardware: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:299
+#: src/sysmanage_agent/communication/data_collector.py:317
 #, python-format
 msgid "Failed to update user access: %s"
 msgstr "Failed to update user access: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:308
+#: src/sysmanage_agent/communication/data_collector.py:326
 #, python-format
 msgid "Error collecting processes: %s"
 msgstr "Error collecting processes: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:315
+#: src/sysmanage_agent/communication/data_collector.py:333
 msgid "Missing required parameter: pid"
 msgstr "Missing required parameter: pid"
 
-#: src/sysmanage_agent/communication/data_collector.py:319
+#: src/sysmanage_agent/communication/data_collector.py:337
 #, python-format
 msgid "Invalid pid: %s"
 msgstr "Invalid pid: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:333
+#: src/sysmanage_agent/communication/data_collector.py:351
 #, python-format
 msgid "Failed to refresh processes after kill: %s"
 msgstr "Failed to refresh processes after kill: %s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/data_collector.py:349
+#: src/sysmanage_agent/communication/data_collector.py:366
 #, python-format
 msgid "Error collecting/sending software inventory: %s"
 msgstr "Error collecting/sending software inventory: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:356
+#: src/sysmanage_agent/communication/data_collector.py:370
 #, python-format
 msgid "Error collecting/sending user access data: %s"
 msgstr "Error collecting/sending user access data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:362
+#: src/sysmanage_agent/communication/data_collector.py:374
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
 msgstr "Error collecting/sending hardware data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:368
+#: src/sysmanage_agent/communication/data_collector.py:378
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
 msgstr "Error collecting/sending certificate data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:374
+#: src/sysmanage_agent/communication/data_collector.py:380
 #, python-format
 msgid "Error collecting/sending role data: %s"
 msgstr "Error collecting/sending role data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:380
+#: src/sysmanage_agent/communication/data_collector.py:383
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
 msgstr "Error collecting/sending OS version data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:386
+#: src/sysmanage_agent/communication/data_collector.py:387
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
 msgstr "Error collecting/sending reboot status: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:393
+#: src/sysmanage_agent/communication/data_collector.py:391
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
 msgstr "Error collecting/sending third-party repository data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:400
+#: src/sysmanage_agent/communication/data_collector.py:395
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
 msgstr "Error collecting/sending antivirus status: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:406
+#: src/sysmanage_agent/communication/data_collector.py:399
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
 msgstr "Error collecting/sending firewall status: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:412
+#: src/sysmanage_agent/communication/data_collector.py:403
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
 msgstr "Error collecting/sending Graylog status: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:418
+#: src/sysmanage_agent/communication/data_collector.py:405
 #, python-format
 msgid "Error collecting/sending process data: %s"
 msgstr "Error collecting/sending process data: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:423
+#: src/sysmanage_agent/communication/data_collector.py:408
 #, python-format
 msgid "Error collecting/sending host metrics: %s"
 msgstr "Error collecting/sending host metrics: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:453
+#: src/sysmanage_agent/communication/data_collector.py:412
 #, python-format
-msgid "Initial data collection error: %s"
-msgstr "Initial data collection error: %s"
+msgid "Error collecting/sending clock status: %s"
+msgstr "Error collecting/sending clock status: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:468
+#: src/sysmanage_agent/communication/data_collector.py:452
 #, python-format
 msgid "Data collector error: %s"
 msgstr "Data collector error: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:693
+#: src/sysmanage_agent/communication/data_collector.py:480
+#, python-format
+msgid "Initial data collection error: %s"
+msgstr "Initial data collection error: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:703
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "Error collecting available packages: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:802
+#: src/sysmanage_agent/communication/data_collector.py:812
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "Error sending package delta: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:881
+#: src/sysmanage_agent/communication/data_collector.py:891
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "Error sending paginated packages for batch %s: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:976
+#: src/sysmanage_agent/communication/data_collector.py:986
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "Error collecting roles: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:53
+#: src/sysmanage_agent/communication/data_collector_senders.py:54
 msgid "Failed to send periodic software inventory data"
 msgstr "Failed to send periodic software inventory data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:77
+#: src/sysmanage_agent/communication/data_collector_senders.py:78
 msgid "Failed to send periodic user access data"
 msgstr "Failed to send periodic user access data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:101
+#: src/sysmanage_agent/communication/data_collector_senders.py:102
 msgid "Failed to send periodic hardware data"
 msgstr "Failed to send periodic hardware data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:121
+#: src/sysmanage_agent/communication/data_collector_senders.py:122
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "Periodic certificate collection failed: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:141
+#: src/sysmanage_agent/communication/data_collector_senders.py:142
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "Periodic role collection failed: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:165
+#: src/sysmanage_agent/communication/data_collector_senders.py:166
 msgid "Failed to send periodic OS version data"
 msgstr "Failed to send periodic OS version data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:186
+#: src/sysmanage_agent/communication/data_collector_senders.py:187
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "Failed to collect third-party repositories: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:220
+#: src/sysmanage_agent/communication/data_collector_senders.py:221
 msgid "Failed to send third-party repository data"
 msgstr "Failed to send third-party repository data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:252
+#: src/sysmanage_agent/communication/data_collector_senders.py:253
 msgid "Failed to send antivirus status data"
 msgstr "Failed to send antivirus status data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:255
+#: src/sysmanage_agent/communication/data_collector_senders.py:256
 msgid "Cannot send antivirus status data: no host approval"
 msgstr "Cannot send antivirus status data: no host approval"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:289
+#: src/sysmanage_agent/communication/data_collector_senders.py:290
 msgid "Failed to send firewall status data"
 msgstr "Failed to send firewall status data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:291
+#: src/sysmanage_agent/communication/data_collector_senders.py:292
 msgid "Cannot send firewall status data: no host approval"
 msgstr "Cannot send firewall status data: no host approval"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:323
+#: src/sysmanage_agent/communication/data_collector_senders.py:324
 msgid "Failed to send Graylog status data"
 msgstr "Failed to send Graylog status data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:325
+#: src/sysmanage_agent/communication/data_collector_senders.py:326
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "Cannot send Graylog status data: no host approval"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:333
+#: src/sysmanage_agent/communication/data_collector_senders.py:334
 msgid "Cannot send process data: no host approval"
 msgstr "Cannot send process data: no host approval"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:363
+#: src/sysmanage_agent/communication/data_collector_senders.py:364
 msgid "Failed to send process status data"
 msgstr "Failed to send process status data"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:374
+#: src/sysmanage_agent/communication/data_collector_senders.py:375
 msgid "Cannot send host metrics: no host approval"
 msgstr "Cannot send host metrics: no host approval"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:386
+#: src/sysmanage_agent/communication/data_collector_senders.py:387
 msgid "Failed to send host metrics"
 msgstr "Failed to send host metrics"
 
-#: src/sysmanage_agent/communication/http_polling.py:81
+#: src/sysmanage_agent/communication/data_collector_senders.py:400
+msgid "Cannot send clock status: no host approval"
+msgstr "Cannot send clock status: no host approval"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:407
+msgid "Failed to send clock status"
+msgstr "Failed to send clock status"
+
+#: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
 msgstr "Could not read the stored host_id for polling"
 
-#: src/sysmanage_agent/communication/http_polling.py:95
+#: src/sysmanage_agent/communication/http_polling.py:131
 msgid "Could not read the outbound queue for polling"
 msgstr "Could not read the outbound queue for polling"
 
-#: src/sysmanage_agent/communication/http_polling.py:120
+#: src/sysmanage_agent/communication/http_polling.py:142
+#, python-format
+msgid "Queued message %s is not readable JSON; not polling it"
+msgstr "Queued message %s is not readable JSON; not polling it"
+
+#: src/sysmanage_agent/communication/http_polling.py:158
 #, python-format
 msgid "Could not mark polled message %s delivered"
 msgstr "Could not mark polled message %s delivered"
 
-#: src/sysmanage_agent/communication/http_polling.py:168
+#: src/sysmanage_agent/communication/http_polling.py:206
 #, python-format
 msgid "Error handling polled message %s"
 msgstr "Error handling polled message %s"
 
-#: src/sysmanage_agent/communication/http_polling.py:184
+#: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 
-#: src/sysmanage_agent/communication/http_polling.py:194
+#: src/sysmanage_agent/communication/http_polling.py:232
 #, python-format
 msgid ""
 "Using HTTP polling instead of a WebSocket: this network refused the "
@@ -1605,67 +1611,66 @@ msgstr ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 
-#: src/sysmanage_agent/communication/http_polling.py:209
+#: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
 msgid "Poll failed (%s); retrying in %ds"
 msgstr "Poll failed (%s); retrying in %ds"
 
-#: src/sysmanage_agent/communication/http_polling.py:220
+#: src/sysmanage_agent/communication/http_polling.py:264
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "Re-testing whether this network now allows WebSocket connections"
 
-#: src/sysmanage_agent/communication/message_handler.py:182
+#: src/sysmanage_agent/communication/message_handler.py:193
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "Failed to queue message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:220
+#: src/sysmanage_agent/communication/message_handler.py:231
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "Failed to queue command acknowledgment for message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:228
+#: src/sysmanage_agent/communication/message_handler.py:239
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "Error queueing command acknowledgment for %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:268
+#: src/sysmanage_agent/communication/message_handler.py:278
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "Server error [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:321
+#: src/sysmanage_agent/communication/message_handler.py:331
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Could not parse message timestamp for stale check: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:359
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+#: src/sysmanage_agent/communication/message_handler.py:369
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Host registration is pending approval. Will continue periodic attempts."
 
-#: src/sysmanage_agent/communication/message_handler.py:364
+#: src/sysmanage_agent/communication/message_handler.py:374
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "Server reports missing hostname in message. This is a bug."
 
-#: src/sysmanage_agent/communication/message_handler.py:367
+#: src/sysmanage_agent/communication/message_handler.py:377
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "Server failed to queue message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:391
+#: src/sysmanage_agent/communication/message_handler.py:401
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 
-#: src/sysmanage_agent/communication/message_handler.py:404
+#: src/sysmanage_agent/communication/message_handler.py:414
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -1674,31 +1679,22 @@ msgstr ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 
-#: src/sysmanage_agent/communication/message_handler.py:415
+#: src/sysmanage_agent/communication/message_handler.py:425
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Error clearing stored host_id: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:469
-#, python-format
-msgid ""
-"Broadcast %s: inventory refresh requested but data_collector lacks "
-"send_software_inventory_update"
-msgstr ""
-"Broadcast %s: inventory refresh requested but data_collector lacks "
-"send_software_inventory_update"
-
-#: src/sysmanage_agent/communication/message_handler.py:476
+#: src/sysmanage_agent/communication/message_handler.py:481
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "Broadcast %s: inventory refresh failed: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:486
+#: src/sysmanage_agent/communication/message_handler.py:491
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Broadcast %s: unknown action '%s' -- ignored"
 
-#: src/sysmanage_agent/communication/message_handler.py:569
+#: src/sysmanage_agent/communication/message_handler.py:574
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -1706,95 +1702,95 @@ msgstr ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 
-#: src/sysmanage_agent/communication/message_handler.py:584
+#: src/sysmanage_agent/communication/message_handler.py:593
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "Invalid JSON received: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:586
+#: src/sysmanage_agent/communication/message_handler.py:595
 #, python-format
 msgid "Error processing message: %s"
 msgstr "Error processing message: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:599
+#: src/sysmanage_agent/communication/message_handler.py:608
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:651
+#: src/sysmanage_agent/communication/message_handler.py:660
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Unknown message type: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:727
+#: src/sysmanage_agent/communication/message_handler.py:738
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Heartbeat failed, connection may be lost"
 
-#: src/sysmanage_agent/communication/message_handler.py:736
+#: src/sysmanage_agent/communication/message_handler.py:747
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Message sender error: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:752
+#: src/sysmanage_agent/communication/message_handler.py:763
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Error closing message handler: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:98
+#: src/sysmanage_agent/communication/message_handler_queue.py:110
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Failed to create task from queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:164
+#: src/sysmanage_agent/communication/message_handler_queue.py:176
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Error in inbound queue processor: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:174
+#: src/sysmanage_agent/communication/message_handler_queue.py:186
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Could not mark inbound message %s as processing"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:204
+#: src/sysmanage_agent/communication/message_handler_queue.py:216
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Error processing inbound message %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:220
+#: src/sysmanage_agent/communication/message_handler_queue.py:232
 msgid "Cannot send message: not connected to server"
 msgstr "Cannot send message: not connected to server"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:228
+#: src/sysmanage_agent/communication/message_handler_queue.py:245
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Failed to send message directly: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:287
+#: src/sysmanage_agent/communication/message_handler_queue.py:304
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Error in queue processor: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:329
+#: src/sysmanage_agent/communication/message_handler_queue.py:346
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Error processing queued message %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:355
+#: src/sysmanage_agent/communication/message_handler_queue.py:372
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Error recovering stuck messages: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:386
+#: src/sysmanage_agent/communication/message_handler_queue.py:403
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Failed to create outbound queue processing task: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:410
+#: src/sysmanage_agent/communication/message_handler_queue.py:427
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Failed to create inbound queue processing task: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:501
+#: src/sysmanage_agent/communication/message_handler_queue.py:518
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "Error pruning completed queue messages: %s"
@@ -1819,134 +1815,133 @@ msgstr "Could not determine hostname, using fallback: %s"
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "In-flight journal reconciliation failed: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:55
+#: src/sysmanage_agent/core/agent_utils.py:57
 msgid "systemctl not found"
 msgstr "systemctl not found"
 
-#: src/sysmanage_agent/core/agent_utils.py:83
+#: src/sysmanage_agent/core/agent_utils.py:85
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "Error during periodic update check: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:111
+#: src/sysmanage_agent/core/agent_utils.py:117
 #, python-format
 msgid "Update checker error: %s"
 msgstr "Update checker error: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:149
+#: src/sysmanage_agent/core/agent_utils.py:155
 msgid "Package collection completed with some issues"
 msgstr "Package collection completed with some issues"
 
-#: src/sysmanage_agent/core/agent_utils.py:152
+#: src/sysmanage_agent/core/agent_utils.py:158
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "Error during package collection: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:191
+#: src/sysmanage_agent/core/agent_utils.py:205
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "Package collection scheduler error: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:300
+#: src/sysmanage_agent/core/agent_utils.py:326
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "Failed to build capability report: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:422
+#: src/sysmanage_agent/core/agent_utils.py:448
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "Script execution UUID %s already processed, skipping duplicate"
 
-#: src/sysmanage_agent/core/agent_utils.py:459
+#: src/sysmanage_agent/core/agent_utils.py:490
 msgid "Generic command missing nested command_type"
 msgstr "Generic command missing nested command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:471
+#: src/sysmanage_agent/core/agent_utils.py:502
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Unknown command type: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:530
+#: src/sysmanage_agent/core/agent_utils.py:561
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Failed to queue script execution result: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:549
+#: src/sysmanage_agent/core/agent_utils.py:580
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Error checking execution UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:563
+#: src/sysmanage_agent/core/agent_utils.py:594
 msgid "No execution UUID provided, cannot track"
 msgstr "No execution UUID provided, cannot track"
 
-#: src/sysmanage_agent/core/agent_utils.py:578
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Execution UUID %s already exists in database"
 
-#: src/sysmanage_agent/core/agent_utils.py:603
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Error storing execution UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:668
+#: src/sysmanage_agent/core/agent_utils.py:699
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Error in service control handler: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:717
-#: src/sysmanage_agent/core/agent_utils.py:801
-#: src/sysmanage_agent/core/agent_utils.py:808
-#, python-format
-msgid "Failed to %s service %s: %s"
-msgstr "Failed to %s service %s: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:724
+#: src/sysmanage_agent/core/agent_utils.py:748
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Service control timeout for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:730
+#: src/sysmanage_agent/core/agent_utils.py:754
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Service control error for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:818
+#: src/sysmanage_agent/core/agent_utils.py:839
+#, python-format
+msgid "Failed to %s service %s: %s"
+msgstr "Failed to %s service %s: %s"
+
+#: src/sysmanage_agent/core/agent_utils.py:849
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Failed to update roles after service control: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:857
+#: src/sysmanage_agent/core/agent_utils.py:888
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Error in service status handler: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:900
+#: src/sysmanage_agent/core/agent_utils.py:931
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Service status timeout for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:910
+#: src/sysmanage_agent/core/agent_utils.py:941
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Service status error for %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:958
+#: src/sysmanage_agent/core/agent_utils.py:989
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "Failed to queue synthetic command_result for in-flight journal: %s"
 
-#: src/sysmanage_agent/core/auth_helper.py:76
+#: src/sysmanage_agent/core/auth_helper.py:115
 #, python-format
 msgid "Auth refused by server: %s"
 msgstr "Auth refused by server: %s"
 
-#: src/sysmanage_agent/core/auth_helper.py:77
+#: src/sysmanage_agent/core/auth_helper.py:116
 msgid "no connection token"
 msgstr "no connection token"
 
-#: src/sysmanage_agent/core/auth_helper.py:87
+#: src/sysmanage_agent/core/auth_helper.py:131
+#: src/sysmanage_agent/core/auth_helper.py:135
 #, python-format
 msgid "Auth failed with status %s: %s"
 msgstr "Auth failed with status %s: %s"
@@ -2203,39 +2198,39 @@ msgstr "Error collecting firewall status: %s"
 msgid "No files provided"
 msgstr "No files provided"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:473
+#: src/sysmanage_agent/operations/generic_deployment.py:497
 #, python-format
 msgid "Rolled back %s from backup %s after failed deployment"
 msgstr "Rolled back %s from backup %s after failed deployment"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:480
+#: src/sysmanage_agent/operations/generic_deployment.py:504
 #, python-format
 msgid "Rollback failed for %s from %s: %s"
 msgstr "Rollback failed for %s from %s: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:509
+#: src/sysmanage_agent/operations/generic_deployment.py:533
 msgid "No steps provided"
 msgstr "No steps provided"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:546
+#: src/sysmanage_agent/operations/generic_deployment.py:570
 #, python-format
 msgid "Unknown step type: %s"
 msgstr "Unknown step type: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:567
+#: src/sysmanage_agent/operations/generic_deployment.py:591
 #, python-format
 msgid "Command sequence step %d/%d failed: %s - %s"
 msgstr "Command sequence step %d/%d failed: %s - %s"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:618
+#: src/sysmanage_agent/operations/generic_deployment.py:642
 msgid "Empty shell command"
 msgstr "Empty shell command"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:658
+#: src/sysmanage_agent/operations/generic_deployment.py:682
 msgid "Empty wait_condition command"
 msgstr "Empty wait_condition command"
 
-#: src/sysmanage_agent/operations/generic_deployment.py:692
+#: src/sysmanage_agent/operations/generic_deployment.py:716
 #, python-format
 msgid "Failed to send progress message: %s"
 msgstr "Failed to send progress message: %s"
@@ -2541,23 +2536,23 @@ msgstr "Quarantine of %s refused: %s"
 msgid "Restore of %s refused: %s"
 msgstr "Restore of %s refused: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:133
+#: src/sysmanage_agent/operations/network_discovery_operations.py:134
 #, python-format
 msgid "Network discovery setting could not be saved: %s"
 msgstr "Network discovery setting could not be saved: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:161
+#: src/sysmanage_agent/operations/network_discovery_operations.py:165
 #, python-format
 msgid "Error sending network discovery report: %s"
 msgstr "Error sending network discovery report: %s"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:169
-#: src/sysmanage_agent/operations/network_discovery_operations.py:241
+#: src/sysmanage_agent/operations/network_discovery_operations.py:173
+#: src/sysmanage_agent/operations/network_discovery_operations.py:245
 msgid "Cannot send network discovery report: no host approval"
 msgstr "Cannot send network discovery report: no host approval"
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:182
-#: src/sysmanage_agent/operations/network_discovery_operations.py:259
+#: src/sysmanage_agent/operations/network_discovery_operations.py:186
+#: src/sysmanage_agent/operations/network_discovery_operations.py:263
 msgid "Failed to send network discovery report"
 msgstr "Failed to send network discovery report"
 
@@ -2579,23 +2574,23 @@ msgstr "Failed to collect installed packages: %s"
 msgid "package inventory collection failed: %s"
 msgstr "package inventory collection failed: %s"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:54
+#: src/sysmanage_agent/operations/package_installation_helpers.py:55
 #, python-format
 msgid "Failed to store installation request: %s"
 msgstr "Failed to store installation request: %s"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:85
+#: src/sysmanage_agent/operations/package_installation_helpers.py:86
 #, python-format
 msgid "Failed to update installation tracking record: %s"
 msgstr "Failed to update installation tracking record: %s"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:107
-#: src/sysmanage_agent/operations/package_operations.py:59
+#: src/sysmanage_agent/operations/package_installation_helpers.py:108
+#: src/sysmanage_agent/operations/package_operations.py:60
 msgid "Skipping package with no name"
 msgstr "Skipping package with no name"
 
-#: src/sysmanage_agent/operations/package_installation_helpers.py:108
-#: src/sysmanage_agent/operations/package_operations.py:60
+#: src/sysmanage_agent/operations/package_installation_helpers.py:109
+#: src/sysmanage_agent/operations/package_operations.py:61
 msgid "No package name"
 msgstr "No package name"
 
@@ -2667,13 +2662,13 @@ msgstr "Homebrew is already installed"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -2700,103 +2695,103 @@ msgid "Scoop installed successfully"
 msgstr "Scoop installed successfully"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/package_operations.py:121
+#: src/sysmanage_agent/operations/package_operations.py:127
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
 msgstr "Uninstall not implemented for %s package manager"
 
-#: src/sysmanage_agent/operations/package_operations.py:154
+#: src/sysmanage_agent/operations/package_operations.py:160
 #, python-format
 msgid "Failed to update uninstall tracking record: %s"
 msgstr "Failed to update uninstall tracking record: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:173
+#: src/sysmanage_agent/operations/package_operations.py:179
 msgid "No package name specified"
 msgstr "No package name specified"
 
-#: src/sysmanage_agent/operations/package_operations.py:263
-#: src/sysmanage_agent/operations/package_operations.py:371
+#: src/sysmanage_agent/operations/package_operations.py:269
+#: src/sysmanage_agent/operations/package_operations.py:377
 msgid "No request_id specified"
 msgstr "No request_id specified"
 
-#: src/sysmanage_agent/operations/package_operations.py:268
+#: src/sysmanage_agent/operations/package_operations.py:274
 msgid "No packages specified for installation"
 msgstr "No packages specified for installation"
 
-#: src/sysmanage_agent/operations/package_operations.py:347
+#: src/sysmanage_agent/operations/package_operations.py:353
 #, python-format
 msgid "Failed to send installation completion to server: %s"
 msgstr "Failed to send installation completion to server: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:376
+#: src/sysmanage_agent/operations/package_operations.py:382
 msgid "No packages specified for uninstallation"
 msgstr "No packages specified for uninstallation"
 
-#: src/sysmanage_agent/operations/package_operations.py:473
+#: src/sysmanage_agent/operations/package_operations.py:479
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "Failed to send uninstall completion to server: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:482
+#: src/sysmanage_agent/operations/package_operations.py:488
 msgid "No packages to install"
 msgstr "No packages to install"
 
-#: src/sysmanage_agent/operations/package_operations.py:528
+#: src/sysmanage_agent/operations/package_operations.py:534
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get install failed: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:533
+#: src/sysmanage_agent/operations/package_operations.py:539
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "Failed to install packages with apt-get: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:536
+#: src/sysmanage_agent/operations/package_operations.py:542
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "Exception during apt-get install: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:543
+#: src/sysmanage_agent/operations/package_operations.py:549
 msgid "No packages to uninstall"
 msgstr "No packages to uninstall"
 
-#: src/sysmanage_agent/operations/package_operations.py:574
+#: src/sysmanage_agent/operations/package_operations.py:580
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove failed: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:579
+#: src/sysmanage_agent/operations/package_operations.py:585
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "Failed to uninstall packages with apt-get: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:582
+#: src/sysmanage_agent/operations/package_operations.py:588
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "Exception during apt-get remove: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:623
+#: src/sysmanage_agent/operations/package_operations.py:629
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr "Failed to queue installation completion for request %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:628
+#: src/sysmanage_agent/operations/package_operations.py:634
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "Error queueing installation completion: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:684
+#: src/sysmanage_agent/operations/package_operations.py:690
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "Failed to send package installation status update: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:757
+#: src/sysmanage_agent/operations/package_operations.py:763
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "Error running package update: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:766
+#: src/sysmanage_agent/operations/package_operations.py:772
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3103,58 +3098,58 @@ msgstr "Failed to check reboot status: %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "Failed to send reboot status update: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:69
+#: src/sysmanage_agent/operations/update_operations.py:74
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "Failed to check updates: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:94
+#: src/sysmanage_agent/operations/update_operations.py:99
 msgid "No packages specified for update"
 msgstr "No packages specified for update"
 
-#: src/sysmanage_agent/operations/update_operations.py:107
+#: src/sysmanage_agent/operations/update_operations.py:112
 msgid "Updates started in background"
 msgstr "Updates started in background"
 
-#: src/sysmanage_agent/operations/update_operations.py:111
+#: src/sysmanage_agent/operations/update_operations.py:116
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "Failed to start updates: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:151
+#: src/sysmanage_agent/operations/update_operations.py:169
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "No package manager specified for %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:183
+#: src/sysmanage_agent/operations/update_operations.py:201
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "Could not determine package manager for %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:196
+#: src/sysmanage_agent/operations/update_operations.py:214
 msgid "Failed to send update results, will retry..."
 msgstr "Failed to send update results, will retry..."
 
-#: src/sysmanage_agent/operations/update_operations.py:206
+#: src/sysmanage_agent/operations/update_operations.py:224
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "Failed to send update results after %d attempts"
 
-#: src/sysmanage_agent/operations/update_operations.py:234
+#: src/sysmanage_agent/operations/update_operations.py:252
 msgid "Could not send fresh update list - not connected"
 msgstr "Could not send fresh update list - not connected"
 
-#: src/sysmanage_agent/operations/update_operations.py:257
+#: src/sysmanage_agent/operations/update_operations.py:276
 msgid "No valid packages found for update"
 msgstr "No valid packages found for update"
 
-#: src/sysmanage_agent/operations/update_operations.py:282
+#: src/sysmanage_agent/operations/update_operations.py:301
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "Failed to rescan for updates after batch: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:286
+#: src/sysmanage_agent/operations/update_operations.py:305
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "Background update process failed: %s"
@@ -3287,50 +3282,50 @@ msgstr "Failed to add Windows repository %s: %s"
 msgid "Error adding Windows repository: %s"
 msgstr "Error adding Windows repository: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:43
+#: src/sysmanage_agent/registration/client_registration.py:46
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  WARNING: aiohttp not available, registration will be skipped"
 
-#: src/sysmanage_agent/registration/client_registration.py:278
+#: src/sysmanage_agent/registration/client_registration.py:307
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp not available, skipping registration"
 
-#: src/sysmanage_agent/registration/client_registration.py:339
+#: src/sysmanage_agent/registration/client_registration.py:382
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "Registration failed with status %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:348
+#: src/sysmanage_agent/registration/client_registration.py:391
 #, python-format
 msgid "Error during registration: %s"
 msgstr "Error during registration: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:377
+#: src/sysmanage_agent/registration/client_registration.py:428
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "Failed to register after %s attempts"
 
-#: src/sysmanage_agent/registration/client_registration.py:382
+#: src/sysmanage_agent/registration/client_registration.py:434
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "Registration failed, retrying in %s seconds..."
 
-#: src/sysmanage_agent/registration/client_registration.py:437
+#: src/sysmanage_agent/registration/client_registration.py:489
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "Error loading stored auth data: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:456
+#: src/sysmanage_agent/registration/client_registration.py:512
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "Error storing auth data: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:469
+#: src/sysmanage_agent/registration/client_registration.py:525
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Error getting stored host_id: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:484
+#: src/sysmanage_agent/registration/client_registration.py:540
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "Error retrieving stored approval data: %s"
@@ -3357,84 +3352,83 @@ msgstr "Invalid JSON announcement from unknown source"
 msgid "Error listening for announcements: %s"
 msgstr "Error listening for announcements: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:90
+#: src/sysmanage_agent/registration/registration_manager.py:100
 msgid "Host not yet approved for certificate retrieval"
 msgstr "Host not yet approved for certificate retrieval"
 
-#: src/sysmanage_agent/registration/registration_manager.py:94
+#: src/sysmanage_agent/registration/registration_manager.py:104
 #, python-format
 msgid "Failed to fetch certificates: HTTP %s"
 msgstr "Failed to fetch certificates: HTTP %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:99
+#: src/sysmanage_agent/registration/registration_manager.py:109
 #, python-format
 msgid "Error fetching certificates: %s"
 msgstr "Error fetching certificates: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:134
+#: src/sysmanage_agent/registration/registration_manager.py:145
 #, python-format
 msgid "Failed to get server fingerprint: %s"
 msgstr "Failed to get server fingerprint: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:145
+#: src/sysmanage_agent/registration/registration_manager.py:156
 msgid "Certificate-based authentication requires manual host approval"
 msgstr "Certificate-based authentication requires manual host approval"
 
-#: src/sysmanage_agent/registration/registration_manager.py:148
+#: src/sysmanage_agent/registration/registration_manager.py:159
 msgid "Please approve this host in the SysManage web interface"
 msgstr "Please approve this host in the SysManage web interface"
 
-#: src/sysmanage_agent/registration/registration_manager.py:200
+#: src/sysmanage_agent/registration/registration_manager.py:256
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "Error processing registration success notification: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:233
+#: src/sysmanage_agent/registration/registration_manager.py:294
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "Error processing host approval notification: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:254
-#: src/sysmanage_agent/registration/registration_manager.py:506
+#: src/sysmanage_agent/registration/registration_manager.py:315
+#: src/sysmanage_agent/registration/registration_manager.py:587
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "Error clearing host approval records: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:308
+#: src/sysmanage_agent/registration/registration_manager.py:333
+msgid "Error retrieving stored credentials"
+msgstr "Error retrieving stored credentials"
+
+#: src/sysmanage_agent/registration/registration_manager.py:389
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "Error storing host approval in database: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:340
+#: src/sysmanage_agent/registration/registration_manager.py:421
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "Error retrieving stored host_id: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:372
-#: src/sysmanage_agent/registration/registration_manager.py:429
-msgid "Error retrieving stored credentials"
-msgstr "Error retrieving stored credentials"
-
-#: src/sysmanage_agent/registration/registration_manager.py:401
+#: src/sysmanage_agent/registration/registration_manager.py:482
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "Error retrieving stored host_id synchronously: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:454
+#: src/sysmanage_agent/registration/registration_manager.py:535
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "Error retrieving host approval: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:508
+#: src/sysmanage_agent/registration/registration_manager.py:589
 msgid "Continuing despite cleanup error..."
 msgstr "Continuing despite cleanup error..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:529
+#: src/sysmanage_agent/registration/registration_manager.py:610
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "Found %d corrupt entries in host_approval table, cleaning up..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:543
+#: src/sysmanage_agent/registration/registration_manager.py:624
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "Error during database cleanup: %s"
@@ -3451,6 +3445,32 @@ msgstr "WSL status check timed out"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Error checking WSL support: %s"
+
+#, python-format
+#~ msgid "Error collecting/sending time status: %s"
+#~ msgstr "Error collecting/sending time status: %s"
+
+#~ msgid "Cannot send time status: no host approval"
+#~ msgstr "Cannot send time status: no host approval"
+
+#~ msgid "Failed to send time status"
+#~ msgstr "Failed to send time status"
+
+#, python-format
+#~ msgid "Error fetching winget page %d (collected %d packages so far): %s"
+#~ msgstr "Error fetching winget page %d (collected %d packages so far): %s"
+
+#, python-format
+#~ msgid "Error fetching page at skip %d: %s"
+#~ msgstr "Error fetching page at skip %d: %s"
+
+#, python-format
+#~ msgid ""
+#~ "Broadcast %s: inventory refresh requested but data_collector lacks "
+#~ "send_software_inventory_update"
+#~ msgstr ""
+#~ "Broadcast %s: inventory refresh requested but data_collector lacks "
+#~ "send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3478,7 +3498,8 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
-#~ msgstr "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+#~ msgstr ""
+#~ "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3603,8 +3624,10 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Found %s package: %s v%s"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
-#~ msgstr "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgstr ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3866,11 +3889,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Completed packages batch %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Collecting SSL certificates from system"
@@ -3968,7 +3991,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "Recovered %d stuck messages on connection establishment"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Creating outbound queue processing task from on_connection_established"
 
@@ -3979,8 +4003,10 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Outbound queue processor already running, not starting another"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
-#~ msgstr "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgstr ""
+#~ "Creating inbound queue processing task from on_connection_established"
 
 #, python-format
 #~ msgid "Inbound queue processing task created successfully: %s"
@@ -4142,7 +4168,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Windows %s Event Log collected in %.2f seconds"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
-#~ msgstr "Collecting Windows System Event Log (this may take 10-30 seconds)..."
+#~ msgstr ""
+#~ "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
@@ -4476,9 +4503,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Registration received but approval pending"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
 #~ msgstr ""
-#~ "Registration success but no host_id provided - approval may come separately"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4642,11 +4671,11 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5343,11 +5372,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Installing sshpass via apk..."
 
 #~ msgid ""
-#~ "Could not detect package manager to install sshpass. Please install sshpass "
-#~ "manually."
+#~ "Could not detect package manager to install sshpass. Please install "
+#~ "sshpass manually."
 #~ msgstr ""
-#~ "Could not detect package manager to install sshpass. Please install sshpass "
-#~ "manually."
+#~ "Could not detect package manager to install sshpass. Please install "
+#~ "sshpass manually."
 
 #~ msgid "Timeout while installing sshpass"
 #~ msgstr "Timeout while installing sshpass"
@@ -5407,7 +5436,3 @@ msgstr "Error checking WSL support: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPUs cannot exceed 64"
-
-#: src/sysmanage_agent/communication/http_polling.py
-msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "Queued message %s is not readable JSON; not polling it"

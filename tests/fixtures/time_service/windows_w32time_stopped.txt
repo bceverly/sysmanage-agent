@@ -1,0 +1,6 @@
+
+$ w32tm /query /status   (rc=2147943462)
+The following error occurred: The service has not been started. (0x80070426)
+
+$ w32tm /query /source   (rc=2147943462)
+The following error occurred: The service has not been started. (0x80070426)

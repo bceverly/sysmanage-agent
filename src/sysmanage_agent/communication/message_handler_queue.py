@@ -233,6 +233,11 @@ class MessageHandlerQueueMixin:
             return False
 
         try:
+            # t3 of the clock measurement is taken HERE, at the socket write,
+            # never when the heartbeat was created or queued (23.3).
+            probe = getattr(self, "clock_probe", None)
+            if probe is not None:
+                message = probe.stamp(message)
             await self.agent.websocket.send(json.dumps(message))
             self.logger.debug("Sent message directly: %s", message.get("message_type"))
             return True

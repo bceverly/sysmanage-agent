@@ -17,6 +17,7 @@ import uuid
 from datetime import datetime, timezone
 
 from src.i18n import _
+from src.sysmanage_agent.collection.time_service import collect_time_status
 
 _UNKNOWN_ERROR = "Unknown error"
 
@@ -384,3 +385,23 @@ class DataCollectorSendersMixin:
             )
         else:
             self.logger.warning(_("Failed to send host metrics"))
+
+    async def _send_time_status_update(self):
+        """Send what the host's own time service says about itself (23.3).
+
+        The server measures the clock offset independently from timestamped
+        heartbeats; this is the host's claim beside it -- which service, is
+        it running and synchronized, its source -- so a stopped Windows Time
+        shows as stopped instead of as nothing.  Send-on-change keeps it to
+        one message whenever the claim changes.
+        """
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if not host_approval:
+            self.logger.warning(_("Cannot send clock status: no host approval"))
+            return
+        # w32tm / chronyc / sntp are subprocesses; keep them off the event loop.
+        payload = await asyncio.to_thread(collect_time_status)
+        payload["host_id"] = str(host_approval.host_id)
+        message = self.agent.create_message("time_status_update", payload)
+        if not await self.agent.send_message(message):
+            self.logger.warning(_("Failed to send clock status"))
