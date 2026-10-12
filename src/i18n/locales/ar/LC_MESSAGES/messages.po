@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 08:22-0400\n"
+"POT-Creation-Date: 2026-10-12 15:02-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -116,8 +116,7 @@ msgstr "فشل في استعلام مخزن الشهادات Windows %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 msgstr "حزمة الشهادات %s تحتوي على أكثر من %d شهادة؛ إعداد تقرير عن الأولى %d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
@@ -1595,8 +1594,8 @@ msgstr "خطأ في معالجة الرسالة المرسلة %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr ""
 "لا يمكن استخدامallback HTTP: هذا الوكيل ليس لديه host_id مخزن. يجب إكمال "
 "التسجيل أولاً."
@@ -1608,8 +1607,8 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"استخدام التحقق عبر HTTP بدلاً من WebSocket: هذه الشبكة رفضت ترقية WebSocket."
-" ستصل الأوامر مع تأخير يصل إلى بضع ثوانٍ. السماح بالترقيات إلى WebSocket %s "
+"استخدام التحقق عبر HTTP بدلاً من WebSocket: هذه الشبكة رفضت ترقية WebSocket. "
+"ستصل الأوامر مع تأخير يصل إلى بضع ثوانٍ. السماح بالترقيات إلى WebSocket %s "
 "لاستعادة التوصيل الفوري."
 
 #: src/sysmanage_agent/communication/http_polling.py:254
@@ -1647,8 +1646,7 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "لا يمكن تحليل توقيع الرسالة لفحص التقادم: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:369
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr "تسجيل المضيف معلق انتظار الموافقة. سيتم مواصلة المحاولات الدورية."
 
 #: src/sysmanage_agent/communication/message_handler.py:374
@@ -1663,8 +1661,8 @@ msgstr "لفشل خادم تحميل الرسالة: %s"
 #: src/sysmanage_agent/communication/message_handler.py:401
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "الخادم أبلغ عن حالة host_not_registered (الضربة %(n)d/%(limit)d) -- إعادة "
@@ -1848,85 +1846,85 @@ msgstr "خطأ في مجدول جمع الحزم: %s"
 msgid "Failed to build capability report: %s"
 msgstr "فشل في بناء تقرير القدرة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:448
+#: src/sysmanage_agent/core/agent_utils.py:449
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "تمت معالجة UUID تنفيذ النص البرمجي %s بالفعل، تخطي التكرار"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:491
 msgid "Generic command missing nested command_type"
 msgstr "الأمر العام مفقود نوع الأمر المتداخل"
 
-#: src/sysmanage_agent/core/agent_utils.py:502
+#: src/sysmanage_agent/core/agent_utils.py:503
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "نوع أمر غير معروف: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:561
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "فشل في وضع علامة على نتيجة تنفيذ النص البرمجي كقيد: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:580
+#: src/sysmanage_agent/core/agent_utils.py:581
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "خطأ في التحقق من UUID للتنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:594
+#: src/sysmanage_agent/core/agent_utils.py:595
 msgid "No execution UUID provided, cannot track"
 msgstr "لم يتم توفير UUID للتنفيذ، لا يمكن التتبع"
 
-#: src/sysmanage_agent/core/agent_utils.py:609
+#: src/sysmanage_agent/core/agent_utils.py:610
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID التنفيذ %s موجود بالفعل في قاعدة البيانات"
 
-#: src/sysmanage_agent/core/agent_utils.py:634
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "خطأ في تخزين UUID التنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:699
+#: src/sysmanage_agent/core/agent_utils.py:700
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "خطأ في معالج التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:749
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "انتهت مهلة التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:755
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "خطأ التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:840
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "تعذّر %s للخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "تعذّر تحديث الأدوار بعد التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:888
+#: src/sysmanage_agent/core/agent_utils.py:889
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "خطأ في معالج حالة الخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:931
+#: src/sysmanage_agent/core/agent_utils.py:932
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "انتهت مهلة فحص حالة الخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:941
+#: src/sysmanage_agent/core/agent_utils.py:942
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "خطأ في حالة الخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:989
+#: src/sysmanage_agent/core/agent_utils.py:990
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2135,6 +2133,16 @@ msgstr "خطأ في إضافة مستودع NetBSD: %s"
 #: src/sysmanage_agent/operations/child_host_ops_stub.py:64
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "تتطلب إدارة المضيفين الأبناء Pro+ (مسار المحرك)."
+
+#: src/sysmanage_agent/operations/clock_resync.py:170
+#, python-format
+msgid "Clock resync: %s failed (%s): %s"
+msgstr "إعادة مزامنة الساعة: فشل %s (%s): %s"
+
+#: src/sysmanage_agent/operations/clock_resync.py:175
+#, python-format
+msgid "Clock resync: %s succeeded"
+msgstr "إعادة مزامنة الساعة: نجح %s"
 
 #: src/sysmanage_agent/operations/config_mgmt_operations.py:168
 #: src/sysmanage_agent/operations/config_mgmt_operations.py:247
@@ -2662,13 +2670,13 @@ msgstr "Homebrew تم تثبيته بالفعل"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
-"يتطلب تثبيت Homebrew تدخلاً يدوياً. يرجى التثبيت باستخدام: /bin/bash -c "
-"\"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"يتطلب تثبيت Homebrew تدخلاً يدوياً. يرجى التثبيت باستخدام: /bin/bash -c \"$"
+"(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/"
+"install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3623,7 +3631,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "وجدت حزمة %s: %s v%s"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "تجاوز الدور المتكرر: %s مع الخدمة %s (لدينا بالفعل حزمة %s)"
 
 #, python-format
@@ -3682,7 +3691,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "اكتمل اكتشاف التحديثات: تم العثور على %d تحديث (%d أمان، %d نظام، %d تطبيق)"
+#~ "اكتمل اكتشاف التحديثات: تم العثور على %d تحديث (%d أمان، %d نظام، %d "
+#~ "تطبيق)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3878,10 +3888,11 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "انتهت دفعة الحزم %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr ""
-#~ "تشغيل جمع الشهادات في الوضع غير المتميز - قد لا يمكن الوصول إلى بعض الشهادات"
+#~ "تشغيل جمع الشهادات في الوضع غير المتميز - قد لا يمكن الوصول إلى بعض "
+#~ "الشهادات"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "جمع شهادات SSL من النظام"
@@ -3979,7 +3990,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "تم استرداد %d رسالة معلقة"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "إنشاء مهمة معالجة طابور الصادر من on_connection_established"
 
 #, python-format
@@ -3989,7 +4001,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "مُعالِج طابور الصادر قائم بالفعل، لن يتم بدء آخر"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "إنشاء مهمة معالجة طابور الوارد من on_connection_established"
 
 #, python-format
@@ -4305,7 +4318,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "جارٍ التحقق من حالة الخدمة: %s"
 
 #~ msgid "Updated OS information sent to server after Ubuntu Pro change"
-#~ msgstr "تم إرسال معلومات نظام التشغيل المحدثة إلى الخادم بعد تغيير Ubuntu Pro"
+#~ msgstr ""
+#~ "تم إرسال معلومات نظام التشغيل المحدثة إلى الخادم بعد تغيير Ubuntu Pro"
 
 #, python-format
 #~ msgid "Sending reboot status update: %s"
@@ -4487,8 +4501,10 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "تم استلام التسجيل ولكن الموافقة معلقة"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
-#~ msgstr "نجاح التسجيل ولكن لم يتم تقديم host_id - قد تأتي الموافقة بشكل منفصل"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
+#~ msgstr ""
+#~ "نجاح التسجيل ولكن لم يتم تقديم host_id - قد تأتي الموافقة بشكل منفصل"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4529,7 +4545,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "يبلغ الخادم أن المضيف غير مسجل. سيتم إزالة host_id المخزن وإعادة التسجيل..."
+#~ "يبلغ الخادم أن المضيف غير مسجل. سيتم إزالة host_id المخزن وإعادة "
+#~ "التسجيل..."
 
 #, python-format
 #~ msgid "Using database path from SYSMANAGE_DB_PATH: %s"
@@ -4635,11 +4652,11 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
-#~ "تم اكتشاف Microsoft Defender for Endpoint على macOS (الإصدار: %s، مفعّل: %s،"
-#~ " مرخّص: %s)"
+#~ "تم اكتشاف Microsoft Defender for Endpoint على macOS (الإصدار: %s، مفعّل: "
+#~ "%s، مرخّص: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4949,8 +4966,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
 #~ msgstr ""
-#~ "جارٍ التثبيت التلقائي لـ OpenBSD. سيتم تثبيت الجهاز الافتراضي وإعادة تشغيله "
-#~ "تلقائياً. قد يستغرق هذا 10-15 دقيقة."
+#~ "جارٍ التثبيت التلقائي لـ OpenBSD. سيتم تثبيت الجهاز الافتراضي وإعادة "
+#~ "تشغيله تلقائياً. قد يستغرق هذا 10-15 دقيقة."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "طلب HTTP للتثبيت التلقائي: %s من %s"

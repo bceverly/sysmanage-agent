@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 08:22-0400\n"
+"POT-Creation-Date: 2026-10-12 15:02-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -114,8 +114,7 @@ msgstr "查詢Windows憑證庫 %s 失敗：%s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 msgstr "證書捆綁 %s 包含超過 %d 個證書；報告前 %d 個"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
@@ -621,7 +620,9 @@ msgstr "收集 pkgin 套件時發生錯誤：%s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr "在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝器）"
+msgstr ""
+"在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝"
+"器）"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:142
@@ -735,7 +736,9 @@ msgstr "沒有 PID 為 %d 的程序"
 msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
-msgstr "PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已拒絕終止"
+msgstr ""
+"PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已"
+"拒絕終止"
 
 #: src/sysmanage_agent/collection/process_collection.py:202
 #, python-format
@@ -1587,8 +1590,8 @@ msgstr "處理輪詢消息 %s 時發生錯誤"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr "無法使用 HTTP 回退：此代理程式沒有存儲的 host_id。註冊必須先完成。"
 
 #: src/sysmanage_agent/communication/http_polling.py:232
@@ -1598,8 +1601,8 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾秒的延遲到達。允許 WebSocket 升級至 "
-"%s 以恢復即時交付。"
+"使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾"
+"秒的延遲到達。允許 WebSocket 升級至 %s 以恢復即時交付。"
 
 #: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
@@ -1636,8 +1639,7 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "無法解析消息時間戳以檢查過期：%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:369
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr "主機註冊正在等待批准。將繼續定期嘗試。"
 
 #: src/sysmanage_agent/communication/message_handler.py:374
@@ -1652,8 +1654,8 @@ msgstr "伺服器無法將消息加入隊列：%s"
 #: src/sysmanage_agent/communication/message_handler.py:401
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "伺服器報告主機未註冊 (第 %(n)d/%(limit)d 次警告) -- 重新連接而不丟棄 "
@@ -1664,7 +1666,9 @@ msgstr ""
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
-msgstr "主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 host_id 並重新註冊。"
+msgstr ""
+"主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 "
+"host_id 並重新註冊。"
 
 #: src/sysmanage_agent/communication/message_handler.py:425
 #, python-format
@@ -1785,7 +1789,8 @@ msgstr "錯誤修剪已完成的隊列消息：%s"
 msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
-msgstr ">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
+msgstr ""
+">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:160
@@ -1831,85 +1836,85 @@ msgstr "套件收集排程器錯誤：%s"
 msgid "Failed to build capability report: %s"
 msgstr "建立能力報告失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:448
+#: src/sysmanage_agent/core/agent_utils.py:449
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:491
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:502
+#: src/sysmanage_agent/core/agent_utils.py:503
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:561
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "無法將腳本執行結果排隊：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:580
+#: src/sysmanage_agent/core/agent_utils.py:581
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "檢查執行 UUID 時出錯：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:594
+#: src/sysmanage_agent/core/agent_utils.py:595
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:609
+#: src/sysmanage_agent/core/agent_utils.py:610
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:634
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存儲執行 UUID 時發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:699
+#: src/sysmanage_agent/core/agent_utils.py:700
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:749
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:755
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:840
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:850
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:888
+#: src/sysmanage_agent/core/agent_utils.py:889
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:931
+#: src/sysmanage_agent/core/agent_utils.py:932
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:941
+#: src/sysmanage_agent/core/agent_utils.py:942
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:989
+#: src/sysmanage_agent/core/agent_utils.py:990
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "無法將合成的 command_result 加入執行中日誌佇列：%s"
@@ -2119,6 +2124,16 @@ msgstr "添加 NetBSD 存放庫時出錯：%s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "子主機管理需要 Pro+ (引擎路徑)。"
 
+#: src/sysmanage_agent/operations/clock_resync.py:170
+#, python-format
+msgid "Clock resync: %s failed (%s): %s"
+msgstr "時鐘重新同步：%s 失敗 (%s)：%s"
+
+#: src/sysmanage_agent/operations/clock_resync.py:175
+#, python-format
+msgid "Clock resync: %s succeeded"
+msgstr "時鐘重新同步：%s 成功"
+
 #: src/sysmanage_agent/operations/config_mgmt_operations.py:168
 #: src/sysmanage_agent/operations/config_mgmt_operations.py:247
 msgid "Config profile requested but no executor is installed"
@@ -2281,7 +2296,8 @@ msgstr "gpg 刪除失敗 (rc=%s)：%s"
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
-msgstr "代理不支援在 Windows 上以特定用戶身份運行 gpg；金鑰將被導入當前的金鑰環中"
+msgstr ""
+"代理不支援在 Windows 上以特定用戶身份運行 gpg；金鑰將被導入當前的金鑰環中"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2643,9 +2659,9 @@ msgstr "Homebrew 已安裝"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
 "Homebrew 安裝需要手動介入。請使用以下命令安裝：/bin/bash -c \"$(curl -fsSL "
 "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
@@ -3448,7 +3464,9 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
-#~ msgstr "廣播 %s：存貨刷新請求，但 data_collector 欠缺 send_software_inventory_update 功能"
+#~ msgstr ""
+#~ "廣播 %s：存貨刷新請求，但 data_collector 欠缺 "
+#~ "send_software_inventory_update 功能"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3600,7 +3618,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "找到%s包：%s v%s"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "跳過重複的角色：%s，服務為 %s（已安裝套件 %s）"
 
 #, python-format
@@ -3861,8 +3880,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "完成包批次 %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr "在非特權模式下執行憑證收集 - 某些憑證可能無法存取"
 
 #~ msgid "Collecting SSL certificates from system"
@@ -3961,7 +3980,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "已恢復 %d 條卡住的訊息"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "從 on_connection_established 建立出去消息處理任務"
 
 #, python-format
@@ -3971,7 +3991,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "進程中的出站隊列處理器正在運行，不再啟動新的"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "從 on_connection_established 建立進來消息處理任務"
 
 #, python-format
@@ -4468,7 +4489,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "收到的註冊數據但批准待定"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
 #~ msgstr "註冊成功但未提供 host_id - 批准可能會單獨來到"
 
 #, python-format
@@ -4619,9 +4641,11 @@ msgstr "檢查 WSL 支持時出錯：%s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
-#~ msgstr "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，已授權：%s）"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
+#~ msgstr ""
+#~ "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，"
+#~ "已授權：%s）"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4890,7 +4914,9 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分鐘。"
+#~ msgstr ""
+#~ "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分"
+#~ "鐘。"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "自動安裝 HTTP 請求: %s 來自 %s"
@@ -5016,7 +5042,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
-#~ msgstr "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
+#~ msgstr ""
+#~ "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM 已初始化並可使用"

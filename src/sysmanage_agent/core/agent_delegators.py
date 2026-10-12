@@ -12,7 +12,10 @@ operations handler, providing a unified interface.
 Extracted from main.py to reduce file size while maintaining API compatibility.
 """
 
+import asyncio
 from typing import Any, Dict
+
+from src.sysmanage_agent.operations import clock_resync
 
 
 class SystemOperationsDelegator:
@@ -397,6 +400,11 @@ class MiscDelegator:
     ) -> Dict[str, Any]:
         """Turn passive network discovery on or off (Phase 21.6)."""
         return await self.network_discovery_ops.configure_network_discovery(parameters)
+
+    async def resync_clock(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Step the clock now through the host's time service (Phase 23.3 S5).
+        Blocking commands, so off the event loop."""
+        return await asyncio.to_thread(clock_resync.resync, parameters)
 
     async def run_malware_scan(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Run a malware scan (Phase 21.3)."""
