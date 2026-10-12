@@ -29,10 +29,14 @@ from __future__ import annotations
 import logging
 import platform
 import re
-import subprocess  # nosec B404 -- fixed argv, no shell
+import subprocess  # nosec B404
 from typing import Callable, Dict, Optional, Tuple
 
 from src.sysmanage_agent.collection.hardware_identity import _tool
+from src.sysmanage_agent.collection.time_service_config import (
+    _read as _read_file,
+    collect_time_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +65,7 @@ def _run(argv) -> Tuple[int, str]:
     Both streams together: the interesting part of a failure ("service has
     not been started", "connect: No such file") is usually on stderr."""
     try:
-        result = subprocess.run(  # nosec B603 -- fixed argv, no shell
+        result = subprocess.run(  # nosec B603
             [_tool(argv[0]), *argv[1:]],
             capture_output=True,
             text=True,
@@ -289,7 +293,7 @@ def _macos(run: Runner) -> Dict[str, object]:
 
 
 def collect_time_status(
-    system: Optional[str] = None, run: Runner = _run
+    system: Optional[str] = None, run: Runner = _run, read=None
 ) -> Dict[str, object]:
     """The host's time service, as it reports itself.  Never raises."""
     system = system or platform.system()
@@ -306,7 +310,12 @@ def collect_time_status(
     if reader is None:
         return _status(None, None, None)
     try:
-        return reader(run)
+        status = reader(run)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         logger.warning("time service: could not read status: %s", exc)
         return _status(None, None, None)
+    # S5b: how it is configured -- servers, enabled at boot, unit, file.
+    status.update(
+        collect_time_config(system, status.get("service"), run, read or _read_file)
+    )
+    return status

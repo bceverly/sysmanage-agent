@@ -54,8 +54,23 @@ def _runner(name, extra=None):
     return run
 
 
+CLAIM = (
+    "service",
+    "running",
+    "synchronized",
+    "source",
+    "stratum",
+    "reported_offset_ms",
+)
+
+
 def _status(system, name, extra=None):
-    return ts.collect_time_status(system, _runner(name, extra))
+    # No config files: the test must not read the machine it runs on.
+    return ts.collect_time_status(system, _runner(name, extra), read=lambda _p: None)
+
+
+def _claim(status):
+    return {key: status[key] for key in CLAIM}
 
 
 def test_linux_chrony():
@@ -70,7 +85,9 @@ def test_linux_chrony():
 
 def test_linux_timesyncd_when_no_ntp_daemon_answers():
     status = _status("Linux", "linux_timesyncd")
-    assert status == {
+    assert status["unit"] == "systemd-timesyncd"
+    assert status["configured_servers"] == ["ntp.ubuntu.com"]
+    assert _claim(status) == {
         "service": "timesyncd",
         "running": True,
         "synchronized": True,
@@ -117,7 +134,8 @@ def test_openbsd_with_ntpd_stopped():
 def test_windows_time_not_started_is_reported_not_missing():
     """The S0 finding: an x13s 1.33 s off because w32time was not running."""
     status = _status("Windows", "windows_w32time_stopped")
-    assert status == {
+    assert status["unit"] == "w32time"
+    assert _claim(status) == {
         "service": "w32time",
         "running": False,
         "synchronized": False,

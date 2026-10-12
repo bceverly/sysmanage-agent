@@ -602,6 +602,23 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         "canonical": {"hi": "एन्क्रिप्शन"},
         "forbid": {"hi": ["शीतलीकरण"]},  # refrigeration (2026-10-12)
     },
+    "policy": {
+        # Catalog majority (2026-10-12).  No forbidden forms: es "directiva"
+        # and zh_TW 原則 are Microsoft's own words for a (Group) Policy, so
+        # they are not wrong -- only not ours.
+        "canonical": {
+            "es": "política",
+            "fr": "politique",
+            "it": "politica",
+            "pt": "política",
+            "zh_CN": "策略",
+            "zh_TW": "策略",
+            "ja": "ポリシー",
+            "ko": "정책",
+            "nl": "beleid",
+            "de": "Richtlinie",
+        },
+    },
     "monitoring": {
         # 2026-10-12: hi docs rendered monitoring as संवेदना ("sensation").
         "canonical": {"hi": "निगरानी"},
