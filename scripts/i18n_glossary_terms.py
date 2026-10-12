@@ -516,8 +516,103 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         "forbid": {"zh_TW": ["幂等"]},
     },
     "tenant": {
-        "canonical": {"hi": "टेनेंट"},  # 246 uses across the catalogs
-        "forbid": {"hi": ["टेंट"]},  # a camping tent
+        # Catalog majority across all four repositories (census 2026-10-12).
+        # ar مستأجر is the established IT term (as in Azure's Arabic UI).
+        "canonical": {
+            "hi": "टेनेंट",  # 246 uses across the catalogs
+            "de": "Mandant",
+            "it": "tenant",
+            "nl": "tenant",
+            "ko": "테넌트",
+            "pt": "locatário",
+            "ru": "арендатор",
+            "ar": "مستأجر",
+        },
+        "forbid": {
+            "hi": [
+                "टेंट",
+                "किरायेदार",
+                "किरायेदारों",
+            ],  # a camping tent; a house renter
+            "de": ["Mieter", "Mieters", "Mietern", "Mieterin"],  # an apartment renter
+            "it": ["inquilino", "inquilini", "multi-inquilino"],  # a lodger
+            "nl": ["huurder", "huurders"],  # a house renter
+            "ko": ["임차인"],  # a lessee of property
+            # 119 vs 120 locatário: one word, not two.  Forbidden forms match
+            # as WHOLE words, so every inflection and compound is listed.
+            "pt": [
+                "inquilino",
+                "inquilinos",
+                "inquilina",
+                "multiinquilino",
+                "multi-inquilino",
+                "multiinquilinato",
+                "multiinquilinagem",
+            ],
+            # 68 vs 114 арендатор: one word, not two (every case form).
+            "ru": [
+                "тенант",
+                "тенанта",
+                "тенанту",
+                "тенантом",
+                "тенанте",
+                "тенанты",
+                "тенантов",
+                "тенантам",
+                "тенантами",
+                "тенантах",
+            ],
+        },
+    },
+    "site": {
+        # A LOCATION that groups hosts.  網站 / 网站 is a WEB site: 117
+        # zh_TW values said "website" (2026-10-12).
+        "canonical": {"zh_TW": "站點", "zh_CN": "站点"},
+        # "website" never matches (the term is matched as a whole word).
+        "forbid": {"zh_TW": ["網站"], "zh_CN": ["网站"]},
+        # Where "site" IS a web site: cross-site scripting, and "this site"
+        # meaning the docs website itself.
+        "except_keys": (
+            "security_docs.lucky13.r02_class",
+            "security_docs.lucky13.r02_check",
+        ),
+    },
+    "role": {
+        "canonical": {"ja": "ロール", "it": "ruolo"},
+        # ja 権限 is a PERMISSION, it funzione a FUNCTION -- "requires the X
+        # role" became "requires the X permission/function" (2026-10-12).
+        "forbid": {"ja": ["権限"], "it": ["funzione", "funzioni"]},
+        # "administrative functions" / "job functions" ARE functions, and the
+        # Japanese one names roles only inside the code identifier
+        # roles.permissions.
+        "except_keys": (
+            "docs.auto.api.users.005",
+            "rbac_docs.best_practices.least_privilege.description",
+            "docs.auto.architecture.database-schema.051",
+        ),
+    },
+    "administrator": {
+        # 2026-10-12: "Administrator Invitations" as शासक आमंत्रण ("ruler
+        # invitations"); प्रशासक contains शासक, which the matcher's
+        # Devanagari word boundary keeps apart.
+        "canonical": {"hi": "प्रशासक"},
+        "forbid": {"hi": ["शासक", "शासकों"]},
+    },
+    "encryption": {
+        "canonical": {"hi": "एन्क्रिप्शन"},
+        "forbid": {"hi": ["शीतलीकरण"]},  # refrigeration (2026-10-12)
+    },
+    "monitoring": {
+        # 2026-10-12: hi docs rendered monitoring as संवेदना ("sensation").
+        "canonical": {"hi": "निगरानी"},
+        "forbid": {"hi": ["संवेदना", "संवेदनाओं"]},
+    },
+    "vulnerability": {
+        # 2026-10-12: 33 hi docs values said "sensitivity" (संवेदनशीलता) or
+        # "sensation" (संवेदना) against 32 saying भेद्यता.  संवेदनशील itself
+        # (sensitive) stays legitimate next to it -- "sensitive data".
+        "canonical": {"hi": "भेद्यता"},
+        "forbid": {"hi": ["संवेदनशीलता", "संवेदनशीलताओं", "संवेदना", "संवेदनाओं"]},
     },
     "repository": {"forbid": {"ar": ["الجمهورية"]}},  # a republic
     "target": {

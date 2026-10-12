@@ -191,7 +191,10 @@ _EXPECTED_SCRIPT = {
     "hi": ("DEVANAGARI",),
     "ru": ("CYRILLIC",),
     "ja": ("CJK", "HIRAGANA", "KATAKANA"),
-    "ko": ("HANGUL", "CJK"),
+    # Hangul only.  Modern Korean UI text does not use Hanja, and allowing CJK
+    # here let wholly-Chinese values through: 119 across the four repos
+    # (2026-10-12), e.g. maintenanceWindows.confirmOverride = "覆盖".
+    "ko": ("HANGUL",),
     "zh_CN": ("CJK",),
     "zh_TW": ("CJK",),
 }
@@ -228,6 +231,26 @@ def scripts_used(text: str) -> set:
     return found - {"LATIN"}
 
 
+# Simplified Chinese characters whose Japanese form is different (実 not 实,
+# 発 not 发, 術 not 术 ...).  A Japanese value is written in the same CJK
+# block as Chinese, so the script test alone cannot tell them apart; one of
+# these can.  Curated to exclude every character Japanese also writes (会, 数,
+# 后 ...).  Found 2026-10-12: 14 Chinese values in Japanese catalogs, e.g. a
+# Japanese CTO title "首席技术官".
+SIMPLIFIED_ONLY = frozenset(
+    "们这为发说时过还进动产经现东车实对开关问无业应头机长电门见计认让请务术统构级"
+    "执运营协导网络页码录签备择项删储资处虑尝试确优载设个书买卖钱变节论讯许识译证"
+    "诉词话语谁调谈谢贵质购赖跃轮软较辆输边达迁远违连迟选递逻钟钥铁铜银锁错键镜"
+    "闭间闻阅阶陆际险隐难预领频题颜风飞饭馆驱验鱼鸟龙"
+)
+
+
+def chinese_in_japanese(text: str, source: str = "") -> bool:
+    """True if a Japanese ``text`` carries a Simplified-only character that
+    the English source does not."""
+    return bool((set(text) & SIMPLIFIED_ONLY) - set(source or ""))
+
+
 def wrong_script(lang: str, text: str, source: str = None) -> bool:
     """True if ``text`` CONTAINS a script this locale never uses.
 
@@ -258,6 +281,8 @@ def wrong_script(lang: str, text: str, source: str = None) -> bool:
     if source:
         expected |= scripts_used(source)
     used = scripts_used(text)
+    if lang == "ja" and chinese_in_japanese(text, source):
+        return True
     return bool(used - expected)
 
 

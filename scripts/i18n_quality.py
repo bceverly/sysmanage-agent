@@ -145,6 +145,20 @@ def placeholders(text: str) -> Counter:
     return Counter(m.group(0).replace(" ", "") for m in PLACEHOLDER.finditer(text))
 
 
+# Pictographs, dingbats, geometric shapes (checkboxes) and Private Use glyphs.
+# Arrows are NOT here: Arabic rightly turns "->" into "<-".  2026-10-12: 501
+# docs values had the English emoji swapped for a random one (FreeBSD's lock
+# became a no-entry sign, a pill, a police car) or one added to a plain title.
+_PICTOGRAPH = re.compile(
+    "[\U0001f000-\U0001faff\u2600-\u27bf\u2b00-\u2bff\u25a0-\u25ff"
+    "\u2300-\u23ff\ue000-\uf8ff]"
+)
+
+
+def pictographs(text: str) -> Counter:
+    return Counter(_PICTOGRAPH.findall(text))
+
+
 def problem(lang: str, source: str, value) -> Optional[str]:
     """Why ``value`` cannot be a correct ``lang`` translation, or None.
 
@@ -160,6 +174,10 @@ def problem(lang: str, source: str, value) -> Optional[str]:
         want = sorted(placeholders(source).elements())
         have = sorted(placeholders(value).elements())
         return f"placeholders {have} do not match the source's {want}"
+    if pictographs(value) != pictographs(source):
+        want = "".join(sorted(pictographs(source).elements()))
+        have = "".join(sorted(pictographs(value).elements()))
+        return f"symbols {have!r} do not match the source's {want!r}"
     if ("\u2013" in value or "\u2014" in value) and not (
         "\u2013" in source or "\u2014" in source
     ):

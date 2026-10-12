@@ -171,6 +171,11 @@ GLOSSARY: Dict[str, str] = {
     "untagged": "having no tag (label) assigned yet. Translate the meaning; "
     "do NOT transliterate the English word",
     "site": "a location that groups hosts. NOT a building plot, and NOT a " "web site",
+    "administrator": "a person who manages the system. NOT a ruler or " "governor",
+    "encryption": "encoding data so only key holders can read it. NOT "
+    "cooling or refrigeration",
+    "monitoring": "continuously watching hosts' health and metrics. NOT a "
+    "feeling or a sensation",
     "tenant": "one customer's isolated data within a shared installation. NOT "
     "someone who rents property",
     "access group": "a set of hosts and users that share permissions",

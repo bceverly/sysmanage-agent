@@ -3295,7 +3295,7 @@ msgstr "%s 시도 후 등록 실패"
 #: src/sysmanage_agent/registration/client_registration.py:434
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
-msgstr "등록 실패, %s 초后再尝试..."
+msgstr "등록에 실패했습니다. %s초 후 다시 시도합니다..."
 
 #: src/sysmanage_agent/registration/client_registration.py:489
 #, python-format
