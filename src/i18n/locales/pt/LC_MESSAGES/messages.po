@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 15:02-0400\n"
+"POT-Creation-Date: 2026-10-13 16:48-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,17 +50,17 @@ msgstr "Falha ao inicializar o banco de dados: %s"
 msgid "Corrupt UUID in database: %s"
 msgstr "UUID corrompido no banco de dados: %s"
 
-#: src/database/queue_manager.py:345
+#: src/database/queue_manager.py:349
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "Mensagem %s falhou permanentemente após %d tentativas: %s"
 
-#: src/database/queue_manager.py:540
+#: src/database/queue_manager.py:544
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Falha ao desserializar mensagem %s: %s"
 
-#: src/database/queue_manager.py:607
+#: src/database/queue_manager.py:611
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
@@ -82,7 +82,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "Plataforma não suportada para coleta de certificados: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:940
+#: src/sysmanage_agent/communication/data_collector.py:944
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "Erro ao coletar certificados: %s"
@@ -115,7 +115,8 @@ msgstr "Falha ao consultar o armazenamento de certificados do Windows %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
 "Bundle de certificados %s contém mais de %d certificados; relatando o "
 "primeiro %d"
@@ -335,6 +336,11 @@ msgstr "Falha ao obter informações de rede do Windows via ipconfig: %s"
 #, python-format
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Falha ao obter configuração da rede Windows: %s"
+
+#: src/sysmanage_agent/collection/hardware_health.py:421
+#, python-format
+msgid "Hardware health collection failed: %s"
+msgstr "Falha ao coletar o estado do hardware: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:92
 #, python-format
@@ -1293,7 +1299,7 @@ msgstr "Falha ao enviar dados de hosts filhos"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector.py:420
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "Erro ao coletar/enviar dados de hosts filhos: %s"
@@ -1459,122 +1465,135 @@ msgstr "Erro ao coletar/enviar as métricas do host: %s"
 msgid "Error collecting/sending clock status: %s"
 msgstr "Erro ao coletar/enviar o status do relógio: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:452
+#: src/sysmanage_agent/communication/data_collector.py:416
+#, python-format
+msgid "Error collecting/sending hardware health: %s"
+msgstr "Erro ao coletar/enviar o estado do hardware: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:456
 #, python-format
 msgid "Data collector error: %s"
 msgstr "Erro no coletor de dados: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:480
+#: src/sysmanage_agent/communication/data_collector.py:484
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "Erro de coleta inicial de dados: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:703
+#: src/sysmanage_agent/communication/data_collector.py:707
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "Erro ao coletar pacotes disponíveis: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:812
+#: src/sysmanage_agent/communication/data_collector.py:816
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "Erro ao enviar pacote delta: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:891
+#: src/sysmanage_agent/communication/data_collector.py:895
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "Erro ao enviar pacotes paginados para lote %s: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:986
+#: src/sysmanage_agent/communication/data_collector.py:990
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "Erro ao coletar papéis: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:54
+#: src/sysmanage_agent/communication/data_collector_senders.py:55
 msgid "Failed to send periodic software inventory data"
 msgstr "Falha ao enviar dados periódicos do inventário de software"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:78
+#: src/sysmanage_agent/communication/data_collector_senders.py:79
 msgid "Failed to send periodic user access data"
 msgstr "Falha ao enviar dados periódicos de acesso do usuário"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:102
+#: src/sysmanage_agent/communication/data_collector_senders.py:103
 msgid "Failed to send periodic hardware data"
 msgstr "Falha ao enviar dados periódicos de hardware"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:122
+#: src/sysmanage_agent/communication/data_collector_senders.py:123
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "Coleta periódica de certificados falhou: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:142
+#: src/sysmanage_agent/communication/data_collector_senders.py:143
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "Coleta periódica de papéis falhou: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:166
+#: src/sysmanage_agent/communication/data_collector_senders.py:167
 msgid "Failed to send periodic OS version data"
 msgstr "Falha ao enviar dados periódicos da versão do SO"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:187
+#: src/sysmanage_agent/communication/data_collector_senders.py:188
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "Falha ao coletar repositórios de terceiros: %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector_senders.py:221
+#: src/sysmanage_agent/communication/data_collector_senders.py:222
 msgid "Failed to send third-party repository data"
 msgstr "Falha ao enviar dados do repositório terceirizado"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:253
+#: src/sysmanage_agent/communication/data_collector_senders.py:254
 msgid "Failed to send antivirus status data"
 msgstr "Falha ao enviar dados de status antivírus"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:256
+#: src/sysmanage_agent/communication/data_collector_senders.py:257
 msgid "Cannot send antivirus status data: no host approval"
 msgstr ""
 "Impossível enviar dados de status do antivírus: nenhuma aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:290
+#: src/sysmanage_agent/communication/data_collector_senders.py:291
 msgid "Failed to send firewall status data"
 msgstr "Falha ao enviar dados de status do firewall"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:292
+#: src/sysmanage_agent/communication/data_collector_senders.py:293
 msgid "Cannot send firewall status data: no host approval"
 msgstr ""
 "Impossível enviar dados de status do firewall: nenhuma aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:324
+#: src/sysmanage_agent/communication/data_collector_senders.py:325
 msgid "Failed to send Graylog status data"
 msgstr "Falha ao enviar dados de status Graylog"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:326
+#: src/sysmanage_agent/communication/data_collector_senders.py:327
 msgid "Cannot send Graylog status data: no host approval"
 msgstr ""
 "Impossível enviar dados de status do Graylog: nenhuma aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:334
+#: src/sysmanage_agent/communication/data_collector_senders.py:335
 msgid "Cannot send process data: no host approval"
 msgstr "Não é possível enviar dados de processos: host não aprovado"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:364
+#: src/sysmanage_agent/communication/data_collector_senders.py:365
 msgid "Failed to send process status data"
 msgstr "Falha ao enviar os dados de estado dos processos"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:375
+#: src/sysmanage_agent/communication/data_collector_senders.py:376
 msgid "Cannot send host metrics: no host approval"
 msgstr "Não é possível enviar as métricas do host: host sem aprovação"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:387
+#: src/sysmanage_agent/communication/data_collector_senders.py:388
 msgid "Failed to send host metrics"
 msgstr "Falha ao enviar as métricas do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:400
+#: src/sysmanage_agent/communication/data_collector_senders.py:401
 msgid "Cannot send clock status: no host approval"
 msgstr "Não é possível enviar o status do relógio: sem aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:407
+#: src/sysmanage_agent/communication/data_collector_senders.py:408
 msgid "Failed to send clock status"
 msgstr "Falha ao enviar o status do relógio"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:419
+msgid "Cannot send hardware health: no host approval"
+msgstr "Não é possível enviar o estado do hardware: sem aprovação do host"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:426
+msgid "Failed to send hardware health"
+msgstr "Falha ao enviar o estado do hardware"
 
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
@@ -1602,8 +1621,8 @@ msgstr "Erro ao lidar com a mensagem polida %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Não é possível usar o fallback HTTP: este agente não tem um host_id "
 "armazenado. A registro deve ser concluído primeiro."
@@ -1628,53 +1647,54 @@ msgstr "Falha na poll (%s); tentando novamente em %ds"
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "Testando novamente se esta rede agora permite conexões WebSocket"
 
-#: src/sysmanage_agent/communication/message_handler.py:193
+#: src/sysmanage_agent/communication/message_handler.py:198
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "Falha ao enfileirar mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:231
+#: src/sysmanage_agent/communication/message_handler.py:236
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "Falha ao enfileirar confirmação de comando para a mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:239
+#: src/sysmanage_agent/communication/message_handler.py:244
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "Erro na fila de comando de reconhecimento para %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:278
+#: src/sysmanage_agent/communication/message_handler.py:283
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "Erro no servidor [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:331
+#: src/sysmanage_agent/communication/message_handler.py:336
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr ""
 "Impossível analisar a marca de tempo da mensagem para verificacao de "
 "obsolescencia: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:369
-msgid "Host registration is pending approval. Will continue periodic attempts."
+#: src/sysmanage_agent/communication/message_handler.py:374
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Registro do host está pendente de aprovação. Continuará tentando "
 "periodicamente."
 
-#: src/sysmanage_agent/communication/message_handler.py:374
+#: src/sysmanage_agent/communication/message_handler.py:379
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "O servidor relata falta de nome do host na mensagem. Isso é um erro."
 
-#: src/sysmanage_agent/communication/message_handler.py:377
+#: src/sysmanage_agent/communication/message_handler.py:382
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "Servidor não conseguiu enfileirar mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:401
+#: src/sysmanage_agent/communication/message_handler.py:406
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "O servidor relatou host_não_cadastrado (strike %(n)d/%(limit)d) -- "
@@ -1682,7 +1702,7 @@ msgstr ""
 "novamente este host a partir do seu index de locatário; re-cadastraremos "
 "apenas se persistir."
 
-#: src/sysmanage_agent/communication/message_handler.py:414
+#: src/sysmanage_agent/communication/message_handler.py:419
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -1691,118 +1711,128 @@ msgstr ""
 "host_não_cadastrado persistiu (%(n)d strikes) -- tratando esta máquina como "
 "genuinamente ausente; limpando o host_id armazenado e recadastrando"
 
-#: src/sysmanage_agent/communication/message_handler.py:425
+#: src/sysmanage_agent/communication/message_handler.py:430
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Erro ao limpar armazenamento de host_id: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:481
+#: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "Transmissão %s: falha na atualização do inventário: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:491
+#: src/sysmanage_agent/communication/message_handler.py:496
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Transmissão %s: ação desconhecida '%s' - ignorada"
 
-#: src/sysmanage_agent/communication/message_handler.py:574
+#: src/sysmanage_agent/communication/message_handler.py:583
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr ""
-"Receptor de mensagens: websocket limpo por desconexão concorrente; saindo do "
-"loop de recepção para permitir reconexão"
+"Receptor de mensagens: websocket limpo por desconexão concorrente; saindo do"
+" loop de recepção para permitir reconexão"
 
-#: src/sysmanage_agent/communication/message_handler.py:593
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "JSON inválido recebido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:595
+#: src/sysmanage_agent/communication/message_handler.py:604
 #, python-format
 msgid "Error processing message: %s"
 msgstr "Erro ao processar mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:608
+#: src/sysmanage_agent/communication/message_handler.py:617
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: Erro do receptor de mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:660
+#: src/sysmanage_agent/communication/message_handler.py:669
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Tipo de mensagem desconhecido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:747
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Batida do coração falhou, a conexão pode ter sido perdida"
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:756
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Erro do remetente da mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:763
+#: src/sysmanage_agent/communication/message_handler.py:772
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Erro ao fechar manipulador de mensagens: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:110
+#: src/sysmanage_agent/communication/message_handler_queue.py:123
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Falha ao criar tarefa a partir de queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:176
+#: src/sysmanage_agent/communication/message_handler_queue.py:189
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Erro no processador da fila de entrada: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:186
+#: src/sysmanage_agent/communication/message_handler_queue.py:214
+#, python-format
+msgid "Error in express queue processor: %s"
+msgstr "Erro no processador da fila expressa: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:223
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Mensagem marcada como processando: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:216
+#: src/sysmanage_agent/communication/message_handler_queue.py:253
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Erro ao processar mensagem de entrada %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:232
+#: src/sysmanage_agent/communication/message_handler_queue.py:269
 msgid "Cannot send message: not connected to server"
 msgstr "Não é possível enviar mensagem: não conectado ao servidor"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:245
+#: src/sysmanage_agent/communication/message_handler_queue.py:282
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:304
+#: src/sysmanage_agent/communication/message_handler_queue.py:341
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Erro no processador da fila: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:346
+#: src/sysmanage_agent/communication/message_handler_queue.py:383
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Erro ao processar mensagem em fila %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:372
+#: src/sysmanage_agent/communication/message_handler_queue.py:409
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Erro ao recuperar mensagens travadas: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:403
+#: src/sysmanage_agent/communication/message_handler_queue.py:440
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Falha ao criar tarefa de processamento da fila outbound: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:427
+#: src/sysmanage_agent/communication/message_handler_queue.py:458
+#, python-format
+msgid "Failed to create express queue processing task: %s"
+msgstr "Falha ao criar a tarefa de processamento da fila expressa: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:476
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Falha ao criar tarefa de processamento da fila inbound: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:518
+#: src/sysmanage_agent/communication/message_handler_queue.py:567
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "Erro ao recortar mensagens da fila concluída: %s"
@@ -2149,12 +2179,12 @@ msgstr "Erro ao adicionar repositório NetBSD: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "O gerenciamento de child hosts requer Pro+ (caminho do engine)."
 
-#: src/sysmanage_agent/operations/clock_resync.py:170
+#: src/sysmanage_agent/operations/clock_resync.py:180
 #, python-format
 msgid "Clock resync: %s failed (%s): %s"
 msgstr "Ressincronização do relógio: %s falhou (%s): %s"
 
-#: src/sysmanage_agent/operations/clock_resync.py:175
+#: src/sysmanage_agent/operations/clock_resync.py:185
 #, python-format
 msgid "Clock resync: %s succeeded"
 msgstr "Ressincronização do relógio: %s concluída com sucesso"
@@ -2323,8 +2353,8 @@ msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
 msgstr ""
-"Executar gpg como um usuário Windows específico não é suportado pelo agente; "
-"importada no keyring atual em vez disso."
+"Executar gpg como um usuário Windows específico não é suportado pelo agente;"
+" importada no keyring atual em vez disso."
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2691,13 +2721,13 @@ msgstr "Homebrew já está instalado"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
 "A instalação do Homebrew requer intervenção manual. Por favor, instale "
-"usando: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/"
-"Homebrew/install/HEAD/install.sh)\""
+"usando: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3488,8 +3518,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Error fetching winget page %d (collected %d packages so far): %s"
-#~ msgstr ""
-#~ "Erro ao buscar página winget %d (%d pacotes coletados até agora): %s"
+#~ msgstr "Erro ao buscar página winget %d (%d pacotes coletados até agora): %s"
 
 #, python-format
 #~ msgid "Error fetching page at skip %d: %s"
@@ -3500,8 +3529,8 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "Transmissão %s: solicitação de atualização do inventário, mas "
-#~ "data_collector não possui send_software_inventory_update"
+#~ "Transmissão %s: solicitação de atualização do inventário, mas data_collector"
+#~ " não possui send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3631,8 +3660,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "%d pacotes coletados com sucesso da API REST do winget"
 
 #~ msgid "Fetching Chocolatey catalog via community repository API"
-#~ msgstr ""
-#~ "Buscando catálogo do Chocolatey via API do repositório da comunidade"
+#~ msgstr "Buscando catálogo do Chocolatey via API do repositório da comunidade"
 
 #, python-format
 #~ msgid ""
@@ -3657,8 +3685,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Encontrado pacote %s: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Ignorando papel duplicado: %s com serviço %s (já tenho o pacote %s)"
 
 #, python-format
@@ -3811,8 +3838,8 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ ".wslconfig não encontrado, criando para prevenir o desligamento "
-#~ "automático do WSL em %s"
+#~ ".wslconfig não encontrado, criando para prevenir o desligamento automático "
+#~ "do WSL em %s"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -3867,8 +3894,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Found %d available updates during initial check"
-#~ msgstr ""
-#~ "Encontradas %d atualizações disponíveis durante verificação periódica"
+#~ msgstr "Encontradas %d atualizações disponíveis durante verificação periódica"
 
 #~ msgid "No updates found during initial check"
 #~ msgstr "Nenhuma atualização encontrada durante a verificação inicial"
@@ -3924,8 +3950,8 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Lote de pacotes concluído %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
 #~ "Executando coleta de certificados em modo sem privilégios - alguns "
 #~ "certificados podem não estar acessíveis"
@@ -4029,8 +4055,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d mensagens travadas recuperadas"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Criando tarefa de processamento da fila de saída a partir de "
 #~ "on_connection_established"
@@ -4040,11 +4065,9 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Bridged network '%s' created successfully"
 
 #~ msgid "Outbound queue processor already running, not starting another"
-#~ msgstr ""
-#~ "Processador de fila de saída já está em execução, não iniciando outro"
+#~ msgstr "Processador de fila de saída já está em execução, não iniciando outro"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Criando tarefa de processamento da fila de entrada a partir de "
 #~ "on_connection_established"
@@ -4069,8 +4092,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Found %d available updates during periodic check"
-#~ msgstr ""
-#~ "Encontradas %d atualizações disponíveis durante verificação periódica"
+#~ msgstr "Encontradas %d atualizações disponíveis durante verificação periódica"
 
 # Agent startup and connection
 #~ msgid "Starting package collection"
@@ -4264,8 +4286,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 #~ msgstr ""
-#~ "Removendo chave GPG %s (impressão digital %s) para target=%s, "
-#~ "has_private=%s"
+#~ "Removendo chave GPG %s (impressão digital %s) para target=%s, has_private=%s"
 
 #~ msgid "NAT rules already configured in before.rules"
 #~ msgstr "Regras NAT já configuradas em before.rules"
@@ -4398,8 +4419,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid "Waiting for reconnection to send update results (attempt %d/%d)"
 #~ msgstr ""
-#~ "Aguardando reconexão para enviar resultados de atualização (tentativa %d/"
-#~ "%d)"
+#~ "Aguardando reconexão para enviar resultados de atualização (tentativa %d/%d)"
 
 #~ msgid "Rescanning for available updates after batch completion"
 #~ msgstr "Reescaneando atualizações disponíveis após conclusão do lote"
@@ -4559,8 +4579,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Registro recebido mas aprovação pendente"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
 #~ "Sucesso no registro mas nenhum host_id fornecido - aprovação pode vir "
 #~ "separadamente"
@@ -4571,19 +4590,18 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Host approval information stored successfully. Host ID: %s"
-#~ msgstr ""
-#~ "Informações de aprovação de host armazenadas com sucesso. Host ID: %s"
+#~ msgstr "Informações de aprovação de host armazenadas com sucesso. Host ID: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
-#~ "Sistema_info colocado na fila após aprovação para atualizar conexão do "
-#~ "back-end"
+#~ "Sistema_info colocado na fila após aprovação para atualizar conexão do back-"
+#~ "end"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
 #~ msgstr ""
-#~ "Excluídos %d registro(s) antigo(s) de aprovação de host antes de "
-#~ "armazenar nova aprovação"
+#~ "Excluídos %d registro(s) antigo(s) de aprovação de host antes de armazenar "
+#~ "nova aprovação"
 
 #, python-format
 #~ msgid "Host approval record stored in database: host_id=%s, status=%s"
@@ -4639,8 +4657,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #, python-format
 #~ msgid "System directory exists, using system database path: %s"
 #~ msgstr ""
-#~ "Diretório do sistema existe, usando caminho do banco de dados do sistema: "
-#~ "%s"
+#~ "Diretório do sistema existe, usando caminho do banco de dados do sistema: %s"
 
 #, python-format
 #~ msgid "Falling back to local database path: %s"
@@ -4726,11 +4743,11 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Microsoft Defender for Endpoint detectado no macOS (versão: %s, "
-#~ "habilitado: %s, licenciado: %s)"
+#~ "Microsoft Defender for Endpoint detectado no macOS (versão: %s, habilitado: "
+#~ "%s, licenciado: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4754,8 +4771,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
 #~ msgstr ""
-#~ "PowerShell não encontrado (não está no Windows ou PowerShell não "
-#~ "instalado)"
+#~ "PowerShell não encontrado (não está no Windows ou PowerShell não instalado)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -4819,8 +4835,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #, python-format
 #~ msgid "Winget command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr ""
-#~ "Resultado do comando Winget: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr "Resultado do comando Winget: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
@@ -4985,8 +5000,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 
 #~ msgid "Could not refresh fwupd metadata (may need privileges)"
 #~ msgstr ""
-#~ "Não foi possível atualizar metadados do fwupd (pode precisar de "
-#~ "privilégios)"
+#~ "Não foi possível atualizar metadados do fwupd (pode precisar de privilégios)"
 
 #~ msgid "No firmware updates available"
 #~ msgstr "Nenhuma atualização de firmware disponível"
@@ -5023,8 +5037,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Servidor HTTP de instalação automática iniciado em %s:%d"
 
 #~ msgid "HTTP port %d already in use, autoinstall may still work"
-#~ msgstr ""
-#~ "Porta HTTP %d já em uso, a instalação automática ainda pode funcionar"
+#~ msgstr "Porta HTTP %d já em uso, a instalação automática ainda pode funcionar"
 
 #~ msgid "Stopped autoinstall HTTP server"
 #~ msgstr "Servidor HTTP de instalação automática parado"
@@ -5048,8 +5061,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Instalação automática detectada: install.conf foi acessado"
 
 #~ msgid "Timeout waiting for autoinstall to fetch install.conf"
-#~ msgstr ""
-#~ "Tempo esgotado aguardando a instalação automática buscar install.conf"
+#~ msgstr "Tempo esgotado aguardando a instalação automática buscar install.conf"
 
 #~ msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
 #~ msgstr ""
@@ -5130,8 +5142,7 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Rede padrão configurada"
 
 #~ msgid "Network setup attempted but may need manual verification"
-#~ msgstr ""
-#~ "Configuração de rede tentada mas pode precisar de verificação manual"
+#~ msgstr "Configuração de rede tentada mas pode precisar de verificação manual"
 
 #~ msgid "Network setup timed out"
 #~ msgstr "Tempo esgotado na configuração de rede"
@@ -5143,8 +5154,8 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM não está disponível neste sistema. Certifique-se de que /dev/kvm "
-#~ "existe e a virtualização de CPU está habilitada no BIOS."
+#~ "KVM não está disponível neste sistema. Certifique-se de que /dev/kvm existe "
+#~ "e a virtualização de CPU está habilitada no BIOS."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM já está inicializado e pronto para uso"
@@ -5315,16 +5326,14 @@ msgstr "Erro ao verificar suporte WSL: %s"
 #~ msgstr "Padrão para raiz FreeBSD: /dev/sda4"
 
 #~ msgid "Virtualization status update queued for sending to server"
-#~ msgstr ""
-#~ "Atualização de status de virtualização em fila para envio ao servidor"
+#~ msgstr "Atualização de status de virtualização em fila para envio ao servidor"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img não encontrado, tentará instalar: %s"
 
 # LXD default profile configuration
 #~ msgid "Configuring LXD default profile for container compatibility"
-#~ msgstr ""
-#~ "Configurando perfil padrão do LXD para compatibilidade de contêineres"
+#~ msgstr "Configurando perfil padrão do LXD para compatibilidade de contêineres"
 
 #~ msgid "Could not set security.nesting on default profile: %s"
 #~ msgstr "Não foi possível definir security.nesting no perfil padrão: %s"

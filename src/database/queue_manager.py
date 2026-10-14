@@ -157,6 +157,7 @@ class MessageQueueManager:
         direction: Union[str, QueueDirection],
         limit: int = 10,
         priority_order: bool = True,
+        priority: Optional[Priority] = None,
     ) -> List[MessageQueue]:
         """
         Get pending messages ready for processing.
@@ -165,6 +166,7 @@ class MessageQueueManager:
             direction: Message direction to dequeue
             limit: Maximum number of messages to return
             priority_order: Whether to order by priority (urgent first)
+            priority: Only messages of this priority (the express lane)
 
         Returns:
             List[MessageQueue]: Ready messages ordered by priority/creation time
@@ -185,6 +187,8 @@ class MessageQueueManager:
                     ),
                 )
             )
+            if priority is not None:
+                query = query.filter(MessageQueue.priority == priority.value)
 
             if priority_order:
                 # Order by priority (urgent=4, high=3, normal=2, low=1), then by creation time

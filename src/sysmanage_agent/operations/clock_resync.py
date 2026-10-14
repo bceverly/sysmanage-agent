@@ -8,7 +8,8 @@ Spot resynchronization of the host's clock (Phase 23.3 S5).
 The server asks; this steps the clock NOW through whichever time service the
 host runs, then reports the service's state afterwards:
 
-* chrony ............ ``chronyc makestep``
+* chrony ............ ``chronyc makestep``; with chronyd stopped,
+                      ``chronyd -q`` (sets the clock once and exits)
 * systemd-timesyncd . restart the service (it steps on start)
 * ntpd .............. ``ntpdate -b -u <server>`` where it exists (FreeBSD and
                       NetBSD ship it), else restart ntpd (which steps a large
@@ -100,11 +101,20 @@ def _fallback(server: str, has) -> List[Step]:
     return []
 
 
-def plan(  # pylint: disable=too-many-return-statements
-    system: str, service: Optional[str], server: str, run, has=_has
+def plan(  # pylint: disable=too-many-return-statements,too-many-arguments
+    system: str,
+    service: Optional[str],
+    server: str,
+    run,
+    has=_has,
+    running: Optional[bool] = None,
 ) -> List[Step]:
     """The steps for this host.  An empty plan means no tool can do it."""
     if service == ts.CHRONY:
+        if running is False:
+            # No daemon to ask: chronyd itself, once -- set the clock from
+            # the server and exit (it does not stay running).
+            return [(["chronyd", "-q", f"server {server} iburst"], True)]
         return [(["chronyc", "makestep"], True)]
     if service == ts.TIMESYNCD:
         return [(["systemctl", "restart", "systemd-timesyncd"], True)]
@@ -156,7 +166,7 @@ def resync(
     if server is None:
         result["error"] = "bad_server"
         return result
-    steps = plan(system, before.get("service"), server, run, has)
+    steps = plan(system, before.get("service"), server, run, has, before.get("running"))
     if not steps:
         result["error"] = "no_tool"
         return result

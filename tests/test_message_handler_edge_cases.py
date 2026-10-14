@@ -289,9 +289,10 @@ class TestMessageHandlerEdgeCases:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.asyncio
     async def test_on_connection_established_already_running(self):
-        """Test connection established when both queue processors already running."""
+        """Test connection established when every queue processor already runs."""
         self.handler.queue_processor_running = True
         self.handler.inbound_queue_processor_running = True
+        self.handler.express_queue_processor_running = True
 
         with patch("asyncio.create_task") as mock_create_task:
             await self.handler.on_connection_established()

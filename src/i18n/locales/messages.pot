@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 15:02-0400\n"
+"POT-Creation-Date: 2026-10-13 16:48-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -62,17 +62,17 @@ msgstr ""
 msgid "Corrupt UUID in database: %s"
 msgstr ""
 
-#: src/database/queue_manager.py:345
+#: src/database/queue_manager.py:349
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr ""
 
-#: src/database/queue_manager.py:540
+#: src/database/queue_manager.py:544
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr ""
 
-#: src/database/queue_manager.py:607
+#: src/database/queue_manager.py:611
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
@@ -93,7 +93,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr ""
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:940
+#: src/sysmanage_agent/communication/data_collector.py:944
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr ""
@@ -344,6 +344,11 @@ msgstr ""
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:321
 #, python-format
 msgid "Failed to get Windows network configuration: %s"
+msgstr ""
+
+#: src/sysmanage_agent/collection/hardware_health.py:421
+#, python-format
+msgid "Hardware health collection failed: %s"
 msgstr ""
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:92
@@ -1295,7 +1300,7 @@ msgstr ""
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector.py:420
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr ""
@@ -1459,117 +1464,130 @@ msgstr ""
 msgid "Error collecting/sending clock status: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:452
+#: src/sysmanage_agent/communication/data_collector.py:416
+#, python-format
+msgid "Error collecting/sending hardware health: %s"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector.py:456
 #, python-format
 msgid "Data collector error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:480
+#: src/sysmanage_agent/communication/data_collector.py:484
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:703
+#: src/sysmanage_agent/communication/data_collector.py:707
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:812
+#: src/sysmanage_agent/communication/data_collector.py:816
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:891
+#: src/sysmanage_agent/communication/data_collector.py:895
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:986
+#: src/sysmanage_agent/communication/data_collector.py:990
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:54
+#: src/sysmanage_agent/communication/data_collector_senders.py:55
 msgid "Failed to send periodic software inventory data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:78
+#: src/sysmanage_agent/communication/data_collector_senders.py:79
 msgid "Failed to send periodic user access data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:102
+#: src/sysmanage_agent/communication/data_collector_senders.py:103
 msgid "Failed to send periodic hardware data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:122
+#: src/sysmanage_agent/communication/data_collector_senders.py:123
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:142
+#: src/sysmanage_agent/communication/data_collector_senders.py:143
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:166
+#: src/sysmanage_agent/communication/data_collector_senders.py:167
 msgid "Failed to send periodic OS version data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:187
+#: src/sysmanage_agent/communication/data_collector_senders.py:188
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:221
+#: src/sysmanage_agent/communication/data_collector_senders.py:222
 msgid "Failed to send third-party repository data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:253
+#: src/sysmanage_agent/communication/data_collector_senders.py:254
 msgid "Failed to send antivirus status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:256
+#: src/sysmanage_agent/communication/data_collector_senders.py:257
 msgid "Cannot send antivirus status data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:290
+#: src/sysmanage_agent/communication/data_collector_senders.py:291
 msgid "Failed to send firewall status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:292
+#: src/sysmanage_agent/communication/data_collector_senders.py:293
 msgid "Cannot send firewall status data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:324
+#: src/sysmanage_agent/communication/data_collector_senders.py:325
 msgid "Failed to send Graylog status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:326
+#: src/sysmanage_agent/communication/data_collector_senders.py:327
 msgid "Cannot send Graylog status data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:334
+#: src/sysmanage_agent/communication/data_collector_senders.py:335
 msgid "Cannot send process data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:364
+#: src/sysmanage_agent/communication/data_collector_senders.py:365
 msgid "Failed to send process status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:375
+#: src/sysmanage_agent/communication/data_collector_senders.py:376
 msgid "Cannot send host metrics: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:387
+#: src/sysmanage_agent/communication/data_collector_senders.py:388
 msgid "Failed to send host metrics"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:400
+#: src/sysmanage_agent/communication/data_collector_senders.py:401
 msgid "Cannot send clock status: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:407
+#: src/sysmanage_agent/communication/data_collector_senders.py:408
 msgid "Failed to send clock status"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:419
+msgid "Cannot send hardware health: no host approval"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:426
+msgid "Failed to send hardware health"
 msgstr ""
 
 #: src/sysmanage_agent/communication/http_polling.py:83
@@ -1618,45 +1636,45 @@ msgstr ""
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:193
+#: src/sysmanage_agent/communication/message_handler.py:198
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:231
+#: src/sysmanage_agent/communication/message_handler.py:236
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:239
+#: src/sysmanage_agent/communication/message_handler.py:244
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:278
+#: src/sysmanage_agent/communication/message_handler.py:283
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:331
+#: src/sysmanage_agent/communication/message_handler.py:336
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:369
+#: src/sysmanage_agent/communication/message_handler.py:374
 msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:374
+#: src/sysmanage_agent/communication/message_handler.py:379
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:377
+#: src/sysmanage_agent/communication/message_handler.py:382
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:401
+#: src/sysmanage_agent/communication/message_handler.py:406
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- "
@@ -1664,123 +1682,133 @@ msgid ""
 " host from its tenant index; will re-register only if it persists."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:414
+#: src/sysmanage_agent/communication/message_handler.py:419
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:425
+#: src/sysmanage_agent/communication/message_handler.py:430
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:481
+#: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:491
+#: src/sysmanage_agent/communication/message_handler.py:496
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:574
+#: src/sysmanage_agent/communication/message_handler.py:583
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:593
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:595
+#: src/sysmanage_agent/communication/message_handler.py:604
 #, python-format
 msgid "Error processing message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:608
+#: src/sysmanage_agent/communication/message_handler.py:617
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:660
+#: src/sysmanage_agent/communication/message_handler.py:669
 #, python-format
 msgid "Unknown message type: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:747
 msgid "Heartbeat failed, connection may be lost"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:756
 #, python-format
 msgid "Message sender error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:763
+#: src/sysmanage_agent/communication/message_handler.py:772
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:110
+#: src/sysmanage_agent/communication/message_handler_queue.py:123
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:176
+#: src/sysmanage_agent/communication/message_handler_queue.py:189
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:186
+#: src/sysmanage_agent/communication/message_handler_queue.py:214
+#, python-format
+msgid "Error in express queue processor: %s"
+msgstr ""
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:223
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:216
+#: src/sysmanage_agent/communication/message_handler_queue.py:253
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:232
+#: src/sysmanage_agent/communication/message_handler_queue.py:269
 msgid "Cannot send message: not connected to server"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:245
+#: src/sysmanage_agent/communication/message_handler_queue.py:282
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:304
+#: src/sysmanage_agent/communication/message_handler_queue.py:341
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:346
+#: src/sysmanage_agent/communication/message_handler_queue.py:383
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:372
+#: src/sysmanage_agent/communication/message_handler_queue.py:409
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:403
+#: src/sysmanage_agent/communication/message_handler_queue.py:440
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:427
+#: src/sysmanage_agent/communication/message_handler_queue.py:458
+#, python-format
+msgid "Failed to create express queue processing task: %s"
+msgstr ""
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:476
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:518
+#: src/sysmanage_agent/communication/message_handler_queue.py:567
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr ""
@@ -2119,12 +2147,12 @@ msgstr ""
 msgid "Child host management requires Pro+ (engine path)."
 msgstr ""
 
-#: src/sysmanage_agent/operations/clock_resync.py:170
+#: src/sysmanage_agent/operations/clock_resync.py:180
 #, python-format
 msgid "Clock resync: %s failed (%s): %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/clock_resync.py:175
+#: src/sysmanage_agent/operations/clock_resync.py:185
 #, python-format
 msgid "Clock resync: %s succeeded"
 msgstr ""

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 15:02-0400\n"
+"POT-Creation-Date: 2026-10-13 16:48-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,17 +50,17 @@ msgstr "Mislukt om database in te stellen: %s"
 msgid "Corrupt UUID in database: %s"
 msgstr "Corrupte UUID in database: %s"
 
-#: src/database/queue_manager.py:345
+#: src/database/queue_manager.py:349
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "Bericht %s definitief mislukt na %d pogingen: %s"
 
-#: src/database/queue_manager.py:540
+#: src/database/queue_manager.py:544
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Deserialiseren van bericht %s mislukt: %s"
 
-#: src/database/queue_manager.py:607
+#: src/database/queue_manager.py:611
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
@@ -83,7 +83,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "Niet-ondersteunde platform voor certificaatverzameling: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:940
+#: src/sysmanage_agent/communication/data_collector.py:944
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "Fout bij verzamelen van certificaten: %s"
@@ -116,7 +116,8 @@ msgstr "Mislukt om Windows-certificaatopslag op te halen %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
 "Certificaatbundel %s bevat meer dan %d certificaten; rapportage van de "
 "eerste %d"
@@ -336,6 +337,11 @@ msgstr "Mislukt om Windows-netwerkinformatie via ipconfig op te halen: %s"
 #, python-format
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Mislukt om Windows-netwerkconfiguratie op te halen: %s"
+
+#: src/sysmanage_agent/collection/hardware_health.py:421
+#, python-format
+msgid "Hardware health collection failed: %s"
+msgstr "Verzamelen van de hardwarestatus mislukt: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:92
 #, python-format
@@ -1293,7 +1299,7 @@ msgstr "Mislukt om gegevens van kind-hosts te verzenden"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector.py:420
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "Fout bij verzamelen/senden van child-hostsdata: %s"
@@ -1459,119 +1465,132 @@ msgstr "Fout bij verzamelen/verzenden van hostmetrieken: %s"
 msgid "Error collecting/sending clock status: %s"
 msgstr "Fout bij het verzamelen/verzenden van de klokstatus: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:452
+#: src/sysmanage_agent/communication/data_collector.py:416
+#, python-format
+msgid "Error collecting/sending hardware health: %s"
+msgstr "Fout bij het verzamelen/verzenden van de hardwarestatus: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:456
 #, python-format
 msgid "Data collector error: %s"
 msgstr "Data-collectiefout: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:480
+#: src/sysmanage_agent/communication/data_collector.py:484
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "Fout bij initiële gegevensverzameling: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:703
+#: src/sysmanage_agent/communication/data_collector.py:707
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "Fout bij verzamelen van beschikbare pakketten: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:812
+#: src/sysmanage_agent/communication/data_collector.py:816
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "Fout bij verzenden van pakketdelta: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:891
+#: src/sysmanage_agent/communication/data_collector.py:895
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "Fout bij het verzenden van paginaties pakketten voor batch %s: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:986
+#: src/sysmanage_agent/communication/data_collector.py:990
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "Fout bij verzamelen van rollen: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:54
+#: src/sysmanage_agent/communication/data_collector_senders.py:55
 msgid "Failed to send periodic software inventory data"
 msgstr "Fout bij verzenden van periodieke software-inventarisgegevens"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:78
+#: src/sysmanage_agent/communication/data_collector_senders.py:79
 msgid "Failed to send periodic user access data"
 msgstr "Fout bij verzenden van periodieke gebruikersaccessdata"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:102
+#: src/sysmanage_agent/communication/data_collector_senders.py:103
 msgid "Failed to send periodic hardware data"
 msgstr "Mislukt om periodieke hardwaredata te verzenden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:122
+#: src/sysmanage_agent/communication/data_collector_senders.py:123
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "Periode certificaatverzameling mislukt: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:142
+#: src/sysmanage_agent/communication/data_collector_senders.py:143
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "Periode rolverzameling mislukt: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:166
+#: src/sysmanage_agent/communication/data_collector_senders.py:167
 msgid "Failed to send periodic OS version data"
 msgstr "Mislukt om periodieke OS-versiedata te verzenden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:187
+#: src/sysmanage_agent/communication/data_collector_senders.py:188
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "Mislukt om derde-partij-reposities te verzamelen: %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector_senders.py:221
+#: src/sysmanage_agent/communication/data_collector_senders.py:222
 msgid "Failed to send third-party repository data"
 msgstr "Mislukt om derden-repository gegevens te verzenden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:253
+#: src/sysmanage_agent/communication/data_collector_senders.py:254
 msgid "Failed to send antivirus status data"
 msgstr "Mislukt om antivirus-statusgegevens te verzenden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:256
+#: src/sysmanage_agent/communication/data_collector_senders.py:257
 msgid "Cannot send antivirus status data: no host approval"
 msgstr "Kan antivirus-statusgegevens niet verzenden: geen hostgoedkeuring"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:290
+#: src/sysmanage_agent/communication/data_collector_senders.py:291
 msgid "Failed to send firewall status data"
 msgstr "Mislukt om firewall-statusgegevens te verzenden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:292
+#: src/sysmanage_agent/communication/data_collector_senders.py:293
 msgid "Cannot send firewall status data: no host approval"
 msgstr "Kan firewall-statusgegevens niet verzenden: geen hostgoedkeuring"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:324
+#: src/sysmanage_agent/communication/data_collector_senders.py:325
 msgid "Failed to send Graylog status data"
 msgstr "Mislukt om Graylog-statusgegevens te verzenden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:326
+#: src/sysmanage_agent/communication/data_collector_senders.py:327
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "Kan Graylog-statusgegevens niet verzenden: geen hostgoedkeuring"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:334
+#: src/sysmanage_agent/communication/data_collector_senders.py:335
 msgid "Cannot send process data: no host approval"
 msgstr "Kan procesgegevens niet verzenden: geen host-goedkeuring"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:364
+#: src/sysmanage_agent/communication/data_collector_senders.py:365
 msgid "Failed to send process status data"
 msgstr "Verzenden van processtatusgegevens mislukt"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:375
+#: src/sysmanage_agent/communication/data_collector_senders.py:376
 msgid "Cannot send host metrics: no host approval"
 msgstr "Kan hostmetrieken niet verzenden: geen hostgoedkeuring"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:387
+#: src/sysmanage_agent/communication/data_collector_senders.py:388
 msgid "Failed to send host metrics"
 msgstr "Verzenden van hostmetrieken mislukt"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:400
+#: src/sysmanage_agent/communication/data_collector_senders.py:401
 msgid "Cannot send clock status: no host approval"
 msgstr "Kan geen klokstatus verzenden: geen goedkeuring van de host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:407
+#: src/sysmanage_agent/communication/data_collector_senders.py:408
 msgid "Failed to send clock status"
 msgstr "Niet gelukt om de klokstatus te verzenden"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:419
+msgid "Cannot send hardware health: no host approval"
+msgstr "Kan de hardwarestatus niet verzenden: geen hostgoedkeuring"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:426
+msgid "Failed to send hardware health"
+msgstr "Verzenden van de hardwarestatus mislukt"
 
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
@@ -1600,8 +1619,8 @@ msgstr "Fout bij verwerken van gepold bericht %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Kan de HTTP fallback niet gebruiken: deze agent heeft geen opgeslagen "
 "host_id. Registratie moet eerst voltooid zijn."
@@ -1614,8 +1633,8 @@ msgid ""
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
 "Gebruik HTTP polling in plaats van een WebSocket: dit netwerk weigert de "
-"WebSocket-upgrade. Commando's zullen met maximaal enkele seconden vertraging "
-"arriveren. Toestaan van WebSocket-upgrades naar %s om directe levering te "
+"WebSocket-upgrade. Commando's zullen met maximaal enkele seconden vertraging"
+" arriveren. Toestaan van WebSocket-upgrades naar %s om directe levering te "
 "herstellen."
 
 #: src/sysmanage_agent/communication/http_polling.py:254
@@ -1627,61 +1646,62 @@ msgstr "Poll mislukt (%s); herproberen over %d seconden"
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "Nogmaals testen of dit netwerk WebSocket-verbindingen nu toestaat"
 
-#: src/sysmanage_agent/communication/message_handler.py:193
+#: src/sysmanage_agent/communication/message_handler.py:198
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "Mislukt om bericht in de wachtrij te plaatsen: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:231
+#: src/sysmanage_agent/communication/message_handler.py:236
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr ""
 "Mislukt om berichtbevestiging voor boodschap in de wachtrij te plaatsen: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:239
+#: src/sysmanage_agent/communication/message_handler.py:244
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "Fout bij het aanstellen van commando-ontvangstbevestiging voor %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:278
+#: src/sysmanage_agent/communication/message_handler.py:283
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "Serverfout [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:331
+#: src/sysmanage_agent/communication/message_handler.py:336
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Kan tijdstempel van bericht voor verouderde controle niet parsen: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:369
-msgid "Host registration is pending approval. Will continue periodic attempts."
-msgstr ""
-"Registratie van host wacht op goedkeuring. Periodieke pogingen zullen worden "
-"doorgestuurd."
-
 #: src/sysmanage_agent/communication/message_handler.py:374
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
+msgstr ""
+"Registratie van host wacht op goedkeuring. Periodieke pogingen zullen worden"
+" doorgestuurd."
+
+#: src/sysmanage_agent/communication/message_handler.py:379
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr ""
 "De server meldt een ontbrekend hostnaam in het bericht. Dit is een fout."
 
-#: src/sysmanage_agent/communication/message_handler.py:377
+#: src/sysmanage_agent/communication/message_handler.py:382
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "Server kan bericht niet in wachtrij plaatsen: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:401
+#: src/sysmanage_agent/communication/message_handler.py:406
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Server meldde host_niet_geregistreerd (aanval %(n)d/%(limit)d) -- verbinding "
-"herstellen ZONDER het host_id te verwijderen zodat de server deze host kan "
+"Server meldde host_niet_geregistreerd (aanval %(n)d/%(limit)d) -- verbinding"
+" herstellen ZONDER het host_id te verwijderen zodat de server deze host kan "
 "opnieuw oplossen uit zijn tenant-index; zal alleen opnieuw registreren als "
 "dit blijft voorkomen."
 
-#: src/sysmanage_agent/communication/message_handler.py:414
+#: src/sysmanage_agent/communication/message_handler.py:419
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -1691,22 +1711,22 @@ msgstr ""
 "beschouwen als echt verdwenen; verwijder stored host_id en registreer "
 "opnieuw."
 
-#: src/sysmanage_agent/communication/message_handler.py:425
+#: src/sysmanage_agent/communication/message_handler.py:430
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Fout bij het wissen van opgeslagen host_id: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:481
+#: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "Uitzending %s: vernieuwing van inventaris mislukt: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:491
+#: src/sysmanage_agent/communication/message_handler.py:496
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Broadcast %s: onbekende actie '%s' -- genegeerd"
 
-#: src/sysmanage_agent/communication/message_handler.py:574
+#: src/sysmanage_agent/communication/message_handler.py:583
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -1714,95 +1734,106 @@ msgstr ""
 "Berichtontvanger: websocket gecleared door gelijktijdig verbroken "
 "verbinding; ontvanklusuren afsluiten om herverbinding te toestaan"
 
-#: src/sysmanage_agent/communication/message_handler.py:593
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "Ongeldige JSON ontvangen: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:595
+#: src/sysmanage_agent/communication/message_handler.py:604
 #, python-format
 msgid "Error processing message: %s"
 msgstr "Fout bij het verwerken van bericht: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:608
+#: src/sysmanage_agent/communication/message_handler.py:617
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: Berichtontvanger fout: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:660
+#: src/sysmanage_agent/communication/message_handler.py:669
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Onbekend berichttype: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:747
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Heartbeat mislukt, verbinding kan verbroken zijn"
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:756
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Fout bij berichtverzender: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:763
+#: src/sysmanage_agent/communication/message_handler.py:772
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Fout bij het sluiten van berichtverwerker: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:110
+#: src/sysmanage_agent/communication/message_handler_queue.py:123
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Mislukt om taak vanuit queue_outbound_message aan te maken: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:176
+#: src/sysmanage_agent/communication/message_handler_queue.py:189
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Fout in binnenkomende wachtrijverwerker: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:186
+#: src/sysmanage_agent/communication/message_handler_queue.py:214
+#, python-format
+msgid "Error in express queue processor: %s"
+msgstr "Fout in de verwerker van de expreswachtrij: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:223
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Kon inkomende bericht niet als verwerkt merken: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:216
+#: src/sysmanage_agent/communication/message_handler_queue.py:253
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Fout bij het verwerken van binnenkomend bericht %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:232
+#: src/sysmanage_agent/communication/message_handler_queue.py:269
 msgid "Cannot send message: not connected to server"
 msgstr "Kan bericht niet verzenden: niet verbonden met server"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:245
+#: src/sysmanage_agent/communication/message_handler_queue.py:282
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Mislukt om bericht rechtstreeks te verzenden: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:304
+#: src/sysmanage_agent/communication/message_handler_queue.py:341
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Fout in wachtrijverwerker: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:346
+#: src/sysmanage_agent/communication/message_handler_queue.py:383
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Fout bij verwerking wachtrij bericht %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:372
+#: src/sysmanage_agent/communication/message_handler_queue.py:409
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Fout bij het herstellen van vastgelopen berichten: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:403
+#: src/sysmanage_agent/communication/message_handler_queue.py:440
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Mislukt om uitgaande-wachtrij-verwerkingsopdracht aan te maken: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:427
+#: src/sysmanage_agent/communication/message_handler_queue.py:458
+#, python-format
+msgid "Failed to create express queue processing task: %s"
+msgstr "Kan de verwerkingstaak voor de expreswachtrij niet aanmaken: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:476
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
-msgstr "Mislukt om binnenkomende-wachtrij-verwerkingsopdracht aan te maken: %s"
+msgstr ""
+"Mislukt om binnenkomende-wachtrij-verwerkingsopdracht aan te maken: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:518
+#: src/sysmanage_agent/communication/message_handler_queue.py:567
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "Fout bij verwijderen van afgehandelde berichten in de wachtrij: %s"
@@ -2150,12 +2181,12 @@ msgstr "Fout bij het toevoegen van NetBSD-repository: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "Child-hostbeheer vereist Pro+ (engine-pad)."
 
-#: src/sysmanage_agent/operations/clock_resync.py:170
+#: src/sysmanage_agent/operations/clock_resync.py:180
 #, python-format
 msgid "Clock resync: %s failed (%s): %s"
 msgstr "Klok opnieuw synchroniseren: %s mislukt (%s): %s"
 
-#: src/sysmanage_agent/operations/clock_resync.py:175
+#: src/sysmanage_agent/operations/clock_resync.py:185
 #, python-format
 msgid "Clock resync: %s succeeded"
 msgstr "Klok opnieuw synchroniseren: %s geslaagd"
@@ -2364,7 +2395,8 @@ msgstr "Mislukt om hostname aan te passen: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:124
 #, python-format
 msgid "hostnamectl failed, trying manual hostname change: %s"
-msgstr "hostnamectl mislukt, handmatige hostnaamwijziging wordt geprobeerd: %s"
+msgstr ""
+"hostnamectl mislukt, handmatige hostnaamwijziging wordt geprobeerd: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:138
 #: src/sysmanage_agent/operations/hostname_operations.py:144
@@ -2690,13 +2722,13 @@ msgstr "Homebrew is al geœtalleerd"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew-installatie vereist handmatige interventie. Installeer met: /bin/"
-"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
-"HEAD/install.sh)\""
+"Homebrew-installatie vereist handmatige interventie. Installeer met: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -2951,7 +2983,8 @@ msgstr "Mislukt om antivirus-status op te halen/door te sturen: %s"
 #: src/sysmanage_agent/operations/system_control.py:168
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
-msgstr "Mislukt om commerciële antivirus-status op te halen/door te sturen: %s"
+msgstr ""
+"Mislukt om commerciële antivirus-status op te halen/door te sturen: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:177
 #, python-format
@@ -3492,8 +3525,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Error fetching winget page %d (collected %d packages so far): %s"
 #~ msgstr ""
-#~ "Fout bij ophalen van winget-pagina %d (tot nu toe %d pakketten "
-#~ "verzameld): %s"
+#~ "Fout bij ophalen van winget-pagina %d (tot nu toe %d pakketten verzameld): "
+#~ "%s"
 
 #, python-format
 #~ msgid "Error fetching page at skip %d: %s"
@@ -3504,8 +3537,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "Uitzending %s: vernieuwing van inventaris gevraagd, maar data_collector "
-#~ "mist send_software_inventory_update"
+#~ "Uitzending %s: vernieuwing van inventaris gevraagd, maar data_collector mist"
+#~ " send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3534,8 +3567,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 #~ msgstr ""
-#~ "Bericht %s mislukt (poging %d/%d), ingepland voor herhaalde poging over "
-#~ "%d seconden"
+#~ "Bericht %s mislukt (poging %d/%d), ingepland voor herhaalde poging over %d "
+#~ "seconden"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3544,8 +3577,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 # Message Queue Recovery
 #, python-format
 #~ msgid "Recovered stuck message %s (type: %s), will retry"
-#~ msgstr ""
-#~ "Vastgelopen bericht %s (type: %s) hersteld, wordt opnieuw geprobeerd"
+#~ msgstr "Vastgelopen bericht %s (type: %s) hersteld, wordt opnieuw geprobeerd"
 
 #, python-format
 #~ msgid "Recovered %d stuck messages"
@@ -3641,8 +3673,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid ""
 #~ "Successfully collected %d packages from Chocolatey community repository"
-#~ msgstr ""
-#~ "%d pakketten succesvol verzameld uit Chocolatey community-repository"
+#~ msgstr "%d pakketten succesvol verzameld uit Chocolatey community-repository"
 
 #, python-format
 #~ msgid "Process snapshot truncated from %d to %d (cap)"
@@ -3661,8 +3692,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Gevonden pakket: %s v%s (%s)"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Dubbele rol overslaan: %s met dienst %s (hebben al pakket %s)"
 
 #, python-format
@@ -3721,8 +3751,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "Updatedetectie voltooid: %d updates gevonden (%d beveiliging, %d systeem, "
-#~ "%d toepassing)"
+#~ "Updatedetectie voltooid: %d updates gevonden (%d beveiliging, %d systeem, %d"
+#~ " toepassing)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3821,8 +3851,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ "Bijwerken van .wslconfig om automatische afsluiting van WSL te voorkomen "
-#~ "op %s"
+#~ "Bijwerken van .wslconfig om automatische afsluiting van WSL te voorkomen op "
+#~ "%s"
 
 #~ msgid ".wslconfig saved successfully"
 #~ msgstr ".wslconfig succesvol opgeslagen"
@@ -3832,8 +3862,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "WSL shutdown complete, new settings will apply on next start"
 #~ msgstr ""
-#~ "WSL afsluiten voltooid, nieuwe instellingen zullen van toepassing zijn "
-#~ "bij de volgende opstart"
+#~ "WSL afsluiten voltooid, nieuwe instellingen zullen van toepassing zijn bij "
+#~ "de volgende opstart"
 
 #~ msgid "Starting WSL keep-alive processes"
 #~ msgstr "Start WSL keep-alive processen"
@@ -3883,16 +3913,14 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Found and sent %d certificates during initial collection"
-#~ msgstr ""
-#~ "Tijdens de initiële verzameling %d certificaten gevonden en verzonden"
+#~ msgstr "Tijdens de initiële verzameling %d certificaten gevonden en verzonden"
 
 #~ msgid "No certificates found during initial collection"
 #~ msgstr "Geen certificaten gevonden op het systeem"
 
 #, python-format
 #~ msgid "Found and sent %d server roles during initial collection"
-#~ msgstr ""
-#~ "Tijdens de initiële verzameling %d serverrollen gevonden en verzonden"
+#~ msgstr "Tijdens de initiële verzameling %d serverrollen gevonden en verzonden"
 
 #~ msgid "No server roles found during initial collection"
 #~ msgstr "Tijdens initiële verzameling geen serverrollen gevonden"
@@ -3922,19 +3950,18 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
-#~ msgstr ""
-#~ "Batch met %d pakketten vanaf %s verzonden (batch %s, pakketten %d-%d)"
+#~ msgstr "Batch met %d pakketten vanaf %s verzonden (batch %s, pakketten %d-%d)"
 
 #, python-format
 #~ msgid "Completed packages batch %s"
 #~ msgstr "Voltooide pakketbatch %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Certificaatverzameling wordt uitgevoerd in modus zonder privileges - "
-#~ "sommige certificaten zijn mogelijk niet toegankelijk"
+#~ "Certificaatverzameling wordt uitgevoerd in modus zonder privileges - sommige"
+#~ " certificaten zijn mogelijk niet toegankelijk"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Verzamelen van SSL-certificaten uit systeem"
@@ -3968,8 +3995,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Ongeldige foutbericht [%s] genegeerd van %s (registratie om %s)"
 
 #~ msgid "Stored host_id cleared from database"
-#~ msgstr ""
-#~ "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
+#~ msgstr "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
 
 #~ msgid "Disconnecting to trigger re-registration..."
 #~ msgstr "Verbinding verbreken om herregistratie te triggeren..."
@@ -3992,8 +4018,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "Creating queue processing task from queue_outbound_message"
 #~ msgstr ""
-#~ "Taak voor het verwerken van berichten aanmaken vanaf "
-#~ "queue_outbound_message"
+#~ "Taak voor het verwerken van berichten aanmaken vanaf queue_outbound_message"
 
 #, python-format
 #~ msgid "Task created from queue_outbound_message: %s"
@@ -4035,8 +4060,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d vastgelopen berichten hersteld"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Taak voor het verwerken van uitgaande berichten aanmaken vanaf "
 #~ "on_connection_established"
@@ -4048,8 +4072,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Uitgaande wachtrijverwerker is al actief, start geen nieuwe"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Taak voor het verwerken van binnenkomende berichten aanmaken vanaf "
 #~ "on_connection_established"
@@ -4246,8 +4269,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 #~ msgstr ""
-#~ "Aangepaste metrieken gesynchroniseerd: %d actief, %d overgeslagen "
-#~ "(ongeldig)"
+#~ "Aangepaste metrieken gesynchroniseerd: %d actief, %d overgeslagen (ongeldig)"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
@@ -4264,8 +4286,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 #~ msgstr ""
-#~ "GPG-sleutel %s (vingerafdruk %s) verwijderen voor target=%s, "
-#~ "has_private=%s"
+#~ "GPG-sleutel %s (vingerafdruk %s) verwijderen voor target=%s, has_private=%s"
 
 #~ msgid "NAT rules already configured in before.rules"
 #~ msgstr "NAT-regels zijn al geconfigureerd in before.rules"
@@ -4290,18 +4311,15 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-#~ msgstr ""
-#~ "Pakket %s wordt geïnstalleerd (installation_id: %s, requested_by: %s)"
+#~ msgstr "Pakket %s wordt geïnstalleerd (installation_id: %s, requested_by: %s)"
 
 #, python-format
 #~ msgid "Installing %d packages for request %s (requested_by: %s)"
-#~ msgstr ""
-#~ "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
+#~ msgstr "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
 
 #, python-format
 #~ msgid "Uninstalling %d packages for request %s (requested_by: %s)"
-#~ msgstr ""
-#~ "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
+#~ msgstr "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
 
 #, python-format
 #~ msgid "Installing packages with apt-get: %s"
@@ -4533,8 +4551,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "libvirt-pakketten succesvol geïnstalleerd"
 
 #~ msgid "No valid certificates found, checking host approval status..."
-#~ msgstr ""
-#~ "Geen geldige certificaten gevonden, hostgoedkeuistatus controleren..."
+#~ msgstr "Geen geldige certificaten gevonden, hostgoedkeuistatus controleren..."
 
 #, python-format
 #~ msgid "Retrieved server fingerprint for validation: %s"
@@ -4557,11 +4574,10 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Inschrijving ontvangen maar goedkeuring nog niet afgerond"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Inschrijving succesvol maar geen host_id verstrekt - goedkeuring kan "
-#~ "apart komen"
+#~ "Inschrijving succesvol maar geen host_id verstrekt - goedkeuring kan apart "
+#~ "komen"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4578,17 +4594,15 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
 #~ msgstr ""
-#~ "%d oude host-goedkeuringsrecord(s) verwijderd voordat nieuwe goedkeuring "
-#~ "is opgeslagen"
+#~ "%d oude host-goedkeuringsrecord(s) verwijderd voordat nieuwe goedkeuring is "
+#~ "opgeslagen"
 
 #, python-format
 #~ msgid "Host approval record stored in database: host_id=%s, status=%s"
-#~ msgstr ""
-#~ "Host-goedkeuringsrecord opgeslagen in database: host_id=%s, status=%s"
+#~ msgstr "Host-goedkeuringsrecord opgeslagen in database: host_id=%s, status=%s"
 
 #~ msgid "Host approval records and related data cleared from database"
-#~ msgstr ""
-#~ "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
+#~ msgstr "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
 
 #~ msgid "Corrupt database entries cleaned up"
 #~ msgstr "Gestoorde databaseteksten zijn opgeruimd"
@@ -4607,8 +4621,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "Server meldt dat de host niet geregistreerd is. Opgehaalde host_id wissen "
-#~ "en hernieuwde registratie activeren..."
+#~ "Server meldt dat de host niet geregistreerd is. Opgehaalde host_id wissen en"
+#~ " hernieuwde registratie activeren..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -4656,8 +4670,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Automatische migratie is ingeschakeld"
 
 #~ msgid "Auto-migration is disabled, skipping migrations"
-#~ msgstr ""
-#~ "Automatische migratie is uitgeschakeld, migraties worden overgeslagen"
+#~ msgstr "Automatische migratie is uitgeschakeld, migraties worden overgeslagen"
 
 #, python-format
 #~ msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
@@ -4719,8 +4732,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
 #~ "Microsoft Defender for Endpoint gedetecteerd op macOS (versie: %s, "
 #~ "ingeschakeld: %s, gelicentieerd: %s)"
@@ -4747,8 +4760,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
 #~ msgstr ""
-#~ "PowerShell niet gevonden (niet op Windows of PowerShell niet "
-#~ "geïnstalleerd)"
+#~ "PowerShell niet gevonden (niet op Windows of PowerShell niet geïnstalleerd)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -4779,8 +4791,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Huidige OpenBSD-versie: %s"
 
 #~ msgid "Fetching https://www.openbsd.org/ to check for updates"
-#~ msgstr ""
-#~ "https://www.openbsd.org/ wordt opgehaald om te controleren op updates"
+#~ msgstr "https://www.openbsd.org/ wordt opgehaald om te controleren op updates"
 
 #, python-format
 #~ msgid "OpenBSD upgrade available: %s -> %s"
@@ -4815,8 +4826,7 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr ""
-#~ "Chocolatey-opdrachtresultaat: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr "Chocolatey-opdrachtresultaat: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -4999,8 +5009,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
 #~ msgstr ""
-#~ "OpenBSD autoinstall bezig. De VM wordt automatisch geïnstalleerd en "
-#~ "opnieuw opgestart. Dit kan 10-15 minuten duren."
+#~ "OpenBSD autoinstall bezig. De VM wordt automatisch geïnstalleerd en opnieuw "
+#~ "opgestart. Dit kan 10-15 minuten duren."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "Autoinstall HTTP-verzoek: %s van %s"

@@ -24,6 +24,19 @@ from src.database.models import Priority, QueueDirection
 from src.i18n import _
 from src.sysmanage_agent.communication import send_on_change
 
+# Commands short, self-contained and urgent enough to run BESIDE a long one.
+# The inbound queue runs one command at a time, and a fresh agent's first
+# package collection (11 minutes for winget's 4,303 packages on the x13s)
+# held a clock resync until the server gave up on it.  These are queued
+# URGENT and run by the express lane as well; only add a command that is
+# quick and safe to run concurrently with any other.
+EXPRESS_COMMANDS = frozenset({"resync_clock"})
+
+
+def is_express(message: Dict[str, Any]) -> bool:
+    data = message.get("data") if isinstance(message, dict) else None
+    return isinstance(data, dict) and data.get("command_type") in EXPRESS_COMMANDS
+
 
 class MessageHandlerQueueMixin:
     """Persistent store-and-forward queue behavior for ``MessageHandler``."""
@@ -130,7 +143,7 @@ class MessageHandlerQueueMixin:
             message_type=message_type,
             message_data=message,
             direction=QueueDirection.INBOUND,
-            priority=Priority.NORMAL,
+            priority=Priority.URGENT if is_express(message) else Priority.NORMAL,
             correlation_id=message.get("correlation_id"),
             reply_to=message.get("reply_to"),
         )
@@ -177,6 +190,30 @@ class MessageHandlerQueueMixin:
         finally:
             self.inbound_queue_processor_running = False
             self.logger.debug("Inbound queue processing stopped")
+
+    async def process_express_queue(self):
+        """The express lane: URGENT inbound commands only (``EXPRESS_COMMANDS``),
+        run while the main loop may be busy with a long one.  Both loops claim
+        a message through ``mark_processing`` -- check-and-set on the one
+        event loop -- so a command runs once, whichever lane gets it."""
+        if self.express_queue_processor_running:
+            return
+        self.express_queue_processor_running = True
+        try:
+            while self.agent.running:
+                messages = self.queue_manager.dequeue_messages(
+                    direction=QueueDirection.INBOUND,
+                    limit=1,
+                    priority=Priority.URGENT,
+                )
+                if not messages:
+                    break
+                await self._process_single_inbound_message(messages[0])
+                await asyncio.sleep(0.1)
+        except Exception as error:
+            self.logger.error(_("Error in express queue processor: %s"), error)
+        finally:
+            self.express_queue_processor_running = False
 
     async def _process_single_inbound_message(self, message) -> None:
         """Process a single inbound message from the queue."""
@@ -408,6 +445,18 @@ class MessageHandlerQueueMixin:
             self.logger.info(
                 "Outbound queue processor already running, not starting another"
             )
+
+        # Express commands left pending across a reconnect must not wait for
+        # the main lane either.
+        if not self.express_queue_processor_running:
+            try:
+                self.express_processing_task = asyncio.create_task(
+                    self.process_express_queue()
+                )
+            except Exception as error:
+                self.logger.error(
+                    _("Failed to create express queue processing task: %s"), error
+                )
 
         # Start inbound queue processing task (to handle any pending commands)
         if not self.inbound_queue_processor_running:

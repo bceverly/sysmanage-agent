@@ -23,7 +23,10 @@ ignores fields that change on every collection without carrying information
   * process lists change on every collection (CPU percentages), so they are
     sent when the SET of processes changes, else at most every 15 minutes;
   * host metrics are samples, sent every 15 minutes -- the server keeps one
-    sample per 15 minutes anyway.
+    sample per 15 minutes anyway;
+  * hardware health (23.1) is sent when a component's STATE changes (a drive
+    turns warning, a pool degrades) or a source starts or stops answering,
+    else every 15 minutes -- its temperatures move on every collection.
 
 Always sent: anything the server ASKED for (a command or a refresh broadcast
 runs inside ``forced()``) and everything after the agent's identity changes
@@ -61,6 +64,7 @@ SNAPSHOT_TYPES = frozenset({
     "antivirus_status_update", "firewall_status_update", "graylog_status_update",
     "child_host_list_update", "fips_compliance_update", "package_updates_update",
     "process_status_update", "host_metrics", "time_status_update",
+    "hardware_health_update",
 })  # fmt: skip
 
 # A newer report of these types replaces a still-queued older one (22.1):
@@ -127,11 +131,33 @@ def _process_identity(data: Dict[str, Any]) -> Any:
     )
 
 
+def _hardware_identity(data: Dict[str, Any]) -> Any:
+    """Each component's identity and verdict, and each source's status --
+    not the readings (temperatures, hours), which change every time."""
+    components = data.get("components")
+    if not isinstance(components, list):
+        return _canonical(data)
+    return {
+        "components": sorted(
+            json.dumps(
+                {k: c.get(k) for k in ("kind", "id", "state", "reasons")},
+                sort_keys=True,
+                default=str,
+            )
+            for c in components
+            if isinstance(c, dict)
+        ),
+        "sources": _canonical(data.get("sources")),
+    }
+
+
 def digest(message: Dict[str, Any]) -> str:
     """The content fingerprint of a report (volatile fields excluded)."""
     data = message.get("data", message)
     if message.get("message_type") == "process_status_update":
         basis = _process_identity(data)
+    elif message.get("message_type") == "hardware_health_update":
+        basis = _hardware_identity(data)
     elif message.get("message_type") == "host_metrics":
         basis = None  # samples: time-based only
     else:
@@ -181,7 +207,9 @@ class SnapshotGate:
         if message_type == "host_metrics":
             return age >= SAMPLE_INTERVAL, fingerprint
         resend_after = (
-            SAMPLE_INTERVAL if message_type == "process_status_update" else RESEND_AFTER
+            SAMPLE_INTERVAL
+            if message_type in ("process_status_update", "hardware_health_update")
+            else RESEND_AFTER
         )
         return fingerprint != last_digest or age >= resend_after, fingerprint
 

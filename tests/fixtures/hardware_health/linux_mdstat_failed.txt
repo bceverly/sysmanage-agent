@@ -1,0 +1,5 @@
+Personalities : [raid1] 
+md127 : active raid1 loop11[1](F) loop10[0]
+      1046528 blocks super 1.2 [2/1] [U_]
+      
+unused devices: <none>

@@ -233,13 +233,21 @@ def parse_sntp(text: str) -> Optional[float]:
 
 
 def _ntp_family(run: Runner) -> Optional[Dict[str, object]]:
-    """chrony, then classic ntpd -- whichever answers."""
+    """chrony, then classic ntpd -- whichever answers.  A client that is
+    installed but finds no daemon means that service is STOPPED, not absent:
+    reporting the next service down the list instead would aim a resync (or
+    a policy) at a service the host does not use."""
     rc, out = run(["chronyc", "-n", "tracking"])
     if rc == 0 and out:
         return parse_chrony_tracking(out)
+    chrony_stopped = rc not in (0, -1) and "Cannot talk to daemon" in (out or "")
     rc, out = run(["ntpq", "-n", "-c", "rv"])
     if rc == 0 and "stratum=" in out:
         return parse_ntpq_rv(out)
+    if chrony_stopped:
+        return _status(CHRONY, False, False)
+    if rc not in (-1,) and "Connection refused" in (out or ""):
+        return _status(NTPD, False, False)
     return None
 
 

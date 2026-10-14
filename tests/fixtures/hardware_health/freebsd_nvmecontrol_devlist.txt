@@ -1,0 +1,2 @@
+ nvme0: CT1000P1SSD8
+    nvme0ns1 (953869MB)

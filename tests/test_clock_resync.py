@@ -145,3 +145,15 @@ def test_the_status_after_is_reported():
         result = cr.resync({}, "Linux", run)
     assert result["status_after"]["synchronized"] is True
     assert result["status_before"]["synchronized"] is False
+
+
+def test_a_stopped_chronyd_is_run_once_instead():
+    run = Fake()
+    stopped = _status(ts.CHRONY)
+    stopped["running"] = False
+    with patch.object(ts, "collect_time_status", return_value=stopped), patch.object(
+        cr, "_privileged", return_value=True
+    ):
+        result = cr.resync({"server": "time.lab"}, "Linux", run, lambda _t: False)
+    assert result["success"] is True
+    assert run.calls == [["chronyd", "-q", "server time.lab iburst"]]

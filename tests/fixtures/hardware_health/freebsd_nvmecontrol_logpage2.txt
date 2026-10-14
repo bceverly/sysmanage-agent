@@ -1,0 +1,31 @@
+SMART/Health Information Log
+============================
+Critical Warning State:         0x00
+ Available spare:               0
+ Temperature:                   0
+ Device reliability:            0
+ Read only:                     0
+ Volatile memory backup:        0
+Temperature:                    307 K, 33.85 C, 92.93 F
+Available spare:                100
+Available spare threshold:      10
+Percentage used:                5
+Data units (512,000 byte) read: 23739563
+Data units written:             71288725
+Host read commands:             360122316
+Host write commands:            1125903081
+Controller busy time (minutes): 29524
+Power cycles:                   1227
+Power on hours:                 16161
+Unsafe shutdowns:               167
+Media errors:                   19
+No. error info log entries:     0
+Warning Temp Composite Time:    0
+Error Temp Composite Time:      0
+Temperature Sensor 1:           307 K, 33.85 C, 92.93 F
+Temperature Sensor 2:           307 K, 33.85 C, 92.93 F
+Temperature Sensor 5:           315 K, 41.85 C, 107.33 F
+Temperature 1 Transition Count: 788
+Temperature 2 Transition Count: 3
+Total Time For Temperature 1:   20242
+Total Time For Temperature 2:   16269

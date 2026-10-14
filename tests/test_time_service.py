@@ -221,3 +221,21 @@ def test_a_reader_that_raises_never_takes_the_agent_down():
         raise RuntimeError("unexpected")
 
     assert ts.collect_time_status("Linux", boom)["service"] is None
+
+
+def test_a_stopped_daemon_is_stopped_not_absent():
+    def chrony_down(argv):
+        if argv[0] == "chronyc":
+            return 1, "506 Cannot talk to daemon"
+        return -1, ""
+
+    status = ts.collect_time_status("Linux", chrony_down, read=lambda _p: None)
+    assert (status["service"], status["running"]) == ("chrony", False)
+
+    def ntpd_down(argv):
+        if argv[0] == "ntpq":
+            return 1, "ntpq: read: Connection refused"
+        return -1, ""
+
+    status = ts.collect_time_status("FreeBSD", ntpd_down, read=lambda _p: None)
+    assert (status["service"], status["running"]) == ("ntpd", False)

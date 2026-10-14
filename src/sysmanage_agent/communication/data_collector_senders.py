@@ -17,6 +17,7 @@ import uuid
 from datetime import datetime, timezone
 
 from src.i18n import _
+from src.sysmanage_agent.collection.hardware_health import collect_hardware_health
 from src.sysmanage_agent.collection.time_service import collect_time_status
 
 _UNKNOWN_ERROR = "Unknown error"
@@ -405,3 +406,21 @@ class DataCollectorSendersMixin:
         message = self.agent.create_message("time_status_update", payload)
         if not await self.agent.send_message(message):
             self.logger.warning(_("Failed to send clock status"))
+
+    async def _send_hardware_health_update(self):
+        """Send the host's hardware health (23.1): drives, arrays, pools,
+        sensors and memory, each judged, with every source's status.
+
+        Send-on-change sends it when a component's state changes, else every
+        15 minutes (its temperatures change on every read).
+        """
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if not host_approval:
+            self.logger.warning(_("Cannot send hardware health: no host approval"))
+            return
+        # smartctl / zpool / PowerShell are subprocesses; off the event loop.
+        payload = await asyncio.to_thread(collect_hardware_health)
+        payload["host_id"] = str(host_approval.host_id)
+        message = self.agent.create_message("hardware_health_update", payload)
+        if not await self.agent.send_message(message):
+            self.logger.warning(_("Failed to send hardware health"))

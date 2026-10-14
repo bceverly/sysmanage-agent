@@ -412,6 +412,10 @@ class DataCollector(DataCollectorSendersMixin):
                 _("Error collecting/sending clock status: %s"),
             ),
             (
+                self._send_hardware_health_update,
+                _("Error collecting/sending hardware health: %s"),
+            ),
+            (
                 self.child_host_collector.send_child_hosts_update,
                 _("Error collecting/sending child hosts data: %s"),
             ),

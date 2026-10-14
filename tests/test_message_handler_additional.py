@@ -319,17 +319,19 @@ class TestMessageHandlerAdditional(
 
         await self.handler.on_connection_established()
 
-        # Should create both outbound and inbound queue processing tasks
-        assert mock_create_task.call_count == 2
+        # Outbound, express and inbound queue processing tasks
+        assert mock_create_task.call_count == 3
         assert self.handler.processing_task == mock_task
+        assert self.handler.express_processing_task == mock_task
         assert self.handler.inbound_processing_task == mock_task
 
     @patch("asyncio.create_task")
     @pytest.mark.asyncio
     async def test_on_connection_established_already_running(self, mock_create_task):
-        """Test on_connection_established when both processors already running."""
+        """Test on_connection_established when every processor already runs."""
         self.handler.queue_processor_running = True
         self.handler.inbound_queue_processor_running = True
+        self.handler.express_queue_processor_running = True
 
         await self.handler.on_connection_established()
 
@@ -347,8 +349,8 @@ class TestMessageHandlerAdditional(
 
         await self.handler.on_connection_established()
 
-        # Should attempt to create both tasks even if first fails
-        assert mock_create_task.call_count == 2
+        # Should attempt every task even if the first fails
+        assert mock_create_task.call_count == 3
 
     @pytest.mark.asyncio
     async def test_on_connection_lost_with_completed_task(self):

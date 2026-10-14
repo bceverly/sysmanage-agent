@@ -25,6 +25,7 @@ from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.communication.clock_probe import ClockProbe
 from src.sysmanage_agent.communication.message_handler_queue import (
     MessageHandlerQueueMixin,
+    is_express,
 )
 from src.sysmanage_agent.communication.message_logging_helpers import (
     log_child_host_received,
@@ -72,6 +73,10 @@ class MessageHandler(MessageHandlerQueueMixin):
         # Inbound queue processing state
         self.inbound_queue_processor_running = False
         self.inbound_processing_task = None
+        # The express lane: short commands that must not wait behind a long
+        # one (see MessageHandlerQueueMixin.process_express_queue).
+        self.express_queue_processor_running = False
+        self.express_processing_task = None
 
         self.logger.info("Message handler initialized")
 
@@ -542,6 +547,10 @@ class MessageHandler(MessageHandlerQueueMixin):
         if not self.inbound_queue_processor_running:
             self.inbound_processing_task = asyncio.create_task(
                 self.process_inbound_queue()
+            )
+        if is_express(data) and not self.express_queue_processor_running:
+            self.express_processing_task = asyncio.create_task(
+                self.process_express_queue()
             )
 
     async def message_receiver(self):  # pylint: disable=too-many-branches

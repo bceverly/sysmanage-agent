@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 15:02-0400\n"
+"POT-Creation-Date: 2026-10-13 16:48-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -51,17 +51,17 @@ msgstr "فشل في تمهيد قاعدة البيانات: %s"
 msgid "Corrupt UUID in database: %s"
 msgstr "UUID معيب في قاعدة البيانات: %s"
 
-#: src/database/queue_manager.py:345
+#: src/database/queue_manager.py:349
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "فشلت الرسالة %s نهائياً بعد %d محاولات: %s"
 
-#: src/database/queue_manager.py:540
+#: src/database/queue_manager.py:544
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "فشل في إلغاء تسلسل الرسالة %s: %s"
 
-#: src/database/queue_manager.py:607
+#: src/database/queue_manager.py:611
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
@@ -83,7 +83,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "منصة غير مدعومة لجمع الشهادات: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:940
+#: src/sysmanage_agent/communication/data_collector.py:944
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "خطأ في جمع الشهادات: %s"
@@ -116,7 +116,8 @@ msgstr "فشل في استعلام مخزن الشهادات Windows %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr "حزمة الشهادات %s تحتوي على أكثر من %d شهادة؛ إعداد تقرير عن الأولى %d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
@@ -334,6 +335,11 @@ msgstr "فشل في الحصول على معلومات الشبكة Windows با
 #, python-format
 msgid "Failed to get Windows network configuration: %s"
 msgstr "فشل في الحصول على تكوين الشبكة Windows: %s"
+
+#: src/sysmanage_agent/collection/hardware_health.py:421
+#, python-format
+msgid "Hardware health collection failed: %s"
+msgstr "فشل جمع حالة صحة الأجهزة: %s"
 
 #: src/sysmanage_agent/collection/linux_system_update_detectors.py:92
 #, python-format
@@ -1288,7 +1294,7 @@ msgstr "فشل في إرسال بيانات المضيفين التابعين"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector.py:420
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "خطأ في جمع/إرسال بيانات المضيفين التابعين: %s"
@@ -1453,119 +1459,132 @@ msgstr "خطأ في جمع مقاييس المضيف أو إرسالها: %s"
 msgid "Error collecting/sending clock status: %s"
 msgstr "حدث خطأ أثناء جمع/إرسال حالة الساعة: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:452
+#: src/sysmanage_agent/communication/data_collector.py:416
+#, python-format
+msgid "Error collecting/sending hardware health: %s"
+msgstr "حدث خطأ أثناء جمع/إرسال حالة صحة الأجهزة: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:456
 #, python-format
 msgid "Data collector error: %s"
 msgstr "خطأ في جمع البيانات: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:480
+#: src/sysmanage_agent/communication/data_collector.py:484
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "خطأ في جمع البيانات الأولية: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:703
+#: src/sysmanage_agent/communication/data_collector.py:707
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr "خطأ في جمع الحزم المتاحة: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:812
+#: src/sysmanage_agent/communication/data_collector.py:816
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr "خطأ في إرسال حزمة الدلتا: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:891
+#: src/sysmanage_agent/communication/data_collector.py:895
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr "خطأ إرسال الحزم المصفحة للحزمة %s: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:986
+#: src/sysmanage_agent/communication/data_collector.py:990
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "خطأ في جمع الأدوار: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:54
+#: src/sysmanage_agent/communication/data_collector_senders.py:55
 msgid "Failed to send periodic software inventory data"
 msgstr "فشل في إرسال بيانات المخزون البرمجي الدوري"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:78
+#: src/sysmanage_agent/communication/data_collector_senders.py:79
 msgid "Failed to send periodic user access data"
 msgstr "فشل في إرسال بيانات وصول المستخدم الدورية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:102
+#: src/sysmanage_agent/communication/data_collector_senders.py:103
 msgid "Failed to send periodic hardware data"
 msgstr "فشل في إرسال بيانات الأجهزة الدورية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:122
+#: src/sysmanage_agent/communication/data_collector_senders.py:123
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "فشل جمع الشهادات الدورية: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:142
+#: src/sysmanage_agent/communication/data_collector_senders.py:143
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "فشل جمع الأدوار الدورية: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:166
+#: src/sysmanage_agent/communication/data_collector_senders.py:167
 msgid "Failed to send periodic OS version data"
 msgstr "فشل في إرسال بيانات نسخة نظام التشغيل الدورية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:187
+#: src/sysmanage_agent/communication/data_collector_senders.py:188
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "فشل في جمع مصادر خارجية ثالثة: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:221
+#: src/sysmanage_agent/communication/data_collector_senders.py:222
 msgid "Failed to send third-party repository data"
 msgstr "فشل في إرسال بيانات مستودعات الجهات الخارجية: "
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:253
+#: src/sysmanage_agent/communication/data_collector_senders.py:254
 msgid "Failed to send antivirus status data"
 msgstr "فشل في إرسال بيانات حالة برنامج حماية الفيروسات"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:256
+#: src/sysmanage_agent/communication/data_collector_senders.py:257
 msgid "Cannot send antivirus status data: no host approval"
 msgstr ""
 "لا يمكن إرسال بيانات حالة برنامج مكافحة الفيروسات: لا يوجد موافقة من المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:290
+#: src/sysmanage_agent/communication/data_collector_senders.py:291
 msgid "Failed to send firewall status data"
 msgstr "فشل في إرسال بيانات حالة جدار الحماية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:292
+#: src/sysmanage_agent/communication/data_collector_senders.py:293
 msgid "Cannot send firewall status data: no host approval"
 msgstr "لا يمكن إرسال بيانات حالة جدار الحماية: لا يوجد موافقة من المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:324
+#: src/sysmanage_agent/communication/data_collector_senders.py:325
 msgid "Failed to send Graylog status data"
 msgstr "فشل في إرسال بيانات حالة Graylog"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:326
+#: src/sysmanage_agent/communication/data_collector_senders.py:327
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "لا يمكن إرسال بيانات حالة Graylog: لا يوجد موافقة من المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:334
+#: src/sysmanage_agent/communication/data_collector_senders.py:335
 msgid "Cannot send process data: no host approval"
 msgstr "تعذّر إرسال بيانات العمليات: لا توجد موافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:364
+#: src/sysmanage_agent/communication/data_collector_senders.py:365
 msgid "Failed to send process status data"
 msgstr "فشل إرسال بيانات حالة العمليات"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:375
+#: src/sysmanage_agent/communication/data_collector_senders.py:376
 msgid "Cannot send host metrics: no host approval"
 msgstr "تعذّر إرسال مقاييس المضيف: لم تتم الموافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:387
+#: src/sysmanage_agent/communication/data_collector_senders.py:388
 msgid "Failed to send host metrics"
 msgstr "فشل إرسال مقاييس المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:400
+#: src/sysmanage_agent/communication/data_collector_senders.py:401
 msgid "Cannot send clock status: no host approval"
 msgstr "لا يمكن إرسال حالة الساعة: لا موافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:407
+#: src/sysmanage_agent/communication/data_collector_senders.py:408
 msgid "Failed to send clock status"
 msgstr "فشل إرسال حالة الساعة"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:419
+msgid "Cannot send hardware health: no host approval"
+msgstr "لا يمكن إرسال حالة صحة الأجهزة: لا موافقة على المضيف"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:426
+msgid "Failed to send hardware health"
+msgstr "فشل إرسال حالة صحة الأجهزة"
 
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
@@ -1594,8 +1613,8 @@ msgstr "خطأ في معالجة الرسالة المرسلة %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "لا يمكن استخدامallback HTTP: هذا الوكيل ليس لديه host_id مخزن. يجب إكمال "
 "التسجيل أولاً."
@@ -1607,8 +1626,8 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"استخدام التحقق عبر HTTP بدلاً من WebSocket: هذه الشبكة رفضت ترقية WebSocket. "
-"ستصل الأوامر مع تأخير يصل إلى بضع ثوانٍ. السماح بالترقيات إلى WebSocket %s "
+"استخدام التحقق عبر HTTP بدلاً من WebSocket: هذه الشبكة رفضت ترقية WebSocket."
+" ستصل الأوامر مع تأخير يصل إلى بضع ثوانٍ. السماح بالترقيات إلى WebSocket %s "
 "لاستعادة التوصيل الفوري."
 
 #: src/sysmanage_agent/communication/http_polling.py:254
@@ -1620,56 +1639,57 @@ msgstr "فشل التحقق (%s); سيتم إعادة المحاولة بعد %d
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "إعادة اختبار ما إذا كان هذا الشبكة يسمح الآن باتصالات WebSocket"
 
-#: src/sysmanage_agent/communication/message_handler.py:193
+#: src/sysmanage_agent/communication/message_handler.py:198
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "فشل في ترتيب الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:231
+#: src/sysmanage_agent/communication/message_handler.py:236
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "فشل في ترتيب إقرار الأمر للرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:239
+#: src/sysmanage_agent/communication/message_handler.py:244
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "خطأ وضع إقرار الأمر لـ %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:278
+#: src/sysmanage_agent/communication/message_handler.py:283
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "خطأ في الخادم [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:331
+#: src/sysmanage_agent/communication/message_handler.py:336
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "لا يمكن تحليل توقيع الرسالة لفحص التقادم: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:369
-msgid "Host registration is pending approval. Will continue periodic attempts."
+#: src/sysmanage_agent/communication/message_handler.py:374
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr "تسجيل المضيف معلق انتظار الموافقة. سيتم مواصلة المحاولات الدورية."
 
-#: src/sysmanage_agent/communication/message_handler.py:374
+#: src/sysmanage_agent/communication/message_handler.py:379
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "يبلغ الخادم عن نقص اسم المضيف في الرسالة. هذا خطأ."
 
-#: src/sysmanage_agent/communication/message_handler.py:377
+#: src/sysmanage_agent/communication/message_handler.py:382
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "لفشل خادم تحميل الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:401
+#: src/sysmanage_agent/communication/message_handler.py:406
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "الخادم أبلغ عن حالة host_not_registered (الضربة %(n)d/%(limit)d) -- إعادة "
 "الاتصال WITHOUT إلغاء host_id حتى يتمكن الخادم من إعادة تحديد هذا العميل من "
 "مؤشر المستأجر الخاص به؛ سيتم التسجيل مجدداً فقط إذا استمرت هذه الحالة."
 
-#: src/sysmanage_agent/communication/message_handler.py:414
+#: src/sysmanage_agent/communication/message_handler.py:419
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -1678,22 +1698,22 @@ msgstr ""
 "استمرار حالة host_not_registered (%(n)d ضربات) -- التعامل مع هذا العميل على "
 "أنه غير موجود فعلياً؛ إزالة host_id المخزن وإعادة التسجيل."
 
-#: src/sysmanage_agent/communication/message_handler.py:425
+#: src/sysmanage_agent/communication/message_handler.py:430
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "خطأ في إزالة المعرف المخزن للمضيف: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:481
+#: src/sysmanage_agent/communication/message_handler.py:486
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "بث %s: فشل تحديث المخزون البرمجي: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:491
+#: src/sysmanage_agent/communication/message_handler.py:496
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "بث %s: إجراء غير معروف '%s' -- تم تجاهله"
 
-#: src/sysmanage_agent/communication/message_handler.py:574
+#: src/sysmanage_agent/communication/message_handler.py:583
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -1701,95 +1721,105 @@ msgstr ""
 "مستقبل الرسائل: websocket تم إزالتها بواسطة انفصال متوازي؛ الخروج من دورة "
 "الاستقبال لاستئناف الاتصال"
 
-#: src/sysmanage_agent/communication/message_handler.py:593
+#: src/sysmanage_agent/communication/message_handler.py:602
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "JSON غير صالح تم استلامه: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:595
+#: src/sysmanage_agent/communication/message_handler.py:604
 #, python-format
 msgid "Error processing message: %s"
 msgstr "خطأ معالجة الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:608
+#: src/sysmanage_agent/communication/message_handler.py:617
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: خطأ مستلم الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:660
+#: src/sysmanage_agent/communication/message_handler.py:669
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "نوع الرسالة غير معروف: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:738
+#: src/sysmanage_agent/communication/message_handler.py:747
 msgid "Heartbeat failed, connection may be lost"
 msgstr "تعذرheartbeat، قد يكون الاتصال ضائعا"
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:756
 #, python-format
 msgid "Message sender error: %s"
 msgstr "خطأ مرسل الرسالة: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:763
+#: src/sysmanage_agent/communication/message_handler.py:772
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "خطأ في إغلاق معالج الرسائل: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:110
+#: src/sysmanage_agent/communication/message_handler_queue.py:123
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "فشل في إنشاء مهمة من طابور الصادرات queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:176
+#: src/sysmanage_agent/communication/message_handler_queue.py:189
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "خطأ في معالج طابور الواردات: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:186
+#: src/sysmanage_agent/communication/message_handler_queue.py:214
+#, python-format
+msgid "Error in express queue processor: %s"
+msgstr "خطأ في معالج الطابور السريع: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:223
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "تعذر وضع علامة على رسالة الوارد %s كقيد المعالجة"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:216
+#: src/sysmanage_agent/communication/message_handler_queue.py:253
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "خطأ في معالجة الرسالة الواردة %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:232
+#: src/sysmanage_agent/communication/message_handler_queue.py:269
 msgid "Cannot send message: not connected to server"
 msgstr "لا يمكن إرسال الرسالة: غير متصل بالخادم"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:245
+#: src/sysmanage_agent/communication/message_handler_queue.py:282
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "فشل في إرسال الرسالة مباشرة: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:304
+#: src/sysmanage_agent/communication/message_handler_queue.py:341
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "خطأ في معالج الطوابير: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:346
+#: src/sysmanage_agent/communication/message_handler_queue.py:383
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "خطأ في معالجة الرسالة المجدولة %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:372
+#: src/sysmanage_agent/communication/message_handler_queue.py:409
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "خطأ استعادة الرسائل العالقة: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:403
+#: src/sysmanage_agent/communication/message_handler_queue.py:440
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "فشل في إنشاء مهمة معالجة طابور الصادرات: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:427
+#: src/sysmanage_agent/communication/message_handler_queue.py:458
+#, python-format
+msgid "Failed to create express queue processing task: %s"
+msgstr "فشل في إنشاء مهمة معالجة الطابور السريع: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:476
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "فشل في إنشاء مهمة معالجة طابور الواردات: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:518
+#: src/sysmanage_agent/communication/message_handler_queue.py:567
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "خطأ في حذف رسائل قائمة الانتظار المكتملة: %s"
@@ -2134,12 +2164,12 @@ msgstr "خطأ في إضافة مستودع NetBSD: %s"
 msgid "Child host management requires Pro+ (engine path)."
 msgstr "تتطلب إدارة المضيفين الأبناء Pro+ (مسار المحرك)."
 
-#: src/sysmanage_agent/operations/clock_resync.py:170
+#: src/sysmanage_agent/operations/clock_resync.py:180
 #, python-format
 msgid "Clock resync: %s failed (%s): %s"
 msgstr "إعادة مزامنة الساعة: فشل %s (%s): %s"
 
-#: src/sysmanage_agent/operations/clock_resync.py:175
+#: src/sysmanage_agent/operations/clock_resync.py:185
 #, python-format
 msgid "Clock resync: %s succeeded"
 msgstr "إعادة مزامنة الساعة: نجح %s"
@@ -2670,13 +2700,13 @@ msgstr "Homebrew تم تثبيته بالفعل"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"يتطلب تثبيت Homebrew تدخلاً يدوياً. يرجى التثبيت باستخدام: /bin/bash -c \"$"
-"(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/"
-"install.sh)\""
+"يتطلب تثبيت Homebrew تدخلاً يدوياً. يرجى التثبيت باستخدام: /bin/bash -c "
+"\"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3631,8 +3661,7 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "وجدت حزمة %s: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "تجاوز الدور المتكرر: %s مع الخدمة %s (لدينا بالفعل حزمة %s)"
 
 #, python-format
@@ -3691,8 +3720,7 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "اكتمل اكتشاف التحديثات: تم العثور على %d تحديث (%d أمان، %d نظام، %d "
-#~ "تطبيق)"
+#~ "اكتمل اكتشاف التحديثات: تم العثور على %d تحديث (%d أمان، %d نظام، %d تطبيق)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3888,11 +3916,10 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "انتهت دفعة الحزم %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "تشغيل جمع الشهادات في الوضع غير المتميز - قد لا يمكن الوصول إلى بعض "
-#~ "الشهادات"
+#~ "تشغيل جمع الشهادات في الوضع غير المتميز - قد لا يمكن الوصول إلى بعض الشهادات"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "جمع شهادات SSL من النظام"
@@ -3990,8 +4017,7 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "تم استرداد %d رسالة معلقة"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "إنشاء مهمة معالجة طابور الصادر من on_connection_established"
 
 #, python-format
@@ -4001,8 +4027,7 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "مُعالِج طابور الصادر قائم بالفعل، لن يتم بدء آخر"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "إنشاء مهمة معالجة طابور الوارد من on_connection_established"
 
 #, python-format
@@ -4318,8 +4343,7 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "جارٍ التحقق من حالة الخدمة: %s"
 
 #~ msgid "Updated OS information sent to server after Ubuntu Pro change"
-#~ msgstr ""
-#~ "تم إرسال معلومات نظام التشغيل المحدثة إلى الخادم بعد تغيير Ubuntu Pro"
+#~ msgstr "تم إرسال معلومات نظام التشغيل المحدثة إلى الخادم بعد تغيير Ubuntu Pro"
 
 #, python-format
 #~ msgid "Sending reboot status update: %s"
@@ -4501,10 +4525,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "تم استلام التسجيل ولكن الموافقة معلقة"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
-#~ msgstr ""
-#~ "نجاح التسجيل ولكن لم يتم تقديم host_id - قد تأتي الموافقة بشكل منفصل"
+#~ "Registration success but no host_id provided - approval may come separately"
+#~ msgstr "نجاح التسجيل ولكن لم يتم تقديم host_id - قد تأتي الموافقة بشكل منفصل"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4545,8 +4567,7 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "يبلغ الخادم أن المضيف غير مسجل. سيتم إزالة host_id المخزن وإعادة "
-#~ "التسجيل..."
+#~ "يبلغ الخادم أن المضيف غير مسجل. سيتم إزالة host_id المخزن وإعادة التسجيل..."
 
 #, python-format
 #~ msgid "Using database path from SYSMANAGE_DB_PATH: %s"
@@ -4652,11 +4673,11 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "تم اكتشاف Microsoft Defender for Endpoint على macOS (الإصدار: %s، مفعّل: "
-#~ "%s، مرخّص: %s)"
+#~ "تم اكتشاف Microsoft Defender for Endpoint على macOS (الإصدار: %s، مفعّل: %s،"
+#~ " مرخّص: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4966,8 +4987,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
 #~ msgstr ""
-#~ "جارٍ التثبيت التلقائي لـ OpenBSD. سيتم تثبيت الجهاز الافتراضي وإعادة "
-#~ "تشغيله تلقائياً. قد يستغرق هذا 10-15 دقيقة."
+#~ "جارٍ التثبيت التلقائي لـ OpenBSD. سيتم تثبيت الجهاز الافتراضي وإعادة تشغيله "
+#~ "تلقائياً. قد يستغرق هذا 10-15 دقيقة."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "طلب HTTP للتثبيت التلقائي: %s من %s"
