@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-13 16:48-0400\n"
+"POT-Creation-Date: 2026-10-14 07:32-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -336,7 +336,7 @@ msgstr "فشل في الحصول على معلومات الشبكة Windows با
 msgid "Failed to get Windows network configuration: %s"
 msgstr "فشل في الحصول على تكوين الشبكة Windows: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:421
+#: src/sysmanage_agent/collection/hardware_health.py:430
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "فشل جمع حالة صحة الأجهزة: %s"
@@ -1494,97 +1494,115 @@ msgstr "خطأ إرسال الحزم المصفحة للحزمة %s: %s"
 msgid "Error collecting roles: %s"
 msgstr "خطأ في جمع الأدوار: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:55
+#: src/sysmanage_agent/communication/data_collector_senders.py:56
 msgid "Failed to send periodic software inventory data"
 msgstr "فشل في إرسال بيانات المخزون البرمجي الدوري"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:79
+#: src/sysmanage_agent/communication/data_collector_senders.py:80
 msgid "Failed to send periodic user access data"
 msgstr "فشل في إرسال بيانات وصول المستخدم الدورية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:103
+#: src/sysmanage_agent/communication/data_collector_senders.py:104
 msgid "Failed to send periodic hardware data"
 msgstr "فشل في إرسال بيانات الأجهزة الدورية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:123
+#: src/sysmanage_agent/communication/data_collector_senders.py:124
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "فشل جمع الشهادات الدورية: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:143
+#: src/sysmanage_agent/communication/data_collector_senders.py:144
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "فشل جمع الأدوار الدورية: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:167
+#: src/sysmanage_agent/communication/data_collector_senders.py:168
 msgid "Failed to send periodic OS version data"
 msgstr "فشل في إرسال بيانات نسخة نظام التشغيل الدورية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:188
+#: src/sysmanage_agent/communication/data_collector_senders.py:189
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "فشل في جمع مصادر خارجية ثالثة: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:222
+#: src/sysmanage_agent/communication/data_collector_senders.py:223
 msgid "Failed to send third-party repository data"
 msgstr "فشل في إرسال بيانات مستودعات الجهات الخارجية: "
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:254
+#: src/sysmanage_agent/communication/data_collector_senders.py:255
 msgid "Failed to send antivirus status data"
 msgstr "فشل في إرسال بيانات حالة برنامج حماية الفيروسات"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:257
+#: src/sysmanage_agent/communication/data_collector_senders.py:258
 msgid "Cannot send antivirus status data: no host approval"
 msgstr ""
 "لا يمكن إرسال بيانات حالة برنامج مكافحة الفيروسات: لا يوجد موافقة من المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:291
+#: src/sysmanage_agent/communication/data_collector_senders.py:292
 msgid "Failed to send firewall status data"
 msgstr "فشل في إرسال بيانات حالة جدار الحماية"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:293
+#: src/sysmanage_agent/communication/data_collector_senders.py:294
 msgid "Cannot send firewall status data: no host approval"
 msgstr "لا يمكن إرسال بيانات حالة جدار الحماية: لا يوجد موافقة من المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:325
+#: src/sysmanage_agent/communication/data_collector_senders.py:326
 msgid "Failed to send Graylog status data"
 msgstr "فشل في إرسال بيانات حالة Graylog"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:327
+#: src/sysmanage_agent/communication/data_collector_senders.py:328
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "لا يمكن إرسال بيانات حالة Graylog: لا يوجد موافقة من المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:335
+#: src/sysmanage_agent/communication/data_collector_senders.py:336
 msgid "Cannot send process data: no host approval"
 msgstr "تعذّر إرسال بيانات العمليات: لا توجد موافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:365
+#: src/sysmanage_agent/communication/data_collector_senders.py:366
 msgid "Failed to send process status data"
 msgstr "فشل إرسال بيانات حالة العمليات"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:376
+#: src/sysmanage_agent/communication/data_collector_senders.py:377
 msgid "Cannot send host metrics: no host approval"
 msgstr "تعذّر إرسال مقاييس المضيف: لم تتم الموافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:388
+#: src/sysmanage_agent/communication/data_collector_senders.py:389
 msgid "Failed to send host metrics"
 msgstr "فشل إرسال مقاييس المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:401
+#: src/sysmanage_agent/communication/data_collector_senders.py:402
 msgid "Cannot send clock status: no host approval"
 msgstr "لا يمكن إرسال حالة الساعة: لا موافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:408
+#: src/sysmanage_agent/communication/data_collector_senders.py:409
 msgid "Failed to send clock status"
 msgstr "فشل إرسال حالة الساعة"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:419
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 msgid "Cannot send hardware health: no host approval"
 msgstr "لا يمكن إرسال حالة صحة الأجهزة: لا موافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:426
+#: src/sysmanage_agent/communication/data_collector_senders.py:438
 msgid "Failed to send hardware health"
 msgstr "فشل إرسال حالة صحة الأجهزة"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:86
+#, python-format
+msgid ""
+"Hardware events from %s need a privileged agent; the periodic report "
+"continues"
+msgstr ""
+"تحتاج أحداث الأجهزة من %s إلى وكيل بصلاحيات مرتفعة؛ يستمر التقرير الدوري"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:96
+#, python-format
+msgid "Listening for hardware events (%s)"
+msgstr "الاستماع إلى أحداث الأجهزة (%s)"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:102
+#, python-format
+msgid "Hardware event source %s stopped: %s"
+msgstr "توقف مصدر أحداث الأجهزة %s: %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
@@ -1755,71 +1773,71 @@ msgstr "خطأ مرسل الرسالة: %s"
 msgid "Error closing message handler: %s"
 msgstr "خطأ في إغلاق معالج الرسائل: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:123
+#: src/sysmanage_agent/communication/message_handler_queue.py:128
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "فشل في إنشاء مهمة من طابور الصادرات queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:189
+#: src/sysmanage_agent/communication/message_handler_queue.py:194
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "خطأ في معالج طابور الواردات: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:214
+#: src/sysmanage_agent/communication/message_handler_queue.py:219
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "خطأ في معالج الطابور السريع: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:223
+#: src/sysmanage_agent/communication/message_handler_queue.py:228
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "تعذر وضع علامة على رسالة الوارد %s كقيد المعالجة"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:253
+#: src/sysmanage_agent/communication/message_handler_queue.py:258
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "خطأ في معالجة الرسالة الواردة %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:269
+#: src/sysmanage_agent/communication/message_handler_queue.py:274
 msgid "Cannot send message: not connected to server"
 msgstr "لا يمكن إرسال الرسالة: غير متصل بالخادم"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:282
+#: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "فشل في إرسال الرسالة مباشرة: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:341
+#: src/sysmanage_agent/communication/message_handler_queue.py:346
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "خطأ في معالج الطوابير: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:383
+#: src/sysmanage_agent/communication/message_handler_queue.py:388
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "خطأ في معالجة الرسالة المجدولة %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:409
+#: src/sysmanage_agent/communication/message_handler_queue.py:414
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "خطأ استعادة الرسائل العالقة: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:440
+#: src/sysmanage_agent/communication/message_handler_queue.py:445
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "فشل في إنشاء مهمة معالجة طابور الصادرات: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:458
+#: src/sysmanage_agent/communication/message_handler_queue.py:463
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "فشل في إنشاء مهمة معالجة الطابور السريع: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:476
+#: src/sysmanage_agent/communication/message_handler_queue.py:481
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "فشل في إنشاء مهمة معالجة طابور الواردات: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:567
+#: src/sysmanage_agent/communication/message_handler_queue.py:572
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "خطأ في حذف رسائل قائمة الانتظار المكتملة: %s"

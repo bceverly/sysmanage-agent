@@ -1,0 +1,4 @@
+Buffer I/O error on dev dm-1, logical block 0, async page read
+Buffer I/O error on dev dm-1, logical block 1, async page read
+md/raid1:md127: Disk failure on loop11, disabling device.
+md/raid1:md127: Operation continuing on 1 devices.

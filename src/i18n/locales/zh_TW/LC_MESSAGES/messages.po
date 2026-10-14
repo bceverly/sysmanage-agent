@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-13 16:48-0400\n"
+"POT-Creation-Date: 2026-10-14 07:32-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -334,7 +334,7 @@ msgstr "無法透過ipconfig取得Windows網路資訊：%s"
 msgid "Failed to get Windows network configuration: %s"
 msgstr "無法取得Windows網路配置：%s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:421
+#: src/sysmanage_agent/collection/hardware_health.py:430
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "收集硬體健康狀況失敗：%s"
@@ -1489,96 +1489,113 @@ msgstr "為批次 %s 發送分頁包時發生錯誤：%s"
 msgid "Error collecting roles: %s"
 msgstr "收集角色時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:55
+#: src/sysmanage_agent/communication/data_collector_senders.py:56
 msgid "Failed to send periodic software inventory data"
 msgstr "無法傳送定期軟件存貨數據"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:79
+#: src/sysmanage_agent/communication/data_collector_senders.py:80
 msgid "Failed to send periodic user access data"
 msgstr "無法傳送定期用戶訪問數據"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:103
+#: src/sysmanage_agent/communication/data_collector_senders.py:104
 msgid "Failed to send periodic hardware data"
 msgstr "無法發送定期硬件數據"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:123
+#: src/sysmanage_agent/communication/data_collector_senders.py:124
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "定期證書收集失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:143
+#: src/sysmanage_agent/communication/data_collector_senders.py:144
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "定期角色收集失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:167
+#: src/sysmanage_agent/communication/data_collector_senders.py:168
 msgid "Failed to send periodic OS version data"
 msgstr "無法發送定期操作系統版本數據"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:188
+#: src/sysmanage_agent/communication/data_collector_senders.py:189
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "收集第三方倉庫失敗：%s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:222
+#: src/sysmanage_agent/communication/data_collector_senders.py:223
 msgid "Failed to send third-party repository data"
 msgstr "傳送第三方倉庫數據失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:254
+#: src/sysmanage_agent/communication/data_collector_senders.py:255
 msgid "Failed to send antivirus status data"
 msgstr "發送防病毒狀態數據失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:257
+#: src/sysmanage_agent/communication/data_collector_senders.py:258
 msgid "Cannot send antivirus status data: no host approval"
 msgstr "無法傳送防毒軟件狀態數據：沒有主機批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:291
+#: src/sysmanage_agent/communication/data_collector_senders.py:292
 msgid "Failed to send firewall status data"
 msgstr "發送防火牆狀態數據失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:293
+#: src/sysmanage_agent/communication/data_collector_senders.py:294
 msgid "Cannot send firewall status data: no host approval"
 msgstr "無法傳送防火牆狀態數據：沒有主機批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:325
+#: src/sysmanage_agent/communication/data_collector_senders.py:326
 msgid "Failed to send Graylog status data"
 msgstr "發送 Graylog 狀態數據失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:327
+#: src/sysmanage_agent/communication/data_collector_senders.py:328
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "無法傳送 Graylog 狀態數據：沒有主機批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:335
+#: src/sysmanage_agent/communication/data_collector_senders.py:336
 msgid "Cannot send process data: no host approval"
 msgstr "無法傳送程序資料：主機未核准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:365
+#: src/sysmanage_agent/communication/data_collector_senders.py:366
 msgid "Failed to send process status data"
 msgstr "傳送程序狀態資料失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:376
+#: src/sysmanage_agent/communication/data_collector_senders.py:377
 msgid "Cannot send host metrics: no host approval"
 msgstr "無法傳送主機指標：主機未獲核准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:388
+#: src/sysmanage_agent/communication/data_collector_senders.py:389
 msgid "Failed to send host metrics"
 msgstr "傳送主機指標失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:401
+#: src/sysmanage_agent/communication/data_collector_senders.py:402
 msgid "Cannot send clock status: no host approval"
 msgstr "無法發送時鐘狀態：沒有主機批准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:408
+#: src/sysmanage_agent/communication/data_collector_senders.py:409
 msgid "Failed to send clock status"
 msgstr "無法發送時鐘狀態"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:419
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 msgid "Cannot send hardware health: no host approval"
 msgstr "無法發送硬體健康狀況：沒有主機核准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:426
+#: src/sysmanage_agent/communication/data_collector_senders.py:438
 msgid "Failed to send hardware health"
 msgstr "發送硬體健康狀況失敗"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:86
+#, python-format
+msgid ""
+"Hardware events from %s need a privileged agent; the periodic report "
+"continues"
+msgstr "來自 %s 的硬體事件需要具有特權的代理程式；定期報告將繼續"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:96
+#, python-format
+msgid "Listening for hardware events (%s)"
+msgstr "正在監聽硬體事件（%s）"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:102
+#, python-format
+msgid "Hardware event source %s stopped: %s"
+msgstr "硬體事件來源 %s 已停止：%s"
 
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
@@ -1739,71 +1756,71 @@ msgstr "訊息發送者錯誤: %s"
 msgid "Error closing message handler: %s"
 msgstr "關閉消息處理程序時出錯：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:123
+#: src/sysmanage_agent/communication/message_handler_queue.py:128
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "從 queue_outbound_message 建立任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:189
+#: src/sysmanage_agent/communication/message_handler_queue.py:194
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "進口隊列處理器中發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:214
+#: src/sysmanage_agent/communication/message_handler_queue.py:219
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "快速佇列處理器發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:223
+#: src/sysmanage_agent/communication/message_handler_queue.py:228
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "無法標記進站訊息 %s 為處理中"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:253
+#: src/sysmanage_agent/communication/message_handler_queue.py:258
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "處理進來的消息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:269
+#: src/sysmanage_agent/communication/message_handler_queue.py:274
 msgid "Cannot send message: not connected to server"
 msgstr "無法傳送訊息：未連線至伺服器"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:282
+#: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "直接傳送消息失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:341
+#: src/sysmanage_agent/communication/message_handler_queue.py:346
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "隊列處理器中發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:383
+#: src/sysmanage_agent/communication/message_handler_queue.py:388
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "處理佇列訊息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:409
+#: src/sysmanage_agent/communication/message_handler_queue.py:414
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "恢復卡住的消息時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:440
+#: src/sysmanage_agent/communication/message_handler_queue.py:445
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "建立出站佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:458
+#: src/sysmanage_agent/communication/message_handler_queue.py:463
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "建立快速佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:476
+#: src/sysmanage_agent/communication/message_handler_queue.py:481
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "建立進階佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:567
+#: src/sysmanage_agent/communication/message_handler_queue.py:572
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "錯誤修剪已完成的隊列消息：%s"

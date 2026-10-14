@@ -619,6 +619,28 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
             "de": "Richtlinie",
         },
     },
+    "acknowledge": {
+        # 2026-10-14: the ar catalog said اعترف -- "confess" -- for the
+        # Acknowledge button, and "acknowledged alerts" as "the confessed
+        # ones".  إقرار is acknowledging receipt (a confirmation); the same
+        # root as "confess" stays legitimate for RECOGNIZE (يعترف بـ), which
+        # never carries this term.
+        "canonical": {"ar": "إقرار"},
+        "forbid": {
+            "ar": [
+                "اعترف",
+                "اعتراف",
+                "الاعتراف",
+                "بالاعتراف",
+                "معترف",
+                "المعترف",
+                "يعترف",
+                "سنعترف",
+                "نعترف",
+                "تعترف",
+            ]
+        },
+    },
     "monitoring": {
         # 2026-10-12: hi docs rendered monitoring as संवेदना ("sensation").
         "canonical": {"hi": "निगरानी"},
@@ -696,4 +718,11 @@ ALIASES: Dict[str, Tuple[str, ...]] = {
     "polling": ("poll", "polled", "polls"),
     "jitter": ("jittered",),
     "privileged": ("privilege", "privileges"),
+    "acknowledge": (
+        "acknowledged",
+        "acknowledges",
+        "acknowledging",
+        "acknowledgment",
+        "acknowledgement",
+    ),
 }

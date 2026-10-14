@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-13 16:48-0400\n"
+"POT-Creation-Date: 2026-10-14 07:32-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -337,7 +337,7 @@ msgstr "Falha ao obter informações de rede do Windows via ipconfig: %s"
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Falha ao obter configuração da rede Windows: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:421
+#: src/sysmanage_agent/collection/hardware_health.py:430
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "Falha ao coletar o estado do hardware: %s"
@@ -1500,100 +1500,119 @@ msgstr "Erro ao enviar pacotes paginados para lote %s: %s"
 msgid "Error collecting roles: %s"
 msgstr "Erro ao coletar papéis: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:55
+#: src/sysmanage_agent/communication/data_collector_senders.py:56
 msgid "Failed to send periodic software inventory data"
 msgstr "Falha ao enviar dados periódicos do inventário de software"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:79
+#: src/sysmanage_agent/communication/data_collector_senders.py:80
 msgid "Failed to send periodic user access data"
 msgstr "Falha ao enviar dados periódicos de acesso do usuário"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:103
+#: src/sysmanage_agent/communication/data_collector_senders.py:104
 msgid "Failed to send periodic hardware data"
 msgstr "Falha ao enviar dados periódicos de hardware"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:123
+#: src/sysmanage_agent/communication/data_collector_senders.py:124
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "Coleta periódica de certificados falhou: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:143
+#: src/sysmanage_agent/communication/data_collector_senders.py:144
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "Coleta periódica de papéis falhou: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:167
+#: src/sysmanage_agent/communication/data_collector_senders.py:168
 msgid "Failed to send periodic OS version data"
 msgstr "Falha ao enviar dados periódicos da versão do SO"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:188
+#: src/sysmanage_agent/communication/data_collector_senders.py:189
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "Falha ao coletar repositórios de terceiros: %s"
 
 # OS Version Update Messages
-#: src/sysmanage_agent/communication/data_collector_senders.py:222
+#: src/sysmanage_agent/communication/data_collector_senders.py:223
 msgid "Failed to send third-party repository data"
 msgstr "Falha ao enviar dados do repositório terceirizado"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:254
+#: src/sysmanage_agent/communication/data_collector_senders.py:255
 msgid "Failed to send antivirus status data"
 msgstr "Falha ao enviar dados de status antivírus"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:257
+#: src/sysmanage_agent/communication/data_collector_senders.py:258
 msgid "Cannot send antivirus status data: no host approval"
 msgstr ""
 "Impossível enviar dados de status do antivírus: nenhuma aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:291
+#: src/sysmanage_agent/communication/data_collector_senders.py:292
 msgid "Failed to send firewall status data"
 msgstr "Falha ao enviar dados de status do firewall"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:293
+#: src/sysmanage_agent/communication/data_collector_senders.py:294
 msgid "Cannot send firewall status data: no host approval"
 msgstr ""
 "Impossível enviar dados de status do firewall: nenhuma aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:325
+#: src/sysmanage_agent/communication/data_collector_senders.py:326
 msgid "Failed to send Graylog status data"
 msgstr "Falha ao enviar dados de status Graylog"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:327
+#: src/sysmanage_agent/communication/data_collector_senders.py:328
 msgid "Cannot send Graylog status data: no host approval"
 msgstr ""
 "Impossível enviar dados de status do Graylog: nenhuma aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:335
+#: src/sysmanage_agent/communication/data_collector_senders.py:336
 msgid "Cannot send process data: no host approval"
 msgstr "Não é possível enviar dados de processos: host não aprovado"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:365
+#: src/sysmanage_agent/communication/data_collector_senders.py:366
 msgid "Failed to send process status data"
 msgstr "Falha ao enviar os dados de estado dos processos"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:376
+#: src/sysmanage_agent/communication/data_collector_senders.py:377
 msgid "Cannot send host metrics: no host approval"
 msgstr "Não é possível enviar as métricas do host: host sem aprovação"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:388
+#: src/sysmanage_agent/communication/data_collector_senders.py:389
 msgid "Failed to send host metrics"
 msgstr "Falha ao enviar as métricas do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:401
+#: src/sysmanage_agent/communication/data_collector_senders.py:402
 msgid "Cannot send clock status: no host approval"
 msgstr "Não é possível enviar o status do relógio: sem aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:408
+#: src/sysmanage_agent/communication/data_collector_senders.py:409
 msgid "Failed to send clock status"
 msgstr "Falha ao enviar o status do relógio"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:419
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 msgid "Cannot send hardware health: no host approval"
 msgstr "Não é possível enviar o estado do hardware: sem aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:426
+#: src/sysmanage_agent/communication/data_collector_senders.py:438
 msgid "Failed to send hardware health"
 msgstr "Falha ao enviar o estado do hardware"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:86
+#, python-format
+msgid ""
+"Hardware events from %s need a privileged agent; the periodic report "
+"continues"
+msgstr ""
+"Os eventos de hardware de %s exigem um agente com privilégios; o relatório "
+"periódico continua"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:96
+#, python-format
+msgid "Listening for hardware events (%s)"
+msgstr "Escutando eventos de hardware (%s)"
+
+#: src/sysmanage_agent/communication/hardware_event_loop.py:102
+#, python-format
+msgid "Hardware event source %s stopped: %s"
+msgstr "A fonte de eventos de hardware %s parou: %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
@@ -1768,71 +1787,71 @@ msgstr "Erro do remetente da mensagem: %s"
 msgid "Error closing message handler: %s"
 msgstr "Erro ao fechar manipulador de mensagens: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:123
+#: src/sysmanage_agent/communication/message_handler_queue.py:128
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Falha ao criar tarefa a partir de queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:189
+#: src/sysmanage_agent/communication/message_handler_queue.py:194
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Erro no processador da fila de entrada: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:214
+#: src/sysmanage_agent/communication/message_handler_queue.py:219
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "Erro no processador da fila expressa: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:223
+#: src/sysmanage_agent/communication/message_handler_queue.py:228
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Mensagem marcada como processando: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:253
+#: src/sysmanage_agent/communication/message_handler_queue.py:258
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Erro ao processar mensagem de entrada %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:269
+#: src/sysmanage_agent/communication/message_handler_queue.py:274
 msgid "Cannot send message: not connected to server"
 msgstr "Não é possível enviar mensagem: não conectado ao servidor"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:282
+#: src/sysmanage_agent/communication/message_handler_queue.py:287
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:341
+#: src/sysmanage_agent/communication/message_handler_queue.py:346
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Erro no processador da fila: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:383
+#: src/sysmanage_agent/communication/message_handler_queue.py:388
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Erro ao processar mensagem em fila %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:409
+#: src/sysmanage_agent/communication/message_handler_queue.py:414
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Erro ao recuperar mensagens travadas: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:440
+#: src/sysmanage_agent/communication/message_handler_queue.py:445
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Falha ao criar tarefa de processamento da fila outbound: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:458
+#: src/sysmanage_agent/communication/message_handler_queue.py:463
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "Falha ao criar a tarefa de processamento da fila expressa: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:476
+#: src/sysmanage_agent/communication/message_handler_queue.py:481
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Falha ao criar tarefa de processamento da fila inbound: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:567
+#: src/sysmanage_agent/communication/message_handler_queue.py:572
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "Erro ao recortar mensagens da fila concluída: %s"

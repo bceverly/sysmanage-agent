@@ -31,6 +31,7 @@ from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollect
 from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
 from src.sysmanage_agent.collection.role_detection import RoleDetector
 from src.sysmanage_agent.communication.data_collector import DataCollector
+from src.sysmanage_agent.communication.hardware_event_loop import HardwareEventLoop
 from src.sysmanage_agent.communication.message_handler import MessageHandler
 from src.sysmanage_agent.core.agent_delegators import AgentDelegatorMixin
 from src.sysmanage_agent.core.agent_lifecycle import AgentLifecycleMixin
@@ -208,6 +209,7 @@ class SysManageAgent(
 
         # Initialize data collector
         self.data_collector = DataCollector(self)
+        self.hardware_events = HardwareEventLoop.for_agent(self)
 
         # Initialize message handler with persistent queues
         self.message_handler = MessageHandler(self)
@@ -738,6 +740,7 @@ class SysManageAgent(
         network_discovery_task = asyncio.create_task(
             self.network_discovery_ops.run_report_loop()
         )
+        hardware_events_task = asyncio.create_task(self.hardware_events.run())
 
         done, pending = await asyncio.wait(
             [sender_task, receiver_task],
@@ -753,6 +756,7 @@ class SysManageAgent(
             queue_cleanup_task,
             custom_metrics_task,
             network_discovery_task,
+            hardware_events_task,
         ]
         for task in background_tasks:
             task.cancel()

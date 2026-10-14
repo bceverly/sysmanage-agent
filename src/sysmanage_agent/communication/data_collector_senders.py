@@ -17,6 +17,7 @@ import uuid
 from datetime import datetime, timezone
 
 from src.i18n import _
+from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.collection.hardware_health import collect_hardware_health
 from src.sysmanage_agent.collection.time_service import collect_time_status
 
@@ -407,12 +408,15 @@ class DataCollectorSendersMixin:
         if not await self.agent.send_message(message):
             self.logger.warning(_("Failed to send clock status"))
 
-    async def _send_hardware_health_update(self):
+    async def _send_hardware_health_update(self, evidence=None):
         """Send the host's hardware health (23.1): drives, arrays, pools,
         sensors and memory, each judged, with every source's status.
 
-        Send-on-change sends it when a component's state changes, else every
-        15 minutes (its temperatures change on every read).
+        Periodically, send-on-change sends it when a component's state
+        changes, else every 15 minutes (its temperatures change on every
+        read).  With ``evidence`` -- lines in which the operating system just
+        announced a hardware problem (S3, ``hardware_event_loop``) -- it is
+        re-collected and sent at once, changed or not, ahead of the queue.
         """
         host_approval = self.agent.registration_manager.get_host_approval_from_db()
         if not host_approval:
@@ -421,6 +425,14 @@ class DataCollectorSendersMixin:
         # smartctl / zpool / PowerShell are subprocesses; off the event loop.
         payload = await asyncio.to_thread(collect_hardware_health)
         payload["host_id"] = str(host_approval.host_id)
+        payload["trigger"] = "event" if evidence else "periodic"
+        if evidence:
+            payload["evidence"] = evidence
         message = self.agent.create_message("hardware_health_update", payload)
-        if not await self.agent.send_message(message):
+        if evidence:
+            with send_on_change.forced():
+                sent = await self.agent.send_message(message)
+        else:
+            sent = await self.agent.send_message(message)
+        if not sent:
             self.logger.warning(_("Failed to send hardware health"))

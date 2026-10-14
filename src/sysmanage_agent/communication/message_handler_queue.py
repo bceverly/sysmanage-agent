@@ -84,6 +84,11 @@ class MessageHandlerQueueMixin:
             priority = Priority.HIGH  # Script results are time-sensitive
         elif message_type == "error":
             priority = Priority.URGENT
+        elif message_type == "hardware_health_update" and (
+            message.get("data") or {}
+        ).get("evidence"):
+            # 23.1 S3: the OS just announced a hardware problem.
+            priority = Priority.URGENT
 
         # Send-on-change (server Phase 22.1): an unchanged snapshot report is
         # not queued at all.  See communication/send_on_change.py.

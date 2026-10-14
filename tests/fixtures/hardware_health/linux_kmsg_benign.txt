@@ -1,0 +1,40 @@
+md: md127: check done.
+md: recover of RAID array md127
+md: md127: recover interrupted.
+md127: detected capacity change from 2093056 to 0
+md: md127 stopped.
+audit: type=1400 audit(1791923368.932:1021): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1022): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1023): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1024): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1025): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1026): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1027): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1028): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1029): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791923368.932:1030): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=672871 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+CIFS: VFS: \\100.78.140.20 has not responded in 180 seconds. Reconnecting...
+CIFS: VFS: \\100.78.140.20 has not responded in 180 seconds. Reconnecting...
+audit: type=1400 audit(1791960345.029:1031): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.029:1032): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.029:1033): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.029:1034): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.030:1035): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.030:1036): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.030:1037): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.030:1038): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=692883 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.125:1039): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=692888 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791960345.125:1040): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=692888 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+kauditd_printk_skb: 6 callbacks suppressed
+audit: type=1400 audit(1791971405.256:1047): apparmor="DENIED" operation="capable" class="cap" profile="ubuntu_pro_esm_cache_systemd_detect_virt" pid=697761 comm="systemd-detect-" capability=38  capname="perfmon"
+audit: type=1400 audit(1791971405.259:1048): apparmor="DENIED" operation="capable" class="cap" profile="ubuntu_pro_esm_cache//cloud_id" pid=697756 comm="cloud-id" capability=38  capname="perfmon"
+audit: type=1400 audit(1791977060.348:1049): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.348:1050): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.348:1051): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.348:1052): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.348:1053): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.348:1054): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.349:1055): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.349:1056): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.349:1057): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/nsswitch.conf" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0
+audit: type=1400 audit(1791977060.349:1058): apparmor="DENIED" operation="open" class="file" profile="who" name="/etc/passwd" pid=743158 comm="who" requested_mask="r" denied_mask="r" fsuid=0 ouid=0

@@ -265,6 +265,8 @@ GLOSSARY: Dict[str, str] = {
     "queue": "stored messages waiting to be delivered",
     "dispatch": "sending a command to an agent",
     "alert": "a notification that a condition was met",
+    "acknowledge": "confirm you have seen an alert or event and are handling "
+    "it, or confirm receipt. NOT confess or admit guilt",
     "alert rule": "the condition that raises an alert",
     "maintenance window": "a period when changes are allowed",
     "blackout": "a period when changes are forbidden. NOT a power cut",
