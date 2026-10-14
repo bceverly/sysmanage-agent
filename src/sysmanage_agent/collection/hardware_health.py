@@ -38,6 +38,7 @@ RAID1 on loop devices).
 
 from __future__ import annotations
 
+import json
 import logging
 import platform
 import re
@@ -375,6 +376,25 @@ def parse_smartctl_json(data: Dict[str, object]) -> Tuple[str, List[str], Dict]:
             state = worst([state, WARNING])
             reasons.append(reason(field, count=value))
     return state, reasons, metrics
+
+
+def smartctl_drive(report: "Report", run, device: str, ident: str, model) -> None:
+    """One drive through ``smartctl -j -H -A``; without smartctl, the drive
+    is UNKNOWN with the reason (and S6 recommends installing smartmontools)."""
+    rc, out = run(["smartctl", "-j", "-H", "-A", device])
+    if rc == -1:
+        report.add(DRIVE, ident, model, UNKNOWN, [reason("smartctl_absent")], {}, None)
+        return
+    try:
+        state, reasons, metrics = parse_smartctl_json(json.loads(out))
+    except (ValueError, TypeError):
+        state, reasons, metrics = UNKNOWN, [reason("smartctl_failed", rc=rc)], {}
+    report.add(DRIVE, ident, model, state, reasons, metrics, "smartctl")
+
+
+def smartctl_source(report: "Report", run) -> None:
+    rc, _out = run(["smartctl", "--version"])
+    report.source("smartctl", ABSENT if rc == -1 else RAN)
 
 
 # --- temperature sensors with the OS's own thresholds ------------------------

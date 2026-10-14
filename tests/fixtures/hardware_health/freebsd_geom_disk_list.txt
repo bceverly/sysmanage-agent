@@ -1,0 +1,25 @@
+Geom name: nda0
+Providers:
+1. Name: nda0
+   Mediasize: 1000204886016 (932G)
+   Sectorsize: 512
+   Mode: r3w3e6
+   descr: CT1000P1SSD8
+   ident: 0000000000
+   rotationrate: 0
+   fwsectors: 0
+   fwheads: 0
+
+Geom name: da0
+Providers:
+1. Name: da0
+   Mediasize: 0 (0B)
+   Sectorsize: 512
+   Mode: r0w0e0
+   descr: Generic- SD/MMC
+   lunid: 0000000000000000
+   ident: 0000000000
+   rotationrate: unknown
+   fwsectors: 0
+   fwheads: 0
+

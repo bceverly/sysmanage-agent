@@ -43,6 +43,8 @@ from src.sysmanage_agent.collection.hardware_health import (
     parse_nvmecontrol_logpage,
     plausible,
     reason,
+    smartctl_drive,
+    smartctl_source,
     temperature_state,
     worst,
 )
@@ -82,6 +84,46 @@ def collect_freebsd_nvme(report: Report, run) -> None:
         report.source("nvmecontrol", SOURCE_FAILED, "; ".join(failures))
     else:
         report.source("nvmecontrol", RAN)
+
+
+# NVMe (read natively) and paravirtual disks (no SMART at all).
+_NOT_SMART = ("nda", "nvd", "nvme", "vtbd", "xbd")
+
+
+def parse_geom_disks(text: str) -> List[Dict[str, object]]:
+    """``geom disk list`` -> [{name, mediasize, descr}]."""
+    disks: List[Dict[str, object]] = []
+    for line in text.splitlines():
+        key, _sep, value = line.strip().partition(": ")
+        if key == "Geom name":
+            disks.append({"name": value.strip(), "mediasize": None, "descr": None})
+        elif disks and key == "Mediasize":
+            size = value.split()[0] if value.split() else ""
+            disks[-1]["mediasize"] = int(size) if size.isdigit() else None
+        elif disks and key == "descr":
+            disks[-1]["descr"] = value.strip() or None
+    return disks
+
+
+def collect_freebsd_disks(report: Report, run) -> None:
+    """SATA / SAS / USB disks through smartctl.  NVMe is read natively
+    (nvmecontrol); an empty card reader (Mediasize 0 -- the lab box has one)
+    is not a drive; paravirtual disks (virtio ``vtbd``, Xen ``xbd``) have no
+    SMART."""
+    rc, out = run(["geom", "disk", "list"])
+    if rc != 0:
+        return
+    disks = [
+        d
+        for d in parse_geom_disks(out)
+        if not str(d["name"]).startswith(_NOT_SMART) and d["mediasize"]
+    ]
+    for disk in disks:
+        smartctl_drive(
+            report, run, f"/dev/{disk['name']}", str(disk["name"]), disk["descr"]
+        )
+    if disks:
+        smartctl_source(report, run)
 
 
 _GEOM_STATES = {"COMPLETE": OK, "OPTIMAL": OK, "DEGRADED": WARNING}
@@ -298,6 +340,7 @@ def collect_hw_sensors(report: Report, run) -> None:
 def collect(report: Report, system: str, run, _read=None) -> None:
     if system == "FreeBSD":
         collect_freebsd_nvme(report, run)
+        collect_freebsd_disks(report, run)
         collect_zfs(report, run)
         collect_geom(report, run, "gmirror")
         collect_geom(report, run, "graid")

@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import ctypes
 import fcntl
-import json
 import os
 import re
 from typing import Dict, List, Optional
@@ -43,9 +42,10 @@ from src.sysmanage_agent.collection.hardware_health import (
     collect_zfs,
     nvme_state,
     parse_nvme_log_page,
-    parse_smartctl_json,
     plausible,
     reason,
+    smartctl_drive,
+    smartctl_source,
     temperature_state,
     worst,
 )
@@ -161,13 +161,16 @@ def collect_nvme(report: Report, read, listdir, smart_log=read_nvme_smart_log):
 
 
 def _sata_disks(read, listdir) -> List[str]:
-    """Whole disks that are not NVMe, loop, ram, zram, md or device-mapper."""
+    """Whole disks that are not NVMe, loop, ram, zram, md or device-mapper --
+    nor paravirtual (virtio ``vd*``, Xen ``xvd*``): those have no SMART at
+    all, and calling them "unknown, install smartmontools" would recommend
+    a package that cannot help (the disk's health is the hypervisor's)."""
     disks = []
     for name in listdir(SYS_BLOCK):
-        if re.match(r"(nvme|loop|ram|zram|md|dm-|sr|fd)", name):
+        if re.match(r"(nvme|loop|ram|zram|md|dm-|sr|fd|vd|xvd)", name):
             continue
         if read(f"{SYS_BLOCK}/{name}/device/type") is None and not name.startswith(
-            ("sd", "hd", "vd")
+            ("sd", "hd")
         ):
             continue
         disks.append(name)
@@ -180,20 +183,8 @@ def collect_smartctl(report: Report, run, read, listdir) -> None:
         return
     for disk in disks:
         model = (read(f"{SYS_BLOCK}/{disk}/device/model") or "").strip() or None
-        rc, out = run(["smartctl", "-j", "-H", "-A", f"/dev/{disk}"])
-        if rc == -1:
-            report.add(
-                DRIVE, disk, model, UNKNOWN,
-                [reason("smartctl_absent")], {}, None,
-            )  # fmt: skip
-            continue
-        try:
-            state, reasons, metrics = parse_smartctl_json(json.loads(out))
-        except (ValueError, TypeError):
-            state, reasons, metrics = UNKNOWN, [reason("smartctl_failed", rc=rc)], {}
-        report.add(DRIVE, disk, model, state, reasons, metrics, "smartctl")
-    rc, _out = run(["smartctl", "--version"])
-    report.source("smartctl", ABSENT if rc == -1 else RAN)
+        smartctl_drive(report, run, f"/dev/{disk}", disk, model)
+    smartctl_source(report, run)
 
 
 # --- md software RAID ----------------------------------------------------------

@@ -284,10 +284,16 @@ def test_nvme_unprivileged_is_unknown(monkeypatch):
 
 def test_sata_without_smartctl_is_unknown():
     read, listdir = _sysfs(
-        {"/sys/block/sda/device/model": "ST4000DM004", "/sys/block/loop0/x": "1"}
+        {
+            "/sys/block/sda/device/model": "ST4000DM004",
+            "/sys/block/loop0/x": "1",
+            "/sys/block/vda/device/type": "0",  # virtio: no SMART, not a drive here
+            "/sys/block/xvda/device/type": "0",
+        }
     )
     report = hh.Report()
     lnx.collect_smartctl(report, lambda argv: (-1, ""), read, listdir)
+    assert set(_by_id(report)) == {"sda"}
     drive = _by_id(report)["sda"]
     assert drive["state"] == hh.UNKNOWN
     assert drive["reasons"] == [{"code": "smartctl_absent"}]
@@ -295,6 +301,54 @@ def test_sata_without_smartctl_is_unknown():
 
 
 # --- BSD ---------------------------------------------------------------------------
+
+
+def test_freebsd_geom_disks_skip_nvme_and_empty_readers():
+    disks = bsd.parse_geom_disks(_fixture("freebsd_geom_disk_list.txt"))
+    assert [(d["name"], d["mediasize"]) for d in disks] == [
+        ("nda0", 1000204886016),
+        ("da0", 0),
+    ]
+    assert disks[1]["descr"] == "Generic- SD/MMC"
+    calls = []
+
+    def run(argv):
+        calls.append(" ".join(argv))
+        if argv[:2] == ["geom", "disk"]:
+            return 0, _fixture("freebsd_geom_disk_list.txt")
+        return -1, ""
+
+    report = hh.Report()
+    bsd.collect_freebsd_disks(report, run)
+    # the lab box: NVMe is nvmecontrol's, the card reader is empty; and a
+    # FreeBSD VM's virtio disk has no SMART
+    vm = "Geom name: vtbd0\nProviders:\n1. Name: vtbd0\n   Mediasize: 21474836480 (20G)\n"  # constructed text
+    assert bsd.parse_geom_disks(vm)[0]["name"] == "vtbd0"
+    vm_report = hh.Report()
+    bsd.collect_freebsd_disks(vm_report, _runner({"geom disk list": (0, vm)}))
+    assert _by_id(vm_report) == {}
+    assert _by_id(report) == {} and not any("smartctl" in c for c in calls)
+
+
+def test_freebsd_sata_disk_through_smartctl():
+    listing = "Geom name: ada0\nProviders:\n1. Name: ada0\n   Mediasize: 500107862016 (466G)\n   descr: Samsung SSD 860 EVO\n"  # constructed text
+    smart = json.dumps({"smart_status": {"passed": True}})
+    run = _runner(
+        {
+            "geom disk list": (0, listing),
+            "smartctl -j -H -A /dev/ada0": (0, smart),
+            "smartctl --version": (0, "smartctl 7.4"),
+        }
+    )
+    report = hh.Report()
+    bsd.collect_freebsd_disks(report, run)
+    drive = _by_id(report)["ada0"]
+    assert (drive["name"], drive["source"]) == ("Samsung SSD 860 EVO", "smartctl")
+    assert _sources(report)["smartctl"]["status"] == hh.RAN
+    absent = hh.Report()
+    bsd.collect_freebsd_disks(absent, _runner({"geom disk list": (0, listing)}))
+    assert _by_id(absent)["ada0"]["reasons"] == [{"code": "smartctl_absent"}]
+    assert _sources(absent)["smartctl"]["status"] == hh.ABSENT
 
 
 def _runner(answers):
