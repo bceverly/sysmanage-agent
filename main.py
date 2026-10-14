@@ -933,7 +933,7 @@ class SysManageAgent(
                     "WEBSOCKET_COMMUNICATION_ERROR: WebSocket connection closed by server"
                 )
                 self._note_websocket_failure(error)
-            except websockets.InvalidStatusCode as error:
+            except websockets.exceptions.InvalidStatus as error:
                 self.logger.error(
                     "WEBSOCKET_PROTOCOL_ERROR: WebSocket connection rejected: %s", error
                 )
