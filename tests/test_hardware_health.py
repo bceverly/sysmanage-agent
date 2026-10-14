@@ -104,6 +104,19 @@ def test_nvmecontrol_logpage_recording():
     assert reasons == [{"code": "media_errors", "count": 19}]
 
 
+def test_smartctl_on_a_real_failing_drive():
+    """RECORDED 2026-10-14: smartctl 7.5 on the FreeBSD box's aging Crucial P1
+    (run from a fetched package, nothing installed).  The drive's own
+    verdict is PASSED; its 19 media errors still make it a warning -- the
+    same answer the native nvmecontrol path gives for the same drive."""
+    recorded = json.loads(_fixture("freebsd_smartctl_nvme_media_errors.json"))
+    assert recorded["smart_status"]["passed"] is True
+    state, reasons, metrics = hh.parse_smartctl_json(recorded)
+    assert state == hh.WARNING
+    assert reasons == [{"code": "media_errors", "count": 19}]
+    assert (metrics["percent_used"], metrics["power_on_hours"]) == (5, 16179)
+
+
 def test_smartctl_json():
     ok = {"smart_status": {"passed": True}, "temperature": {"current": 31}}
     assert hh.parse_smartctl_json(ok)[0] == hh.OK

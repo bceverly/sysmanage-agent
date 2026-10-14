@@ -192,8 +192,14 @@ class PackageOperations:
                     installation_id, "installing", package_name, requested_by
                 )
 
+            # On a worker thread: the install is a blocking package-manager run
+            # (up to minutes), and on the event loop it froze the WHOLE agent
+            # -- heartbeats, and the urgent hardware report of an md array
+            # failing while a ClamAV deploy plan ran (2026-10-14, 22 s late).
             update_detector = UpdateDetector()
-            result = update_detector.install_package(package_name, package_manager)
+            result = await asyncio.to_thread(
+                update_detector.install_package, package_name, package_manager
+            )
 
             # Determine success based on result
             success = True

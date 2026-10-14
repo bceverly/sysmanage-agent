@@ -446,6 +446,10 @@ def collect_hardware_health(
             report.source("platform", ABSENT, f"no collectors for {system}")
             return report.as_dict()
         osmod.collect(report, system, run, read)
+        if system in ("Linux", "FreeBSD", "Windows"):  # vendor RAID CLIs, the BMC
+            from src.sysmanage_agent.collection import hardware_health_vendor
+
+            hardware_health_vendor.collect(report, system, run)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         logger.warning(_("Hardware health collection failed: %s"), exc)
         report.source("collector", SOURCE_FAILED, str(exc))

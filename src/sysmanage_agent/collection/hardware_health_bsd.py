@@ -15,17 +15,25 @@ FreeBSD
                       ``_CRT`` / ``_PSV``, and ``dev.cpu.N.temperature``
                       where coretemp / amdtemp is loaded
 
-OpenBSD (and NetBSD's ``envstat`` once a NetBSD host is in the lab again)
+OpenBSD
   * ``sysctl hw.sensors`` -- the kernel already judges each sensor (OK /
     WARNING / CRITICAL): NVMe endurance and spare, softraid volumes and
     drives, temperatures.  We keep its verdict rather than second-guess it.
+  * ``bioctl`` -- each RAID controller's volumes and member chunks
+    (``hardware_health_bsd_raid``); they replace that controller's one-line
+    hw.sensors summary when bioctl ran (root).
+
+NetBSD
+  * ``envstat -x``, ``bioctl`` and ``raidctl -s`` (``hardware_health_bsd_raid``)
+    and ``zpool``.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
+from src.sysmanage_agent.collection import hardware_health_bsd_raid as bsd_raid
 from src.sysmanage_agent.collection.hardware_health import (
     ABSENT,
     ARRAY,
@@ -319,22 +327,47 @@ def _platform_sensor(report: Report, device: str, sensor) -> None:
         )  # fmt: skip
 
 
-def collect_hw_sensors(report: Report, run) -> None:
+def read_hw_sensors(report: Report, run) -> Dict[str, List[Dict]]:
+    """``sysctl hw.sensors`` -> {device: [sensors]} (empty when it failed)."""
     rc, out = run(["sysctl", "hw.sensors"])
     if rc != 0:
         report.source("hw.sensors", ABSENT if rc == -1 else SOURCE_FAILED, out)
-        return
+        return {}
     report.source("hw.sensors", RAN)
     by_device: Dict[str, List[Dict]] = {}
     for sensor in parse_hw_sensors(out):
         by_device.setdefault(str(sensor["device"]), []).append(sensor)
+    return by_device
+
+
+def add_hw_sensors(
+    report: Report, by_device: Dict[str, List[Dict]], skip: Iterable[str] = ()
+) -> None:
+    """Components from the sensors.  A RAID controller in ``skip`` was
+    detailed volume by volume through bioctl, so its one-line sensor summary
+    is left out rather than reported twice."""
+    skip = set(skip)
     for device, sensors in by_device.items():
         base = device.rstrip("0123456789")
+        if device in skip:
+            continue
         if base in _DRIVE_DEVICES or base in _ARRAY_DEVICES:
             _device_component(report, device, sensors)
         else:
             for sensor in sensors:
                 _platform_sensor(report, device, sensor)
+
+
+def collect_hw_sensors(report: Report, run) -> None:
+    add_hw_sensors(report, read_hw_sensors(report, run))
+
+
+def collect_openbsd(report: Report, run) -> None:
+    """hw.sensors, with each RAID controller's volumes through bioctl."""
+    by_device = read_hw_sensors(report, run)
+    controllers = [d for d in by_device if d.rstrip("0123456789") in _ARRAY_DEVICES]
+    covered = bsd_raid.collect_bioctl(report, run, controllers, "OpenBSD")
+    add_hw_sensors(report, by_device, skip=covered)
 
 
 def collect(report: Report, system: str, run, _read=None) -> None:
@@ -347,7 +380,7 @@ def collect(report: Report, system: str, run, _read=None) -> None:
         collect_freebsd_temperatures(report, run)
         return
     if system == "OpenBSD":
-        collect_hw_sensors(report, run)
+        collect_openbsd(report, run)
         return
-    report.source("envstat", ABSENT, f"{system}: not collected yet")
+    bsd_raid.collect_netbsd(report, run)
     collect_zfs(report, run)

@@ -66,6 +66,17 @@ def test_kmsg_record_format():
         "Buffer I/O error on dev sda"
     )
     assert he.parse_kmsg_record("no prefix at all") == "no prefix at all"
+    # RECORDED 2026-10-14 (md RAID1 on loop devices, mdadm --fail): md prints
+    # both lines as one message, and /dev/kmsg escapes the newline
+    md = he.parse_kmsg_record(
+        "2,1180,412345678,-;md/raid1:md100: Disk failure on loop1, disabling "
+        "device.\\x0amd/raid1:md100: Operation continuing on 1 devices."
+    )
+    assert md.splitlines() == [
+        "md/raid1:md100: Disk failure on loop1, disabling device.",
+        "md/raid1:md100: Operation continuing on 1 devices.",
+    ]
+    assert he.classify_kernel_line(md) is not None
 
 
 def test_devd_recording_only_the_failure_counts():

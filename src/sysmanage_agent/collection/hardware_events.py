@@ -13,7 +13,11 @@ lines as evidence:
 
 * Linux ..... the kernel log (``/dev/kmsg``, root): I/O and medium errors,
               NVMe timeouts and resets, ATA exceptions, md disk failures,
-              filesystem errors, machine checks, EDAC, thermal trips
+              filesystem errors, machine checks, EDAC, thermal trips --
+              AND the journal of the storage daemons (``journalctl -f`` for
+              smartd, zed and ``mdadm --monitor`` only, never the kernel
+              facility, so no kernel line arrives twice): SMART failures and
+              pending / uncorrectable sectors, ZFS faults, md array failures
 * FreeBSD ... ``devd``'s event socket: ZFS state changes and errors, CAM
               errors, GEOM mirror / raid events, ACPI thermal
 * Windows ... the System event log, every 30 seconds, from the last record
@@ -27,14 +31,20 @@ recordings; each source is a thin reader that yields lines.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import platform
+import queue
 import re
+import selectors
 import socket
 import subprocess  # nosec B404
+import threading
 import xml.etree.ElementTree as ET  # nosec B405  # our own wevtutil output
 from typing import Callable, Dict, Iterator, List, Optional, Tuple
+
+from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
@@ -78,10 +88,18 @@ def classify_kernel_line(line: str) -> Optional[str]:
     return None
 
 
+_KMSG_ESCAPE = re.compile(r"\\x([0-9a-fA-F]{2})")
+
+
 def parse_kmsg_record(record: str) -> str:
-    """``/dev/kmsg`` gives ``prio,seq,usec,flags;message``: the message."""
+    """``/dev/kmsg`` gives ``prio,seq,usec,flags;message``: the message --
+    with the kernel's ``\\xHH`` escapes undone.  It escapes every
+    non-printable byte, and some drivers print two lines as ONE message (md:
+    "Disk failure on loop1, disabling device." + "Operation continuing on 1
+    devices." arrived as "...device.\\x0amd/raid1:..." on 2026-10-14)."""
     head, sep, message = record.partition(";")
-    return message.strip() if sep and "," in head else record.strip()
+    text = message if sep and "," in head else record
+    return _KMSG_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)), text).strip()
 
 
 # ZFS vdev_state: 2 OFFLINE, 3 REMOVED, 4 CANT_OPEN, 5 FAULTED, 6 DEGRADED
@@ -214,6 +232,106 @@ def windows_query(after_record: int) -> str:
     return f"*[System[Provider[{providers}] and EventRecordID > {int(after_record)}]]"
 
 
+# --- smartd, zed and mdadm --monitor, through the journal ------------------------
+
+JOURNAL_IDENTIFIERS = ("smartd", "zed", "mdadm", "mdmonitor")
+
+_SMARTD = (
+    (THERMAL, re.compile(r"Temperature \d+ Celsius reached (critical )?limit")),
+    (
+        STORAGE,
+        re.compile(
+            r"FAILED SMART self-check|SMART Failure|Failed SMART (usage )?Attribute"
+            # only the attributes that mean damage: Raw_Read_Error_Rate and
+            # Seek_Error_Rate move routinely on Seagate drives, and every
+            # match is an operating-system event
+            r"|SMART Prefailure Attribute: \d+ (Reallocated_Sector_Ct"
+            r"|Reallocated_Event_Count|Current_Pending_Sector"
+            r"|Offline_Uncorrectable|Reported_Uncorrect|End-to-End_Error) changed"
+            r"|Currently unreadable \(pending\) sectors|Offline uncorrectable sectors"
+            r"|ATA error count increased|Self-Test Log error count increased"
+            r"|Critical Warning \(0x[0-9a-fA-F]+\)"
+        ),
+    ),
+)
+# smartd's all-clear: "No more Currently unreadable (pending) sectors,
+# warning condition reset after 1 email" -- the same words, good news.
+_SMARTD_CLEAR = re.compile(r"\bNo more |warning condition reset")
+_MDADM = re.compile(r"\b(Fail|FailSpare|DegradedArray|SparesMissing) event detected")
+# zed's all-syslog.sh: "eid=N class=<last part of the event class> ...
+# vdev_state=<NAME>"; history_event, config_sync, scrub_finish ... are not.
+_ZED_PROBLEM_CLASSES = {
+    "io",
+    "checksum",
+    "data",
+    "probe_failure",
+    "deadman",
+    "open_failed",
+    "corrupt_data",
+    "no_replicas",
+}
+_ZED_BAD_STATES = {"OFFLINE", "REMOVED", "CANT_OPEN", "FAULTED", "DEGRADED", "UNAVAIL"}
+
+
+def _smartd(message: str) -> Optional[str]:
+    if _SMARTD_CLEAR.search(message):
+        return None
+    for category, pattern in _SMARTD:
+        if pattern.search(message):
+            return category
+    return None
+
+
+def _zed(message: str) -> Optional[str]:
+    fields = {k: v.strip("'") for k, v in re.findall(r"(\w+)=('[^']*'|\S+)", message)}
+    kind = fields.get("class", "").rsplit(".", 1)[-1]
+    if kind == "statechange":
+        return STORAGE if fields.get("vdev_state") in _ZED_BAD_STATES else None
+    return STORAGE if kind in _ZED_PROBLEM_CLASSES else None
+
+
+def _mdadm(message: str) -> Optional[str]:
+    return STORAGE if _MDADM.search(message) else None
+
+
+_DAEMONS = {"smartd": _smartd, "zed": _zed, "mdadm": _mdadm, "mdmonitor": _mdadm}
+
+
+def classify_daemon_line(identifier: str, message: str) -> Optional[str]:
+    """The category of a storage daemon's journal message, or None for one
+    that is not a hardware problem (temperature drift, a finished self-test,
+    a rebuild that completed, ZFS history)."""
+    judge = _DAEMONS.get(identifier)
+    return judge(message) if judge else None
+
+
+def parse_journal_record(line: str) -> Optional[Tuple[str, str]]:
+    """One ``journalctl -o json`` line -> (identifier, message).  journald
+    writes a message that is not valid UTF-8 as an array of byte values."""
+    try:
+        record = json.loads(line)
+    except ValueError:
+        return None
+    if not isinstance(record, dict):
+        return None
+    message = record.get("MESSAGE")
+    if isinstance(message, list):
+        message = bytes(b & 0xFF for b in message if isinstance(b, int))
+        message = message.decode("utf-8", errors="replace")
+    if not isinstance(message, str):
+        return None
+    return str(record.get("SYSLOG_IDENTIFIER") or ""), message.strip()
+
+
+def journal_command() -> List[str]:
+    """New entries only, from the storage daemons only (never the kernel's:
+    those already come from ``/dev/kmsg``)."""
+    command = ["journalctl", "-f", "-n", "0", "-o", "json", "-q"]
+    for identifier in JOURNAL_IDENTIFIERS:
+        command += ["-t", identifier]
+    return command
+
+
 # --- the readers -----------------------------------------------------------------
 
 Evidence = Dict[str, str]
@@ -305,6 +423,113 @@ def windows_eventlog(
                 yield _evidence("eventlog", category, text)
 
 
+def linux_journal(
+    stopped: Callable[[], bool], command: Optional[List[str]] = None
+) -> Iterator[Evidence]:
+    """New smartd / zed / mdadm journal entries that are hardware problems;
+    nothing at all where there is no ``journalctl`` (no systemd)."""
+    argv = command or journal_command()
+    try:
+        # pylint: disable-next=consider-using-with  # closed in _end()
+        proc = subprocess.Popen(  # nosec B603 B607
+            argv, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+        )
+    except FileNotFoundError:
+        return
+    try:
+        for line in _pipe_lines(proc.stdout, stopped):
+            parsed = parse_journal_record(line)
+            category = classify_daemon_line(*parsed) if parsed else None
+            if category:
+                identifier, message = parsed
+                if not message.startswith(f"{identifier}:"):
+                    message = f"{identifier}: {message}"
+                yield _evidence("journal", category, message)
+        if not stopped():
+            raise RuntimeError(f"journalctl exited ({proc.wait(timeout=5)})")
+    finally:
+        _end(proc)
+
+
+def _pipe_lines(stream, stopped: Callable[[], bool]) -> Iterator[str]:
+    """Whole lines from a pipe, waking every second to notice a stop."""
+    pending = b""
+    with selectors.DefaultSelector() as selector:
+        selector.register(stream, selectors.EVENT_READ)
+        while not stopped():
+            if not selector.select(timeout=1.0):
+                continue
+            chunk = os.read(stream.fileno(), 65536)
+            if not chunk:
+                return
+            *lines, pending = (pending + chunk).split(b"\n")
+            for line in lines:
+                yield line.decode("utf-8", errors="replace")
+
+
+def _end(proc) -> None:
+    if proc.poll() is None:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+    if proc.stdout:
+        proc.stdout.close()
+
+
+class _Done:  # pylint: disable=too-few-public-methods
+    """A reader of a merged source has ended (``error`` if it failed)."""
+
+    def __init__(self, name: str, error: Optional[BaseException] = None):
+        self.name, self.error = name, error
+
+
+def _feed(name: str, reader: LineSource, stopped, lines: "queue.Queue") -> None:
+    try:
+        for event in reader(stopped):
+            lines.put(event)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        lines.put(_Done(name, exc))
+        return
+    lines.put(_Done(name))
+
+
+def merged(*sources: Tuple[str, LineSource]) -> LineSource:
+    """Several sources as one: each reader on its own thread.  A reader that
+    ends quietly (no journalctl) just ends; one that fails while others still
+    run is logged and the rest carry on; when the last one ends with a
+    failure, that failure is the merged source's, as for a single source."""
+
+    def read(stopped: Callable[[], bool]) -> Iterator[Evidence]:
+        lines: "queue.Queue" = queue.Queue()
+        for name, reader in sources:
+            threading.Thread(
+                target=_feed, args=(name, reader, stopped, lines), daemon=True
+            ).start()
+        live = len(sources)
+        while live and not stopped():
+            try:
+                item = lines.get(timeout=0.5)
+            except queue.Empty:
+                continue
+            if not isinstance(item, _Done):
+                yield item
+                continue
+            live -= 1
+            _ended(item, live)
+
+    return read
+
+
+def _ended(done: _Done, live: int) -> None:
+    if done.error is None:
+        return
+    if not live:
+        raise done.error
+    logger.warning(_("Hardware event source %s stopped: %s"), done.name, done.error)
+
+
 def _sleep(seconds: float, stopped: Callable[[], bool]) -> None:
     """Sleep in short steps so a stop is noticed promptly."""
     import time  # pylint: disable=import-outside-toplevel
@@ -318,7 +543,7 @@ def source_for(system: Optional[str] = None) -> Optional[Tuple[str, LineSource]]
     """This platform's event source, or None (the periodic report only)."""
     system = system or platform.system()
     if system == "Linux":
-        return "kernel", linux_kmsg
+        return "kernel", merged(("kernel", linux_kmsg), ("journal", linux_journal))
     if system == "FreeBSD":
         return "devd", freebsd_devd
     if system == "Windows":

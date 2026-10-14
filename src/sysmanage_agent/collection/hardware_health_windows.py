@@ -12,6 +12,8 @@ Windows hardware health (Phase 23.1 S1), one PowerShell call:
 * temperatures ...... ACPI thermal zones (``MSAcpi_ThermalZoneTemperature``,
                       administrator), judged against each zone's own critical
                       and passive trip points
+* machine checks .... WHEA-Logger events in the System log over the last 24
+                      hours (``hardware_health_mce`` judges them)
 
 What the S0 spike found on a real machine (an x13s, recorded): reliability
 counters come back EMPTY for read / write errors and power-on hours -- not
@@ -43,6 +45,9 @@ from src.sysmanage_agent.collection.hardware_health import (
     temperature_state,
     worst,
 )
+from src.sysmanage_agent.collection.hardware_health_mce import add_machine_checks
+
+WHEA = "WHEA-Logger"
 
 SCRIPT = r"""
 $ProgressPreference = 'SilentlyContinue'
@@ -70,7 +75,17 @@ $zones = @(Get-CimInstance -Namespace root\wmi -ClassName MSAcpi_ThermalZoneTemp
     [ordered]@{ name = [string]$_.InstanceName; current = $_.CurrentTemperature
                 critical = $_.CriticalTripPoint; passive = $_.PassiveTripPoint }
 })
-[ordered]@{ disks = $disks; virtual_disks = $vdisks; thermal_zones = $zones } | ConvertTo-Json -Depth 4 -Compress
+$whea = [ordered]@{ corrected = 0; fatal = 0; error = $null }
+try {
+    $events = @(Get-WinEvent -ErrorAction Stop -FilterHashtable @{
+        LogName = 'System'; ProviderName = 'Microsoft-Windows-WHEA-Logger'
+        StartTime = (Get-Date).AddHours(-24) })
+    $whea.corrected = @($events | Where-Object { $_.Level -eq 3 }).Count
+    $whea.fatal = @($events | Where-Object { $_.Level -eq 1 -or $_.Level -eq 2 }).Count
+} catch {
+    if ($_.FullyQualifiedErrorId -notlike 'NoMatchingEventsFound*') { $whea.error = [string]$_.Exception.Message }
+}
+[ordered]@{ disks = $disks; virtual_disks = $vdisks; thermal_zones = $zones; whea = $whea } | ConvertTo-Json -Depth 4 -Compress
 """
 
 _HEALTH = {"Healthy": OK, "Warning": WARNING, "Unhealthy": FAILED}
@@ -161,6 +176,24 @@ def parse(data: Dict[str, object], report: Report) -> None:
         _virtual_disk(report, vdisk)
     for zone in data.get("thermal_zones") or []:
         _thermal_zone(report, zone)
+    _whea(report, data.get("whea"))
+
+
+def _whea(report: Report, whea) -> None:
+    """WHEA-Logger events of the last 24 hours: Warning is a corrected
+    hardware error, Error / Critical an uncorrected one.  "No events were
+    found" is zero (the script turns it into 0), not a failure."""
+    if not isinstance(whea, dict):
+        return  # an older script: not measured
+    if whea.get("error"):
+        report.source(WHEA, SOURCE_FAILED, str(whea["error"]))
+        return
+    corrected, fatal = whea.get("corrected"), whea.get("fatal")
+    if not isinstance(corrected, int) or not isinstance(fatal, int):
+        report.source(WHEA, SOURCE_FAILED, "unreadable WHEA counts")
+        return
+    report.source(WHEA, RAN)
+    add_machine_checks(report, "whea", "Hardware errors (WHEA)", corrected, fatal, WHEA)
 
 
 def collect(report: Report, _system, run, _read=None) -> None:

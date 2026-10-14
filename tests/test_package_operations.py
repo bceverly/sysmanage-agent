@@ -768,3 +768,39 @@ class TestPackageOperations:
 
             # Should still succeed
             assert result["success"] is True
+
+
+@pytest.mark.asyncio
+async def test_an_install_does_not_freeze_the_agent():
+    """2026-10-14: an install ran on the event loop, so for its whole length
+    the agent did nothing else -- an md array failing during a ClamAV deploy
+    plan was reported 22 s late.  The loop must keep running meanwhile."""
+    import asyncio  # pylint: disable=import-outside-toplevel
+    import time  # pylint: disable=import-outside-toplevel
+
+    window = []
+
+    def slow_install(_name, _manager):
+        window.append(time.monotonic())
+        time.sleep(0.5)
+        window.append(time.monotonic())
+        return {"success": True, "version": "7.4"}
+
+    ticks = []
+
+    async def ticker():
+        for _ in range(10):
+            ticks.append(time.monotonic())
+            await asyncio.sleep(0.02)
+
+    ops = PackageOperations(Mock())
+    with patch(
+        "src.sysmanage_agent.operations.package_operations.UpdateDetector"
+    ) as detector:
+        detector.return_value.install_package.side_effect = slow_install
+        result, _ = await asyncio.gather(
+            ops.install_package({"package_name": "smartmontools"}), ticker()
+        )
+    assert result["success"] is True
+    start, end = window
+    assert any(start < tick < end for tick in ticks)  # the loop ran meanwhile

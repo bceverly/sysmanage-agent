@@ -13,6 +13,7 @@ Linux hardware health (Phase 23.1 S1), native first:
 * md arrays ....... ``/proc/mdstat`` (degraded ``[U_]``, failed ``(F)``
                     members, rebuild progress)
 * ZFS pools ....... ``zpool`` where installed
+* btrfs, LVM RAID . ``btrfs`` / ``lvs`` (hardware_health_linux_storage)
 * temperatures .... hwmon sysfs, judged against the limits the hardware
                     declares (``temp*_max`` / ``temp*_crit``)
 * memory .......... EDAC corrected / uncorrected error counts
@@ -48,6 +49,10 @@ from src.sysmanage_agent.collection.hardware_health import (
     smartctl_source,
     temperature_state,
     worst,
+)
+from src.sysmanage_agent.collection.hardware_health_linux_storage import (
+    collect_btrfs,
+    collect_lvm_raid,
 )
 
 SYS_NVME = "/sys/class/nvme"
@@ -342,5 +347,11 @@ def collect(report: Report, _system, run, read=None, listdir=None) -> None:
     collect_smartctl(report, run, read, listdir)
     collect_md(report, read)
     collect_zfs(report, run)
+    collect_btrfs(report, run, read)
+    collect_lvm_raid(report, run)
     collect_hwmon(report, read, listdir)
     collect_edac(report, read, listdir)
+    # pylint: disable-next=import-outside-toplevel  # machine checks (rasdaemon)
+    from src.sysmanage_agent.collection import hardware_health_mce
+
+    hardware_health_mce.collect_rasdaemon(report, run)
