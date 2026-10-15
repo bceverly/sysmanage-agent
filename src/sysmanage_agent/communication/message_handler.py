@@ -45,6 +45,10 @@ from src.sysmanage_agent.core.version import get_agent_version
 HOST_NOT_REGISTERED_STRIKE_LIMIT = 3
 
 
+# Seconds before asking again after host_credential_required; the last repeats.
+REFUSAL_RETRY_SECONDS = (60, 120, 300, 600, 900)
+
+
 class MessageHandler(MessageHandlerQueueMixin):
     """
     Message handler that integrates persistent queues with WebSocket communication.
@@ -69,6 +73,9 @@ class MessageHandler(MessageHandlerQueueMixin):
         # Queue processing state
         self.queue_processor_running = False
         self.processing_task = None
+        # Re-asking after host_credential_required (see _retry_after_refusal).
+        self.refusal_attempts = 0
+        self.refusal_task = None
 
         # Inbound queue processing state
         self.inbound_queue_processor_running = False
@@ -374,12 +381,49 @@ class MessageHandler(MessageHandlerQueueMixin):
                     "Host registration is pending approval. Will continue periodic attempts."
                 )
             )
+        elif error_code == "host_credential_required":
+            self._retry_after_refusal()
         elif error_code == "missing_hostname":
             self.logger.error(
                 _("Server reports missing hostname in message. This is a bug.")
             )
         elif error_code == "queue_error":
             self.logger.error(_("Server failed to queue message: %s"), error_message)
+
+    def _retry_after_refusal(self) -> None:
+        """The server refused this agent's claim to its host (it presented no
+        credential for a host name the server already knows).  The server's
+        own advice is to remove the old host and approve the new
+        registration -- but the agent sent its registration ONCE per
+        connection, so after the operator did exactly that it sat on its open
+        connection, never registered, until someone restarted it (the T480,
+        2026-10-15).  So: ask again on the same connection, 1, 2, 5, 10, then
+        every 15 minutes, until registration is confirmed.  Not a reconnect:
+        that would repeat the HTTP registration, which can spend an
+        enrollment-token use every time."""
+        if self.refusal_task is not None and not self.refusal_task.done():
+            return
+        delay = REFUSAL_RETRY_SECONDS[
+            min(self.refusal_attempts, len(REFUSAL_RETRY_SECONDS) - 1)
+        ]
+        self.refusal_attempts += 1
+        self.logger.warning(
+            _(
+                "This host's registration was refused; asking the server again "
+                "in %d seconds."
+            ),
+            delay,
+        )
+        self.refusal_task = asyncio.create_task(self._resend_registration(delay))
+
+    async def _resend_registration(self, delay: int) -> None:
+        await asyncio.sleep(delay)
+        if (
+            self.agent.running
+            and self.agent.connected
+            and not self.agent.registration_confirmed
+        ):
+            await self.send_message(self.create_system_info_message())
 
     async def _handle_host_not_registered(self) -> None:
         """React to a host_not_registered error from the server.

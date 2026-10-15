@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 07:32-0400\n"
+"POT-Creation-Date: 2026-10-15 09:17-0400\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -63,7 +63,8 @@ msgstr "メッセージ%sのデシリアライゼーションに失敗しまし�
 #: src/database/queue_manager.py:611
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
-msgstr "メッセージ %s (タイプ: %s) は最大再試行回数を超え、失敗としてマークされました"
+msgstr ""
+"メッセージ %s (タイプ: %s) は最大再試行回数を超え、失敗としてマークされました"
 
 #: src/security/certificate_store.py:68
 #, python-brace-format
@@ -114,9 +115,9 @@ msgstr "Windows 証明書ストア %s のクエリに失敗しました: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
-msgstr "証明書バンドル %s は %d 以上の証明書を保持しています；最初の %d を報告します"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+msgstr ""
+"証明書バンドル %s は %d 以上の証明書を保持しています；最初の %d を報告します"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
@@ -334,7 +335,13 @@ msgstr "ipconfig を使用して Windows ネットワーク情報を取得でき
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Windows ネットワーク構成を取得できませんでした: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:430
+#: src/sysmanage_agent/collection/hardware_events.py:532
+#: src/sysmanage_agent/communication/hardware_event_loop.py:102
+#, python-format
+msgid "Hardware event source %s stopped: %s"
+msgstr "ハードウェアイベントソース %s が停止しました: %s"
+
+#: src/sysmanage_agent/collection/hardware_health.py:454
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "ハードウェアの健全性の収集に失敗しました: %s"
@@ -491,7 +498,9 @@ msgstr "ネットワーク検出: 直接キャプチャは利用できません:
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
 "recorded"
-msgstr "ネットワーク検出が1つの期間で%d台を超えるデバイスを検出しました。残りは記録されていません"
+msgstr ""
+"ネットワーク検出が1つの期間で%d台を超えるデバイスを検出しました。残りは記録さ"
+"れていません"
 
 #: src/sysmanage_agent/collection/os_info_collection.py:122
 msgid "Ubuntu Pro status check timed out"
@@ -626,7 +635,9 @@ msgstr "pkginパッケージの収集に失敗しました: %s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr "dnf が利用可能なホストで yum 収集をスキップ (RHEL/Fedora 8+ では yum は dnf のラッパー)"
+msgstr ""
+"dnf が利用可能なホストで yum 収集をスキップ (RHEL/Fedora 8+ では yum は dnf "
+"のラッパー)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:142
@@ -715,7 +726,8 @@ msgstr "Homebrew パッケージの収集エラー: %s"
 #: src/sysmanage_agent/collection/package_collector_windows.py:201
 #, python-format
 msgid "Error collecting winget packages via REST API: %s"
-msgstr "REST API を使用して winget パッケージの収集中にエラーが発生しました: %s"
+msgstr ""
+"REST API を使用して winget パッケージの収集中にエラーが発生しました: %s"
 
 #: src/sysmanage_agent/collection/package_collector_windows.py:202
 msgid "No packages collected from winget REST API"
@@ -741,8 +753,8 @@ msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
 msgstr ""
-"PID %(pid)d は現在 '%(actual)s' であり、'%(expected)s' "
-"ではありません（プロセスが再利用された可能性があります）。終了を拒否しました"
+"PID %(pid)d は現在 '%(actual)s' であり、'%(expected)s' ではありません（プロセ"
+"スが再利用された可能性があります）。終了を拒否しました"
 
 #: src/sysmanage_agent/collection/process_collection.py:202
 #, python-format
@@ -757,7 +769,9 @@ msgstr "public_ip_refresh_service イテレーション失敗: %s"
 #: src/sysmanage_agent/collection/role_detection.py:161
 #: src/sysmanage_agent/collection/software_inventory_bsd.py:79
 msgid "No packages detected or unsupported package manager"
-msgstr "検出されたパッケージまたはサポートされていないパッケージマネージャーはありません"
+msgstr ""
+"検出されたパッケージまたはサポートされていないパッケージマネージャーはありま"
+"せん"
 
 #: src/sysmanage_agent/collection/role_detection.py:184
 #, python-format
@@ -890,7 +904,7 @@ msgstr "利用可能な更新プログラムの検出に失敗しました: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:252
-#: src/sysmanage_agent/operations/package_operations.py:237
+#: src/sysmanage_agent/operations/package_operations.py:243
 #, python-format
 msgid "Failed to install package %s: %s"
 msgstr "パッケージ %s のインストールに失敗: %s"
@@ -1589,17 +1603,14 @@ msgstr "ハードウェアの健全性の送信に失敗しました。"
 msgid ""
 "Hardware events from %s need a privileged agent; the periodic report "
 "continues"
-msgstr "%s からのハードウェアイベントには特権エージェントが必要です。定期レポートは継続します"
+msgstr ""
+"%s からのハードウェアイベントには特権エージェントが必要です。定期レポートは継"
+"続します"
 
 #: src/sysmanage_agent/communication/hardware_event_loop.py:96
 #, python-format
 msgid "Listening for hardware events (%s)"
 msgstr "ハードウェアイベントを待ち受けています (%s)"
-
-#: src/sysmanage_agent/communication/hardware_event_loop.py:102
-#, python-format
-msgid "Hardware event source %s stopped: %s"
-msgstr "ハードウェアイベントソース %s が停止しました: %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
@@ -1612,7 +1623,9 @@ msgstr "アウトバウンドキューの読み取りができませんでした
 #: src/sysmanage_agent/communication/http_polling.py:142
 #, python-format
 msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "キュー内のメッセージ %s は読み取り可能な JSON ではありません。ポーリングでは送信しません"
+msgstr ""
+"キュー内のメッセージ %s は読み取り可能な JSON ではありません。ポーリングでは"
+"送信しません"
 
 #: src/sysmanage_agent/communication/http_polling.py:158
 #, python-format
@@ -1626,9 +1639,11 @@ msgstr "ポーリングされたメッセージ%sの処理中にエラーが発�
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
-msgstr "HTTP フォールバックを使用できません: このエージェントには保存された host_id がありません。登録を最初に行う必要があります。"
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
+msgstr ""
+"HTTP フォールバックを使用できません: このエージェントには保存された host_id "
+"がありません。登録を最初に行う必要があります。"
 
 #: src/sysmanage_agent/communication/http_polling.py:232
 #, python-format
@@ -1637,8 +1652,9 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"WebSocket の代わりに HTTP ポーリングを使用しています: このネットワークは WebSocket "
-"アップグレードを拒否しました。コマンドは最大数秒の遅延で到着します。WebSocket アップグレードを %s に許可するように設定してください。"
+"WebSocket の代わりに HTTP ポーリングを使用しています: このネットワークは "
+"WebSocket アップグレードを拒否しました。コマンドは最大数秒の遅延で到着しま"
+"す。WebSocket アップグレードを %s に許可するように設定してください。"
 
 #: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
@@ -1647,117 +1663,130 @@ msgstr "ポーリングに失敗しました (%s); %d秒後に再試行します
 
 #: src/sysmanage_agent/communication/http_polling.py:264
 msgid "Re-testing whether this network now allows WebSocket connections"
-msgstr "このネットワークが WebSocket 接続を許可するようになったかどうかを再テストしています"
+msgstr ""
+"このネットワークが WebSocket 接続を許可するようになったかどうかを再テストして"
+"います"
 
-#: src/sysmanage_agent/communication/message_handler.py:198
+#: src/sysmanage_agent/communication/message_handler.py:205
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "メッセージのキューに追加できませんでした: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:236
+#: src/sysmanage_agent/communication/message_handler.py:243
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "メッセージのコマンド認識をキューに追加できませんでした: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:244
+#: src/sysmanage_agent/communication/message_handler.py:251
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "%s のコマンド認知をキューに追加中にエラーが発生しました: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:283
+#: src/sysmanage_agent/communication/message_handler.py:290
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "サーバーエラー [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:336
+#: src/sysmanage_agent/communication/message_handler.py:343
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
-msgstr "メッセージタイムスタンプを解析できませんでした。古いデータチェックのために：%s"
+msgstr ""
+"メッセージタイムスタンプを解析できませんでした。古いデータチェックのために："
+"%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:374
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+#: src/sysmanage_agent/communication/message_handler.py:381
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr "ホスト登録が承認待ちです。定期的な試行を継続します"
 
-#: src/sysmanage_agent/communication/message_handler.py:379
+#: src/sysmanage_agent/communication/message_handler.py:388
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "サーバーからのメッセージにホスト名が欠けています。これはバグです。"
 
-#: src/sysmanage_agent/communication/message_handler.py:382
+#: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "サーバーがメッセージのキューに追加に失敗しました: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:406
+#: src/sysmanage_agent/communication/message_handler.py:412
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"This host's registration was refused; asking the server again in %d seconds."
+msgstr ""
+"このホストの登録は拒否されました。%d 秒後にサーバーへ再度問い合わせます。"
+
+#: src/sysmanage_agent/communication/message_handler.py:450
+#, python-format
+msgid ""
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"サーバーから host_not_registered (ストライク %(n)d/%(limit)d) が報告されました -- "
-"ホストIDを破棄せずに再接続します。サーバーがこのホストをテナントインデックスから再解決できるように; 再登録は、これが継続する場合のみ行います。"
+"サーバーから host_not_registered (ストライク %(n)d/%(limit)d) が報告されまし"
+"た -- ホストIDを破棄せずに再接続します。サーバーがこのホストをテナントイン"
+"デックスから再解決できるように; 再登録は、これが継続する場合のみ行います。"
 
-#: src/sysmanage_agent/communication/message_handler.py:419
+#: src/sysmanage_agent/communication/message_handler.py:463
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered が持続しました (%(n)d ストライク) -- このホストを本当に消失したものとして扱います。保存された "
-"host_id をクリアし、再登録します。"
+"host_not_registered が持続しました (%(n)d ストライク) -- このホストを本当に消"
+"失したものとして扱います。保存された host_id をクリアし、再登録します。"
 
-#: src/sysmanage_agent/communication/message_handler.py:430
+#: src/sysmanage_agent/communication/message_handler.py:474
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "保存された host_id をクリアできませんでした：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:486
+#: src/sysmanage_agent/communication/message_handler.py:530
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "%s: インベントリ更新に失敗しました: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:496
+#: src/sysmanage_agent/communication/message_handler.py:540
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "%s: 無効なアクション'%s' -- 応答なし"
 
-#: src/sysmanage_agent/communication/message_handler.py:583
+#: src/sysmanage_agent/communication/message_handler.py:627
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
-msgstr "メッセージ受信者：WebSocketの同時切断によりクリア；再接続を許可するため、受信ループから退出します"
+msgstr ""
+"メッセージ受信者：WebSocketの同時切断によりクリア；再接続を許可するため、受信"
+"ループから退出します"
 
-#: src/sysmanage_agent/communication/message_handler.py:602
+#: src/sysmanage_agent/communication/message_handler.py:646
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "無効なJSONが受信されました：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:604
+#: src/sysmanage_agent/communication/message_handler.py:648
 #, python-format
 msgid "Error processing message: %s"
 msgstr "メッセージ処理中にエラーが発生しました: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:617
+#: src/sysmanage_agent/communication/message_handler.py:661
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: メッセージ受信者エラー: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:669
+#: src/sysmanage_agent/communication/message_handler.py:713
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "未知のメッセージタイプ: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:791
 msgid "Heartbeat failed, connection may be lost"
 msgstr "ハートビートに失敗しました。接続が切断されている可能性があります"
 
-#: src/sysmanage_agent/communication/message_handler.py:756
+#: src/sysmanage_agent/communication/message_handler.py:800
 #, python-format
 msgid "Message sender error: %s"
 msgstr "メッセージ送信者エラー: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:772
+#: src/sysmanage_agent/communication/message_handler.py:816
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "メッセージハンドラのクローズに失敗しました：%s"
@@ -1837,7 +1866,8 @@ msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
 msgstr ""
-">>> [CREATE_CHILD_HOST_DUPLICATE] 重複のvm_name=%s queue_message_id=%sをスキップします"
+">>> [CREATE_CHILD_HOST_DUPLICATE] 重複のvm_name=%s queue_message_id=%sをス"
+"キップします"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:160
@@ -1964,7 +1994,8 @@ msgstr "%s のサービス状態エラー: %s"
 #: src/sysmanage_agent/core/agent_utils.py:990
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
-msgstr "実行中ジャーナルの合成 command_result をキューに入れられませんでした: %s"
+msgstr ""
+"実行中ジャーナルの合成 command_result をキューに入れられませんでした: %s"
 
 #: src/sysmanage_agent/core/auth_helper.py:115
 #, python-format
@@ -2343,7 +2374,9 @@ msgstr "gpg 削除に失敗しました (rc=%s): %s"
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
-msgstr "エージェントでは、Windowsユーザーとしてgpgを実行することはサポートされていません；現在のキーリングにインポートされます。"
+msgstr ""
+"エージェントでは、Windowsユーザーとしてgpgを実行することはサポートされていま"
+"せん；現在のキーリングにインポートされます。"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2674,7 +2707,9 @@ msgstr "Flatpak はすでにインストールされています"
 #: src/sysmanage_agent/operations/package_manager_operations.py:188
 #, python-format
 msgid "No supported package manager found to install %s"
-msgstr "インストール用のサポートされているパッケージマネージャーが見つかりませんでした: %s"
+msgstr ""
+"インストール用のサポートされているパッケージマネージャーが見つかりませんでし"
+"た: %s"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:211
 #, python-format
@@ -2705,12 +2740,13 @@ msgstr "Homebrew はすでにインストールされています"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew のインストールには手動操作が必要です。次のコマンドでインストールしてください: /bin/bash -c \"$(curl -fsSL"
-" https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew のインストールには手動操作が必要です。次のコマンドでインストールして"
+"ください: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/"
+"Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -2751,89 +2787,89 @@ msgstr "アンインストール追跡レコードの更新に失敗しました
 msgid "No package name specified"
 msgstr "パッケージ名が指定されていません"
 
-#: src/sysmanage_agent/operations/package_operations.py:269
-#: src/sysmanage_agent/operations/package_operations.py:377
+#: src/sysmanage_agent/operations/package_operations.py:275
+#: src/sysmanage_agent/operations/package_operations.py:383
 msgid "No request_id specified"
 msgstr "request_id が指定されていません"
 
-#: src/sysmanage_agent/operations/package_operations.py:274
+#: src/sysmanage_agent/operations/package_operations.py:280
 msgid "No packages specified for installation"
 msgstr "インストールするパッケージが指定されていません"
 
-#: src/sysmanage_agent/operations/package_operations.py:353
+#: src/sysmanage_agent/operations/package_operations.py:359
 #, python-format
 msgid "Failed to send installation completion to server: %s"
 msgstr "インストール完了をサーバーに送信できませんでした: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:382
+#: src/sysmanage_agent/operations/package_operations.py:388
 msgid "No packages specified for uninstallation"
 msgstr "アンインストールするパッケージが指定されていません"
 
-#: src/sysmanage_agent/operations/package_operations.py:479
+#: src/sysmanage_agent/operations/package_operations.py:485
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "アンインストール完了をサーバーに送信できませんでした: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:488
+#: src/sysmanage_agent/operations/package_operations.py:494
 msgid "No packages to install"
 msgstr "インストールするパッケージはありません"
 
-#: src/sysmanage_agent/operations/package_operations.py:534
+#: src/sysmanage_agent/operations/package_operations.py:540
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get install が失敗しました: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:539
+#: src/sysmanage_agent/operations/package_operations.py:545
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "apt-get を使用したパッケージインストールに失敗しました: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:542
+#: src/sysmanage_agent/operations/package_operations.py:548
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "apt-get install 中の例外: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:549
+#: src/sysmanage_agent/operations/package_operations.py:555
 msgid "No packages to uninstall"
 msgstr "アンインストールするパッケージはありません"
 
-#: src/sysmanage_agent/operations/package_operations.py:580
+#: src/sysmanage_agent/operations/package_operations.py:586
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove 失敗: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:585
+#: src/sysmanage_agent/operations/package_operations.py:591
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "パッケージをアンインストールできませんでした: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:588
+#: src/sysmanage_agent/operations/package_operations.py:594
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "apt-get remove 中の例外: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:629
+#: src/sysmanage_agent/operations/package_operations.py:635
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr "要求 %s のインストール完了をキューに追加できませんでした"
 
-#: src/sysmanage_agent/operations/package_operations.py:634
+#: src/sysmanage_agent/operations/package_operations.py:640
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "インストール完了のキューイングに失敗しました: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:690
+#: src/sysmanage_agent/operations/package_operations.py:696
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "パッケージインストールステータス更新を送信できませんでした: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:763
+#: src/sysmanage_agent/operations/package_operations.py:769
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "パッケージ更新実行エラー: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:772
+#: src/sysmanage_agent/operations/package_operations.py:778
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -2930,7 +2966,9 @@ msgstr "スクリプトのタイムアウトは最大%d秒に制限されます"
 
 #: src/sysmanage_agent/operations/script_operations.py:94
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
-msgstr "エージェントは apply_deployment_plan を公開していません。アップグレードが必要です"
+msgstr ""
+"エージェントは apply_deployment_plan を公開していません。アップグレードが必要"
+"です"
 
 #: src/sysmanage_agent/operations/script_operations.py:98
 #, python-format
@@ -3161,7 +3199,9 @@ msgstr "更新の開始に失敗しました: %s"
 #: src/sysmanage_agent/operations/update_operations.py:169
 #, python-format
 msgid "No package manager specified for %s"
-msgstr "パッケージマネージャーが指定されていないため %s 用にパッケージマネージャーが必要です"
+msgstr ""
+"パッケージマネージャーが指定されていないため %s 用にパッケージマネージャーが"
+"必要です"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/operations/update_operations.py:201
@@ -3204,7 +3244,8 @@ msgstr "ユーザー %s とデフォルトグループが正常に削除され�
 #: src/sysmanage_agent/operations/user_account_operations.py:19
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
-msgstr "ユーザー %s を削除しましたが、デフォルトグループの削除に失敗しました: %s"
+msgstr ""
+"ユーザー %s を削除しましたが、デフォルトグループの削除に失敗しました: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:38
 #: src/sysmanage_agent/operations/user_account_operations.py:124
@@ -3468,7 +3509,9 @@ msgstr "クリーンアップエラーにもかかわらず続行..."
 #: src/sysmanage_agent/registration/registration_manager.py:610
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
-msgstr "%d 個の破損したエントリが host_approval テーブルで見つかり、クリーンアップしています..."
+msgstr ""
+"%d 個の破損したエントリが host_approval テーブルで見つかり、クリーンアップし"
+"ています..."
 
 #: src/sysmanage_agent/registration/registration_manager.py:624
 #, python-format
@@ -3500,7 +3543,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Error fetching winget page %d (collected %d packages so far): %s"
-#~ msgstr "winget ページ %d の取得エラー (これまでに %d 個のパッケージを収集): %s"
+#~ msgstr ""
+#~ "winget ページ %d の取得エラー (これまでに %d 個のパッケージを収集): %s"
 
 #, python-format
 #~ msgid "Error fetching page at skip %d: %s"
@@ -3511,7 +3555,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "%s: インベントリ更新が要求されたが、data_collectorにはsend_software_inventory_updateがないため無視します"
+#~ "%s: インベントリ更新が要求されたが、data_collectorには"
+#~ "send_software_inventory_updateがないため無視します"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3539,7 +3584,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
-#~ msgstr "メッセージ%sが失敗しました（試行%d/%d）、%d秒後に再試行を予定しています"
+#~ msgstr ""
+#~ "メッセージ%sが失敗しました（試行%d/%d）、%d秒後に再試行を予定しています"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3574,7 +3620,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Windows certificate collection completed: %d certificates found"
-#~ msgstr "ソフトウェアインベントリの収集が完了しました：%d個のパッケージが見つかりました"
+#~ msgstr ""
+#~ "ソフトウェアインベントリの収集が完了しました：%d個のパッケージが見つかりま"
+#~ "した"
 
 #, python-format
 #~ msgid "Applying firmware update for device: %s"
@@ -3601,7 +3649,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Package collection completed. Collected %d packages"
-#~ msgstr "ソフトウェアインベントリの収集が完了しました：%d個のパッケージが見つかりました"
+#~ msgstr ""
+#~ "ソフトウェアインベントリの収集が完了しました：%d個のパッケージが見つかりま"
+#~ "した"
 
 #, python-format
 #~ msgid "Collected %d packages from pkg_info"
@@ -3663,8 +3713,11 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "%s パッケージ: %s v%s が見つかりました"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
-#~ msgstr "重複する役割:%s（サービス%s）をスキップしました（既にパッケージ%sがあります）"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgstr ""
+#~ "重複する役割:%s（サービス%s）をスキップしました（既にパッケージ%sがありま"
+#~ "す）"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3721,7 +3774,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgid ""
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
-#~ msgstr "更新検出完了: %d 個の更新を発見 (%d セキュリティ、%d システム、%d アプリケーション)"
+#~ msgstr ""
+#~ "更新検出完了: %d 個の更新を発見 (%d セキュリティ、%d システム、%d アプリ"
+#~ "ケーション)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3813,7 +3868,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
-#~ msgstr ".wslconfigが見つかりません、%sでWSLの自動シャットダウンを防ぐために作成します"
+#~ msgstr ""
+#~ ".wslconfigが見つかりません、%sでWSLの自動シャットダウンを防ぐために作成し"
+#~ "ます"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -3909,20 +3966,24 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Started packages batch %s with %d total packages"
-#~ msgstr "パッケージバッチ %s を開始しました。合計で %d 個のパッケージがあります"
+#~ msgstr ""
+#~ "パッケージバッチ %s を開始しました。合計で %d 個のパッケージがあります"
 
 #, python-format
 #~ msgid "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
-#~ msgstr "%d 個のパッケージを %s から送信しました（バッチ %s、パッケージ %d-%d）"
+#~ msgstr ""
+#~ "%d 個のパッケージを %s から送信しました（バッチ %s、パッケージ %d-%d）"
 
 #, python-format
 #~ msgid "Completed packages batch %s"
 #~ msgstr "パッケージのバッチ%sを完了しました"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
-#~ msgstr "非特権モードで証明書収集を実行中 - 一部の証明書にアクセスできない可能性があります"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
+#~ msgstr ""
+#~ "非特権モードで証明書収集を実行中 - 一部の証明書にアクセスできない可能性が"
+#~ "あります"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "システムからSSL証明書を収集しています"
@@ -3953,7 +4014,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Ignoring stale error message [%s] from %s (registration at %s)"
-#~ msgstr "古いエラーメッセージ [%s] を無視しました (%s からのメッセージ、登録は %s)"
+#~ msgstr ""
+#~ "古いエラーメッセージ [%s] を無視しました (%s からのメッセージ、登録は %s)"
 
 #~ msgid "Stored host_id cleared from database"
 #~ msgstr "ホスト承認レコードと関連データをデータベースから削除しました"
@@ -3972,7 +4034,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #~ msgid "WEBSOCKET_COMMUNICATION_ERROR: Connection to server closed"
 #~ msgstr ""
-#~ "WEBSOCKET Kommunikationsfehler: Server mit dem Serververbindung geschlossen"
+#~ "WEBSOCKET Kommunikationsfehler: Server mit dem Serververbindung "
+#~ "geschlossen"
 
 #, python-format
 #~ msgid "Queued outbound message: %s (ID: %s)"
@@ -4021,7 +4084,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d 件のスタックしたメッセージを回復しました"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established から送信キュー処理タスクを作成中"
 
 #, python-format
@@ -4029,9 +4093,11 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "Bridged network '%s' created successfully"
 
 #~ msgid "Outbound queue processor already running, not starting another"
-#~ msgstr "流出キュー処理プログラムはすでに実行中です。新しいプログラムを開始しません"
+#~ msgstr ""
+#~ "流出キュー処理プログラムはすでに実行中です。新しいプログラムを開始しません"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established から受信キュー処理タスクを作成中"
 
 #, python-format
@@ -4039,7 +4105,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "Bridged network '%s' created successfully"
 
 #~ msgid "Inbound queue processor already running, not starting another"
-#~ msgstr "流入キュー処理プログラムはすでに実行中です。新しいプログラムを開始しません"
+#~ msgstr ""
+#~ "流入キュー処理プログラムはすでに実行中です。新しいプログラムを開始しません"
 
 #~ msgid "Connection lost, stopping outbound queue processing"
 #~ msgstr "接続が確立されました。キュー処理を開始します"
@@ -4195,11 +4262,14 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "%s の収集を %.2f 秒で完了"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
-#~ msgstr "Windowsシステムイベントログの収集（10-30秒かかる可能性があります）..."
+#~ msgstr ""
+#~ "Windowsシステムイベントログの収集（10-30秒かかる可能性があります）..."
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
-#~ msgstr "Windowsセキュリティイベントログの収集（管理者権限が必要な場合があります）..."
+#~ msgstr ""
+#~ "Windowsセキュリティイベントログの収集（管理者権限が必要な場合がありま"
+#~ "す）..."
 
 #, python-format
 #~ msgid "Collecting %s..."
@@ -4226,7 +4296,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
-#~ msgstr "カスタムメトリクスを同期しました：アクティブ：%d 個、スキップ：%d 個（無効）"
+#~ msgstr ""
+#~ "カスタムメトリクスを同期しました：アクティブ：%d 個、スキップ：%d 個（無"
+#~ "効）"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
@@ -4242,13 +4314,16 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
-#~ msgstr "GPGキー%s (指紋%s) をターゲット=%s から削除しています。has_private=%s"
+#~ msgstr ""
+#~ "GPGキー%s (指紋%s) をターゲット=%s から削除しています。has_private=%s"
 
 #~ msgid "NAT rules already configured in before.rules"
 #~ msgstr "before.rulesにNATルールがすでに設定されています"
 
 #~ msgid "UFW not installed; skipping LXD bridge firewall config"
-#~ msgstr "UFW がインストールされていません；LXD ブリッジのファイアウォール設定をスキップします"
+#~ msgstr ""
+#~ "UFW がインストールされていません；LXD ブリッジのファイアウォール設定をス"
+#~ "キップします"
 
 #, python-format
 #~ msgid "Configuring UFW firewall for LXD bridge: %s"
@@ -4267,7 +4342,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-#~ msgstr "パッケージ %s をインストール中 (installation_id: %s、requested_by: %s)"
+#~ msgstr ""
+#~ "パッケージ %s をインストール中 (installation_id: %s、requested_by: %s)"
 
 #, python-format
 #~ msgid "Installing %d packages for request %s (requested_by: %s)"
@@ -4525,8 +4601,11 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "登録は受け付けられましたが、承認待ちです"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
-#~ msgstr "登録成功ですがホストIDが提供されていません - 単独で承認が行われる可能性があります"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
+#~ msgstr ""
+#~ "登録成功ですがホストIDが提供されていません - 単独で承認が行われる可能性が"
+#~ "あります"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4537,7 +4616,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "ホスト承認情報を正常に保存しました。Host ID: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
-#~ msgstr "承認後、システム情報(system_info)をバックエンド接続更新のためにキューに追加しました"
+#~ msgstr ""
+#~ "承認後、システム情報(system_info)をバックエンド接続更新のためにキューに追"
+#~ "加しました"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
@@ -4566,7 +4647,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgid ""
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
-#~ msgstr "サーバーはホストが登録されていないことを報告しました。保存されている host_id をクリアし、再登録をトリガーします..."
+#~ msgstr ""
+#~ "サーバーはホストが登録されていないことを報告しました。保存されている "
+#~ "host_id をクリアし、再登録をトリガーします..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -4590,7 +4673,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "System directory exists, using system database path: %s"
-#~ msgstr "システムディレクトリが存在します、システムデータベースパスを使用: %s"
+#~ msgstr ""
+#~ "システムディレクトリが存在します、システムデータベースパスを使用: %s"
 
 #, python-format
 #~ msgid "Falling back to local database path: %s"
@@ -4676,10 +4760,11 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
-#~ "macOS で Microsoft Defender for Endpoint を検出 (バージョン: %s、有効: %s、ライセンス: %s)"
+#~ "macOS で Microsoft Defender for Endpoint を検出 (バージョン: %s、有効: "
+#~ "%s、ライセンス: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4699,10 +4784,14 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #, python-format
 #~ msgid "Software inventory collection completed: %d packages found"
-#~ msgstr "ソフトウェアインベントリの収集が完了しました：%d個のパッケージが見つかりました"
+#~ msgstr ""
+#~ "ソフトウェアインベントリの収集が完了しました：%d個のパッケージが見つかりま"
+#~ "した"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-#~ msgstr "PowerShell が見つかりません (Windows ではないか PowerShell が未インストール)"
+#~ msgstr ""
+#~ "PowerShell が見つかりません (Windows ではないか PowerShell が未インストー"
+#~ "ル)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -4801,7 +4890,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgid ""
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
-#~ msgstr "%s での OpenTelemetry デプロイメントは現在サポートされていません。手動インストールが必要です。"
+#~ msgstr ""
+#~ "%s での OpenTelemetry デプロイメントは現在サポートされていません。手動イン"
+#~ "ストールが必要です。"
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -4883,7 +4974,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "BSDOtelDeployer は直接呼び出されるべきではありません"
 
 #~ msgid "No supported package manager found (apt/yum/dnf)"
-#~ msgstr "サポートされているパッケージマネージャーが見つかりません (apt/yum/dnf)"
+#~ msgstr ""
+#~ "サポートされているパッケージマネージャーが見つかりません (apt/yum/dnf)"
 
 #, python-format
 #~ msgid "Failed to install prerequisites: %s"
@@ -4948,7 +5040,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr "OpenBSD自動インストール進行中。VMは自動的にインストールして再起動します。10〜15分かかる場合があります。"
+#~ msgstr ""
+#~ "OpenBSD自動インストール進行中。VMは自動的にインストールして再起動します。"
+#~ "10〜15分かかる場合があります。"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "自動インストールHTTPリクエスト: %s から %s"
@@ -4960,7 +5054,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "自動インストールHTTPサーバーを%s:%dで開始しました"
 
 #~ msgid "HTTP port %d already in use, autoinstall may still work"
-#~ msgstr "HTTPポート%dは既に使用中ですが、自動インストールは機能する可能性があります"
+#~ msgstr ""
+#~ "HTTPポート%dは既に使用中ですが、自動インストールは機能する可能性があります"
 
 #~ msgid "Stopped autoinstall HTTP server"
 #~ msgstr "自動インストールHTTPサーバーを停止しました"
@@ -4987,7 +5082,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "自動インストールがinstall.confを取得するのを待機中にタイムアウト"
 
 #~ msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
-#~ msgstr "パスワードを暗号化できませんでした。プレーンテキストを使用します（非推奨）"
+#~ msgstr ""
+#~ "パスワードを暗号化できませんでした。プレーンテキストを使用します（非推奨）"
 
 #~ msgid "Port already in use"
 #~ msgstr "ポートは既に使用中です"
@@ -5075,7 +5171,8 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "このシステムでは KVM が利用できません。/dev/kvm が存在し、BIOS で CPU 仮想化が有効になっていることを確認してください。"
+#~ "このシステムでは KVM が利用できません。/dev/kvm が存在し、BIOS で CPU 仮想"
+#~ "化が有効になっていることを確認してください。"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM は既に初期化されており、使用可能です"
@@ -5224,10 +5321,14 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 # libguestfs-tools (guestmount) support
 #~ msgid "guestmount not found. Install libguestfs-tools package."
-#~ msgstr "guestmountが見つかりません。libguestfs-toolsパッケージをインストールしてください。"
+#~ msgstr ""
+#~ "guestmountが見つかりません。libguestfs-toolsパッケージをインストールしてく"
+#~ "ださい。"
 
 #~ msgid "guestunmount not found. Install libguestfs-tools package."
-#~ msgstr "guestunmountが見つかりません。libguestfs-toolsパッケージをインストールしてください。"
+#~ msgstr ""
+#~ "guestunmountが見つかりません。libguestfs-toolsパッケージをインストールして"
+#~ "ください。"
 
 #~ msgid "Found FreeBSD root: %s"
 #~ msgstr "FreeBSDルートが見つかりました: %s"
@@ -5261,7 +5362,9 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 #~ msgstr "LXDデフォルトプロファイルがsecurity.nesting=trueで設定されました"
 
 #~ msgid "Updating agent on child host: type=%s, name=%s, distribution=%s"
-#~ msgstr "子ホストのエージェントを更新中：タイプ=%s、名前=%s、ディストリビューション=%s"
+#~ msgstr ""
+#~ "子ホストのエージェントを更新中：タイプ=%s、名前=%s、ディストリビューション"
+#~ "=%s"
 
 #~ msgid "Unsupported child distribution for agent update: %s"
 #~ msgstr "エージェント更新にサポートされていない子ディストリビューション：%s"

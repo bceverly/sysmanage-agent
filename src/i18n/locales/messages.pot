@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 07:32-0400\n"
+"POT-Creation-Date: 2026-10-15 09:17-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -346,7 +346,13 @@ msgstr ""
 msgid "Failed to get Windows network configuration: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/hardware_health.py:430
+#: src/sysmanage_agent/collection/hardware_events.py:532
+#: src/sysmanage_agent/communication/hardware_event_loop.py:102
+#, python-format
+msgid "Hardware event source %s stopped: %s"
+msgstr ""
+
+#: src/sysmanage_agent/collection/hardware_health.py:454
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr ""
@@ -899,7 +905,7 @@ msgstr ""
 
 #: src/sysmanage_agent/collection/update_detection.py:189
 #: src/sysmanage_agent/operations/package_installation_helpers.py:252
-#: src/sysmanage_agent/operations/package_operations.py:237
+#: src/sysmanage_agent/operations/package_operations.py:243
 #, python-format
 msgid "Failed to install package %s: %s"
 msgstr ""
@@ -1602,11 +1608,6 @@ msgstr ""
 msgid "Listening for hardware events (%s)"
 msgstr ""
 
-#: src/sysmanage_agent/communication/hardware_event_loop.py:102
-#, python-format
-msgid "Hardware event source %s stopped: %s"
-msgstr ""
-
 #: src/sysmanage_agent/communication/http_polling.py:83
 msgid "Could not read the stored host_id for polling"
 msgstr ""
@@ -1653,45 +1654,52 @@ msgstr ""
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:198
+#: src/sysmanage_agent/communication/message_handler.py:205
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:236
+#: src/sysmanage_agent/communication/message_handler.py:243
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:244
+#: src/sysmanage_agent/communication/message_handler.py:251
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:283
+#: src/sysmanage_agent/communication/message_handler.py:290
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:336
+#: src/sysmanage_agent/communication/message_handler.py:343
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:374
+#: src/sysmanage_agent/communication/message_handler.py:381
 msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:379
+#: src/sysmanage_agent/communication/message_handler.py:388
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:382
+#: src/sysmanage_agent/communication/message_handler.py:391
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:406
+#: src/sysmanage_agent/communication/message_handler.py:412
+#, python-format
+msgid ""
+"This host's registration was refused; asking the server again in %d "
+"seconds."
+msgstr ""
+
+#: src/sysmanage_agent/communication/message_handler.py:450
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- "
@@ -1699,64 +1707,64 @@ msgid ""
 " host from its tenant index; will re-register only if it persists."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:419
+#: src/sysmanage_agent/communication/message_handler.py:463
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:430
+#: src/sysmanage_agent/communication/message_handler.py:474
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:486
+#: src/sysmanage_agent/communication/message_handler.py:530
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:496
+#: src/sysmanage_agent/communication/message_handler.py:540
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:583
+#: src/sysmanage_agent/communication/message_handler.py:627
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:602
+#: src/sysmanage_agent/communication/message_handler.py:646
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:604
+#: src/sysmanage_agent/communication/message_handler.py:648
 #, python-format
 msgid "Error processing message: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:617
+#: src/sysmanage_agent/communication/message_handler.py:661
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:669
+#: src/sysmanage_agent/communication/message_handler.py:713
 #, python-format
 msgid "Unknown message type: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:747
+#: src/sysmanage_agent/communication/message_handler.py:791
 msgid "Heartbeat failed, connection may be lost"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:756
+#: src/sysmanage_agent/communication/message_handler.py:800
 #, python-format
 msgid "Message sender error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:772
+#: src/sysmanage_agent/communication/message_handler.py:816
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr ""
@@ -2742,89 +2750,89 @@ msgstr ""
 msgid "No package name specified"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:269
-#: src/sysmanage_agent/operations/package_operations.py:377
+#: src/sysmanage_agent/operations/package_operations.py:275
+#: src/sysmanage_agent/operations/package_operations.py:383
 msgid "No request_id specified"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:274
+#: src/sysmanage_agent/operations/package_operations.py:280
 msgid "No packages specified for installation"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:353
+#: src/sysmanage_agent/operations/package_operations.py:359
 #, python-format
 msgid "Failed to send installation completion to server: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:382
+#: src/sysmanage_agent/operations/package_operations.py:388
 msgid "No packages specified for uninstallation"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:479
+#: src/sysmanage_agent/operations/package_operations.py:485
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:488
+#: src/sysmanage_agent/operations/package_operations.py:494
 msgid "No packages to install"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:534
+#: src/sysmanage_agent/operations/package_operations.py:540
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:539
+#: src/sysmanage_agent/operations/package_operations.py:545
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:542
+#: src/sysmanage_agent/operations/package_operations.py:548
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:549
+#: src/sysmanage_agent/operations/package_operations.py:555
 msgid "No packages to uninstall"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:580
+#: src/sysmanage_agent/operations/package_operations.py:586
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:585
+#: src/sysmanage_agent/operations/package_operations.py:591
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:588
+#: src/sysmanage_agent/operations/package_operations.py:594
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:629
+#: src/sysmanage_agent/operations/package_operations.py:635
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:634
+#: src/sysmanage_agent/operations/package_operations.py:640
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:690
+#: src/sysmanage_agent/operations/package_operations.py:696
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:763
+#: src/sysmanage_agent/operations/package_operations.py:769
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/package_operations.py:772
+#: src/sysmanage_agent/operations/package_operations.py:778
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
