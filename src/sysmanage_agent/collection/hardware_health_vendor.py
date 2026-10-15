@@ -73,6 +73,11 @@ MAX_BMC_SENSORS = 60
 SEL_WINDOW = timedelta(hours=24)
 
 
+_RESPONSE_DATA = "Response Data"
+_CONTROLLER_STATUS = "Controller Status"
+_NO_CONTROLLER = "no controller"
+
+
 def _root() -> bool:
     return hasattr(os, "geteuid") and os.geteuid() == 0
 
@@ -133,7 +138,7 @@ def parse_storcli_details(data: Dict[str, object]) -> Dict[str, Dict[str, object
     """``/call/eall/sall show all J`` -> {drive id: error counters}."""
     details: Dict[str, Dict[str, object]] = {}
     for ctrl in data.get("Controllers") or []:
-        for key, value in ((ctrl or {}).get("Response Data") or {}).items():
+        for key, value in ((ctrl or {}).get(_RESPONSE_DATA) or {}).items():
             match = re.fullmatch(r"Drive /(\S+) - Detailed Information", key)
             if not match or not isinstance(value, dict):
                 continue
@@ -151,7 +156,7 @@ def parse_storcli_rebuild(data: Dict[str, object]) -> Dict[str, float]:
     """``/call/eall/sall show rebuild J`` -> {drive id: percent}."""
     progress: Dict[str, float] = {}
     for ctrl in data.get("Controllers") or []:
-        rows = (ctrl or {}).get("Response Data")
+        rows = (ctrl or {}).get(_RESPONSE_DATA)
         for row in rows if isinstance(rows, list) else []:
             percent = row.get("Progress%")
             if isinstance(percent, (int, float)):
@@ -203,8 +208,8 @@ def _storcli_vd(ctrl: int, row: Dict, drives: List[Dict]) -> Dict:
             "reasons": reasons, "metrics": metrics}  # fmt: skip
 
 
-def _storcli_controller(ctrl: int, data: Dict) -> Tuple[str, List, Dict]:
-    status = str((data.get("Status") or {}).get("Controller Status") or "").strip()
+def _storcli_controller(data: Dict) -> Tuple[str, List, Dict]:
+    status = str((data.get("Status") or {}).get(_CONTROLLER_STATUS) or "").strip()
     states = [_judge(status, _CONTROLLER_STATES, WARNING) if status else UNKNOWN]
     reasons = [] if states[0] == OK else [reason("controller_status", status=status)]
     metrics: Dict[str, object] = {"controller_status": status or None}
@@ -233,7 +238,7 @@ def parse_storcli(
             errors.append(str(status.get("Description") or status))
             continue
         number = status.get("Controller", len(components))
-        body = ctrl.get("Response Data") or {}
+        body = ctrl.get(_RESPONSE_DATA) or {}
         components += _storcli_controller_components(number, body, details, rebuild)
     return components, errors
 
@@ -244,7 +249,7 @@ def _storcli_controller_components(number, body, details, rebuild) -> List[Dict]
         for row in body.get("PD LIST") or []
     ]
     arrays = [_storcli_vd(number, row, drives) for row in body.get("VD LIST") or []]
-    state, reasons, metrics = _storcli_controller(number, body)
+    state, reasons, metrics = _storcli_controller(body)
     model = str((body.get("Basics") or {}).get("Model") or "").strip()
     controller = {"id": f"c{number}", "name": model or f"controller {number}",
                   "state": state, "reasons": reasons, "metrics": metrics,
@@ -265,7 +270,7 @@ def _json(text: str) -> Optional[Dict[str, object]]:
 
 
 def _no_controller(errors: List[str]) -> bool:
-    return bool(errors) and all("no controller" in e.lower() for e in errors)
+    return bool(errors) and all(_NO_CONTROLLER in e.lower() for e in errors)
 
 
 def _storcli_extras(run: Runner, tool: str, components: List[Dict]):
@@ -294,7 +299,7 @@ def _megaraid(report: Report, run: Runner, family: str, tool, rc, out) -> None:
         return
     components, errors = parse_storcli(data)
     if _no_controller(errors):
-        report.source(family, RAN, "no controller")
+        report.source(family, RAN, _NO_CONTROLLER)
         return
     if errors:
         report.source(family, SOURCE_FAILED, "; ".join(errors))
@@ -369,7 +374,7 @@ def parse_ssacli(text: str) -> List[Dict[str, object]]:
 
 
 def _ssa_controller(fields: Dict[str, str]) -> Tuple[str, List, Dict]:
-    status = fields.get("Controller Status")
+    status = fields.get(_CONTROLLER_STATUS)
     battery = fields.get("Battery/Capacitor Status")
     states, reasons = [OK], []
     if status and status.upper() != "OK":
@@ -576,7 +581,7 @@ def _arc_physical(item: Dict, ctrl: int) -> Optional[Dict]:
 
 def _arc_controller(parsed: Dict, ctrl: int) -> Dict:
     fields, battery = parsed["controller"], parsed["battery"].get("Status")
-    status = fields.get("Controller Status")
+    status = fields.get(_CONTROLLER_STATUS)
     state = _judge(status, {"optimal": OK, "failed": FAILED}, WARNING)
     reasons = [] if state == OK else [reason("controller_status", status=status)]
     if battery:
@@ -612,7 +617,7 @@ def collect_arcconf(report: Report, run: Runner) -> None:
     tool, rc, out = found
     parsed = parse_arcconf(out, 1)
     if parsed["found"] == 0:
-        report.source("arcconf", RAN, "no controller")
+        report.source("arcconf", RAN, _NO_CONTROLLER)
         return
     if rc != 0:
         report.source("arcconf", SOURCE_FAILED, f"rc={rc}: {out}")
@@ -643,7 +648,7 @@ _EVENT_WARNING = re.compile(
     re.IGNORECASE,
 )
 _SDR_STATUS = {"ok": OK, "nc": WARNING, "lnc": WARNING, "unc": WARNING}
-_SDR_STATUS.update({s: FAILED for s in ("cr", "lcr", "ucr", "nr", "lnr", "unr")})
+_SDR_STATUS.update(dict.fromkeys(("cr", "lcr", "ucr", "nr", "lnr", "unr"), FAILED))
 _SDR_UNITS = (
     ("degrees c", "temperature_c"),
     ("rpm", "rpm"),

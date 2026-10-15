@@ -331,11 +331,11 @@ def collect_identity(system: Optional[str] = None) -> Dict[str, object]:
     reader = _READERS.get(system)
     if reader is None:
         return {
-            **{f: None for f in FIELDS},
+            **dict.fromkeys(FIELDS),
             "vendor": None,
             "model": None,
             "match_key": None,
-            "status": {f: ABSENT for f in FIELDS},
+            "status": dict.fromkeys(FIELDS, ABSENT),
         }
     raw = reader()
     uuid, uuid_status = (

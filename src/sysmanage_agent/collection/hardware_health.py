@@ -342,15 +342,14 @@ _SMART_ATTRIBUTES = {
 }
 
 
-def parse_smartctl_json(data: Dict[str, object]) -> Tuple[str, List[str], Dict]:
-    """``smartctl -j -H -A`` (SATA / SAS / NVMe) -> state, reasons, metrics."""
+def _smart_metrics(data: Dict[str, object]) -> Dict[str, object]:
+    """The values worth keeping from ``smartctl -j``: temperature, the ATA
+    attributes we judge on, and the NVMe health log."""
     metrics: Dict[str, object] = {}
-    passed = (data.get("smart_status") or {}).get("passed")
     temperature = (data.get("temperature") or {}).get("current")
     if temperature is not None:
         metrics["temperature_c"] = temperature
-    table = (data.get("ata_smart_attributes") or {}).get("table") or []
-    for attr in table:
+    for attr in (data.get("ata_smart_attributes") or {}).get("table") or []:
         field = _SMART_ATTRIBUTES.get(attr.get("id"))
         if field:
             metrics[field] = (attr.get("raw") or {}).get("value")
@@ -362,15 +361,24 @@ def parse_smartctl_json(data: Dict[str, object]) -> Tuple[str, List[str], Dict]:
             media_errors=nvme.get("media_errors"),
             power_on_hours=nvme.get("power_on_hours"),
         )
-        state, reasons = nvme_state(metrics)
-    else:
-        state, reasons = OK, []
+    return metrics
+
+
+_SECTOR_FIELDS = ("reallocated_sectors", "pending_sectors", "offline_uncorrectable")
+
+
+def parse_smartctl_json(data: Dict[str, object]) -> Tuple[str, List[str], Dict]:
+    """``smartctl -j -H -A`` (SATA / SAS / NVMe) -> state, reasons, metrics."""
+    metrics = _smart_metrics(data)
+    passed = (data.get("smart_status") or {}).get("passed")
+    nvme = data.get("nvme_smart_health_information_log")
+    state, reasons = nvme_state(metrics) if isinstance(nvme, dict) else (OK, [])
     if passed is False:
         state = FAILED
         reasons.insert(0, reason("smart_failed"))
     elif passed is None and not nvme:
         state = UNKNOWN
-    for field in ("reallocated_sectors", "pending_sectors", "offline_uncorrectable"):
+    for field in _SECTOR_FIELDS:
         value = metrics.get(field)
         if isinstance(value, int) and value > 0:
             state = worst([state, WARNING])

@@ -91,6 +91,9 @@ try {
 _HEALTH = {"Healthy": OK, "Warning": WARNING, "Unhealthy": FAILED}
 
 
+_SOURCE = "powershell storage"
+
+
 def _decikelvin(value) -> Optional[float]:
     """ACPI thermal zones report tenths of a kelvin; 0 = no reading."""
     if not isinstance(value, (int, float)) or value <= 0:
@@ -202,7 +205,7 @@ def collect(report: Report, _system, run, _read=None) -> None:
         ["powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded]
     )
     if rc != 0:
-        report.source("powershell storage", SOURCE_FAILED, out)
+        report.source(_SOURCE, SOURCE_FAILED, out)
         return
     # No JSON at all is a failure, not "nothing found": an empty report
     # would read as healthy.
@@ -212,7 +215,7 @@ def collect(report: Report, _system, run, _read=None) -> None:
         if not isinstance(data, dict):
             raise ValueError("no report in the output")
     except ValueError as exc:
-        report.source("powershell storage", SOURCE_FAILED, f"unreadable output: {exc}")
+        report.source(_SOURCE, SOURCE_FAILED, f"unreadable output: {exc}")
         return
-    report.source("powershell storage", RAN)
+    report.source(_SOURCE, RAN)
     parse(data, report)

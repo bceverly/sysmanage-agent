@@ -108,10 +108,9 @@ def _rc_conf_enabled(read: Reader, name: str) -> Optional[bool]:
     text = read(RC_CONF)
     if text is None:
         return None
-    match = None
-    for match in re.finditer(rf'^\s*{name}=["\']?(\w+)', text, re.M):
-        pass
-    return bool(match) and match.group(1).upper() == "YES"
+    # the LAST assignment wins, as in rc.subr
+    matches = list(re.finditer(rf'^\s*{name}=["\']?(\w+)', text, re.M))
+    return bool(matches) and matches[-1].group(1).upper() == "YES"
 
 
 def _chrony(system, run, read) -> Dict[str, object]:

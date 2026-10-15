@@ -150,12 +150,22 @@ def parse_ntpq_rv(text: str) -> Dict[str, object]:
     )
 
 
+def _key_values(text: str) -> Dict[str, str]:
+    """``KEY=value`` lines as a dict."""
+    values: Dict[str, str] = {}
+    for line in text.splitlines():
+        if "=" in line:
+            key, value = line.split("=", 1)
+            values[key] = value
+    return values
+
+
 def parse_timedatectl(show: str, timesync: str = "") -> Dict[str, object]:
     """``timedatectl show`` (+ ``show-timesync --all`` for the source).
 
     systemd-timesyncd does not publish an offset estimate; that stays None."""
-    values = dict(line.split("=", 1) for line in show.splitlines() if "=" in line)
-    sync = dict(line.split("=", 1) for line in timesync.splitlines() if "=" in line)
+    values = _key_values(show)
+    sync = _key_values(timesync)
     running = values.get("NTP") == "yes"
     stratum = _number(r"Stratum=(\d+)", sync.get("NTPMessage", ""))
     return _status(

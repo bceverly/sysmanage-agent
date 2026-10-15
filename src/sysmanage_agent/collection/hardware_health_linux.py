@@ -98,7 +98,7 @@ def read_nvme_smart_log(device: str) -> bytes:
     cmd = _NvmeAdminCmd(
         opcode=_GET_LOG_PAGE,
         nsid=0xFFFFFFFF,
-        addr=ctypes.addressof(buf),
+        addr=ctypes.cast(buf, ctypes.c_void_p).value,
         data_len=_LOG_BYTES,
         # number of dwords - 1 in the upper half, the log id in the lower
         cdw10=((_LOG_BYTES // 4 - 1) << 16) | _SMART_LOG,

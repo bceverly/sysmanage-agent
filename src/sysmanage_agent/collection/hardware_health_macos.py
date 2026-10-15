@@ -39,7 +39,7 @@ _SMART = {"Verified": OK, "Failing": FAILED}
 def _plist(text: str) -> Optional[Dict]:
     try:
         data = plistlib.loads(text.encode())
-    except (plistlib.InvalidFileException, ValueError, TypeError):
+    except (ValueError, TypeError):  # InvalidFileException is a ValueError
         return None
     return data if isinstance(data, dict) else None
 

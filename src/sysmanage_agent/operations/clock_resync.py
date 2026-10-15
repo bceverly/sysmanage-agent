@@ -171,6 +171,13 @@ def resync(
         result["error"] = "no_tool"
         return result
     result["method"] = " ".join(steps[-1][0][:2])
+    _run_steps(steps, run, result)
+    result["status_after"] = ts.collect_time_status(system, run)
+    return result
+
+
+def _run_steps(steps, run, result: Dict) -> None:
+    """Run the plan in order; a REQUIRED step that fails ends it."""
     for argv, required in steps:
         rc, out = run(argv)
         if rc != 0 and required:
@@ -179,9 +186,6 @@ def resync(
             logger.warning(
                 _("Clock resync: %s failed (%s): %s"), argv[0], rc, (out or "")[-200:]
             )
-            break
-    else:
-        result["success"] = True
-        logger.info(_("Clock resync: %s succeeded"), result["method"])
-    result["status_after"] = ts.collect_time_status(system, run)
-    return result
+            return
+    result["success"] = True
+    logger.info(_("Clock resync: %s succeeded"), result["method"])

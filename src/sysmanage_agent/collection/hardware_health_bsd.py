@@ -60,6 +60,9 @@ from src.sysmanage_agent.collection.hardware_health import (
 # --- FreeBSD -------------------------------------------------------------------
 
 
+_HW_SENSORS = "hw.sensors"
+
+
 def parse_nvmecontrol_devlist(text: str) -> Dict[str, str]:
     """``nvmecontrol devlist`` -> {controller: model}."""
     controllers = {}
@@ -303,7 +306,7 @@ def _device_component(report: Report, device: str, sensors: List[Dict]) -> None:
         if state != OK:
             reasons.append(_sensor_reason(sensor))
     state = worst(states) if states else UNKNOWN
-    report.add(kind, device, device, state, reasons, metrics, "hw.sensors")
+    report.add(kind, device, device, state, reasons, metrics, _HW_SENSORS)
 
 
 def _platform_sensor(report: Report, device: str, sensor) -> None:
@@ -317,23 +320,23 @@ def _platform_sensor(report: Report, device: str, sensor) -> None:
                 SENSOR, f"{device}/temp{sensor['index']}",
                 f"{device} {sensor['description'] or 'temperature'}",
                 status or OK, [] if status in (None, OK) else [_sensor_reason(sensor)],
-                {"temperature_c": celsius}, "hw.sensors",
+                {"temperature_c": celsius}, _HW_SENSORS,
             )  # fmt: skip
     elif status in (WARNING, FAILED):
         report.add(
             SENSOR, f"{device}/{sensor['type']}{sensor['index']}",
             f"{device} {_label(sensor)}", status, [_sensor_reason(sensor)], {},
-            "hw.sensors",
+            _HW_SENSORS,
         )  # fmt: skip
 
 
 def read_hw_sensors(report: Report, run) -> Dict[str, List[Dict]]:
     """``sysctl hw.sensors`` -> {device: [sensors]} (empty when it failed)."""
-    rc, out = run(["sysctl", "hw.sensors"])
+    rc, out = run(["sysctl", _HW_SENSORS])
     if rc != 0:
-        report.source("hw.sensors", ABSENT if rc == -1 else SOURCE_FAILED, out)
+        report.source(_HW_SENSORS, ABSENT if rc == -1 else SOURCE_FAILED, out)
         return {}
-    report.source("hw.sensors", RAN)
+    report.source(_HW_SENSORS, RAN)
     by_device: Dict[str, List[Dict]] = {}
     for sensor in parse_hw_sensors(out):
         by_device.setdefault(str(sensor["device"]), []).append(sensor)
