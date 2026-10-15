@@ -703,6 +703,15 @@ class MessageHandler(MessageHandlerQueueMixin):
             await self.agent.handle_host_approval(data)
         elif message_type == "registration_success":
             await self.agent.handle_registration_success(data)
+        elif message_type == "registration_pending":
+            # The server's answer to system_info while this host awaits
+            # approval -- expected, not an unknown message (it was logged as
+            # one until 2026-10-15).
+            self.logger.info(
+                _(
+                    "Host registration is pending approval. Will continue periodic attempts."
+                )
+            )
         elif message_type == "logging_config_update":
             # The payload is nested under the envelope's "data" key (same as
             # command/ack messages), not at the top level.

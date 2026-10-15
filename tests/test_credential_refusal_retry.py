@@ -70,3 +70,14 @@ async def test_other_errors_do_not_retry():
     await handler._dispatch_server_error("queue_error", "x")
     assert handler.refusal_task is None
     await asyncio.sleep(0)
+
+
+@pytest.mark.asyncio
+async def test_registration_pending_is_not_an_unknown_message(caplog):
+    handler = _handler()
+    with caplog.at_level("INFO"):
+        await handler._dispatch_received_message(
+            {"message_type": "registration_pending", "approved": False}
+        )
+    assert "pending approval" in caplog.text
+    assert "Unknown message type" not in caplog.text

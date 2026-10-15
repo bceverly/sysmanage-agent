@@ -154,12 +154,21 @@ def test_journal_command_never_asks_for_the_kernel():
 # --- the journal reader ------------------------------------------------------------
 
 
+# The journal reader waits on a subprocess pipe with select(), which Windows
+# supports only on sockets; the reader is Linux-only (journalctl), so these two
+# cannot run on the Windows CI leg.
+LINUX_PIPES = pytest.mark.skipif(
+    sys.platform == "win32", reason="select() on a pipe; journalctl is Linux-only"
+)
+
+
 def _cat(lines):
     """A stand-in for journalctl that prints ``lines`` and exits."""
     script = "import sys; sys.stdout.write(sys.argv[1])"
     return [sys.executable, "-c", script, "".join(f"{l}\n" for l in lines)]
 
 
+@LINUX_PIPES
 def test_journal_reader_yields_hardware_lines_then_reports_the_exit():
     zed = json.dumps({"SYSLOG_IDENTIFIER": "zed", "MESSAGE": ZED_FAILURES[0]})
     events = []
@@ -179,6 +188,7 @@ def test_no_journalctl_is_silent():
     )
 
 
+@LINUX_PIPES
 def test_a_stop_ends_a_quiet_journal():
     stop = threading.Event()
     timer = threading.Timer(0.3, stop.set)
