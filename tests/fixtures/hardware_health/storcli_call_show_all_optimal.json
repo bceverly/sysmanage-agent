@@ -1,0 +1,117 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "007.1017.0000.0000 May 10, 2019",
+		"Operating system" : "Linux 5.15.0-91-generic",
+		"Controller" : 0,
+		"Status" : "Success",
+		"Description" : "None"
+	},
+	"Response Data" : {
+		"Basics" : {
+			"Controller" : 0,
+			"Model" : "AVAGO MegaRAID SAS 9361-8i",
+			"Serial Number" : "SV00000001",
+			"Current Controller Date/Time" : "10/14/2026, 12:00:00",
+			"SAS Address" : "500605b000000001"
+		},
+		"Version" : {
+			"Firmware Package Build" : "24.21.0-0151",
+			"Firmware Version" : "4.680.00-8527"
+		},
+		"Status" : {
+			"Controller Status" : "Optimal",
+			"Memory Correctable Errors" : 0,
+			"Memory Uncorrectable Errors" : 0,
+			"ECC Bucket Count" : 0,
+			"Any Offline VD Cache Preserved" : "No",
+			"BBU Status" : 0,
+			"PD Firmware Download in progress" : "No",
+			"Support PD Firmware Download" : "Yes",
+			"Lock Key Assigned" : "No",
+			"Failed to get lock key on bootup" : "No",
+			"Lock key has not been backed up" : "No",
+			"Bios was not detected during boot" : "No",
+			"Controller must be rebooted to complete security operation" : "No",
+			"A rollback operation is in progress" : "No",
+			"At least one PFK exists in NVRAM" : "No",
+			"SSC Policy is WB" : "No",
+			"Controller has booted into safe mode" : "No"
+		},
+		"Virtual Drives" : 1,
+		"VD LIST" : [
+			{
+				"DG/VD" : "0/0",
+				"TYPE" : "RAID1",
+				"State" : "Optl",
+				"Access" : "RW",
+				"Consist" : "Yes",
+				"Cache" : "RWBD",
+				"Cac" : "-",
+				"sCC" : "ON",
+				"Size" : "1.818 TB",
+				"Name" : "system"
+			}
+		],
+		"Physical Drives" : 3,
+		"PD LIST" : [
+			{
+				"EID:Slt" : "252:0",
+				"DID" : 8,
+				"State" : "Onln",
+				"DG" : 0,
+				"Size" : "1.818 TB",
+				"Intf" : "SATA",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST2000NM0055-1V4104",
+				"Sp" : "U",
+				"Type" : "-"
+			},
+			{
+				"EID:Slt" : "252:1",
+				"DID" : 9,
+				"State" : "Onln",
+				"DG" : 0,
+				"Size" : "1.818 TB",
+				"Intf" : "SATA",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST2000NM0055-1V4104",
+				"Sp" : "U",
+				"Type" : "-"
+			},
+			{
+				"EID:Slt" : "252:2",
+				"DID" : 10,
+				"State" : "GHS",
+				"DG" : "-",
+				"Size" : "1.818 TB",
+				"Intf" : "SATA",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST2000NM0055-1V4104",
+				"Sp" : "U",
+				"Type" : "-"
+			}
+		],
+		"Cachevault_Info" : [
+			{
+				"Model" : "CVPM02",
+				"State" : "Optimal",
+				"Temp" : "28C",
+				"Mode" : "-",
+				"MfgDate" : "2019/03/14"
+			}
+		]
+	}
+}
+]
+}

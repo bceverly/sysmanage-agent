@@ -1,0 +1,8 @@
+Volume Status       Size         Device/Label    Level Stripe
+=============================================================
+     0 Rebuild      136G                  ld0   RAID 1    N/A  37.50% done
+   0:0 Online       136G         0:0.0 noencl <SEAGATE ST3146356SS>
+   0:1 Rebuild      136G         0:1.0 noencl <SEAGATE ST3146356SS>
+     1 Online       278G                  ld1   RAID 1    N/A 
+   1:0 Online       279G         0:2.0 noencl <SEAGATE ST3300657SS>
+   1:1 Online       279G         0:3.0 noencl <SEAGATE ST3300657SS>

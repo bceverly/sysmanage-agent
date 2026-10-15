@@ -1,0 +1,56 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "007.1017.0000.0000 May 10, 2019",
+		"Operating system" : "Linux 5.15.0-91-generic",
+		"Controller" : 0,
+		"Status" : "Success",
+		"Description" : "Show Drive Information Succeeded."
+	},
+	"Response Data" : {
+		"Drive /c0/e32/s0" : [
+			{
+				"EID:Slt" : "32:0",
+				"DID" : 0,
+				"State" : "Onln",
+				"DG" : 0,
+				"Size" : "278.875 GB",
+				"Intf" : "SAS",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST300MM0008",
+				"Sp" : "U",
+				"Type" : "-"
+			}
+		],
+		"Drive /c0/e32/s0 - Detailed Information" : {
+			"Drive /c0/e32/s0 State" : {
+				"Shield Counter" : 0,
+				"Media Error Count" : 12,
+				"Other Error Count" : 3,
+				"Drive Temperature" : " 34C (93.20 F)",
+				"Predictive Failure Count" : 0,
+				"S.M.A.R.T alert flagged by drive" : "No"
+			},
+			"Drive /c0/e32/s0 Device attributes" : {
+				"SN" : "S0000000AAAA",
+				"Model Number" : "ST300MM0008"
+			}
+		},
+		"Drive /c0/e32/s2 - Detailed Information" : {
+			"Drive /c0/e32/s2 State" : {
+				"Shield Counter" : 0,
+				"Media Error Count" : 0,
+				"Other Error Count" : 0,
+				"Drive Temperature" : " 33C (91.40 F)",
+				"Predictive Failure Count" : 2,
+				"S.M.A.R.T alert flagged by drive" : "Yes"
+			}
+		}
+	}
+}
+]
+}

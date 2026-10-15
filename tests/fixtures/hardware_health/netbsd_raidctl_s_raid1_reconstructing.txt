@@ -1,0 +1,30 @@
+Components:
+           /dev/sd1e: optimal
+           /dev/sd2e: reconstructing
+           /dev/sd3e: optimal
+Spares:
+           /dev/sd4e: used_spare
+Component label for /dev/sd1e:
+   Row: 0, Column: 0, Num Rows: 1, Num Columns: 3
+   Version: 2, Serial Number: 13432, Mod Counter: 66
+   Clean: No, Status: 0
+   sectPerSU: 32, SUsPerPU: 1, SUsPerRU: 1
+   Queue size: 100, blocksize: 512, numBlocks: 1799936
+   RAID Level: 5
+   Autoconfig: No
+   Root partition: No
+   Last configured as: raid1
+/dev/sd2e status is: reconstructing.  Skipping label.
+Component label for /dev/sd3e:
+   Row: 0, Column: 2, Num Rows: 1, Num Columns: 3
+   Version: 2, Serial Number: 13432, Mod Counter: 66
+   Clean: No, Status: 0
+   sectPerSU: 32, SUsPerPU: 1, SUsPerRU: 1
+   Queue size: 100, blocksize: 512, numBlocks: 1799936
+   RAID Level: 5
+   Autoconfig: No
+   Root partition: No
+   Last configured as: raid1
+Parity status: clean
+Reconstruction is 10% complete.
+Parity Re-write is 100% complete.

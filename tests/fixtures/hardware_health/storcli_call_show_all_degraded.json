@@ -1,0 +1,143 @@
+{
+"Controllers":[
+{
+	"Command Status" : {
+		"CLI Version" : "007.1017.0000.0000 May 10, 2019",
+		"Operating system" : "Linux 5.15.0-91-generic",
+		"Controller" : 0,
+		"Status" : "Success",
+		"Description" : "None"
+	},
+	"Response Data" : {
+		"Basics" : {
+			"Controller" : 0,
+			"Model" : "PERC H730P Mini",
+			"Serial Number" : "SV00000002"
+		},
+		"Status" : {
+			"Controller Status" : "Needs Attention",
+			"Memory Correctable Errors" : 0,
+			"Memory Uncorrectable Errors" : 0,
+			"ECC Bucket Count" : 0,
+			"Any Offline VD Cache Preserved" : "No",
+			"BBU Status" : 32
+		},
+		"Virtual Drives" : 2,
+		"VD LIST" : [
+			{
+				"DG/VD" : "0/0",
+				"TYPE" : "RAID1",
+				"State" : "Dgrd",
+				"Access" : "RW",
+				"Consist" : "No",
+				"Cache" : "RWBD",
+				"Cac" : "-",
+				"sCC" : "ON",
+				"Size" : "278.875 GB",
+				"Name" : "os"
+			},
+			{
+				"DG/VD" : "1/1",
+				"TYPE" : "RAID5",
+				"State" : "OfLn",
+				"Access" : "RW",
+				"Consist" : "No",
+				"Cache" : "RWBD",
+				"Cac" : "-",
+				"sCC" : "ON",
+				"Size" : "1.090 TB",
+				"Name" : "data"
+			}
+		],
+		"Physical Drives" : 5,
+		"PD LIST" : [
+			{
+				"EID:Slt" : "32:0",
+				"DID" : 0,
+				"State" : "Onln",
+				"DG" : 0,
+				"Size" : "278.875 GB",
+				"Intf" : "SAS",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST300MM0008",
+				"Sp" : "U",
+				"Type" : "-"
+			},
+			{
+				"EID:Slt" : "32:1",
+				"DID" : 1,
+				"State" : "Rbld",
+				"DG" : 0,
+				"Size" : "278.875 GB",
+				"Intf" : "SAS",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST300MM0008",
+				"Sp" : "U",
+				"Type" : "-"
+			},
+			{
+				"EID:Slt" : "32:2",
+				"DID" : 2,
+				"State" : "Onln",
+				"DG" : 1,
+				"Size" : "558.375 GB",
+				"Intf" : "SAS",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST600MM0088",
+				"Sp" : "U",
+				"Type" : "-"
+			},
+			{
+				"EID:Slt" : "32:3",
+				"DID" : 3,
+				"State" : "Failed",
+				"DG" : 1,
+				"Size" : "558.375 GB",
+				"Intf" : "SAS",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST600MM0088",
+				"Sp" : "U",
+				"Type" : "-"
+			},
+			{
+				"EID:Slt" : "32:4",
+				"DID" : 4,
+				"State" : "Offln",
+				"DG" : 1,
+				"Size" : "558.375 GB",
+				"Intf" : "SAS",
+				"Med" : "HDD",
+				"SED" : "N",
+				"PI" : "N",
+				"SeSz" : "512B",
+				"Model" : "ST600MM0088",
+				"Sp" : "U",
+				"Type" : "-"
+			}
+		],
+		"BBU_Info" : [
+			{
+				"Model" : "BBU",
+				"State" : "Failed",
+				"RetentionTime" : "48 hours +",
+				"Temp" : "31C",
+				"Mode" : "4",
+				"MfgDate" : "2018/11/02"
+			}
+		]
+	}
+}
+]
+}

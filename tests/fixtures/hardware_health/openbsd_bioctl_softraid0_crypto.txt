@@ -1,0 +1,3 @@
+Volume      Status               Size Device  
+softraid0 0 Online      1000202241536 sd3     CRYPTO
+          0 Online      1000202241536 1:0.0   noencl <sd1a>

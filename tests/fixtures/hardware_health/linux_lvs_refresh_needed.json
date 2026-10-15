@@ -1,0 +1,14 @@
+  {
+      "report": [
+          {
+              "lv": [
+                  {"lv_name":"r1", "vg_name":"smhwtest", "segtype":"raid1", "lv_health_status":"refresh needed", "sync_percent":"100.00", "raid_mismatch_count":"0", "lv_attr":"rwi-a-r-r-"},
+                  {"lv_name":"ubuntu-lv", "vg_name":"ubuntu-vg", "segtype":"linear", "lv_health_status":"", "sync_percent":"", "raid_mismatch_count":"", "lv_attr":"-wi-ao----"}
+              ]
+          }
+      ]
+      ,
+      "log": [
+          {"log_seq_num":"3", "log_type":"warn", "log_context":"processing", "log_object_type":"lv", "log_object_name":"r1", "log_object_id":"7vnnfl-B2bD-N9RE-oYMm-McyS-z4Om-HUiTfA", "log_object_group":"smhwtest", "log_object_group_id":"fvsDwi-XXUZ-Nb1l-4uFq-9288-f9jB-H8rdd0", "log_message":"WARNING: RaidLV smhwtest/r1 needs to be refreshed!  See character 'r' at position 9 in the RaidLV's attributes and also its SubLV(s) with option '-a'.", "log_errno":"0", "log_ret_code":"0"}
+      ]
+  }

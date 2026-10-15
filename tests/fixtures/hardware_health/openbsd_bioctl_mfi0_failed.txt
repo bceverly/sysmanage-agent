@@ -1,0 +1,7 @@
+Volume      Status               Size Device  
+     mfi0 0 Offline      146163105792 sd0     RAID0 WB
+          0 Failed       146695782400 32:0.0  0      <SEAGATE ST3146356SS 0007>
+          1 Online       146695782400 32:1.0  0      <SEAGATE ST3146356SS 0007>
+     mfi0 1 Scrubbing    299439751168 sd1     RAID1 7% done WT
+          0 Online       299966445568 32:2.0  0      <SEAGATE ST3300657SS 0008>
+          1 Online       299966445568 32:3.0  0      <SEAGATE ST3300657SS 0008>

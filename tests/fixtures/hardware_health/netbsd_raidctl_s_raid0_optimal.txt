@@ -1,0 +1,27 @@
+Components:
+           /dev/wd0e: optimal
+           /dev/wd1e: optimal
+No spares.
+Component label for /dev/wd0e:
+   Row: 0, Column: 0, Num Rows: 1, Num Columns: 2
+   Version: 2, Serial Number: 2026101401, Mod Counter: 87
+   Clean: No, Status: 0
+   sectPerSU: 128, SUsPerPU: 1, SUsPerRU: 1
+   Queue size: 100, blocksize: 512, numBlocks: 976772992
+   RAID Level: 1
+   Autoconfig: Yes
+   Root partition: Force
+   Last configured as: raid0
+Component label for /dev/wd1e:
+   Row: 0, Column: 1, Num Rows: 1, Num Columns: 2
+   Version: 2, Serial Number: 2026101401, Mod Counter: 87
+   Clean: No, Status: 0
+   sectPerSU: 128, SUsPerPU: 1, SUsPerRU: 1
+   Queue size: 100, blocksize: 512, numBlocks: 976772992
+   RAID Level: 1
+   Autoconfig: Yes
+   Root partition: Force
+   Last configured as: raid0
+Parity status: clean
+Reconstruction is 100% complete.
+Parity Re-write is 100% complete.

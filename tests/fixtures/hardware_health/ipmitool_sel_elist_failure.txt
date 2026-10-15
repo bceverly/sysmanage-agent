@@ -1,0 +1,3 @@
+   1 | 10/13/2026 | 22:30:00 | Power Supply #0xc9 | Failure detected | Asserted
+   2 | 10/14/2026 | 09:12:45 | Drive Slot / Bay #0x30 | Drive Fault | Asserted
+   3 | 10/14/2026 | 09:13:00 | Memory #0x02 | Correctable ECC | Asserted

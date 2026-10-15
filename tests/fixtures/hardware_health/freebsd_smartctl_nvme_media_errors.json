@@ -1,0 +1,81 @@
+{
+  "json_format_version": [
+    1,
+    0
+  ],
+  "smartctl": {
+    "version": [
+      7,
+      5
+    ],
+    "pre_release": false,
+    "svn_revision": "5714",
+    "platform_info": "FreeBSD 14.4-RELEASE-p8 amd64",
+    "build_info": "(local build)",
+    "argv": [
+      "smartctl",
+      "-j",
+      "-H",
+      "-A",
+      "/dev/nvme0"
+    ],
+    "exit_status": 0
+  },
+  "local_time": {
+    "time_t": 1791986091,
+    "asctime": "Wed Oct 14 09:54:51 2026 EDT"
+  },
+  "device": {
+    "name": "/dev/nvme0",
+    "info_name": "/dev/nvme0",
+    "type": "nvme",
+    "protocol": "NVMe"
+  },
+  "smart_status": {
+    "passed": true,
+    "nvme": {
+      "value": 0
+    }
+  },
+  "nvme_smart_health_information_log": {
+    "nsid": -1,
+    "critical_warning": 0,
+    "temperature": 34,
+    "available_spare": 100,
+    "available_spare_threshold": 10,
+    "percentage_used": 5,
+    "data_units_read": 23739710,
+    "data_units_written": 71309998,
+    "host_reads": 360131039,
+    "host_writes": 1127250933,
+    "controller_busy_time": 29526,
+    "power_cycles": 1227,
+    "power_on_hours": 16179,
+    "unsafe_shutdowns": 167,
+    "media_errors": 19,
+    "num_err_log_entries": 0,
+    "warning_temp_time": 0,
+    "critical_comp_time": 0,
+    "temperature_sensors": [
+      34,
+      34,
+      null,
+      null,
+      41
+    ]
+  },
+  "temperature": {
+    "current": 34
+  },
+  "spare_available": {
+    "current_percent": 100,
+    "threshold_percent": 10
+  },
+  "endurance_used": {
+    "current_percent": 5
+  },
+  "power_cycle_count": 1227,
+  "power_on_time": {
+    "hours": 16179
+  }
+}

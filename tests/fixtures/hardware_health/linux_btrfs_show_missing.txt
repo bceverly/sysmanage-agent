@@ -1,0 +1,4 @@
+Label: 'smhwtest'  uuid: 77035804-8931-44df-b41a-84a2a82ce7c2
+	Total devices 2 FS bytes used 100.25MiB
+	devid    1 size 512.00MiB used 267.19MiB path /dev/loop10
+	devid    2 size 0 used 0 path <missing disk> MISSING

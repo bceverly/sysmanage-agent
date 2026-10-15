@@ -1,0 +1,13 @@
+  WARNING: Running as a non-root user. Functionality may be unavailable.
+  {
+      "report": [
+          {
+              "lv": [
+              ]
+          }
+      ]
+      ,
+      "log": [
+          {"log_seq_num":"1", "log_type":"error", "log_context":"processing", "log_object_type":"lv", "log_object_name":"", "log_object_id":"", "log_object_group":"", "log_object_group_id":"", "log_message":"/run/lock/lvm/P_global:aux: open failed: Permission denied", "log_errno":"-1", "log_ret_code":"0"}
+      ]
+  }

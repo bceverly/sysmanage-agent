@@ -1,0 +1,5 @@
+Volume      Status               Size Device  
+softraid0 0 Rebuild      500105249280 sd4     RAID1 42% done 
+          0 Online       500105249280 0:0.0   noencl <sd0a>
+          1 Rebuild      500105249280 0:1.0   noencl <sd2a>
+softraid0 1 Hot spare    500105249280 0:2.0   noencl <sd6a>

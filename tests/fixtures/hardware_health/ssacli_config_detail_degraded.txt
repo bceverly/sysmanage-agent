@@ -1,0 +1,87 @@
+
+Smart Array P440ar in Slot 0 (Embedded)
+   Bus Interface: PCI
+   Slot: 0
+   Serial Number: PDNLH0XXX00001
+   Controller Status: OK
+   Firmware Version: 7.00-0
+   Cache Board Present: True
+   Cache Status: Temporarily Disabled
+   Cache Backup Power Source: Batteries
+   Battery/Capacitor Count: 1
+   Battery/Capacitor Status: Failed (Replace Batteries)
+
+
+   Array: A
+      Interface Type: SAS
+      Unused Space: 0  MB (0.00%)
+      Status: Failed Physical Drive
+      Array Type: Data
+
+
+      Logical Drive: 1
+         Size: 279.37 GB
+         Fault Tolerance: 1
+         Status: Interim Recovery Mode
+         Disk Name: /dev/sda
+
+      physicaldrive 1I:1:1
+         Port: 1I
+         Box: 1
+         Bay: 1
+         Status: OK
+         Drive Type: Data Drive
+         Model: HP      EG0300FCVBF
+         Current Temperature (C): 31
+
+      physicaldrive 1I:1:2
+         Port: 1I
+         Box: 1
+         Bay: 2
+         Status: Failed
+         Drive Type: Data Drive
+         Model: HP      EG0300FCVBF
+
+
+   Array: B
+      Interface Type: SAS
+      Status: OK
+      Array Type: Data
+
+
+      Logical Drive: 2
+         Size: 558.73 GB
+         Fault Tolerance: 1
+         Status: Recovering, 62% complete
+         Disk Name: /dev/sdb
+
+      physicaldrive 1I:1:3
+         Port: 1I
+         Box: 1
+         Bay: 3
+         Status: Predictive Failure
+         Drive Type: Data Drive
+         Model: HP      EG0600FBVFP
+         Current Temperature (C): 33
+
+      physicaldrive 1I:1:4
+         Port: 1I
+         Box: 1
+         Bay: 4
+         Status: Rebuilding
+         Drive Type: Data Drive
+         Model: HP      EG0600FBVFP
+
+
+   Array: C
+      Interface Type: SAS
+      Status: Failed Physical Drive
+      Array Type: Data
+
+
+      Logical Drive: 3
+         Size: 558.73 GB
+         Fault Tolerance: 0
+         Status: Failed
+         Disk Name: /dev/sdc
+

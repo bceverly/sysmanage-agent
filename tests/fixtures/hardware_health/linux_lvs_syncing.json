@@ -1,0 +1,13 @@
+  {
+      "report": [
+          {
+              "lv": [
+                  {"lv_name":"r1", "vg_name":"smhwtest", "segtype":"raid1", "lv_health_status":"", "sync_percent":"12.89", "raid_mismatch_count":"0", "lv_attr":"rwi-a-r---"},
+                  {"lv_name":"ubuntu-lv", "vg_name":"ubuntu-vg", "segtype":"linear", "lv_health_status":"", "sync_percent":"", "raid_mismatch_count":"", "lv_attr":"-wi-ao----"}
+              ]
+          }
+      ]
+      ,
+      "log": [
+      ]
+  }

@@ -1,0 +1,15 @@
+CPU1 Temp        | 01h | ok  |  3.1 | 45 degrees C
+CPU2 Temp        | 02h | ucr |  3.2 | 98 degrees C
+System Temp      | 11h | ok  |  7.1 | 32 degrees C
+Peripheral Temp  | 12h | unc |  7.2 | 71 degrees C
+DIMMA1 Temp      | 61h | ns  | 32.64 | No Reading
+FAN1             | 41h | ok  | 29.1 | 5400 RPM
+FAN2             | 42h | lcr | 29.2 | 0 RPM
+FAN3             | 43h | ns  | 29.3 | No Reading
+Vcpu1            | 51h | ok  |  3.1 | 1.79 Volts
+12V              | 52h | lnc |  7.1 | 11.33 Volts
+PS1 Status       | C8h | ok  | 10.1 | Presence detected
+PS2 Status       | C9h | ok  | 10.2 | Presence detected, Failure detected
+Chassis Intru    | AAh | ok  | 23.1 | General Chassis intrusion
+Watchdog2        | CAh | ok  |  7.1 |
+BMC Health       | CBh | ok  | 46.1 | Device Enabled

@@ -1,0 +1,8 @@
+   1 | Pre-Init  |0000000012| System ACPI Power State #0x26 | S0/G0: working | Asserted
+   2 | 10/10/2026 | 09:15:02 | Event Logging Disabled #0x07 | Log area reset/cleared | Asserted
+   3 | 10/12/2026 | 03:41:19 | Memory #0x02 | Uncorrectable ECC | Asserted
+   4 | 10/13/2026 | 14:02:44 | Power Supply #0xc8 | Presence detected | Asserted
+   5 | 10/13/2026 | 18:20:01 | Memory #0x02 | Correctable ECC | Asserted
+   6 | 10/14/2026 | 06:55:10 | Power Supply #0xc9 | Power Supply AC lost | Asserted
+   7 | 10/14/2026 | 07:10:00 | Power Supply #0xc9 | Power Supply AC lost | Deasserted
+   8 | 10/14/2026 | 08:00:00 | System Event #0x83 | Timestamp Clock Sync | Asserted

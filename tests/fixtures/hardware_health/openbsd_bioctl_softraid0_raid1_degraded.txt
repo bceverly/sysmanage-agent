@@ -1,0 +1,6 @@
+Volume      Status               Size Device  
+softraid0 0 Degraded     500105249280 sd4     RAID1 
+          0 Online       500105249280 0:0.0   noencl <sd0a>
+          1 Offline                 0 0:1.0   noencl <sd2a>
+softraid0 1 Online      1000202241536 sd5     CRYPTO
+          0 Online      1000202241536 1:0.0   noencl <sd3a>

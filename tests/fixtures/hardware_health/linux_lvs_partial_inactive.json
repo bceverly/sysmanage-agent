@@ -1,0 +1,15 @@
+  {
+      "report": [
+          {
+              "lv": [
+                  {"lv_name":"r1", "vg_name":"smhwtest", "segtype":"raid1", "lv_health_status":"partial", "sync_percent":"", "raid_mismatch_count":"", "lv_attr":"rwi---r-p-"},
+                  {"lv_name":"ubuntu-lv", "vg_name":"ubuntu-vg", "segtype":"linear", "lv_health_status":"", "sync_percent":"", "raid_mismatch_count":"", "lv_attr":"-wi-ao----"}
+              ]
+          }
+      ]
+      ,
+      "log": [
+          {"log_seq_num":"3", "log_type":"warn", "log_context":"processing", "log_object_type":"vg", "log_object_name":"smhwtest", "log_object_id":"fvsDwi-XXUZ-Nb1l-4uFq-9288-f9jB-H8rdd0", "log_object_group":"", "log_object_group_id":"", "log_message":"WARNING: Couldn't find device with uuid BsN2Zb-h2WR-xQRb-Vzcj-ZNd3-iQxM-TtCqLr.", "log_errno":"0", "log_ret_code":"0"},
+          {"log_seq_num":"4", "log_type":"warn", "log_context":"processing", "log_object_type":"vg", "log_object_name":"smhwtest", "log_object_id":"fvsDwi-XXUZ-Nb1l-4uFq-9288-f9jB-H8rdd0", "log_object_group":"", "log_object_group_id":"", "log_message":"WARNING: VG smhwtest is missing PV BsN2Zb-h2WR-xQRb-Vzcj-ZNd3-iQxM-TtCqLr (last written to /dev/loop11).", "log_errno":"0", "log_ret_code":"0"}
+      ]
+  }

@@ -1,0 +1,120 @@
+Controllers found: 1
+----------------------------------------------------------------------
+Controller information
+----------------------------------------------------------------------
+   Controller Status                          : Optimal
+   Controller Mode                            : RAID (Expose RAW)
+   Channel description                        : SAS/SATA
+   Controller Model                           : Adaptec ASR8805
+   Controller Serial Number                   : 7A0000000001
+   Controller World Wide Name                 : 50000D1000000001
+   Controller Alarm                           : Enabled
+   Physical Slot                              : 2
+   Temperature                                : 52 C/ 125 F (Normal)
+   Installed memory                           : 1024 MB
+   Global task priority                       : High
+   Performance Mode                           : Default/Dynamic
+   PCI Device ID                              : 653
+   Stayawake period                           : Disabled
+   Spinup limit internal drives               : 0
+   Spinup limit external drives               : 0
+   Defunct disk drive count                   : 0
+   Logical devices/Failed/Degraded            : 1/0/0
+   NCQ status                                 : Enabled
+   Statistics data collection mode            : Enabled
+   Global Physical Device Write Cache Policy  : Drive Specific
+   --------------------------------------------------------
+   Controller Version Information
+   --------------------------------------------------------
+   BIOS                                       : 7.11-0 (33556)
+   Firmware                                   : 7.11-0 (33556)
+   Driver                                     : 1.2-1 (50877)
+   Boot Flash                                 : 7.11-0 (33556)
+   --------------------------------------------------------
+   Controller ZMM Information
+   --------------------------------------------------------
+   Status                                     : ZMM Optimal
+   Supercap Status                            : Ready
+
+----------------------------------------------------------------------
+Logical device information
+----------------------------------------------------------------------
+Logical Device number 0
+   Logical Device name                        : system
+   Block Size of member drives                : 512 Bytes
+   RAID level                                 : 1
+   Unique Identifier                          : 0A1B2C3D
+   Status of Logical Device                   : Optimal
+   Size                                       : 285686 MB
+   Parity space                               : 285696 MB
+   Read-cache setting                         : Enabled
+   Read-cache status                          : On
+   Write-cache setting                        : Enabled
+   Write-cache status                         : On
+   Partitioned                                : Yes
+   Protected by Hot-Spare                     : No
+   Bootable                                   : Yes
+   Failed stripes                             : No
+   Power settings                             : Disabled
+   --------------------------------------------------------
+   Logical Device segment information
+   --------------------------------------------------------
+   Group 0, Segment 0                         : Present (Controller:1,Enclosure:0,Slot:0)             S0000000CCC1
+   Group 0, Segment 1                         : Present (Controller:1,Enclosure:0,Slot:1)             S0000000CCC2
+
+----------------------------------------------------------------------
+Physical Device information
+----------------------------------------------------------------------
+      Channel #0:
+         Device #0
+            Device is a Hard drive
+            State                              : Online
+            Block Size                         : 512 Bytes
+            Supported                          : Yes
+            Transfer Speed                     : SAS 6.0 Gb/s
+            Reported Channel,Device(T:L)       : 0,0(0:0)
+            Reported Location                  : Enclosure 0, Slot 0
+            Reported ESD(T:L)                  : 2,0(0:0)
+            Vendor                             : SEAGATE
+            Model                              : ST300MM0008
+            Firmware                           : N004
+            Serial number                      : S0000000CCC1
+            World-wide name                    : 5000C50000000101
+            Reserved Size                      : 538264 KB
+            Used Size                          : 285696 MB
+            Unused Size                        : 64 KB
+            Total Size                         : 286102 MB
+            Write Cache                        : Enabled (write-back)
+            FRU                                : None
+            S.M.A.R.T.                         : No
+            S.M.A.R.T. warnings                : 0
+            Power State                        : Full rpm
+            Supported Power States             : Full rpm,Powered off
+            SSD                                : No
+            Temperature                        : 31 C/ 87 F
+         Device #1
+            Device is a Hard drive
+            State                              : Online
+            Block Size                         : 512 Bytes
+            Supported                          : Yes
+            Transfer Speed                     : SAS 6.0 Gb/s
+            Reported Channel,Device(T:L)       : 0,1(1:0)
+            Reported Location                  : Enclosure 0, Slot 1
+            Vendor                             : SEAGATE
+            Model                              : ST300MM0008
+            Serial number                      : S0000000CCC2
+            S.M.A.R.T.                         : No
+            S.M.A.R.T. warnings                : 0
+            SSD                                : No
+         Device #2
+            Device is an Enclosure services device
+            Reported Channel,Device(T:L)       : 2,0(0:0)
+            Enclosure ID                       : 0
+            Type                               : SES2
+            Vendor                             : ADAPTEC
+            Model                              : Virtual SGPIO
+            Firmware                           : 0001
+            Status of Enclosure services device
+
+
+Command completed successfully.

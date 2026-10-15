@@ -1,0 +1,84 @@
+Controllers found: 2
+----------------------------------------------------------------------
+Controller information
+----------------------------------------------------------------------
+   Controller Status                          : Optimal
+   Channel description                        : SAS/SATA
+   Controller Model                           : Adaptec ASR8405
+   Controller Serial Number                   : 7A0000000002
+   --------------------------------------------------------
+   Controller Battery Information
+   --------------------------------------------------------
+   Status                                     : Failed
+   Over temperature                           : No
+   Capacity remaining                         : 0 percent
+
+----------------------------------------------------------------------
+Logical device information
+----------------------------------------------------------------------
+Logical Device number 0
+   Logical Device name                        : system
+   RAID level                                 : 1
+   Status of Logical Device                   : Degraded
+   Size                                       : 285686 MB
+   --------------------------------------------------------
+   Logical Device segment information
+   --------------------------------------------------------
+   Group 0, Segment 0                         : Present (Controller:1,Enclosure:0,Slot:0)             S0000000DDD1
+   Group 0, Segment 1                         : Missing
+
+Logical Device number 1
+   Logical Device name                        : data
+   RAID level                                 : 5
+   Status of Logical Device                   : Rebuilding ( Rebuild : 45 % )
+   Size                                       : 571372 MB
+   --------------------------------------------------------
+   Logical Device segment information
+   --------------------------------------------------------
+   Segment 0                                  : Present (Controller:1,Enclosure:0,Slot:2)             S0000000DDD3
+   Segment 1                                  : Present (Controller:1,Enclosure:0,Slot:3)             S0000000DDD4
+   Segment 2                                  : Rebuilding (Controller:1,Enclosure:0,Slot:4)          S0000000DDD5
+
+----------------------------------------------------------------------
+Physical Device information
+----------------------------------------------------------------------
+      Channel #0:
+         Device #0
+            Device is a Hard drive
+            State                              : Online
+            Reported Location                  : Enclosure 0, Slot 0
+            Vendor                             : SEAGATE
+            Model                              : ST300MM0008
+            Serial number                      : S0000000DDD1
+            S.M.A.R.T.                         : No
+            S.M.A.R.T. warnings                : 0
+         Device #1
+            Device is a Hard drive
+            State                              : Failed
+            Reported Location                  : Enclosure 0, Slot 1
+            Vendor                             : SEAGATE
+            Model                              : ST300MM0008
+            Serial number                      : S0000000DDD2
+            S.M.A.R.T.                         : No
+            S.M.A.R.T. warnings                : 0
+         Device #2
+            Device is a Hard drive
+            State                              : Online
+            Reported Location                  : Enclosure 0, Slot 2
+            Vendor                             : SEAGATE
+            Model                              : ST300MM0008
+            Serial number                      : S0000000DDD3
+            S.M.A.R.T.                         : Yes
+            S.M.A.R.T. warnings                : 4
+         Device #3
+            Device is a Hard drive
+            State                              : Rebuilding
+            Reported Location                  : Enclosure 0, Slot 4
+            Vendor                             : SEAGATE
+            Model                              : ST300MM0008
+            Serial number                      : S0000000DDD5
+            S.M.A.R.T.                         : No
+            S.M.A.R.T. warnings                : 0
+
+
+Command completed successfully.

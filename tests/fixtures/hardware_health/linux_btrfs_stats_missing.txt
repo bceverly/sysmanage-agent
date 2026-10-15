@@ -1,0 +1,10 @@
+[/dev/loop10].write_io_errs    0
+[/dev/loop10].read_io_errs     0
+[/dev/loop10].flush_io_errs    0
+[/dev/loop10].corruption_errs  0
+[/dev/loop10].generation_errs  0
+[<missing disk>].write_io_errs    0
+[<missing disk>].read_io_errs     0
+[<missing disk>].flush_io_errs    0
+[<missing disk>].corruption_errs  25600
+[<missing disk>].generation_errs  0

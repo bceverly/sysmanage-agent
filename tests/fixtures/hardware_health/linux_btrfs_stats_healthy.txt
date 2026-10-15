@@ -1,0 +1,10 @@
+[/dev/loop10].write_io_errs    0
+[/dev/loop10].read_io_errs     0
+[/dev/loop10].flush_io_errs    0
+[/dev/loop10].corruption_errs  0
+[/dev/loop10].generation_errs  0
+[/dev/loop11].write_io_errs    0
+[/dev/loop11].read_io_errs     0
+[/dev/loop11].flush_io_errs    0
+[/dev/loop11].corruption_errs  0
+[/dev/loop11].generation_errs  0
