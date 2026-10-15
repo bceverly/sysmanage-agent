@@ -346,7 +346,9 @@ def linux_kmsg(
     stopped: Callable[[], bool], path: str = "/dev/kmsg"
 ) -> Iterator[Evidence]:
     """New kernel messages that are hardware problems (blocking; root)."""
-    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    # O_NONBLOCK does not exist on Windows, where this never runs for real;
+    # the fallback keeps the module (and its tests) importable there.
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
     try:
         os.lseek(fd, 0, os.SEEK_END)  # only what happens from now on
         while not stopped():

@@ -22,7 +22,6 @@ Linux hardware health (Phase 23.1 S1), native first:
 from __future__ import annotations
 
 import ctypes
-import fcntl
 import os
 import re
 from typing import Dict, List, Optional
@@ -105,6 +104,10 @@ def read_nvme_smart_log(device: str) -> bytes:
         cdw10=((_LOG_BYTES // 4 - 1) << 16) | _SMART_LOG,
         timeout_ms=5000,
     )
+    # Linux only, and absent on Windows: importing it at the top made the
+    # module (and every test that imports it) fail there.
+    import fcntl  # pylint: disable=import-outside-toplevel
+
     fd = os.open(device, os.O_RDONLY)
     try:
         fcntl.ioctl(fd, NVME_IOCTL_ADMIN_CMD, cmd)

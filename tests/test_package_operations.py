@@ -802,5 +802,5 @@ async def test_an_install_does_not_freeze_the_agent():
             ops.install_package({"package_name": "smartmontools"}), ticker()
         )
     assert result["success"] is True
-    start, end = window
+    start, end = window[0], window[-1]
     assert any(start < tick < end for tick in ticks)  # the loop ran meanwhile
