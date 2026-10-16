@@ -567,7 +567,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
                     in result["result"]
                 )
                 mock_execute.assert_called_once_with(
-                    {"command": "sudo pro enable esm-infra --assume-yes"}
+                    {"command": "sudo -n pro enable esm-infra --assume-yes"}
                 )
                 mock_update.assert_called_once()
 
@@ -636,7 +636,7 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
                     in result["result"]
                 )
                 mock_execute.assert_called_once_with(
-                    {"command": "sudo pro disable esm-infra --assume-yes"}
+                    {"command": "sudo -n pro disable esm-infra --assume-yes"}
                 )
                 mock_update.assert_called_once()
 

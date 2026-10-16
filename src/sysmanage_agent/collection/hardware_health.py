@@ -439,7 +439,14 @@ def collect_hardware_health(
     """This host's hardware health report.  Never raises."""
     # pylint: disable=import-outside-toplevel  # each OS's module, on its OS
     system = system or platform.system()
-    run = run or _run
+    if run is None:
+        run = _run
+        if system == "Linux":  # an unprivileged agent reads through sudo -n
+            from src.sysmanage_agent.collection.hardware_health_privilege import (
+                privileged_runner,
+            )
+
+            run = privileged_runner(_run)
     report = Report()
     try:
         if system == "Linux":

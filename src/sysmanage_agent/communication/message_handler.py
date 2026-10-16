@@ -215,9 +215,9 @@ class MessageHandler(MessageHandlerQueueMixin):
 
         Goes through the standard outbound queue rather than ``send_message_direct``
         to honor the architectural rule that all agent → server traffic flows
-        through the SQLite outbound queue.  ``queue_outbound_message`` already
-        gives ack-class messages priority handling so the server still sees the
-        ack quickly enough to stop its retry loop.
+        through the SQLite outbound queue.  ``queue_outbound_message`` gives
+        ``command_acknowledgment`` HIGH priority so it overtakes queued reports
+        and the server sees it before its 60-second no-ack retry fires.
 
         Args:
             message_id: The server's message_id that we're acknowledging
@@ -371,11 +371,26 @@ class MessageHandler(MessageHandlerQueueMixin):
 
         return msg_time
 
+    def _forget_reports_sent_while_pending(self) -> None:
+        """The server drops a pending host's reports, so none of them count
+        as sent: after approval every report goes out again.
+
+        The approval notice (``host_approved``) resets this memory too, but a
+        server that failed to deliver it (2026-10-16: "Unknown outbound
+        message type") left beast's hardware -- sent while pending -- held
+        back for a day as "unchanged", and network discovery could not match
+        the host's interfaces."""
+        try:
+            send_on_change.gate.reset()
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.debug("Could not reset the report memory: %s", error)
+
     async def _dispatch_server_error(self, error_code: str, error_message: str) -> None:
         """Dispatch handling for specific server error codes."""
         if error_code == "host_not_registered":
             await self._handle_host_not_registered()
         elif error_code == "host_not_approved":
+            self._forget_reports_sent_while_pending()
             self.logger.warning(
                 _(
                     "Host registration is pending approval. Will continue periodic attempts."
@@ -707,6 +722,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             # The server's answer to system_info while this host awaits
             # approval -- expected, not an unknown message (it was logged as
             # one until 2026-10-15).
+            self._forget_reports_sent_while_pending()
             self.logger.info(
                 _(
                     "Host registration is pending approval. Will continue periodic attempts."

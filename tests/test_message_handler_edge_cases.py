@@ -51,6 +51,8 @@ class TestMessageHandlerEdgeCases:  # pylint: disable=too-many-public-methods
         test_cases = [
             ("system_info", Priority.URGENT),
             ("heartbeat", Priority.HIGH),
+            # Must overtake queued reports, but not the registration handshake.
+            ("command_acknowledgment", Priority.HIGH),
             ("command_result", Priority.HIGH),
             ("script_execution_result", Priority.HIGH),
             ("error", Priority.URGENT),

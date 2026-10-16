@@ -78,6 +78,15 @@ class MessageHandlerQueueMixin:
             priority = Priority.URGENT
         elif message_type == "heartbeat":
             priority = Priority.HIGH
+        elif message_type == "command_acknowledgment":
+            # The server re-sends a command it has no acknowledgment for after
+            # 60 s, three times, then marks it FAILED.  At NORMAL an ack waited
+            # behind the reconnect burst of inventory reports and arrived
+            # ~107 s late -- after the server had given up on an
+            # apply_updates that then installed 11 of 11 (2026-10-16).  HIGH,
+            # not URGENT: ``system_info`` must still drain first on a fresh
+            # connection, or the server drops the ack as host-less.
+            priority = Priority.HIGH
         elif message_type == "command_result":
             priority = Priority.HIGH
         elif message_type == "script_execution_result":

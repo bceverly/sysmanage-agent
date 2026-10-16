@@ -50,6 +50,7 @@ from src.sysmanage_agent.core.auth_helper import (  # noqa: F401 - re-export
     AuthenticationHelper,
 )
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
+from src.sysmanage_agent.core.agent_privileges import escalate_service_cmd
 
 # pylint: enable=unused-import
 
@@ -710,8 +711,6 @@ class MessageProcessor:
             rc-service / rc-update -- Alpine, Gentoo (OpenRC)
             launchctl  -- macOS
             sc.exe     -- Windows
-        Falls back to systemctl if nothing else is present (preserving the
-        previous behavior on hosts where the platform probe is inconclusive).
 
         Args:
             action: start | stop | restart | enable | disable
@@ -733,7 +732,7 @@ class MessageProcessor:
                 self.logger.error(_(_SYSTEMCTL_NOT_FOUND))
                 return {"success": False, "error": _SYSTEMCTL_NOT_FOUND}
 
-            result = await run_command_async(cmd, timeout=30.0)
+            result = await run_command_async(escalate_service_cmd(cmd), timeout=30.0)
 
             if result.returncode == 0:
                 return self._service_ok(action, service)

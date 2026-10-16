@@ -14,6 +14,30 @@ from typing import Any, Dict
 from src.i18n import _
 
 
+def _pro_streams(result: Dict[str, Any]) -> Dict[str, str]:
+    inner = result.get("result") or {}
+    return {
+        "stdout": (inner.get("stdout") or "").strip(),
+        "stderr": (inner.get("stderr") or "").strip(),
+    }
+
+
+def _pro_output(result: Dict[str, Any]) -> str:
+    """What ``pro`` said: stderr if any, else stdout.
+
+    ``pro`` reports most outcomes on STDOUT; logging only stderr produced
+    "Failed to enable Ubuntu Pro service livepatch: " with nothing after it
+    (beast, 2026-10-16)."""
+    streams = _pro_streams(result)
+    return streams["stderr"] or streams["stdout"] or str(result.get("error") or "")
+
+
+def _already_in_state(result: Dict[str, Any]) -> bool:
+    """``pro enable``/``disable`` exits 1 with "... - nothing to do." when the
+    service is already enabled/disabled; that is the requested outcome."""
+    return "nothing to do" in _pro_streams(result)["stdout"].lower()
+
+
 class UbuntuProOperations:
     """Handles Ubuntu Pro operations for the agent."""
 
@@ -114,12 +138,12 @@ class UbuntuProOperations:
             self.logger.info("Enabling Ubuntu Pro service: %s", service_name)
 
             # Run pro enable command
-            command = f"sudo pro enable {service_name} --assume-yes"
+            command = f"sudo -n pro enable {service_name} --assume-yes"
             result = await self.agent_instance.system_ops.execute_shell_command(
                 {"command": command}
             )
 
-            if result["success"]:
+            if result["success"] or _already_in_state(result):
                 self.logger.info(
                     "Ubuntu Pro service %s enabled successfully", service_name
                 )
@@ -134,16 +158,17 @@ class UbuntuProOperations:
                     "output": result["result"]["stdout"],
                 }
 
+            detail = _pro_output(result)
             self.logger.error(
                 _("Failed to enable Ubuntu Pro service %s: %s"),
                 service_name,
-                result["result"]["stderr"],
+                detail,
             )
             return {
                 "success": False,
                 "error": _("Failed to enable Ubuntu Pro service %s: %s")
-                % (service_name, result["result"]["stderr"]),
-                "output": result["result"]["stderr"],
+                % (service_name, detail),
+                "output": detail,
             }
         except Exception as error:
             self.logger.error(
@@ -164,12 +189,12 @@ class UbuntuProOperations:
             self.logger.info("Disabling Ubuntu Pro service: %s", service_name)
 
             # Run pro disable command
-            command = f"sudo pro disable {service_name} --assume-yes"
+            command = f"sudo -n pro disable {service_name} --assume-yes"
             result = await self.agent_instance.system_ops.execute_shell_command(
                 {"command": command}
             )
 
-            if result["success"]:
+            if result["success"] or _already_in_state(result):
                 self.logger.info(
                     "Ubuntu Pro service %s disabled successfully", service_name
                 )
@@ -184,16 +209,17 @@ class UbuntuProOperations:
                     "output": result["result"]["stdout"],
                 }
 
+            detail = _pro_output(result)
             self.logger.error(
                 _("Failed to disable Ubuntu Pro service %s: %s"),
                 service_name,
-                result["result"]["stderr"],
+                detail,
             )
             return {
                 "success": False,
                 "error": _("Failed to disable Ubuntu Pro service %s: %s")
-                % (service_name, result["result"]["stderr"]),
-                "output": result["result"]["stderr"],
+                % (service_name, detail),
+                "output": detail,
             }
         except Exception as error:
             self.logger.error(

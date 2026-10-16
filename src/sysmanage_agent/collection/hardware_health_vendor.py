@@ -44,6 +44,7 @@ from src.sysmanage_agent.collection.hardware_health import (
     reason,
     worst,
 )
+from src.sysmanage_agent.collection.hardware_health_privilege import escalates
 
 logger = logging.getLogger(__name__)
 
@@ -828,7 +829,8 @@ def collect(
 ) -> None:
     """Every vendor tool that is installed; one failing never stops the rest."""
     exists = exists or os.path.exists
-    is_root = is_root or _root
+    # The agent's runner reads the BMC through sudo -n when it is not root.
+    is_root = is_root or (lambda: _root() or escalates(run))
     collectors = (
         ("storcli", lambda: collect_megaraid(report, run)),
         ("ssacli", lambda: collect_ssacli(report, run)),

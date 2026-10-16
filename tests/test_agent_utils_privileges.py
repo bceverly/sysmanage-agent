@@ -425,7 +425,10 @@ class TestServiceControlNewActions:
         assert result["action"] == action
         # Confirm we actually invoked systemctl with the right action
         called_cmd = mock_run.call_args[0][0]
-        assert called_cmd == ["/usr/bin/systemctl", action, "nginx"]
+        # Prefixed with ``sudo -n`` when the test runs unprivileged (the
+        # packaged agent's case); bare as root.
+        assert called_cmd[-3:] == ["/usr/bin/systemctl", action, "nginx"]
+        assert called_cmd[:-3] in ([], ["sudo", "-n"])
 
     @pytest.mark.asyncio
     async def test_invalid_action_still_rejected(self):

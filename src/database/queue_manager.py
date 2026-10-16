@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy import and_, asc, func, or_, text
+from sqlalchemy import and_, asc, case, desc, func, or_, text
 
 from src.i18n import _
 from src.sysmanage_agent.utils.verbosity_logger import get_logger
@@ -191,40 +191,28 @@ class MessageQueueManager:
                 query = query.filter(MessageQueue.priority == priority.value)
 
             if priority_order:
-                # Order by priority (urgent=4, high=3, normal=2, low=1), then by creation time
-                priority_map = {
-                    Priority.URGENT.value: 4,
-                    Priority.HIGH.value: 3,
-                    Priority.NORMAL.value: 2,
-                    Priority.LOW.value: 1,
-                }
-
-                # SQLAlchemy doesn't have a direct way to order by custom priority,
-                # so we'll order by creation time and handle priority in Python
-                # In a production system, you might want to add a numeric priority column
-                query = query.order_by(asc(MessageQueue.created_at))
+                # Priority (urgent first), then oldest first -- IN SQL, so the
+                # LIMIT applies to the priority-ordered rows.  This used to
+                # fetch the oldest ``limit`` rows and sort only those, so a
+                # HIGH command acknowledgment queued behind more than
+                # ``limit`` reports was not fetched at all: it reached the
+                # server ~107 s late, after the server had given up on the
+                # command (2026-10-16).  SQLite handles CASE in ORDER BY.
+                rank = case(
+                    {
+                        Priority.URGENT.value: 4,
+                        Priority.HIGH.value: 3,
+                        Priority.NORMAL.value: 2,
+                        Priority.LOW.value: 1,
+                    },
+                    value=MessageQueue.priority,
+                    else_=0,
+                )
+                query = query.order_by(desc(rank), asc(MessageQueue.created_at))
             else:
                 query = query.order_by(asc(MessageQueue.created_at))
 
             messages = query.limit(limit).all()
-
-            # Sort by priority if requested (since SQLite doesn't support CASE WHEN in ORDER BY easily)
-            if priority_order and messages:
-                priority_map = {
-                    Priority.URGENT.value: 4,
-                    Priority.HIGH.value: 3,
-                    Priority.NORMAL.value: 2,
-                    Priority.LOW.value: 1,
-                }
-                # Higher priority first, then OLDER first.  (This was one key
-                # with reverse=True, which also reversed the time order:
-                # within a priority the newest message went out first.)
-                messages.sort(
-                    key=lambda m: (
-                        -priority_map.get(m.priority, 0),
-                        m.created_at,
-                    )
-                )
 
             # Eagerly load all attributes to avoid DetachedInstanceError
             for message in messages:

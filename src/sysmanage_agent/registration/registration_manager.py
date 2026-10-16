@@ -215,6 +215,13 @@ class RegistrationManager:
             if host_id and previous and str(previous) != str(host_id):
                 send_on_change.gate.reset()
                 run_ledger.forget(run_ledger.UPDATE_CHECK)
+            # Approved now, but not approved before (``previous`` is only an
+            # APPROVED stored id): everything sent while pending was dropped
+            # by the server.  The host_approved notice resets this too, but
+            # if it never arrives (2026-10-16: the server failed it as an
+            # unknown type) beast's hardware stayed "sent" for a day.
+            elif approved and (host_id or host_token) and not previous:
+                send_on_change.gate.reset()
 
             if (host_id or host_token) and approved:
                 self.logger.info(

@@ -53,6 +53,7 @@ from src.sysmanage_agent.collection.hardware_health_linux_storage import (
     collect_btrfs,
     collect_lvm_raid,
 )
+from src.sysmanage_agent.collection.hardware_health_privilege import escalates
 
 SYS_NVME = "/sys/class/nvme"
 SYS_BLOCK = "/sys/block"
@@ -140,10 +141,35 @@ def _root() -> bool:
 # --- NVMe --------------------------------------------------------------------
 
 
-def collect_nvme(report: Report, read, listdir, smart_log=read_nvme_smart_log):
+def _nvme_through_smartctl(report: Report, run, read, controllers) -> None:
+    """Unprivileged: the admin ioctl needs root, so read each controller's
+    health log through ``smartctl`` (escalated by the agent's runner).  With
+    no smartctl the drive is UNKNOWN as ``smartctl_absent`` -- the reason the
+    server's smartmontools install offer (23.1 S6) reacts to -- instead of an
+    unexplained "the health log could not be read"."""
+    installed = run(["smartctl", "--version"])[0] != -1
+    for ctrl in controllers:
+        model = (read(f"{SYS_NVME}/{ctrl}/model") or "").strip() or None
+        if installed:
+            smartctl_drive(report, run, f"/dev/{ctrl}", ctrl, model)
+        else:
+            reasons = [reason("smartctl_absent")]
+            report.add(DRIVE, ctrl, model, UNKNOWN, reasons, {}, None)
+    if installed:
+        report.source("nvme", RAN, "smartctl")
+    else:
+        report.source("nvme", SOURCE_FAILED, "not_privileged")
+
+
+def collect_nvme(
+    report: Report, read, listdir, smart_log=read_nvme_smart_log, run=None
+):
     controllers = [c for c in listdir(SYS_NVME) if re.fullmatch(r"nvme\d+", c)]
     if not controllers:
         report.source("nvme", ABSENT)
+        return
+    if not _root() and run is not None:
+        _nvme_through_smartctl(report, run, read, controllers)
         return
     if not _root():
         report.source("nvme", SOURCE_FAILED, "not_privileged")
@@ -346,11 +372,11 @@ def collect_edac(report: Report, read, listdir) -> None:
 def collect(report: Report, _system, run, read=None, listdir=None) -> None:
     read = read or _read
     listdir = listdir or _listdir
-    collect_nvme(report, read, listdir)
+    collect_nvme(report, read, listdir, run=run)
     collect_smartctl(report, run, read, listdir)
     collect_md(report, read)
     collect_zfs(report, run)
-    collect_btrfs(report, run, read)
+    collect_btrfs(report, run, read, root=True if escalates(run) else None)
     collect_lvm_raid(report, run)
     collect_hwmon(report, read, listdir)
     collect_edac(report, read, listdir)

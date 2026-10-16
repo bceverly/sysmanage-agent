@@ -158,6 +158,9 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro detach *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro enable *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro disable *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/pro status *
+# Livepatch detail (patch state, applied fixes) for the Ubuntu Pro card: an
+# unprivileged caller cannot read the daemon (read-only status query).
+sysmanage-agent ALL=(ALL) NOPASSWD: /snap/bin/canonical-livepatch status *
 
 # System Power Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/shutdown -r *
@@ -191,3 +194,107 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/update-ca-trust extract
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/test, /bin/test
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ln, /bin/ln
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/nginx, /usr/bin/nginx
+
+# Hardware health reads (Phase 23.1) -- READ-ONLY, exact argument forms.
+# An unprivileged agent cannot read drive health: the NVMe log needs the
+# admin ioctl, smartctl cannot open a disk, lvs cannot take LVM's lock, and
+# btrfs device stats / ipmitool need root -- every drive read "not judged"
+# (2026-10-16).  The agent runs these, and only these, through sudo -n.  Both
+# /usr/sbin and /usr/bin forms: distributions differ (and Fedora merged them).
+# smartctl: one exact form per disk node (sda-sdz, nvme0-nvme15).  sudoers
+# cannot wildcard part of an argument (sudo-rs rejects /dev/*), and a
+# whole-argument * would also allow -s / -t, which change drive settings.
+Cmnd_Alias SYSMANAGE_SMART_READ = /usr/sbin/smartctl -j -H -A /dev/sda, \
+    /usr/sbin/smartctl -j -H -A /dev/sdb, \
+    /usr/sbin/smartctl -j -H -A /dev/sdc, \
+    /usr/sbin/smartctl -j -H -A /dev/sdd, \
+    /usr/sbin/smartctl -j -H -A /dev/sde, \
+    /usr/sbin/smartctl -j -H -A /dev/sdf, \
+    /usr/sbin/smartctl -j -H -A /dev/sdg, \
+    /usr/sbin/smartctl -j -H -A /dev/sdh, \
+    /usr/sbin/smartctl -j -H -A /dev/sdi, \
+    /usr/sbin/smartctl -j -H -A /dev/sdj, \
+    /usr/sbin/smartctl -j -H -A /dev/sdk, \
+    /usr/sbin/smartctl -j -H -A /dev/sdl, \
+    /usr/sbin/smartctl -j -H -A /dev/sdm, \
+    /usr/sbin/smartctl -j -H -A /dev/sdn, \
+    /usr/sbin/smartctl -j -H -A /dev/sdo, \
+    /usr/sbin/smartctl -j -H -A /dev/sdp, \
+    /usr/sbin/smartctl -j -H -A /dev/sdq, \
+    /usr/sbin/smartctl -j -H -A /dev/sdr, \
+    /usr/sbin/smartctl -j -H -A /dev/sds, \
+    /usr/sbin/smartctl -j -H -A /dev/sdt, \
+    /usr/sbin/smartctl -j -H -A /dev/sdu, \
+    /usr/sbin/smartctl -j -H -A /dev/sdv, \
+    /usr/sbin/smartctl -j -H -A /dev/sdw, \
+    /usr/sbin/smartctl -j -H -A /dev/sdx, \
+    /usr/sbin/smartctl -j -H -A /dev/sdy, \
+    /usr/sbin/smartctl -j -H -A /dev/sdz, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme0, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme1, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme2, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme3, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme4, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme5, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme6, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme7, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme8, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme9, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme10, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme11, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme12, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme13, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme14, \
+    /usr/sbin/smartctl -j -H -A /dev/nvme15, \
+    /usr/bin/smartctl -j -H -A /dev/sda, \
+    /usr/bin/smartctl -j -H -A /dev/sdb, \
+    /usr/bin/smartctl -j -H -A /dev/sdc, \
+    /usr/bin/smartctl -j -H -A /dev/sdd, \
+    /usr/bin/smartctl -j -H -A /dev/sde, \
+    /usr/bin/smartctl -j -H -A /dev/sdf, \
+    /usr/bin/smartctl -j -H -A /dev/sdg, \
+    /usr/bin/smartctl -j -H -A /dev/sdh, \
+    /usr/bin/smartctl -j -H -A /dev/sdi, \
+    /usr/bin/smartctl -j -H -A /dev/sdj, \
+    /usr/bin/smartctl -j -H -A /dev/sdk, \
+    /usr/bin/smartctl -j -H -A /dev/sdl, \
+    /usr/bin/smartctl -j -H -A /dev/sdm, \
+    /usr/bin/smartctl -j -H -A /dev/sdn, \
+    /usr/bin/smartctl -j -H -A /dev/sdo, \
+    /usr/bin/smartctl -j -H -A /dev/sdp, \
+    /usr/bin/smartctl -j -H -A /dev/sdq, \
+    /usr/bin/smartctl -j -H -A /dev/sdr, \
+    /usr/bin/smartctl -j -H -A /dev/sds, \
+    /usr/bin/smartctl -j -H -A /dev/sdt, \
+    /usr/bin/smartctl -j -H -A /dev/sdu, \
+    /usr/bin/smartctl -j -H -A /dev/sdv, \
+    /usr/bin/smartctl -j -H -A /dev/sdw, \
+    /usr/bin/smartctl -j -H -A /dev/sdx, \
+    /usr/bin/smartctl -j -H -A /dev/sdy, \
+    /usr/bin/smartctl -j -H -A /dev/sdz, \
+    /usr/bin/smartctl -j -H -A /dev/nvme0, \
+    /usr/bin/smartctl -j -H -A /dev/nvme1, \
+    /usr/bin/smartctl -j -H -A /dev/nvme2, \
+    /usr/bin/smartctl -j -H -A /dev/nvme3, \
+    /usr/bin/smartctl -j -H -A /dev/nvme4, \
+    /usr/bin/smartctl -j -H -A /dev/nvme5, \
+    /usr/bin/smartctl -j -H -A /dev/nvme6, \
+    /usr/bin/smartctl -j -H -A /dev/nvme7, \
+    /usr/bin/smartctl -j -H -A /dev/nvme8, \
+    /usr/bin/smartctl -j -H -A /dev/nvme9, \
+    /usr/bin/smartctl -j -H -A /dev/nvme10, \
+    /usr/bin/smartctl -j -H -A /dev/nvme11, \
+    /usr/bin/smartctl -j -H -A /dev/nvme12, \
+    /usr/bin/smartctl -j -H -A /dev/nvme13, \
+    /usr/bin/smartctl -j -H -A /dev/nvme14, \
+    /usr/bin/smartctl -j -H -A /dev/nvme15
+sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_SMART_READ
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/lvs --reportformat json -o lv_name\,vg_name\,segtype\,lv_health_status\,sync_percent\,raid_mismatch_count\,lv_attr
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/lvs --reportformat json -o lv_name\,vg_name\,segtype\,lv_health_status\,sync_percent\,raid_mismatch_count\,lv_attr
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/btrfs filesystem show *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs filesystem show *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/btrfs device stats *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs device stats *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ipmitool sdr elist
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ipmitool sel elist
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ipmitool sel time get

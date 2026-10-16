@@ -93,6 +93,35 @@ class OSInfoCollector:
         # Fallback to kernel version
         return ("Linux", platform.release())
 
+    def _run_as_root_if_allowed(self, argv: list) -> subprocess.CompletedProcess:
+        """Run a status query as root when the agent is not, via ``sudo -n``.
+
+        A packaged agent runs unprivileged, and ``pro status`` then cannot
+        reach the Livepatch daemon: it reports livepatch as ``warning`` on a
+        host where ``sudo pro status`` says ``enabled``, so the UI showed
+        Livepatch disabled on hosts where it worked (2026-10-16).  The sudo
+        allowlist grants ``pro status *`` and ``canonical-livepatch status *``;
+        if sudo refuses (older allowlist, no sudo), the plain call still
+        answers what it can.
+        """
+        if hasattr(os, "geteuid") and os.geteuid() != 0 and shutil.which("sudo"):
+            result = subprocess.run(  # nosec B603, B607
+                ["sudo", "-n"] + argv,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0 and result.stdout:
+                return result
+        return subprocess.run(  # nosec B603, B607
+            argv,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+
     def _get_ubuntu_pro_info(self) -> Dict[str, Any]:
         """Get Ubuntu Pro subscription and service status information."""
         ubuntu_pro_info = {
@@ -107,12 +136,8 @@ class OSInfoCollector:
         }
 
         try:
-            result = subprocess.run(
-                ["pro", "status", "--all", "--format", "json"],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
+            result = self._run_as_root_if_allowed(
+                ["pro", "status", "--all", "--format", "json"]
             )
 
             if result.returncode == 0 and result.stdout:
@@ -200,12 +225,8 @@ class OSInfoCollector:
     def _detect_fips_ubuntu_pro(self, info: Dict[str, Any]) -> None:
         """Ubuntu Pro FIPS service status."""
         try:
-            result = subprocess.run(
-                ["pro", "status", "--all", "--format", "json"],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
+            result = self._run_as_root_if_allowed(
+                ["pro", "status", "--all", "--format", "json"]
             )
             if result.returncode == 0 and result.stdout:
                 for svc in json.loads(result.stdout).get("services", []):
@@ -341,7 +362,10 @@ class OSInfoCollector:
         # Determine the normalized status
         if not available:
             status = "n/a"
-        elif raw_status in ["enabled", "active"]:
+        elif raw_status in ["enabled", "active", "warning"]:
+            # ``warning`` is pro's "enabled, but something needs attention"
+            # (and what an unprivileged caller sees for livepatch); the raw
+            # value travels in ``raw_status``.
             status = "enabled"
         else:
             status = "disabled"
@@ -366,17 +390,8 @@ class OSInfoCollector:
         back to the generic Pro service record.
         """
         try:
-            result = subprocess.run(
-                [
-                    "canonical-livepatch",
-                    "status",
-                    "--format",
-                    "json",
-                ],  # nosec B603, B607
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
+            result = self._run_as_root_if_allowed(
+                ["canonical-livepatch", "status", "--format", "json"]
             )
         except subprocess.TimeoutExpired:
             self.logger.warning(_("Livepatch status check timed out"))

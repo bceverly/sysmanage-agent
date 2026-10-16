@@ -8,6 +8,12 @@ Wants=network-online.target
 Type=simple
 User=sysmanage-agent
 Group=sysmanage-agent
+# Raw sockets ONLY, so passive ARP listening and IPv6 neighbor discovery
+# (network discovery, 21.6) work without running the agent as root.
+# Deliberately NO CapabilityBoundingSet: it would also cap every sudo
+# command the agent runs (apt, systemctl, pro ...) to CAP_NET_RAW and break
+# the sudoers allowlist; NoNewPrivileges is left off for the same reason.
+AmbientCapabilities=CAP_NET_RAW
 WorkingDirectory=/opt/sysmanage-agent
 ExecStart=/opt/sysmanage-agent/.venv/bin/python3 /opt/sysmanage-agent/main.py
 Restart=always

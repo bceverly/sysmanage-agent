@@ -299,3 +299,19 @@ def _test_sudo_access() -> bool:
 
     except Exception:
         return False
+
+
+def escalate_service_cmd(cmd: list) -> list:
+    """Prefix ``sudo -n`` to a service-manager argv when not root.
+
+    A packaged agent runs unprivileged; ``systemctl enable/start`` then asked
+    polkit for interactive authentication and every antivirus plan's service
+    step failed (beast, 2026-10-16).  The sudoers allowlists grant
+    ``/usr/bin/systemctl {start,stop,restart,enable,disable} *``.  As root
+    (Alpine's OpenRC unit) and on Windows (sc.exe) nothing is added.
+    """
+    if not cmd or not hasattr(os, "geteuid") or os.geteuid() == 0:
+        return list(cmd)
+    if cmd[0].replace("\\", "/").rsplit("/", 1)[-1].lower() in ("sc", "sc.exe"):
+        return list(cmd)
+    return ["sudo", "-n"] + list(cmd)

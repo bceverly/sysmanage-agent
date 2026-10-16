@@ -299,7 +299,11 @@ class TestCacheMerge:
         collector = nd.NetworkDiscoveryCollector()
         with patch.object(nd.platform, "system", return_value="Linux"), patch.object(
             nd, "_is_root", return_value=False
-        ), patch.object(nd, "_MulticastListener", return_value=fake), patch.object(
+        ), patch.object(
+            nd, "_PacketListener", side_effect=PermissionError("no CAP_NET_RAW")
+        ), patch.object(
+            nd, "_MulticastListener", return_value=fake
+        ), patch.object(
             nd, "local_interfaces", return_value=[]
         ):
             methods = collector.start()

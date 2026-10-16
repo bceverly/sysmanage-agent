@@ -193,7 +193,7 @@ class _Accumulator:
 
 
 class _PacketListener(threading.Thread):
-    """Linux, root: one AF_PACKET socket sees ARP, ND, mDNS and SSDP with the
+    """Linux, root or CAP_NET_RAW: one AF_PACKET socket sees ARP, ND, mDNS and SSDP with the
     sender's MAC.  Frames this host sent are ignored."""
 
     def __init__(self, sink: _Accumulator):
@@ -405,11 +405,18 @@ class NetworkDiscoveryCollector:
         return dict(methods)
 
     def _raw_listener(self) -> Optional[threading.Thread]:
-        """Raw capture where the platform has it and we are root: AF_PACKET
-        on Linux, BPF on the BSDs and macOS (S6).  None means fall back to
-        plain multicast sockets -- mDNS/SSDP only, no ARP listening."""
+        """Raw capture where the platform has it: AF_PACKET on Linux, BPF on
+        the BSDs and macOS (S6).  None means fall back to plain multicast
+        sockets -- mDNS/SSDP only, no ARP listening.
+
+        On Linux the test is opening the socket, not "are we root": the
+        packaged agent runs unprivileged with CAP_NET_RAW granted by its
+        systemd unit (AmbientCapabilities), which is all AF_PACKET needs.
+        The BSDs and macOS still need root to open a BPF device."""
         system = platform.system()
-        if system not in _CAPTURE_SYSTEMS or not _is_root():
+        if system not in _CAPTURE_SYSTEMS:
+            return None
+        if system != "Linux" and not _is_root():
             return None
         try:
             if system == "Linux":
@@ -418,6 +425,11 @@ class NetworkDiscoveryCollector:
                 local_interfaces(),
                 lambda frame, iface: parse_frame(self.sink, frame, iface),
             )
+        except PermissionError as error:
+            # Expected for an unprivileged agent without CAP_NET_RAW (an
+            # older unit file, or one run by hand): reported as not_root.
+            logger.debug("Network discovery raw capture not permitted: %s", error)
+            return None
         except OSError as error:
             logger.warning(_("Network discovery raw capture unavailable: %s"), error)
             return None

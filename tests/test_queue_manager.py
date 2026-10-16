@@ -145,6 +145,30 @@ class TestMessageQueueManager:
         )
         assert [m.message_id for m in messages] == [urgent] + ids
 
+    def test_a_high_ack_overtakes_a_burst_bigger_than_one_drain(self, queue_manager):
+        """A command acknowledgment queued behind a reconnect burst of reports
+        (more than one 10-message drain) must still go out in the FIRST drain:
+        at NORMAL it waited ~107 s and the server gave up on the command
+        (2026-10-16).  Also guards LIMIT-before-sort, which would leave the
+        ack out of the fetched batch entirely."""
+        for n in range(30):
+            queue_manager.enqueue_message(
+                f"report_{n}",
+                {"n": n},
+                QueueDirection.OUTBOUND,
+                priority=Priority.NORMAL,
+            )
+        ack = queue_manager.enqueue_message(
+            "command_acknowledgment",
+            {},
+            QueueDirection.OUTBOUND,
+            priority=Priority.HIGH,
+        )
+        messages = queue_manager.dequeue_messages(
+            QueueDirection.OUTBOUND, limit=10, priority_order=True
+        )
+        assert messages[0].message_id == ack
+
     def test_message_processing_lifecycle(self, queue_manager):
         """Test complete message processing lifecycle."""
         message_id = queue_manager.enqueue_message(
