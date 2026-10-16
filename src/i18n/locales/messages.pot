@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-15 09:17-0400\n"
+"POT-Creation-Date: 2026-10-15 16:12-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -352,7 +352,7 @@ msgstr ""
 msgid "Hardware event source %s stopped: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/hardware_health.py:454
+#: src/sysmanage_agent/collection/hardware_health.py:462
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr ""
@@ -1680,6 +1680,7 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr ""
 
 #: src/sysmanage_agent/communication/message_handler.py:381
+#: src/sysmanage_agent/communication/message_handler.py:712
 msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 
@@ -1750,21 +1751,21 @@ msgstr ""
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:713
+#: src/sysmanage_agent/communication/message_handler.py:722
 #, python-format
 msgid "Unknown message type: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:791
+#: src/sysmanage_agent/communication/message_handler.py:800
 msgid "Heartbeat failed, connection may be lost"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:800
+#: src/sysmanage_agent/communication/message_handler.py:809
 #, python-format
 msgid "Message sender error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/message_handler.py:816
+#: src/sysmanage_agent/communication/message_handler.py:825
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr ""
@@ -2001,6 +2002,13 @@ msgstr ""
 msgid "Failed to load configuration file: %s"
 msgstr ""
 
+#: src/sysmanage_agent/core/config.py:346
+#, python-format
+msgid ""
+"enrollment_token found at '%s' is ignored; it must be under the top-level"
+" 'security' section"
+msgstr ""
+
 #: src/sysmanage_agent/core/version.py:201
 msgid "Could not determine agent version, using 'unknown'"
 msgstr ""
@@ -2172,12 +2180,12 @@ msgstr ""
 msgid "Child host management requires Pro+ (engine path)."
 msgstr ""
 
-#: src/sysmanage_agent/operations/clock_resync.py:180
+#: src/sysmanage_agent/operations/clock_resync.py:187
 #, python-format
 msgid "Clock resync: %s failed (%s): %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/clock_resync.py:185
+#: src/sysmanage_agent/operations/clock_resync.py:191
 #, python-format
 msgid "Clock resync: %s succeeded"
 msgstr ""

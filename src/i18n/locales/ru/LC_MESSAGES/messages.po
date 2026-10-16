@@ -118,7 +118,8 @@ msgstr "Не удалось запросить хранилище сертифи
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
 "Бундл сертификатов %s содержит более %d сертификатов; отчитывается первый %d"
 
@@ -927,8 +928,8 @@ msgstr "Не удалось обновить OpenBSD"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:215
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr ""
-"Обновление OpenBSD завершилось ошибкой из-за превышения времени ожидания (30 "
-"минут)"
+"Обновление OpenBSD завершилось ошибкой из-за превышения времени ожидания (30"
+" минут)"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:314
 msgid "FreeBSD upgrade failed"
@@ -1650,8 +1651,8 @@ msgstr "Ошибка при обработке опрошенного сообщ
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Невозможно использовать HTTP-резервное соединение: у этого агента нет "
 "сохраненного host_id. Регистрация должна быть завершена сначала."
@@ -1706,7 +1707,8 @@ msgstr ""
 "данных: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:381
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Регистрация узла ожидает одобрения. Будут продолжены периодические попытки."
 
@@ -1729,12 +1731,12 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:450
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Сервер сообщил о ошибке host_not_registered (недействительно %(n)d/%(limit)d "
-"раза) -- переподключаюсь БЕЗ сброса host_id, чтобы сервер мог повторно "
+"Сервер сообщил о ошибке host_not_registered (недействительно %(n)d/%(limit)d"
+" раза) -- переподключаюсь БЕЗ сброса host_id, чтобы сервер мог повторно "
 "определить этот хост из индекса его арендатора; перезарегистрирую только "
 "если ошибка сохранится."
 
@@ -1868,7 +1870,8 @@ msgstr "Не удалось создать задачу обработки эк�
 #: src/sysmanage_agent/communication/message_handler_queue.py:481
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
-msgstr "Не удалось создать задачу для обработки входящей очереди сообщений: %s"
+msgstr ""
+"Не удалось создать задачу для обработки входящей очереди сообщений: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:572
 #, python-format
@@ -2294,7 +2297,8 @@ msgstr "Файлы не предоставлены"
 #: src/sysmanage_agent/operations/generic_deployment.py:497
 #, python-format
 msgid "Rolled back %s from backup %s after failed deployment"
-msgstr "Восстановление %s из резервной копии %s после неудачного развертывания"
+msgstr ""
+"Восстановление %s из резервной копии %s после неудачного развертывания"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:504
 #, python-format
@@ -2755,13 +2759,13 @@ msgstr "Homebrew уже установлен"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Установка Homebrew требует ручного вмешательства. Установите с помощью: /bin/"
-"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
-"HEAD/install.sh)\""
+"Установка Homebrew требует ручного вмешательства. Установите с помощью: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3255,7 +3259,8 @@ msgstr "Пользователь %s и группа по умолчанию ус
 #: src/sysmanage_agent/operations/user_account_operations.py:19
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
-msgstr "Пользователь %s удалён, но удаление по умолчанию группы не удалось: %s"
+msgstr ""
+"Пользователь %s удалён, но удаление по умолчанию группы не удалось: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:38
 #: src/sysmanage_agent/operations/user_account_operations.py:124
@@ -3539,6 +3544,15 @@ msgstr "Проверка статуса WSL не удалась в течени�
 msgid "Error checking WSL support: %s"
 msgstr "Ошибка проверки поддержки WSL: %s"
 
+#: src/sysmanage_agent/core/config.py
+#, python-format
+msgid ""
+"enrollment_token found at '%s' is ignored; it must be under the top-level "
+"'security' section"
+msgstr ""
+"enrollment_token, найденный в '%s', игнорируется; он должен находиться в "
+"разделе 'security' верхнего уровня"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "Ошибка при сборе/отправке статуса времени: %s"
@@ -3562,8 +3576,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "Рассылка %s: запрос на обновление инвентаря, но data_collector "
-#~ "отсутствует send_software_inventory_update"
+#~ "Рассылка %s: запрос на обновление инвентаря, но data_collector отсутствует "
+#~ "send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3592,8 +3606,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 #~ msgstr ""
-#~ "Сообщение %s не удалось (попытка %d/%d), повтор запланирован через %d "
-#~ "секунд"
+#~ "Сообщение %s не удалось (попытка %d/%d), повтор запланирован через %d секунд"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3718,8 +3731,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Обнаружен пакет %s: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Пропуск повторяющейся роли: %s с сервисом %s (уже имеем пакет %s)"
 
 #, python-format
@@ -3779,8 +3791,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "Обнаружение обновлений завершено: найдено %d обновлений (%d безопасности, "
-#~ "%d системных, %d приложений)"
+#~ "Обнаружение обновлений завершено: найдено %d обновлений (%d безопасности, %d"
+#~ " системных, %d приложений)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -3873,14 +3885,13 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ ".wslconfig не найден, создание для предотвращения автоматического "
-#~ "выключения WSL в %s"
+#~ ".wslconfig не найден, создание для предотвращения автоматического выключения"
+#~ " WSL в %s"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ "Обновление .wslconfig для предотвращения автоматического отключения WSL в "
-#~ "%s"
+#~ "Обновление .wslconfig для предотвращения автоматического отключения WSL в %s"
 
 #~ msgid ".wslconfig saved successfully"
 #~ msgstr ".wslconfig успешно сохранен"
@@ -3906,8 +3917,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "WSL distribution %s no longer exists, stopping keep-alive"
 #~ msgstr ""
-#~ "Распределение WSL %s больше не существует, остановка поддержания "
-#~ "активности"
+#~ "Распределение WSL %s больше не существует, остановка поддержания активности"
 
 #~ msgid "Initial data updates sent successfully"
 #~ msgstr "Начальные обновления данных успешно отправлены"
@@ -3924,8 +3934,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Отправка начальных данных доступа пользователей..."
 
 #~ msgid "Sending initial software inventory data..."
-#~ msgstr ""
-#~ "Отправка начальных данных инвентаризации программного обеспечения..."
+#~ msgstr "Отправка начальных данных инвентаризации программного обеспечения..."
 
 # OS Version Update Messages
 #~ msgid "Sending initial update check..."
@@ -3944,8 +3953,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Found and sent %d certificates during initial collection"
-#~ msgstr ""
-#~ "Найдено и отправлено %d сертификатов во время первичной сборки данных"
+#~ msgstr "Найдено и отправлено %d сертификатов во время первичной сборки данных"
 
 #~ msgid "No certificates found during initial collection"
 #~ msgstr "В системе не найдено сертификатов"
@@ -3991,11 +3999,11 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Завершено выполнение пакета команд %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Сбор сертификатов в непривилегированном режиме - некоторые сертификаты "
-#~ "могут быть недоступны"
+#~ "Сбор сертификатов в непривилегированном режиме - некоторые сертификаты могут"
+#~ " быть недоступны"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Сбор SSL-сертификатов с системы"
@@ -4027,8 +4035,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "Ignoring stale error message [%s] from %s (registration at %s)"
 #~ msgstr ""
-#~ "Игнорирование устаревшего сообщения об ошибке [%s] от %s (регистрация в "
-#~ "%s)"
+#~ "Игнорирование устаревшего сообщения об ошибке [%s] от %s (регистрация в %s)"
 
 #~ msgid "Stored host_id cleared from database"
 #~ msgstr "Записи одобрения узла и связанные данные удалены из БД"
@@ -4095,8 +4102,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "Восстановлено %d зависших сообщений"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Создание задачи обработки исходящей очереди из on_connection_established"
 
@@ -4107,8 +4113,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Выходящий обработчик очереди уже запущен, не начинать новый"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Создание задачи обработки входящей очереди из on_connection_established"
 
@@ -4152,8 +4157,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Queued script execution result for execution_id: %s"
-#~ msgstr ""
-#~ "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
+#~ msgstr "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
 
 #, python-format
 #~ msgid "Stored execution UUID %s for tracking"
@@ -4333,8 +4337,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Правила NAT уже настроены в before.rules"
 
 #~ msgid "UFW not installed; skipping LXD bridge firewall config"
-#~ msgstr ""
-#~ "UFW не установлен; пропускаем конфигурацию брандмауэра для моста LXD"
+#~ msgstr "UFW не установлен; пропускаем конфигурацию брандмауэра для моста LXD"
 
 #, python-format
 #~ msgid "Configuring UFW firewall for LXD bridge: %s"
@@ -4434,8 +4437,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "Updated OS information sent to server after Ubuntu Pro change"
 #~ msgstr ""
-#~ "Обновленная информация об ОС отправлена на сервер после изменения Ubuntu "
-#~ "Pro"
+#~ "Обновленная информация об ОС отправлена на сервер после изменения Ubuntu Pro"
 
 #, python-format
 #~ msgid "Sending reboot status update: %s"
@@ -4447,8 +4449,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
-#~ msgstr ""
-#~ "Получен запрос обновления: package='%s', manager='%s', bundle_id='%s'"
+#~ msgstr "Получен запрос обновления: package='%s', manager='%s', bundle_id='%s'"
 
 #, python-format
 #~ msgid "Using detected package manager '%s' for %s"
@@ -4460,8 +4461,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "Waiting for reconnection to send update results (attempt %d/%d)"
 #~ msgstr ""
-#~ "Ожидание переподключения для отправки результатов обновления (попытка %d/"
-#~ "%d)"
+#~ "Ожидание переподключения для отправки результатов обновления (попытка %d/%d)"
 
 #~ msgid "Rescanning for available updates after batch completion"
 #~ msgstr "Повторное сканирование доступных обновлений после завершения пакета"
@@ -4529,8 +4529,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Script execution enabled from config: %s"
-#~ msgstr ""
-#~ "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
+#~ msgstr "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
 
 #, python-format
 #~ msgid "Basic info script_execution_enabled: %s"
@@ -4598,8 +4597,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "No valid certificates found, checking host approval status..."
 #~ msgstr ""
-#~ "Не найдено действительных сертификатов, проверка статуса одобрения "
-#~ "хоста..."
+#~ "Не найдено действительных сертификатов, проверка статуса одобрения хоста..."
 
 #, python-format
 #~ msgid "Retrieved server fingerprint for validation: %s"
@@ -4616,18 +4614,16 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Запрошено одобрение узла для host_id: %s"
 
 #~ msgid "Registration confirmed, sending initial inventory data..."
-#~ msgstr ""
-#~ "Отправка начальных данных инвентаризации программного обеспечения..."
+#~ msgstr "Отправка начальных данных инвентаризации программного обеспечения..."
 
 #~ msgid "Registration received but approval pending"
 #~ msgstr "Регистрация получена, но ожидается одобрение"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Успешная регистрация, но не предоставлен ID хоста - одобрение может "
-#~ "прийти отдельно"
+#~ "Успешная регистрация, но не предоставлен ID хоста - одобрение может прийти "
+#~ "отдельно"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4639,8 +4635,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
-#~ "Системная информация отправлена после одобрения для обновления соединения "
-#~ "с сервером"
+#~ "Системная информация отправлена после одобрения для обновления соединения с "
+#~ "сервером"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
@@ -4670,8 +4666,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "Сервер сообщает, что хост не зарегистрирован. Очищаю сохраненный host_id "
-#~ "и запускаю перерегистрацию..."
+#~ "Сервер сообщает, что хост не зарегистрирован. Очищаю сохраненный host_id и "
+#~ "запускаю перерегистрацию..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -4782,11 +4778,11 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Обнаружен Microsoft Defender for Endpoint на macOS (версия: %s, включен: "
-#~ "%s, лицензирован: %s)"
+#~ "Обнаружен Microsoft Defender for Endpoint на macOS (версия: %s, включен: %s,"
+#~ " лицензирован: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4875,8 +4871,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr ""
-#~ "Результат команды Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr "Результат команды Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -5035,8 +5030,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Обнаружение обновлений прошивки fwupd"
 
 #~ msgid "Could not refresh fwupd metadata (may need privileges)"
-#~ msgstr ""
-#~ "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
+#~ msgstr "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
 
 #~ msgid "No firmware updates available"
 #~ msgstr "Обновления прошивки недоступны"
@@ -5290,8 +5284,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
 #~ msgstr ""
-#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения "
-#~ "настроек"
+#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения настроек"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -5364,8 +5357,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Обновление статуса виртуализации добавлено в очередь для отправки на "
-#~ "сервер"
+#~ "Обновление статуса виртуализации добавлено в очередь для отправки на сервер"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img не найден, попытка установки: %s"

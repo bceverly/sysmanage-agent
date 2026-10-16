@@ -114,9 +114,11 @@ msgstr "Failed to query Windows certificate store %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
@@ -1632,11 +1634,11 @@ msgstr "Error handling polled message %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 
 #: src/sysmanage_agent/communication/http_polling.py:232
 #, python-format
@@ -1684,7 +1686,8 @@ msgid "Could not parse message timestamp for stale check: %s"
 msgstr "Could not parse message timestamp for stale check: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:381
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Host registration is pending approval. Will continue periodic attempts."
 
@@ -1707,12 +1710,12 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:450
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 
 #: src/sysmanage_agent/communication/message_handler.py:463
@@ -2727,13 +2730,13 @@ msgstr "Homebrew is already installed"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:306
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid "Chocolatey is only supported on Windows systems"
@@ -3511,6 +3514,15 @@ msgstr "WSL status check timed out"
 msgid "Error checking WSL support: %s"
 msgstr "Error checking WSL support: %s"
 
+#: src/sysmanage_agent/core/config.py
+#, python-format
+msgid ""
+"enrollment_token found at '%s' is ignored; it must be under the top-level "
+"'security' section"
+msgstr ""
+"enrollment_token found at '%s' is ignored; it must be under the top-level "
+"'security' section"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "Error collecting/sending time status: %s"
@@ -3563,8 +3575,7 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
-#~ msgstr ""
-#~ "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+#~ msgstr "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3689,10 +3700,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Found %s package: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
-#~ msgstr ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgstr "Skipping duplicate role: %s with service %s (already have package %s)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -3954,11 +3963,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Completed packages batch %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Collecting SSL certificates from system"
@@ -4056,8 +4065,7 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "Recovered %d stuck messages on connection establishment"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Creating outbound queue processing task from on_connection_established"
 
@@ -4068,10 +4076,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Outbound queue processor already running, not starting another"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
-#~ msgstr ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgstr "Creating inbound queue processing task from on_connection_established"
 
 #, python-format
 #~ msgid "Inbound queue processing task created successfully: %s"
@@ -4233,8 +4239,7 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Windows %s Event Log collected in %.2f seconds"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
-#~ msgstr ""
-#~ "Collecting Windows System Event Log (this may take 10-30 seconds)..."
+#~ msgstr "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
@@ -4568,11 +4573,9 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Registration received but approval pending"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4736,11 +4739,11 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5437,11 +5440,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Installing sshpass via apk..."
 
 #~ msgid ""
-#~ "Could not detect package manager to install sshpass. Please install "
-#~ "sshpass manually."
+#~ "Could not detect package manager to install sshpass. Please install sshpass "
+#~ "manually."
 #~ msgstr ""
-#~ "Could not detect package manager to install sshpass. Please install "
-#~ "sshpass manually."
+#~ "Could not detect package manager to install sshpass. Please install sshpass "
+#~ "manually."
 
 #~ msgid "Timeout while installing sshpass"
 #~ msgstr "Timeout while installing sshpass"

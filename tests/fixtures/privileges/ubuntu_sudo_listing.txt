@@ -1,0 +1,57 @@
+User sysmanage-agent may run the following commands on host.example.com:
+    (ALL) NOPASSWD: /usr/bin/apt
+    (ALL) NOPASSWD: /usr/bin/apt-get
+    (ALL) NOPASSWD: /usr/bin/dpkg -i *
+    (ALL) NOPASSWD: /usr/bin/add-apt-repository
+    (ALL) NOPASSWD: /usr/bin/snap refresh *
+    (ALL) NOPASSWD: /snap/bin/snap refresh *
+    (ALL) NOPASSWD: /usr/bin/flatpak update -y *
+    (ALL) NOPASSWD: /usr/bin/fwupdmgr update *
+    (ALL) NOPASSWD: /usr/bin/do-release-upgrade
+    (ALL) NOPASSWD: /usr/bin/apt-mirror
+    (ALL) NOPASSWD: /usr/bin/createrepo_c, /usr/sbin/createrepo
+    (ALL) NOPASSWD: /usr/bin/reposync
+    (ALL) NOPASSWD: /usr/bin/trickle
+    (ALL) NOPASSWD: /usr/bin/systemd-run, /usr/bin/systemd-run
+    (ALL) NOPASSWD: /usr/bin/mkdir, /usr/bin/mkdir
+    (ALL) NOPASSWD: /usr/bin/find
+    (ALL) NOPASSWD: /usr/bin/chmod, /usr/bin/chmod
+    (ALL) NOPASSWD: /usr/bin/chown, /usr/bin/chown
+    (ALL) NOPASSWD: /usr/bin/rsync
+    (ALL) NOPASSWD: /usr/bin/xorriso
+    (ALL) NOPASSWD: /usr/bin/sha256sum
+    (ALL) NOPASSWD: /usr/bin/growisofs
+    (ALL) NOPASSWD: /usr/bin/eject
+    (ALL) NOPASSWD: /usr/bin/curl
+    (ALL) NOPASSWD: /usr/bin/mount, /usr/bin/mount
+    (ALL) NOPASSWD: /usr/bin/umount, /usr/bin/umount
+    (ALL) NOPASSWD: /usr/bin/sed, /usr/bin/sed
+    (ALL) NOPASSWD: /usr/bin/rm, /usr/bin/rm
+    (ALL) NOPASSWD: /usr/bin/install
+    (ALL) NOPASSWD: /usr/bin/systemctl start *, /usr/bin/systemctl start *
+    (ALL) NOPASSWD: /usr/bin/systemctl stop *, /usr/bin/systemctl stop *
+    (ALL) NOPASSWD: /usr/bin/systemctl restart *, /usr/bin/systemctl restart *
+    (ALL) NOPASSWD: /usr/bin/systemctl enable *, /usr/bin/systemctl enable *
+    (ALL) NOPASSWD: /usr/bin/systemctl disable *, /usr/bin/systemctl disable *
+    (ALL) NOPASSWD: /usr/bin/systemctl is-active *, /usr/bin/systemctl is-active *
+    (ALL) NOPASSWD: /usr/bin/systemctl daemon-reload, /usr/bin/systemctl daemon-reload
+    (ALL) NOPASSWD: /usr/sbin/ufw allow *
+    (ALL) NOPASSWD: /usr/sbin/ufw --force enable
+    (ALL) NOPASSWD: /usr/sbin/ufw disable
+    (ALL) NOPASSWD: /usr/sbin/ufw reload
+    (ALL) NOPASSWD: /usr/sbin/ufw status *
+    (ALL) NOPASSWD: /usr/bin/firewall-cmd
+    (ALL) NOPASSWD: /usr/bin/pro attach *
+    (ALL) NOPASSWD: /usr/bin/pro detach *
+    (ALL) NOPASSWD: /usr/bin/pro enable *
+    (ALL) NOPASSWD: /usr/bin/pro disable *
+    (ALL) NOPASSWD: /usr/bin/pro status *
+    (ALL) NOPASSWD: /usr/sbin/shutdown -r *
+    (ALL) NOPASSWD: /usr/sbin/shutdown -h *
+    (ALL) NOPASSWD: /usr/sbin/shutdown -r *
+    (ALL) NOPASSWD: /usr/sbin/shutdown -h *
+    (ALL) NOPASSWD: /usr/sbin/update-ca-certificates
+    (ALL) NOPASSWD: /usr/bin/update-ca-trust extract
+    (ALL) NOPASSWD: /usr/bin/test, /usr/bin/test
+    (ALL) NOPASSWD: /usr/bin/ln, /usr/bin/ln
+    (ALL) NOPASSWD: /usr/sbin/nginx, /usr/bin/nginx

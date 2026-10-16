@@ -338,4 +338,26 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
         Returns:
             The enrollment-token string if configured, None otherwise.
         """
-        return self.get("security.enrollment_token")
+        token = self.get("security.enrollment_token")
+        if token is None:
+            for path in _misplaced_keys(self.config_data, "enrollment_token"):
+                self.logger.warning(
+                    _(
+                        "enrollment_token found at '%s' is ignored; it must be "
+                        "under the top-level 'security' section"
+                    ),
+                    path,
+                )
+        return token
+
+
+def _misplaced_keys(data: Any, key: str, prefix: str = "") -> list:
+    """Dotted paths of every ``key`` anywhere in ``data``."""
+    found = []
+    if isinstance(data, dict):
+        for name, value in data.items():
+            path = f"{prefix}{name}"
+            if name == key:
+                found.append(path)
+            found.extend(_misplaced_keys(value, key, path + "."))
+    return found

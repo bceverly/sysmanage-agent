@@ -166,7 +166,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                     parent_dir,
                 )
 
-        backup_path, backup_err = self._maybe_backup(path, backup_requested)
+        backup_path, backup_err = await self._maybe_backup(path, backup_requested)
         if backup_err:
             return backup_err
 
@@ -180,17 +180,19 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 dest_path=path,
                 explicit_owner=explicit_owner,
             )
-            post_err = self._verify_post_write_hash(path, expected_sha256, backup_path)
+            post_err = await self._verify_post_write_hash(
+                path, expected_sha256, backup_path
+            )
             if post_err:
                 return post_err
         except PermissionError as exc:
-            self._rollback_file(path, backup_path)
+            await self._rollback_file(path, backup_path)
             return {
                 "success": False,
                 "error": f"Permission denied writing '{path}': {exc}",
             }
         except OSError as exc:
-            self._rollback_file(path, backup_path)
+            await self._rollback_file(path, backup_path)
             return {
                 "success": False,
                 "error": f"OS error writing '{path}': {exc}",
@@ -227,13 +229,23 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             ),
         }
 
-    def _maybe_backup(self, path: str, requested: bool) -> tuple:
-        """Snapshot an existing file before overwrite; return (backup_path, error_dict)."""
+    async def _maybe_backup(self, path: str, requested: bool) -> tuple:
+        """Snapshot an existing file before overwrite; return (backup_path, error_dict).
+
+        A packaged agent runs unprivileged, so the copy into a root-owned
+        directory (``/etc/clamav/``) is refused; it then goes through
+        ``sudo install -p`` like the write itself.  Without this every
+        antivirus plan failed on its first config file (production,
+        2026-10-16: "Permission denied: '/etc/clamav/clamd.conf.sysmanage.bak'").
+        """
         if not requested or not os.path.exists(path):
             return None, None
         backup_path = path + ".sysmanage.bak"
         try:
-            shutil.copy2(path, backup_path)
+            try:
+                shutil.copy2(path, backup_path)
+            except PermissionError:
+                await self._sudo_copy(path, backup_path)
             self.logger.debug("Backed up existing file %s -> %s", path, backup_path)
             return backup_path, None
         except OSError as exc:
@@ -241,6 +253,29 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 "success": False,
                 "error": f"Could not back up existing '{path}' before deploy: {exc}",
             }
+
+    async def _sudo_copy(self, source: str, dest: str) -> None:
+        """``sudo install`` ``source`` to ``dest`` keeping its mode, owner and
+        timestamps -- ``install`` is on the agent's sudo allowlist, ``cp``
+        is not."""
+        info = os.stat(source)
+        await self._run_sudo(
+            [
+                "sudo",
+                "-n",
+                "install",
+                "-p",
+                "-m",
+                f"{info.st_mode & 0o7777:o}",
+                "-o",
+                str(info.st_uid),
+                "-g",
+                str(info.st_gid),
+                "--",
+                source,
+                dest,
+            ]
+        )
 
     async def _write_atomic(
         self,
@@ -343,6 +378,41 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 os.unlink(tmp_path)
             raise
 
+    async def _run_sudo(self, argv) -> None:
+        """Run a ``sudo -n ...`` argv; PermissionError on a non-zero exit."""
+        # Same safe-cwd / safe-HOME shim as ``_exec_plan_command``;
+        # see the docstring there for why ``/nonexistent`` HOME on
+        # service-user accounts breaks sudo's PAM session module.
+        try:
+            shim_cwd = os.getcwd()
+            if not os.access(shim_cwd, os.R_OK | os.X_OK):
+                raise OSError("cwd not accessible")
+        except OSError:
+            # ``tempfile.gettempdir()`` resolves ``$TMPDIR`` /
+            # ``$TEMP`` / ``$TMP`` and falls back to the platform
+            # default (``/tmp`` on Unix, ``%TEMP%`` on Windows)
+            # without a hardcoded literal.  We use this only as
+            # ``cwd=`` for the subprocess -- no temp file is
+            # created here.
+            shim_cwd = tempfile.gettempdir()
+        shim_env = os.environ.copy()
+        shim_home = shim_env.get("HOME", "")
+        if not shim_home or not os.path.isdir(shim_home):
+            shim_env["HOME"] = shim_cwd
+        proc = await asyncio.create_subprocess_exec(
+            *argv,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=shim_cwd,
+            env=shim_env,
+        )
+        _stdout_bytes, stderr_bytes = await proc.communicate()
+        if proc.returncode != 0:
+            stderr_text = (stderr_bytes or b"").decode("utf-8", "replace").strip()
+            raise PermissionError(
+                f"sudo {argv[2]} failed (rc={proc.returncode}): {stderr_text}"
+            )
+
     async def _write_via_sudo(
         self,
         content: str,
@@ -404,38 +474,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 staged_path,
                 dest_path,
             ]
-            # Same safe-cwd / safe-HOME shim as ``_exec_plan_command``;
-            # see the docstring there for why ``/nonexistent`` HOME on
-            # service-user accounts breaks sudo's PAM session module.
-            try:
-                shim_cwd = os.getcwd()
-                if not os.access(shim_cwd, os.R_OK | os.X_OK):
-                    raise OSError("cwd not accessible")
-            except OSError:
-                # ``tempfile.gettempdir()`` resolves ``$TMPDIR`` /
-                # ``$TEMP`` / ``$TMP`` and falls back to the platform
-                # default (``/tmp`` on Unix, ``%TEMP%`` on Windows)
-                # without a hardcoded literal.  We use this only as
-                # ``cwd=`` for the subprocess -- no temp file is
-                # created here.
-                shim_cwd = tempfile.gettempdir()
-            shim_env = os.environ.copy()
-            shim_home = shim_env.get("HOME", "")
-            if not shim_home or not os.path.isdir(shim_home):
-                shim_env["HOME"] = shim_cwd
-            proc = await asyncio.create_subprocess_exec(
-                *argv,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=shim_cwd,
-                env=shim_env,
-            )
-            _stdout_bytes, stderr_bytes = await proc.communicate()
-            if proc.returncode != 0:
-                stderr_text = (stderr_bytes or b"").decode("utf-8", "replace").strip()
-                raise PermissionError(
-                    f"sudo install failed (rc={proc.returncode}): {stderr_text}"
-                )
+            await self._run_sudo(argv)
         finally:
             if os.path.exists(staged_path):
                 try:
@@ -445,7 +484,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                         "Could not remove staged tempfile %s", staged_path
                     )
 
-    def _verify_post_write_hash(
+    async def _verify_post_write_hash(
         self, path: str, expected_sha256: Optional[str], backup_path: Optional[str]
     ) -> Optional[Dict[str, Any]]:
         """Re-hash the on-disk file; roll back from backup on mismatch."""
@@ -454,7 +493,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
         on_disk_hash = self._sha256_of_file(path)
         if on_disk_hash.lower() == expected_sha256.lower():
             return None
-        rollback_msg = self._rollback_file(path, backup_path)
+        rollback_msg = await self._rollback_file(path, backup_path)
         return {
             "success": False,
             "error": (
@@ -478,7 +517,7 @@ class GenericDeployment(GenericDeploymentPlanMixin):
                 digest.update(chunk)
         return digest.hexdigest()
 
-    def _rollback_file(self, path: str, backup_path: Optional[str]) -> str:
+    async def _rollback_file(self, path: str, backup_path: Optional[str]) -> str:
         """Restore the previous file from backup, if a backup exists.
 
         Returns a short human-readable status string suitable for inclusion
@@ -492,7 +531,11 @@ class GenericDeployment(GenericDeploymentPlanMixin):
             # corrupted content there), and Windows ``os.rename``
             # refuses to overwrite an existing destination (WinError
             # 183).  Same fix as the primary _write_atomic path.
-            os.replace(backup_path, path)
+            try:
+                os.replace(backup_path, path)
+            except PermissionError:
+                # Root-owned directory: restore as root, as the backup was made.
+                await self._sudo_copy(backup_path, path)
             self.logger.warning(
                 _("Rolled back %s from backup %s after failed deployment"),
                 path,

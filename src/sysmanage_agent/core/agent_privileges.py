@@ -131,20 +131,20 @@ def _check_sudoers_privileges(username: str) -> bool:
         # even if the file exists, so we always try to read and fall back to testing
         content = _read_sudoers_file(sudoers_path)
         if content is None:
-            # Can't read sudoers file (doesn't exist or permission denied)
-            # Try to infer from running actual sudo commands
-            return _test_sudo_access()
+            # The normal case for a packaged agent: sudo requires
+            # /etc/sudoers.d to be root-only, so the agent can never read its
+            # own fragment.  Ask sudo instead -- ``sudo -n -l`` lists the
+            # caller's own grants without a password.  (Falling straight
+            # through to ``sudo -n true`` reported every packaged agent as
+            # unprivileged: ``true`` is not on the allowlist, so it is refused,
+            # and the UI then disabled reboot, roles, accounts... 2026-10-15.)
+            listing = _sudo_listing()
+            if listing is None:
+                return _test_sudo_access()
+            return _grants_suffice(_parse_sudo_listing(listing))
 
         # Parse sudoers content for NOPASSWD privileges
-        granted_commands = _parse_sudoers_content(content, username)
-
-        # Consider privileged if we have systemctl and package management
-        has_systemctl = "systemctl" in granted_commands
-        has_package_mgmt = any(
-            cmd in granted_commands for cmd in ["apt", "yum", "dnf", "zypper"]
-        )
-
-        return has_systemctl and has_package_mgmt
+        return _grants_suffice(_parse_sudoers_content(content, username))
 
     except Exception:
         # If we can't parse sudoers, assume no privileges
@@ -179,10 +179,7 @@ def _parse_sudoers_content(content: str, username: str) -> set:
     Returns:
         set: Set of granted command names
     """
-    required_commands = [
-        "systemctl",  # Service management
-        "apt",  # Package management
-    ]
+    required_commands = list(_REQUIRED_COMMANDS)
 
     granted_commands = set()
     for line in content.split("\n"):
@@ -215,6 +212,55 @@ def _parse_sudoers_line(line: str, username: str, required_commands: list) -> se
 
     command_part = parts[1].strip()
     return {cmd for cmd in required_commands if cmd in command_part}
+
+
+# Service management plus ANY package manager (an RPM host's allowlist names
+# dnf / yum / zypper, never apt -- the old list only looked for apt).
+_PACKAGE_MANAGERS = ("apt", "yum", "dnf", "zypper")
+_REQUIRED_COMMANDS = ("systemctl",) + _PACKAGE_MANAGERS
+_FULL_SUDO = "ALL"
+
+
+def _grants_suffice(granted_commands: set) -> bool:
+    """Privileged = service control and a package manager (or full sudo)."""
+    if _FULL_SUDO in granted_commands:
+        return True
+    return "systemctl" in granted_commands and any(
+        cmd in granted_commands for cmd in _PACKAGE_MANAGERS
+    )
+
+
+def _sudo_listing() -> Optional[str]:
+    """``sudo -n -l``: the caller's own NOPASSWD grants, or None."""
+    try:
+        result = subprocess.run(  # nosec B603 B607
+            ["sudo", "-n", "-l"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except Exception:  # pylint: disable=broad-except
+        return None
+    return result.stdout if result.returncode == 0 else None
+
+
+def _parse_sudo_listing(listing: str) -> set:
+    """The command names granted NOPASSWD in a ``sudo -l`` listing, e.g.
+    ``    (ALL) NOPASSWD: /usr/bin/apt, /usr/bin/systemctl restart *``."""
+    granted: set = set()
+    for line in listing.splitlines():
+        if "NOPASSWD:" not in line:
+            continue
+        for spec in line.split("NOPASSWD:", 1)[1].split(","):
+            command = spec.strip().split(" ", 1)[0]
+            if command == _FULL_SUDO:
+                granted.add(_FULL_SUDO)
+                continue
+            name = command.rsplit("/", 1)[-1]
+            if name in _REQUIRED_COMMANDS:
+                granted.add(name)
+    return granted
 
 
 def _test_sudo_access() -> bool:
