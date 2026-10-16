@@ -7,6 +7,7 @@ a root-owned directory must go through ``sudo install`` like the write does.
 Production, 2026-10-16: every antivirus plan failed with "Could not back up
 existing '/etc/clamav/clamd.conf' before deploy: Permission denied"."""
 
+import os
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -36,7 +37,10 @@ async def test_an_unwritable_backup_goes_through_sudo_install(tmp_path):
     assert backup == str(original) + ".sysmanage.bak"
     argv = sudo.await_args.args[0]
     assert argv[:4] == ["sudo", "-n", "install", "-p"]
-    assert argv[argv.index("-m") + 1] == "640"  # the original's mode, kept
+    # The original's mode, kept.  Read back rather than assumed: Windows'
+    # chmod only toggles read-only, so the file there is 666, not 640.
+    expected_mode = f"{os.stat(original).st_mode & 0o7777:o}"
+    assert argv[argv.index("-m") + 1] == expected_mode
     assert argv[-2:] == [str(original), backup]
 
 
