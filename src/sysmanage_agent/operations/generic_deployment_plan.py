@@ -52,15 +52,44 @@ def _all_pkg_install_optional(pkgs: list) -> bool:
 
 
 def _plan_result(
-    success: bool, results: Dict[str, Any], errors: list, failed_step: Optional[str]
+    success: bool,
+    results: Dict[str, Any],
+    errors: list,
+    warnings: list,
+    failed_step: Optional[str],
 ) -> Dict[str, Any]:
-    """Build the final apply_deployment_plan response."""
+    """Build the final apply_deployment_plan response.
+
+    ``errors`` are failures that decide ``success``; ``warnings`` are failures
+    of steps the plan itself marked best-effort (``ignore_errors`` commands,
+    ``optional`` packages).  They used to share ``errors``, so a plan that
+    succeeded still reported an error ("refresh ClamAV signature database ...
+    sudo: I'm sorry", 2026-10-17) and nobody could tell which mattered.
+    """
     return {
         "success": success,
         "results": results,
         "errors": errors,
+        "warnings": warnings,
         "failed_step": failed_step,
     }
+
+
+def _ok_exit_codes(spec: Dict[str, Any]) -> tuple:
+    """The exit codes a plan command counts as success (default: 0 only).
+
+    ``pkill`` exits 1 when nothing matched -- for "stop it if it is running"
+    that is success, and reporting it as a failure (or a warning) on every
+    first install would be noise.  Malformed values fall back to (0,).
+    """
+    codes = spec.get("ok_exit_codes")
+    if (
+        isinstance(codes, list)
+        and codes
+        and all(isinstance(c, int) and not isinstance(c, bool) for c in codes)
+    ):
+        return tuple(codes)
+    return (0,)
 
 
 class GenericDeploymentPlanMixin:
@@ -99,6 +128,7 @@ class GenericDeploymentPlanMixin:
                     - elevated: bool                (Windows only; informational)
                     - timeout: int seconds          (default 60)
                     - ignore_errors: bool           (default False)
+                    - ok_exit_codes: list[int]      (default [0])
                     - description: str              (for logs)
                 service_actions    : list of {service, action}
                 packages_to_remove : same shape as packages
@@ -116,6 +146,7 @@ class GenericDeploymentPlanMixin:
         self._current_plan_message_id = message_id
         results: Dict[str, Any] = {}
         errors: list = []
+        warnings: list = []
 
         # Each phase returns the failed-step name on a hard failure, or
         # None to continue.  Sequenced this way so the dispatcher itself
@@ -129,11 +160,11 @@ class GenericDeploymentPlanMixin:
         )
         try:
             for phase in phases:
-                failed_step = await phase(plan, results, errors)
+                failed_step = await phase(plan, results, errors, warnings)
                 if failed_step:
-                    return _plan_result(False, results, errors, failed_step)
+                    return _plan_result(False, results, errors, warnings, failed_step)
 
-            return _plan_result(True, results, errors, None)
+            return _plan_result(True, results, errors, warnings, None)
         finally:
             # Always clear the journal on any plan exit (success, hard
             # failure, or exception).  The synthetic-result path is only
@@ -144,20 +175,29 @@ class GenericDeploymentPlanMixin:
             self._current_plan_message_id = None
 
     async def _phase_install_packages(
-        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+        self,
+        plan: Dict[str, Any],
+        results: Dict[str, Any],
+        errors: list,
+        warnings: list,
     ) -> Optional[str]:
         pkgs = plan.get("packages") or []
         if not pkgs:
             return None
         pkg_results, pkg_errors = await self._apply_plan_packages(pkgs, install=True)
         results["packages"] = pkg_results
+        if pkg_errors and _all_pkg_install_optional(pkgs):
+            warnings.extend(pkg_errors)
+            return None
         errors.extend(pkg_errors)
-        if pkg_errors and not _all_pkg_install_optional(pkgs):
-            return "packages"
-        return None
+        return "packages" if pkg_errors else None
 
     async def _phase_deploy_files(
-        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+        self,
+        plan: Dict[str, Any],
+        results: Dict[str, Any],
+        errors: list,
+        warnings: list,
     ) -> Optional[str]:
         files = plan.get("files") or []
         if not files:
@@ -170,18 +210,29 @@ class GenericDeploymentPlanMixin:
         return None
 
     async def _phase_run_commands(
-        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+        self,
+        plan: Dict[str, Any],
+        results: Dict[str, Any],
+        errors: list,
+        warnings: list,
     ) -> Optional[str]:
         cmds = plan.get("commands") or []
         if not cmds:
             return None
-        cmd_results, cmd_errors, hard_fail = await self._apply_plan_commands(cmds)
+        cmd_results, cmd_errors, cmd_warnings, hard_fail = (
+            await self._apply_plan_commands(cmds)
+        )
         results["commands"] = cmd_results
         errors.extend(cmd_errors)
+        warnings.extend(cmd_warnings)
         return "commands" if hard_fail else None
 
     async def _phase_service_actions(
-        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+        self,
+        plan: Dict[str, Any],
+        results: Dict[str, Any],
+        errors: list,
+        warnings: list,
     ) -> Optional[str]:
         svc_actions = plan.get("service_actions") or []
         if not svc_actions:
@@ -192,7 +243,11 @@ class GenericDeploymentPlanMixin:
         return "service_actions" if svc_errors else None
 
     async def _phase_remove_packages(
-        self, plan: Dict[str, Any], results: Dict[str, Any], errors: list
+        self,
+        plan: Dict[str, Any],
+        results: Dict[str, Any],
+        errors: list,
+        warnings: list,
     ) -> Optional[str]:
         pkgs_rm = plan.get("packages_to_remove") or []
         if not pkgs_rm:
@@ -277,19 +332,23 @@ class GenericDeploymentPlanMixin:
         Run each plan command via asyncio.create_subprocess_exec.
 
         Stops on the first command whose `ignore_errors` is False AND that
-        returned nonzero. Returns (per-command results, accumulated errors,
-        hard_fail bool).
+        returned nonzero. Returns (per-command results, errors, warnings,
+        hard_fail bool): a failure the spec marked ``ignore_errors`` is a
+        warning (and its result carries ``"ignored": True``), not an error.
         """
         results = []
         errors = []
+        warnings = []
         for spec in commands:
             result, error_msg, hard_fail = await self._run_one_plan_command(spec)
             results.append(result)
-            if error_msg:
+            if error_msg and hard_fail:
                 errors.append(error_msg)
-            if hard_fail:
-                return results, errors, True
-        return results, errors, False
+                return results, errors, warnings, True
+            if error_msg:
+                result["ignored"] = True
+                warnings.append(error_msg)
+        return results, errors, warnings, False
 
     async def _run_one_plan_command(self, spec: Dict[str, Any]) -> tuple:
         """
@@ -340,6 +399,7 @@ class GenericDeploymentPlanMixin:
                 timeout=timeout,
                 ignore_errors=ignore_errors,
                 envelope_extras=envelope_extras,
+                ok_exit_codes=_ok_exit_codes(spec),
             )
         except FileNotFoundError as exc:
             return (
@@ -487,6 +547,7 @@ class GenericDeploymentPlanMixin:
         timeout: int,  # NOSONAR S7497 - asyncio.timeout() needs 3.11+, we support 3.9
         ignore_errors: bool,
         envelope_extras: Optional[Dict[str, Any]] = None,
+        ok_exit_codes: tuple = (0,),
     ) -> tuple:
         """Spawn the subprocess and translate the exit/timeout into a result tuple.
 
@@ -526,7 +587,7 @@ class GenericDeploymentPlanMixin:
             )
 
         returncode, stdout, stderr = outcome
-        cmd_ok = returncode == 0
+        cmd_ok = returncode in ok_exit_codes
         # UTF-16LE-aware decode so wsl.exe output (always UTF-16LE on
         # Windows) doesn't come back as garbled null-littered bytes.
         stdout_str = _decode_command_output(stdout, argv=run_argv)

@@ -74,7 +74,7 @@ sudo apt update
 sudo apt install sysmanage-agent
 
 # Configure
-sudo nano /etc/sysmanage-agent.yaml
+sudo vim /etc/sysmanage-agent.yaml
 sudo systemctl restart sysmanage-agent
 ```
 

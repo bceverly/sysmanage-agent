@@ -147,15 +147,50 @@ def mdns_services(payload: bytes) -> List[str]:
     return found[:MAX_EVIDENCE]
 
 
-def ssdp_evidence(payload: bytes) -> List[str]:
-    """The SERVER and NT/ST lines of an SSDP message: what the device is."""
-    keep = []
-    for line in payload[:2048].decode("latin-1", "replace").split("\r\n"):
-        if line.lower().startswith(("server:", "nt:", "st:")):
+def ssdp_parse(payload: bytes) -> Tuple[List[str], List[str]]:
+    """``(identity, searches)`` from one SSDP message.
+
+    What a line MEANS depends on the message's start line:
+
+    * ``NOTIFY * HTTP/1.1`` -- an announcement: NT / USN / SERVER say what
+      the sender IS.
+    * ``HTTP/1.1 200 OK`` -- a reply to a search: its ST / USN / SERVER say
+      what the replier IS.  The ST line is sent as ``RST:`` so a reader can
+      tell it from a request's ST.
+    * ``M-SEARCH * HTTP/1.1`` -- a REQUEST: its ST is what the sender is
+      LOOKING FOR.  A Windows laptop searching for its router sends
+      ``ST: ...InternetGatewayDevice:1`` and Chrome searching for casting
+      targets sends ``ST: urn:dial-multiscreen-org:...``; read as identity,
+      those made laptops "network equipment" and "media players"
+      (2026-10-17).  They go in ``searches``, never in ``identity``.
+    """
+    lines = payload[:2048].decode("latin-1", "replace").split("\r\n")
+    start = lines[0].strip().upper() if lines else ""
+    identity: List[str] = []
+    searches: List[str] = []
+    for line in lines[1:]:
+        name, _, value = line.partition(":")
+        name, value = name.strip().lower(), value.strip()
+        if not value:
+            continue
+        if start.startswith("M-SEARCH"):
+            if name == "st" and value[:120] not in searches:
+                searches.append(value[:120])
+            continue
+        if name in ("server", "nt", "usn"):
             text = line.strip()[:128]
-            if text not in keep:
-                keep.append(text)
-    return keep[:MAX_EVIDENCE]
+        elif name == "st":
+            text = ("RST: " + value)[:128]
+        else:
+            continue
+        if text not in identity:
+            identity.append(text)
+    return identity[:MAX_EVIDENCE], searches[:MAX_EVIDENCE]
+
+
+def ssdp_evidence(payload: bytes) -> List[str]:
+    """The lines of an SSDP message that say what the SENDER is."""
+    return ssdp_parse(payload)[0]
 
 
 class _Accumulator:
@@ -166,7 +201,9 @@ class _Accumulator:
         self._devices: Dict[str, Dict[str, Any]] = {}
         self.overflowed = False
 
-    def note(self, key, mac, ip, iface, method, mdns=None, ssdp=None):
+    def note(  # pylint: disable=too-many-arguments
+        self, key, mac, ip, iface, method, mdns=None, ssdp=None, searches=None
+    ):
         with self._lock:
             row = self._devices.get(key)
             if row is None:
@@ -174,13 +211,18 @@ class _Accumulator:
                     self.overflowed = True
                     return
                 row = {"mac": mac, "ips": [], "interface": iface, "methods": set(),
-                       "count": 0, "mdns": [], "ssdp": []}  # fmt: skip
+                       "count": 0, "mdns": [], "ssdp": [],
+                       "ssdp_searches": []}  # fmt: skip
                 self._devices[key] = row
             if ip and ip not in row["ips"] and len(row["ips"]) < 10:
                 row["ips"].append(ip)
             row["methods"].add(method)
             row["count"] += 1
-            for kind, items in (("mdns", mdns or []), ("ssdp", ssdp or [])):
+            for kind, items in (
+                ("mdns", mdns or []),
+                ("ssdp", ssdp or []),
+                ("ssdp_searches", searches or []),
+            ):
                 for item in items:
                     if item not in row[kind] and len(row[kind]) < MAX_EVIDENCE:
                         row[kind].append(item)
@@ -259,7 +301,8 @@ def _parse_udp(sink: "_Accumulator", body: bytes, mac: str, iface: str) -> None:
     if _MDNS[1] in (sport, dport):
         sink.note(mac, mac, src, iface, "mdns", mdns=mdns_services(payload))
     elif _SSDP[1] in (sport, dport):
-        sink.note(mac, mac, src, iface, "ssdp", ssdp=ssdp_evidence(payload))
+        identity, searches = ssdp_parse(payload)
+        sink.note(mac, mac, src, iface, "ssdp", ssdp=identity, searches=searches)
 
 
 class _MulticastListener(threading.Thread):
@@ -322,13 +365,15 @@ class _MulticastListener(threading.Thread):
                         mdns=mdns_services(payload),
                     )
                 else:
+                    identity, searches = ssdp_parse(payload)
                     self.sink.note(
                         "ip:" + src,
                         None,
                         src,
                         None,
                         "ssdp",
-                        ssdp=ssdp_evidence(payload),
+                        ssdp=identity,
+                        searches=searches,
                     )
         for sock in self.sockets.values():
             sock.close()
@@ -490,7 +535,7 @@ def _fold_cache_rows(devices, cache, interfaces) -> Dict[str, Any]:
         entry = devices.setdefault(
             mac,
             {"mac": mac, "ips": [], "interface": iface, "methods": set(),
-             "count": 0, "mdns": [], "ssdp": []},  # fmt: skip
+             "count": 0, "mdns": [], "ssdp": [], "ssdp_searches": []},  # fmt: skip
         )
         if row["ip"] not in entry["ips"]:
             entry["ips"].append(row["ip"])
@@ -547,8 +592,9 @@ def _fold(into, other) -> None:
     for ip in other["ips"]:
         if ip not in into["ips"]:
             into["ips"].append(ip)
-    for kind in ("mdns", "ssdp"):
-        into[kind] += [x for x in other[kind] if x not in into[kind]]
+    for kind in ("mdns", "ssdp", "ssdp_searches"):
+        mine = into.setdefault(kind, [])
+        mine += [x for x in other.get(kind, []) if x not in mine]
 
 
 def _observation(device: Dict[str, Any]) -> Dict[str, Any]:
@@ -558,5 +604,10 @@ def _observation(device: Dict[str, Any]) -> Dict[str, Any]:
         "interface": device["interface"],
         "methods": sorted(device["methods"]),
         "count": device["count"],
-        "evidence": {"mdns_services": device["mdns"], "ssdp": device["ssdp"]},
+        "evidence": {
+            "mdns_services": device["mdns"],
+            "ssdp": device["ssdp"],
+            # What the device searched for -- never identity (see ssdp_parse).
+            "ssdp_searches": device.get("ssdp_searches", []),
+        },
     }

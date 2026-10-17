@@ -3549,6 +3549,40 @@ msgstr ""
 "'%s' पर मिला enrollment_token अनदेखा किया जाता है; इसे शीर्ष-स्तरीय "
 "'security' अनुभाग के अंतर्गत होना चाहिए"
 
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "no server is configured (server.url is not set)"
+msgstr "कोई सर्वर कॉन्फ़िगर नहीं है (server.url सेट नहीं है)"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "server.url still points at the example host %s"
+msgstr "server.url अभी भी उदाहरण होस्ट %s की ओर इंगित करता है"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid ""
+"Edit %s: set server.url to your SysManage server and, for a multi-tenant "
+"server, security.enrollment_token; then restart the sysmanage-agent service."
+msgstr ""
+"%s संपादित करें: server.url को अपने SysManage सर्वर पर सेट करें और "
+"मल्टी-टेनेंट सर्वर के लिए security.enrollment_token भी सेट करें; फिर "
+"sysmanage-agent सेवा को पुनः आरंभ करें।"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "SysManage agent not started: %s. %s"
+msgstr "SysManage एजेंट शुरू नहीं हुआ: %s. %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr ""
+"कॉन्फ़िगरेशन मिल गया; इसे लागू करने के लिए SysManage Agent सेवा को पुनः आरंभ"
+" करें"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restarting the agent"
+msgstr "कॉन्फ़िगरेशन मिल गया; एजेंट पुनः आरंभ हो रहा है"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "समय स्थिति एकत्र करने/भेजने में त्रुटि: %s"

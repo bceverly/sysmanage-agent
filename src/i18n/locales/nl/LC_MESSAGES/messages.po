@@ -3549,6 +3549,40 @@ msgstr ""
 "enrollment_token gevonden op '%s' wordt genegeerd; het moet in de "
 "'security'-sectie op het hoogste niveau staan"
 
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "no server is configured (server.url is not set)"
+msgstr "er is geen server geconfigureerd (server.url is niet ingesteld)"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "server.url still points at the example host %s"
+msgstr "server.url verwijst nog naar de voorbeeldhost %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid ""
+"Edit %s: set server.url to your SysManage server and, for a multi-tenant "
+"server, security.enrollment_token; then restart the sysmanage-agent service."
+msgstr ""
+"Bewerk %s: stel server.url in op uw SysManage-server en, voor een server met"
+" meerdere tenants, security.enrollment_token; start daarna de service "
+"sysmanage-agent opnieuw."
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "SysManage agent not started: %s. %s"
+msgstr "SysManage-agent niet gestart: %s. %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr ""
+"Configuratie gevonden; start de service SysManage Agent opnieuw om deze toe "
+"te passen"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restarting the agent"
+msgstr "Configuratie gevonden; de agent wordt opnieuw gestart"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "Fout bij het verzamelen/verzenden van de tijdstatus: %s"

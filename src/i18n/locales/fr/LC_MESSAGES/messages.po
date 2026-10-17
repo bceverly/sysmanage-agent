@@ -3601,6 +3601,40 @@ msgstr ""
 "enrollment_token trouvé à '%s' est ignoré ; il doit se trouver dans la "
 "section 'security' de premier niveau"
 
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "no server is configured (server.url is not set)"
+msgstr "aucun serveur n'est configuré (server.url n'est pas défini)"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "server.url still points at the example host %s"
+msgstr "server.url pointe toujours vers l'hôte d'exemple %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid ""
+"Edit %s: set server.url to your SysManage server and, for a multi-tenant "
+"server, security.enrollment_token; then restart the sysmanage-agent service."
+msgstr ""
+"Modifiez %s : définissez server.url sur votre serveur SysManage et, pour un "
+"serveur multi-locataire, security.enrollment_token ; puis redémarrez le "
+"service sysmanage-agent."
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "SysManage agent not started: %s. %s"
+msgstr "Agent SysManage non démarré : %s. %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr ""
+"Configuration trouvée ; redémarrez le service SysManage Agent pour "
+"l'appliquer"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restarting the agent"
+msgstr "Configuration trouvée ; redémarrage de l'agent"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "Erreur lors de la collecte/envoi du statut horaire : %s"

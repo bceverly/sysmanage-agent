@@ -3502,6 +3502,37 @@ msgid ""
 "'security' section"
 msgstr "'%s'에 있는 enrollment_token은 무시됩니다. 최상위 'security' 섹션 아래에 있어야 합니다"
 
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "no server is configured (server.url is not set)"
+msgstr "서버가 구성되지 않았습니다 (server.url이 설정되지 않음)"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "server.url still points at the example host %s"
+msgstr "server.url이 아직 예제 호스트 %s를 가리키고 있습니다"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid ""
+"Edit %s: set server.url to your SysManage server and, for a multi-tenant "
+"server, security.enrollment_token; then restart the sysmanage-agent service."
+msgstr ""
+"%s 파일을 편집하세요: server.url을 SysManage 서버로 설정하고, 다중 테넌트 서버의 경우 "
+"security.enrollment_token도 설정한 후 sysmanage-agent 서비스를 다시 시작하세요."
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "SysManage agent not started: %s. %s"
+msgstr "SysManage 에이전트가 시작되지 않았습니다: %s. %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr "구성을 찾았습니다. 적용하려면 SysManage Agent 서비스를 다시 시작하세요"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restarting the agent"
+msgstr "구성을 찾았습니다. 에이전트를 다시 시작합니다"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "시간 상태 수집/전송 중 오류: %s"

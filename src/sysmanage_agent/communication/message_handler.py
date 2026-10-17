@@ -10,7 +10,6 @@ Provides reliable message delivery with queue-based persistence and message proc
 import asyncio
 import json
 import logging
-import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -22,6 +21,7 @@ from src.database.queue_manager import MessageQueueManager
 from src.i18n import _
 from src.sysmanage_agent.collection import public_ip_fetcher
 from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.communication import receive_pump
 from src.sysmanage_agent.communication.clock_probe import ClockProbe
 from src.sysmanage_agent.communication.message_handler_queue import (
     MessageHandlerQueueMixin,
@@ -629,25 +629,18 @@ class MessageHandler(MessageHandlerQueueMixin):
         commands until manual restart).
         """
         self.logger.debug("Message receiver started")
+        # A reader task stamps each frame's arrival (t2) while this loop
+        # handles the previous one -- see receive_pump for why that matters.
+        inbox: asyncio.Queue = asyncio.Queue()
+        reader = asyncio.create_task(
+            receive_pump.read_frames(self.agent, inbox, self._log_websocket_cleared)
+        )
         try:
             while self.agent.running:
-                # Defensive: if a concurrent disconnect cleared the
-                # websocket between iterations, surface that as a
-                # ConnectionClosed rather than letting recv() raise an
-                # AttributeError on None.
-                ws = self.agent.websocket
-                if ws is None:
-                    self.logger.info(
-                        _(
-                            "Message receiver: websocket cleared by concurrent "
-                            "disconnect; exiting receive loop to allow reconnect"
-                        )
-                    )
-                    raise websockets.ConnectionClosed(None, None)
-                message = await ws.recv()
-                # Stamped BEFORE parsing: parse time is the host's, not the
-                # network's, and must not count against the clock (23.3).
-                received_wall, received_mono = time.time(), time.monotonic()
+                frame = await receive_pump.next_frame(inbox, reader)
+                if frame is None:
+                    return
+                message, received_wall, received_mono = frame
                 self.logger.debug("Received: %s", message)
 
                 try:
@@ -684,6 +677,17 @@ class MessageHandler(MessageHandlerQueueMixin):
             # net effect was inbound commands silently disappearing
             # until the agent was manually restarted.
             raise
+        finally:
+            if not reader.done():
+                reader.cancel()
+
+    def _log_websocket_cleared(self) -> None:
+        self.logger.info(
+            _(
+                "Message receiver: websocket cleared by concurrent "
+                "disconnect; exiting receive loop to allow reconnect"
+            )
+        )
 
     async def _dispatch_received_message(self, data: Dict[str, Any]) -> bool:
         """Dispatch a received message to the appropriate handler.

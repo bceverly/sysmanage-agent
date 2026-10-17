@@ -3495,6 +3495,37 @@ msgid ""
 "'security' section"
 msgstr "位於 '%s' 的 enrollment_token 已被忽略；它必須位於最上層 'security' 區段下"
 
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "no server is configured (server.url is not set)"
+msgstr "未設定伺服器（未設定 server.url）"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "server.url still points at the example host %s"
+msgstr "server.url 仍指向範例主機 %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid ""
+"Edit %s: set server.url to your SysManage server and, for a multi-tenant "
+"server, security.enrollment_token; then restart the sysmanage-agent service."
+msgstr ""
+"請編輯 %s：將 server.url 設定為您的 SysManage 伺服器；如果是多租戶伺服器，還要設定 "
+"security.enrollment_token；然後重新啟動 sysmanage-agent 服務。"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "SysManage agent not started: %s. %s"
+msgstr "SysManage 代理程式未啟動：%s。%s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr "已找到設定；請重新啟動 SysManage Agent 服務以套用設定"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restarting the agent"
+msgstr "已找到設定；正在重新啟動代理程式"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "收集/發送時間狀態時發生錯誤：%s"

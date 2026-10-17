@@ -43,6 +43,7 @@ from src.sysmanage_agent.core.agent_utils import (
     is_running_privileged,
 )
 from src.sysmanage_agent.core.config import ConfigManager
+from src.sysmanage_agent.core.unconfigured import ensure_configured
 from src.sysmanage_agent.communication.http_polling import HttpPollingTransport
 from src.sysmanage_agent.communication.transport_fallback import (
     TransportState,
@@ -989,11 +990,11 @@ if __name__ == "__main__":
         else:  # Unix-like (Linux, macOS, BSD)
             system_config = "/etc/sysmanage-agent.yaml"  # pylint: disable=invalid-name
 
-        # Try system location first, then fall back to current directory
         if os.path.exists(system_config):
             config_path = system_config  # pylint: disable=invalid-name
         else:
             config_path = "sysmanage-agent.yaml"  # pylint: disable=invalid-name
 
     agent = SysManageAgent(config_path)
+    ensure_configured(agent.config, agent.logger)  # never the example host
     asyncio.run(agent.run())

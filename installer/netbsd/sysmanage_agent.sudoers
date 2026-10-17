@@ -98,3 +98,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/poweroff
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/test
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/ln
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/nginx, /usr/sbin/nginx
+
+# Antivirus deploy plan (server av_plan_builder): refresh the ClamAV signature
+# database once, before clamd first starts -- on these platforms installing
+# the package does not start the updater, and clamd will not run without a
+# database.  Exactly "freshclam" with NO arguments ("" = none allowed): an
+# argument such as --config-file could point it at an attacker's config.
+# (2026-10-17: the step was refused, "sudo: I'm sorry sysmanage-agent".)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/freshclam ""

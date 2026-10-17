@@ -253,3 +253,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs device stats *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ipmitool sdr elist
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ipmitool sel elist
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ipmitool sel time get
+
+# Antivirus deploy plan (server av_plan_builder): refresh the ClamAV signature
+# database once, before clamd first starts -- on these platforms installing
+# the package does not start the updater, and clamd will not run without a
+# database.  Exactly "freshclam" with NO arguments ("" = none allowed): an
+# argument such as --config-file could point it at an attacker's config.
+# (2026-10-17: the step was refused, "sudo: I'm sorry sysmanage-agent".)
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/freshclam ""

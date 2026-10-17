@@ -2277,7 +2277,9 @@ jobs:
           # to a version pruned from the bucket long ago and 404'd -- while
           # looking like a live, version-aware instruction.  Write it here, on
           # every release, for each direct-download channel that has one.
-          for channel in mac alpine freebsd openbsd netbsd; do
+          # windows added 2026-10-17: it was missing here, so its latest.txt
+          # stayed at the hand-placed 0.0.0 while the MSIs were current.
+          for channel in windows mac alpine freebsd openbsd netbsd; do
             mkdir -p "repo/agent/$channel"
             printf '%s\n' "$VERSION" > "repo/agent/$channel/latest.txt"
             echo "  latest.txt: agent/$channel -> $VERSION"
@@ -2291,6 +2293,50 @@ jobs:
           # Copy Flatpak repository data
           echo "Syncing Flatpak repository..."
           rsync -av ${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/repo/ repo/ 2>/dev/null || true
+
+          # The bundle, from the release-files copy the GitHub release itself
+          # uses: the artifact-path copy above can match nothing, and the R2
+          # bundle was missing for 3.11.0.4 while GitHub had it (2026-10-17).
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-*.flatpak "repo/flatpak/" 2>/dev/null || true
+          cp ${{ github.workspace }}/release-files/sysmanage-agent-*.flatpak.sha256 "repo/flatpak/" 2>/dev/null || true
+          ls repo/flatpak/sysmanage-agent-*.flatpak >/dev/null 2>&1 \
+            || echo "::warning::no Flatpak bundle staged for R2"
+
+          # A Flatpak remote needs a `summary` (and, with the GPGKey that
+          # sysmanage.flatpakrepo carries, signed commits and a signed
+          # summary).  None was ever generated, so `flatpak remote-add` against
+          # repo.sysmanage.org could not work.  Sign the app commit with the
+          # archive signing subkey and regenerate the summary.
+          if [ -d repo/refs/heads/app ]; then
+            sudo apt-get install -y -qq flatpak >/dev/null 2>&1
+            FP_SIGN=""
+            if [ -n "${APT_SIGNING_KEY:-}" ]; then
+              FP_GNUPG="$(mktemp -d)"; chmod 700 "$FP_GNUPG"
+              echo "allow-preset-passphrase" > "$FP_GNUPG/gpg-agent.conf"
+              gpg --homedir "$FP_GNUPG" --batch --import <<<"$APT_SIGNING_KEY"
+              gpgconf --homedir "$FP_GNUPG" --kill gpg-agent || true
+              if [ -n "${APT_SIGNING_PASSPHRASE:-}" ]; then
+                # flatpak signs through gpg-agent with no passphrase option;
+                # preset it for every secret key's keygrip.
+                gpg-connect-agent --homedir "$FP_GNUPG" /bye >/dev/null 2>&1 || true
+                for grip in $(gpg --homedir "$FP_GNUPG" --batch --with-keygrip -K 2>/dev/null | awk '/Keygrip/ {print $3}'); do
+                  /usr/lib/gnupg/gpg-preset-passphrase --homedir "$FP_GNUPG" --preset --passphrase "$APT_SIGNING_PASSPHRASE" "$grip" 2>/dev/null \
+                    || /usr/libexec/gpg-preset-passphrase --homedir "$FP_GNUPG" --preset --passphrase "$APT_SIGNING_PASSPHRASE" "$grip"
+                done
+              fi
+              FP_SIGN="--gpg-sign=${APT_SIGNING_KEY_ID%!} --gpg-homedir=$FP_GNUPG"
+              # shellcheck disable=SC2086
+              flatpak build-sign repo org.sysmanage.Agent master $FP_SIGN \
+                || { echo "::error::flatpak build-sign failed"; exit 1; }
+            else
+              echo "::warning::no signing key: publishing an UNSIGNED Flatpak summary (sysmanage.flatpakrepo's GPGKey will reject it)"
+            fi
+            # shellcheck disable=SC2086
+            flatpak build-update-repo repo $FP_SIGN \
+              || { echo "::error::flatpak build-update-repo failed"; exit 1; }
+            test -f repo/summary || { echo "::error::Flatpak summary was not generated"; exit 1; }
+            echo "Flatpak summary generated (signed: ${FP_SIGN:+yes})"
+          fi
 
           # Install repository tools
           echo "Installing repository metadata tools..."
@@ -2506,6 +2552,10 @@ jobs:
           FILES=$(printf '"%s",' \
             "$BASE/agent/sysmanage-archive-keyring.gpg" \
             "$BASE/agent/rpm/RPM-GPG-KEY-sysmanage" \
+            "$BASE/agent/windows/latest.txt" \
+            "$BASE/summary" \
+            "$BASE/summary.sig" \
+            "$BASE/config" \
             "$BASE/agent/mac/latest.txt" \
             "$BASE/agent/alpine/latest.txt" \
             "$BASE/agent/freebsd/latest.txt" \
@@ -2668,7 +2718,7 @@ jobs:
           sudo apt install ./sysmanage-agent_${VERSION}-1_amd64.deb
 
           # Configure and start
-          sudo nano /etc/sysmanage-agent.yaml
+          sudo vim /etc/sysmanage-agent.yaml
           sudo systemctl enable --now sysmanage-agent
           \`\`\`
 
@@ -2695,7 +2745,7 @@ jobs:
           sudo dnf install ./sysmanage-agent-${VERSION}-1.el9.x86_64.rpm
 
           # Configure and start
-          sudo nano /etc/sysmanage-agent.yaml
+          sudo vim /etc/sysmanage-agent.yaml
           sudo systemctl enable --now sysmanage-agent
           \`\`\`
 
@@ -2706,7 +2756,7 @@ jobs:
           sudo zypper install ./sysmanage-agent-${VERSION}-1.opensuse.tumbleweed.x86_64.rpm
 
           # Configure and start
-          sudo nano /etc/sysmanage-agent.yaml
+          sudo vim /etc/sysmanage-agent.yaml
           sudo systemctl enable --now sysmanage-agent
           \`\`\`
 
@@ -2717,7 +2767,7 @@ jobs:
           sudo zypper install ./sysmanage-agent-${VERSION}-1.opensuse.leap.15.x86_64.rpm
 
           # Configure and start
-          sudo nano /etc/sysmanage-agent.yaml
+          sudo vim /etc/sysmanage-agent.yaml
           sudo systemctl enable --now sysmanage-agent
           \`\`\`
 
@@ -2728,7 +2778,7 @@ jobs:
           sudo zypper install ./sysmanage-agent-${VERSION}-1.sles.x86_64.rpm
 
           # Configure and start
-          sudo nano /etc/sysmanage-agent.yaml
+          sudo vim /etc/sysmanage-agent.yaml
           sudo systemctl enable --now sysmanage-agent
           \`\`\`
 
@@ -2739,7 +2789,7 @@ jobs:
           sudo installer -pkg sysmanage-agent-${VERSION}-macos.pkg -target /
 
           # Configure and start
-          sudo nano /etc/sysmanage-agent.yaml
+          sudo vim /etc/sysmanage-agent.yaml
           sudo launchctl load /Library/LaunchDaemons/com.sysmanage.agent.plist
           \`\`\`
 
@@ -2794,7 +2844,7 @@ jobs:
           sudo pkg add sysmanage-agent-${VERSION}.pkg
 
           # Configure and start
-          sudo nano /etc/sysmanage-agent.yaml
+          sudo vim /etc/sysmanage-agent.yaml
           sudo sysrc sysmanage_agent_enable=YES
           sudo service sysmanage_agent start
           \`\`\`
@@ -3249,7 +3299,7 @@ jobs:
   deploy-obs:
     name: Deploy to OBS
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120  # includes waiting for the OBS build
     needs: [release]
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -3448,6 +3498,46 @@ jobs:
           echo "  - openSUSE Leap 15.5"
           echo "  - SLE 15 SP6"
           echo "  - SLE 15 SP5"
+
+      # A commit is not a release: the agent sat at 0.9.9.6 on every OBS
+      # repository (and the server at 3.9.0.26 on Tumbleweed) for months
+      # while this job stayed green, because nothing ever looked at what OBS
+      # built.  Wait for the build and fail loudly, with the log, if any
+      # repository failed (found in the docs audit, 2026-10-17).
+      - name: Wait for OBS build results
+        env:
+          OBS_USERNAME: ${{ secrets.OBS_USERNAME }}
+        run: |
+          cd "home:${OBS_USERNAME}/sysmanage-agent"
+          sleep 120  # let the scheduler see the new sources
+          deadline=$(( $(date +%s) + 60*60 ))
+          while :; do
+            if results=$(osc results 2>&1); then
+              pending=$(printf '%s\n' "$results" | awk '$3 ~ /\*$/ || $3 ~ /^(scheduled|building|dispatching|finished|signing|blocked)/' | wc -l)
+            else
+              echo "::warning::osc results failed: $results"; pending=1
+            fi
+            if [ "$pending" -eq 0 ]; then break; fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::warning::OBS still building after 60 minutes; check https://build.opensuse.org/package/show/home:${OBS_USERNAME}/sysmanage-agent"
+              printf '%s\n' "$results"
+              exit 0
+            fi
+            sleep 60
+          done
+          printf '%s\n' "$results"
+          bad=$(printf '%s\n' "$results" | awk '$3 ~ /^(failed|unresolvable|broken)/ {print $1" "$2" "$3}')
+          if [ -n "$bad" ]; then
+            printf '%s\n' "$bad" | while read -r repo arch state; do
+              echo "::error::OBS sysmanage-agent $repo/$arch: $state"
+              if [ "$state" = unresolvable ]; then
+                osc results -v -r "$repo" -a "$arch" 2>&1 | tail -5
+              else
+                osc remotebuildlog "home:${OBS_USERNAME}" sysmanage-agent "$repo" "$arch" 2>&1 | tail -60
+              fi
+            done
+            exit 1
+          fi
 
   # Deploy to Fedora Copr (runs in parallel with OBS)
   deploy-copr:

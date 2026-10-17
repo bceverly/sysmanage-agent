@@ -18,6 +18,10 @@ WorkingDirectory=/opt/sysmanage-agent
 ExecStart=/opt/sysmanage-agent/.venv/bin/python3 /opt/sysmanage-agent/main.py
 Restart=always
 RestartSec=10
+# Exit 78 (EX_CONFIG) = "server.url not set / still the example host": the
+# agent logs exactly what to edit and must NOT be restarted every 10 s.
+# systemctl status then shows status=78/CONFIG and the reason in the log.
+RestartPreventExitStatus=78
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sysmanage-agent

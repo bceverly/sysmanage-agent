@@ -51,6 +51,7 @@ Type=simple
 ExecStart=/usr/bin/flatpak run org.sysmanage.Agent
 Restart=on-failure
 RestartSec=10
+RestartPreventExitStatus=78
 
 [Install]
 WantedBy=default.target

@@ -3502,6 +3502,37 @@ msgid ""
 "'security' section"
 msgstr "'%s' にある enrollment_token は無視されます。最上位の 'security' セクションに置く必要があります"
 
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "no server is configured (server.url is not set)"
+msgstr "サーバーが設定されていません (server.url が未設定です)"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "server.url still points at the example host %s"
+msgstr "server.url がまだサンプルホスト %s を指しています"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid ""
+"Edit %s: set server.url to your SysManage server and, for a multi-tenant "
+"server, security.enrollment_token; then restart the sysmanage-agent service."
+msgstr ""
+"%s を編集してください: server.url に SysManage サーバーを、マルチテナントサーバーの場合は "
+"security.enrollment_token も設定し、sysmanage-agent サービスを再起動してください。"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "SysManage agent not started: %s. %s"
+msgstr "SysManage エージェントは起動していません: %s。%s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr "設定が見つかりました。反映するには SysManage Agent サービスを再起動してください"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restarting the agent"
+msgstr "設定が見つかりました。エージェントを再起動します"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "時間ステータスの収集/送信中にエラーが発生しました: %s"

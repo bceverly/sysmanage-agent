@@ -3518,6 +3518,38 @@ msgstr ""
 "يتم تجاهل enrollment_token الموجود في '%s'؛ يجب أن يكون ضمن قسم 'security' "
 "في المستوى الأعلى"
 
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "no server is configured (server.url is not set)"
+msgstr "لم يتم تكوين أي خادم (لم يتم تعيين server.url)"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "server.url still points at the example host %s"
+msgstr "لا يزال server.url يشير إلى المضيف النموذجي %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid ""
+"Edit %s: set server.url to your SysManage server and, for a multi-tenant "
+"server, security.enrollment_token; then restart the sysmanage-agent service."
+msgstr ""
+"حرّر %s: اضبط server.url على خادم SysManage الخاص بك، وفي حالة الخادم متعدد "
+"المستأجرين اضبط security.enrollment_token أيضًا؛ ثم أعد تشغيل خدمة "
+"sysmanage-agent."
+
+#: src/sysmanage_agent/core/unconfigured.py
+#, python-format
+msgid "SysManage agent not started: %s. %s"
+msgstr "لم يبدأ وكيل SysManage: %s. %s"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr "تم العثور على التكوين؛ أعد تشغيل خدمة SysManage Agent لتطبيقه"
+
+#: src/sysmanage_agent/core/unconfigured.py
+msgid "Configuration found; restarting the agent"
+msgstr "تم العثور على التكوين؛ جارٍ إعادة تشغيل الوكيل"
+
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"
 #~ msgstr "خطأ في جمع/إرسال حالة الوقت: %s"
