@@ -40,9 +40,14 @@ def is_root() -> bool:
     return hasattr(os, "geteuid") and os.geteuid() == 0
 
 
-def _refused(out: str) -> bool:
+def refused(out: str) -> bool:
+    """Whether ``out`` is sudo / sudo-rs declining the command (the allowlist
+    does not cover it), as opposed to the command itself failing."""
     text = (out or "").lower()
     return text.startswith("sudo") and any(marker in text for marker in _REFUSED)
+
+
+_refused = refused  # the name the health runner below has always used
 
 
 def privileged_runner(run: Runner, root=None) -> Runner:

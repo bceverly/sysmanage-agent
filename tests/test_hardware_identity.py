@@ -103,7 +103,11 @@ def test_linux_unprivileged_reports_unreadable_not_blank():
             raise PermissionError(path)
         return mock_open(read_data="LENOVO\n")()
 
-    with patch("builtins.open", side_effect=opener):
+    # No sudo on this host: the root-only files stay unreadable.  (With sudo,
+    # see test_hardware_identity_sudo.py.)
+    with patch("builtins.open", side_effect=opener), patch.object(
+        hid.shutil, "which", return_value=None
+    ):
         report = hid.collect_identity("Linux")
     assert report["system_uuid"] is None and report["match_key"] is None
     assert report["status"] == {f: hid.UNPRIVILEGED for f in hid.FIELDS}

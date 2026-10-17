@@ -14,8 +14,10 @@ same identity for the same hardware.
 Measured on real hardware, 2026-10-11 (Phase 23.2 S0):
 
 * Linux reads ``/sys/class/dmi/id/*``, mode 0400 root; NetBSD's
-  ``machdep.dmi.system-uuid`` is root-only too.  Unprivileged there, the
-  identity is reported UNREADABLE -- never guessed, never left blank.
+  ``machdep.dmi.system-uuid`` is root-only too.  An unprivileged Linux agent
+  reads the three root-only files through ``sudo -n cat`` (2026-10-17);
+  otherwise the identity is reported UNREADABLE -- never guessed, never left
+  blank.
 * Windows (CIM), FreeBSD (``kenv``, one variable per call), OpenBSD
   (``sysctl``) and macOS (``ioreg``) read it unprivileged.
 * OpenBSD prints the UUID's first three fields UNswapped
@@ -49,6 +51,9 @@ logger = logging.getLogger(__name__)
 RAN = "ran"
 ABSENT = "absent"
 UNPRIVILEGED = "unprivileged"
+# Not root, and sudo refused the read: the installed sudoers allowlist predates
+# the identity rules (an older agent package), not a host with no privilege.
+NEEDS_SUDO_RULE = "needs_sudo_rule"
 FAILED = "failed"
 PLACEHOLDER = "placeholder"
 
@@ -200,14 +205,61 @@ def _read_file(path: str) -> Tuple[Optional[str], str]:
         return None, FAILED
 
 
+_DMI = "/sys/class/dmi/id/"
+# Mode 0400 root.  A packaged agent runs as the unprivileged sysmanage-agent
+# user, so every Linux host showed "No machine identified" (production,
+# 2026-10-17).  These exact files -- and nothing else -- are read through
+# ``sudo -n cat``; the sudoers allowlists name each path.  ``cat`` rather than
+# dmidecode: it is on every Linux host (dmidecode is not, on minimal VMs and
+# containers) and reads the very file the root path reads, so root and
+# unprivileged agents report identical values.
+_ROOT_ONLY_DMI = ("product_uuid", "product_serial", "board_serial")
+
+
+def _sudo_read(path: str) -> Tuple[Optional[str], str]:
+    """``sudo -n cat <path>`` for one root-only DMI file."""
+    # Imported here: hardware_health_privilege imports this module.
+    from src.sysmanage_agent.collection.hardware_health_privilege import (  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
+        refused,
+    )
+
+    cat = _tool("cat")
+    if not os.path.isabs(cat) or not shutil.which("sudo"):
+        return None, UNPRIVILEGED
+    try:
+        result = subprocess.run(  # nosec B603 -- fixed argv, no shell
+            ["sudo", "-n", cat, path],
+            capture_output=True,
+            text=True,
+            timeout=_TIMEOUT,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.debug("identity: sudo cat %s failed: %s", path, exc)
+        return None, FAILED
+    if result.returncode == 0:
+        return result.stdout.strip(), RAN
+    if refused(result.stderr):
+        return None, NEEDS_SUDO_RULE
+    if "no such file" in (result.stderr or "").lower():
+        return None, ABSENT
+    return None, FAILED
+
+
+def _read_dmi(name: str) -> Tuple[Optional[str], str]:
+    value, status = _read_file(_DMI + name)
+    if status == UNPRIVILEGED and name in _ROOT_ONLY_DMI:
+        return _sudo_read(_DMI + name)
+    return value, status
+
+
 def _linux() -> Dict[str, Tuple[Optional[str], str]]:
-    base = "/sys/class/dmi/id/"
     return {
-        "system_uuid": _read_file(base + "product_uuid"),
-        "system_serial": _read_file(base + "product_serial"),
-        "board_serial": _read_file(base + "board_serial"),
-        "vendor": _read_file(base + "sys_vendor"),
-        "model": _read_file(base + "product_name"),
+        "system_uuid": _read_dmi("product_uuid"),
+        "system_serial": _read_dmi("product_serial"),
+        "board_serial": _read_dmi("board_serial"),
+        "vendor": _read_file(_DMI + "sys_vendor"),
+        "model": _read_file(_DMI + "product_name"),
     }
 
 

@@ -38,12 +38,13 @@ import socket
 import struct
 import threading
 import time
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import psutil
 
 from src.i18n import _
-from src.sysmanage_agent.collection import network_bpf
+from src.sysmanage_agent.collection import network_bpf, network_names
 from src.sysmanage_agent.collection.network_bpf import BpfListener
 from src.sysmanage_agent.collection.network_neighbor_cache import read_neighbor_cache
 
@@ -51,6 +52,7 @@ logger = logging.getLogger(__name__)
 
 MAX_DEVICES = 4096
 MAX_EVIDENCE = 20
+MAX_HOSTNAMES = 10  # the engine keeps no more than this per device
 
 OK = "ok"
 NOT_ROOT = "unavailable:not_root"
@@ -64,6 +66,12 @@ _ETH_P_IP = 0x0800
 _ETH_P_IPV6 = 0x86DD
 _MDNS = ("224.0.0.251", 5353)  # NOSONAR - the mDNS multicast group (RFC 6762)
 _SSDP = ("239.255.255.250", 1900)  # NOSONAR - the SSDP multicast group (UPnP)
+_DHCP_PORTS = (67, 68)
+_NETBIOS_NS_PORT = 137
+_LLMNR_PORT = 5355
+# Heard only by raw capture (a DHCP DISCOVER comes from 0.0.0.0, NetBIOS is a
+# subnet broadcast); a plain socket cannot join them without owning the port.
+_NAME_METHODS = ("dhcp", "netbios", "llmnr")
 # Where raw capture exists (S6): AF_PACKET on Linux, BPF everywhere else.
 _CAPTURE_SYSTEMS = ("Linux", "Darwin", "FreeBSD", "OpenBSD", "NetBSD", "DragonFly")
 _SKIP_PREFIXES = (
@@ -193,6 +201,26 @@ def ssdp_evidence(payload: bytes) -> List[str]:
     return ssdp_parse(payload)[0]
 
 
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def note_names(hostnames: List[Dict[str, str]], names, seen_at: str) -> None:
+    """Add ``(name, source)`` pairs to a device's names, bounded.
+
+    One entry per name AND source -- the same name from DHCP and from mDNS
+    is two pieces of evidence -- and a repeat only moves ``seen_at`` on.
+    """
+    for name, source in names:
+        for entry in hostnames:
+            if entry["source"] == source and entry["name"].lower() == name.lower():
+                entry["seen_at"] = max(entry["seen_at"], seen_at)
+                break
+        else:
+            if len(hostnames) < MAX_HOSTNAMES:
+                hostnames.append({"name": name, "source": source, "seen_at": seen_at})
+
+
 class _Accumulator:
     """Thread-safe, bounded map of devices seen since the last report."""
 
@@ -202,7 +230,16 @@ class _Accumulator:
         self.overflowed = False
 
     def note(  # pylint: disable=too-many-arguments
-        self, key, mac, ip, iface, method, mdns=None, ssdp=None, searches=None
+        self,
+        key,
+        mac,
+        ip,
+        iface,
+        method,
+        mdns=None,
+        ssdp=None,
+        searches=None,
+        names=None,
     ):
         with self._lock:
             row = self._devices.get(key)
@@ -212,7 +249,7 @@ class _Accumulator:
                     return
                 row = {"mac": mac, "ips": [], "interface": iface, "methods": set(),
                        "count": 0, "mdns": [], "ssdp": [],
-                       "ssdp_searches": []}  # fmt: skip
+                       "ssdp_searches": [], "hostnames": []}  # fmt: skip
                 self._devices[key] = row
             if ip and ip not in row["ips"] and len(row["ips"]) < 10:
                 row["ips"].append(ip)
@@ -226,6 +263,8 @@ class _Accumulator:
                 for item in items:
                     if item not in row[kind] and len(row[kind]) < MAX_EVIDENCE:
                         row[kind].append(item)
+            if names:
+                note_names(row["hostnames"], names, _now_iso())
 
     def drain(self) -> Tuple[Dict[str, Dict[str, Any]], bool]:
         with self._lock:
@@ -299,10 +338,36 @@ def _parse_udp(sink: "_Accumulator", body: bytes, mac: str, iface: str) -> None:
     src = socket.inet_ntoa(body[12:16])
     payload = body[ihl + 8 :]
     if _MDNS[1] in (sport, dport):
-        sink.note(mac, mac, src, iface, "mdns", mdns=mdns_services(payload))
+        sink.note(mac, mac, src, iface, "mdns", mdns=mdns_services(payload),
+                  names=_sourced(network_names.mdns_names(payload, src),
+                                 network_names.SOURCE_MDNS))  # fmt: skip
     elif _SSDP[1] in (sport, dport):
         identity, searches = ssdp_parse(payload)
         sink.note(mac, mac, src, iface, "ssdp", ssdp=identity, searches=searches)
+    elif sport in _DHCP_PORTS and dport in _DHCP_PORTS:
+        client = network_names.dhcp_client_names(payload)
+        if client is not None:
+            # Keyed by the CLIENT's hardware address (chaddr): a DISCOVER
+            # comes from 0.0.0.0, so it has no address to key by.
+            sink.note(client["mac"], client["mac"], client["ip"], iface, "dhcp",
+                      names=client["names"])  # fmt: skip
+    elif _NETBIOS_NS_PORT in (sport, dport):
+        _note_named(sink, mac, src, iface, "netbios",
+                    network_names.netbios_names(payload, src))  # fmt: skip
+    elif _LLMNR_PORT in (sport, dport):
+        _note_named(sink, mac, src, iface, "llmnr",
+                    network_names.llmnr_names(payload, src))  # fmt: skip
+
+
+def _sourced(names: List[str], source: str) -> List[Tuple[str, str]]:
+    return [(name, source) for name in names]
+
+
+def _note_named(sink, mac, src, iface, method, names) -> None:
+    """A NetBIOS / LLMNR sighting counts only when it carried a name: a
+    query says nothing about the sender but what it is looking for."""
+    if names:
+        sink.note(mac, mac, src, iface, method, names=_sourced(names, method))
 
 
 class _MulticastListener(threading.Thread):
@@ -356,6 +421,7 @@ class _MulticastListener(threading.Thread):
                 except OSError:
                     continue
                 if kind == "mdns":
+                    names = network_names.mdns_names(payload, src)
                     self.sink.note(
                         "ip:" + src,
                         None,
@@ -363,6 +429,7 @@ class _MulticastListener(threading.Thread):
                         None,
                         "mdns",
                         mdns=mdns_services(payload),
+                        names=_sourced(names, network_names.SOURCE_MDNS),
                     )
                 else:
                     identity, searches = ssdp_parse(payload)
@@ -417,6 +484,11 @@ class NetworkDiscoveryCollector:
         self._listener: Optional[threading.Thread] = None
         self._methods: Dict[str, str] = {}
         self._window_start: Optional[float] = None
+        # Reverse DNS is ACTIVE (it asks the resolver, which may ask the
+        # network), so it is off unless the server says the operator opted
+        # in to active discovery (the sweep switch).
+        self.name_lookups = False
+        self._reverse = network_names.ReverseNames()
 
     @property
     def running(self) -> bool:
@@ -436,9 +508,11 @@ class NetworkDiscoveryCollector:
         self._listener = self._raw_listener()
         if self._listener is not None:
             methods.update(arp_listen=OK, nd_listen=OK, mdns=OK, ssdp=OK)
+            methods.update({name: OK for name in _NAME_METHODS})
         else:
             reason = NOT_ROOT if platform.system() in _CAPTURE_SYSTEMS else UNSUPPORTED
             methods.update(arp_listen=reason, nd_listen=reason)
+            methods.update({name: reason for name in _NAME_METHODS})
             ips = [i["ip"] for i in local_interfaces()]
             listener = _MulticastListener(self.sink, ips)
             methods["mdns"] = OK if "mdns" in listener.sockets else PORT_IN_USE
@@ -497,6 +571,8 @@ class NetworkDiscoveryCollector:
         cache = read_neighbor_cache()
         methods["cache"] = OK if cache is not None else UNREADABLE
         _merge_cache(devices, cache or [], interfaces)
+        if self.name_lookups:
+            self.name_by_address(devices.values())
         if overflowed:
             logger.warning(
                 _(
@@ -511,6 +587,22 @@ class NetworkDiscoveryCollector:
             "window_seconds": window or None,
             "observations": [_observation(d) for d in devices.values()],
         }
+
+    def name_by_address(self, devices) -> None:
+        """Reverse DNS for each device (snapshot row or sweep observation)
+        that has an address and no name yet; IPv4 asked first, since an
+        fe80:: address heard by ND has no PTR record anywhere."""
+        wanted: Dict[str, List[Dict[str, Any]]] = {}
+        for device in devices:
+            if device["ips"] and not device.get("hostnames"):
+                ip = next((a for a in device["ips"] if ":" not in a), device["ips"][0])
+                wanted.setdefault(ip, []).append(device)
+        found = self._reverse.lookup(list(wanted))
+        seen_at = _now_iso()
+        for ip, name in found.items():
+            for device in wanted[ip]:
+                note_names(device.setdefault("hostnames", []),
+                           [(name, network_names.SOURCE_PTR)], seen_at)  # fmt: skip
 
 
 def _merge_cache(devices, cache, interfaces) -> None:
@@ -535,7 +627,8 @@ def _fold_cache_rows(devices, cache, interfaces) -> Dict[str, Any]:
         entry = devices.setdefault(
             mac,
             {"mac": mac, "ips": [], "interface": iface, "methods": set(),
-             "count": 0, "mdns": [], "ssdp": [], "ssdp_searches": []},  # fmt: skip
+             "count": 0, "mdns": [], "ssdp": [], "ssdp_searches": [],
+             "hostnames": []},  # fmt: skip
         )
         if row["ip"] not in entry["ips"]:
             entry["ips"].append(row["ip"])
@@ -595,6 +688,9 @@ def _fold(into, other) -> None:
     for kind in ("mdns", "ssdp", "ssdp_searches"):
         mine = into.setdefault(kind, [])
         mine += [x for x in other.get(kind, []) if x not in mine]
+    names = into.setdefault("hostnames", [])
+    for entry in other.get("hostnames", []):
+        note_names(names, [(entry["name"], entry["source"])], entry["seen_at"])
 
 
 def _observation(device: Dict[str, Any]) -> Dict[str, Any]:
@@ -604,6 +700,8 @@ def _observation(device: Dict[str, Any]) -> Dict[str, Any]:
         "interface": device["interface"],
         "methods": sorted(device["methods"]),
         "count": device["count"],
+        # [{"name", "source", "seen_at"}] -- what the device calls itself.
+        "hostnames": device.get("hostnames", []),
         "evidence": {
             "mdns_services": device["mdns"],
             "ssdp": device["ssdp"],

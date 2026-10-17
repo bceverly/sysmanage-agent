@@ -263,3 +263,15 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ipmitool sel time get
 # argument such as --config-file could point it at an attacker's config.
 # (2026-10-17: the step was refused, "sudo: I'm sorry sysmanage-agent".)
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/freshclam ""
+
+# Hardware identity (Phase 23.2): the three root-only SMBIOS files under
+# /sys/class/dmi/id/ (mode 0400), read with cat -- exact paths, no wildcard,
+# so nothing else is readable.  Without these every packaged agent showed
+# "No machine identified" (2026-10-17).  Both cat paths: usrmerged and not.
+Cmnd_Alias SYSMANAGE_DMI_READ = /usr/bin/cat /sys/class/dmi/id/product_uuid, \
+    /usr/bin/cat /sys/class/dmi/id/product_serial, \
+    /usr/bin/cat /sys/class/dmi/id/board_serial, \
+    /bin/cat /sys/class/dmi/id/product_uuid, \
+    /bin/cat /sys/class/dmi/id/product_serial, \
+    /bin/cat /sys/class/dmi/id/board_serial
+sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_DMI_READ

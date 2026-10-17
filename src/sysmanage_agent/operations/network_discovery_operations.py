@@ -14,7 +14,10 @@ command map is what advertises the ``network_discovery`` capability.
 Contract
 --------
 * Server -> agent: ``command_type="configure_network_discovery"`` with
-  ``parameters={"enabled": bool, "report_interval_seconds": int}``.
+  ``parameters={"enabled": bool, "report_interval_seconds": int,
+  "name_lookups": bool}``.  ``name_lookups`` (servers from 2026-10-17) is
+  the operator's ACTIVE-discovery opt-in: reverse DNS for devices that
+  announced no name.  Absent means off.
 * Agent -> server, every interval while enabled:
   ``message_type="network_discovery_report"`` (see the server's
   ``network_discovery_handlers`` for the payload).
@@ -87,13 +90,18 @@ class NetworkDiscoveryOperations:
         except (OSError, ValueError):
             return
         self.interval = _clamp_interval(data.get("report_interval_seconds"))
+        self.collector.name_lookups = data.get("name_lookups") is True
         if data.get("enabled") is True:
             self._set_enabled(True)
 
     def _persist(self) -> None:
         path = state_path()
         path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"enabled": self.enabled, "report_interval_seconds": self.interval}
+        payload = {
+            "enabled": self.enabled,
+            "report_interval_seconds": self.interval,
+            "name_lookups": bool(self.collector.name_lookups),
+        }
         descriptor, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
         try:
             with os.fdopen(descriptor, "w", encoding="utf-8") as out:
@@ -122,6 +130,7 @@ class NetworkDiscoveryOperations:
     ) -> Dict[str, Any]:
         """Turn listening on or off, and set how often to report."""
         enabled = parameters.get("enabled") is True
+        self.collector.name_lookups = parameters.get("name_lookups") is True
         self.interval = _clamp_interval(
             parameters.get("report_interval_seconds", self.interval)
         )
@@ -137,6 +146,7 @@ class NetworkDiscoveryOperations:
             "success": True,
             "enabled": self.enabled,
             "report_interval_seconds": self.interval,
+            "name_lookups": bool(self.collector.name_lookups),
             "methods": methods,
         }
 
@@ -227,6 +237,9 @@ class NetworkDiscoveryOperations:
             found = await asyncio.to_thread(
                 network_sweep.observations_in, verdict["cidr"], verdict["interface"]
             )
+            if found:
+                # A sweep IS the active opt-in: name what it found by PTR.
+                await asyncio.to_thread(self.collector.name_by_address, found)
         finally:
             self._sweeping = False
         status = "completed" if found is not None else "failed"
