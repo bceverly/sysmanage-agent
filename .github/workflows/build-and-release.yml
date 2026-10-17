@@ -2178,6 +2178,9 @@ jobs:
           s3 sync "s3://${R2_BUCKET}/objects/"   repo/objects/   --only-show-errors || true
           s3 sync "s3://${R2_BUCKET}/refs/"      repo/refs/      --only-show-errors || true
           s3 cp   "s3://${R2_BUCKET}/summary"    repo/summary    2>/dev/null || true
+          # The OSTree repo's own config: without it flatpak build-sign / build-update-repo
+          # cannot open the repo ("openat(config): No such file", 3.11.0.5 release).
+          s3 cp   "s3://${R2_BUCKET}/config"     repo/config     2>/dev/null || true
 
           # Create version directories for each platform
           mkdir -p "repo/agent/deb/pool/main/$VERSION-1"
@@ -2292,7 +2295,23 @@ jobs:
 
           # Copy Flatpak repository data
           echo "Syncing Flatpak repository..."
-          rsync -av ${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/repo/ repo/ 2>/dev/null || true
+          # upload-artifact stores multiple paths relative to their common
+          # ancestor (installer/flatpak/), so the downloaded artifact holds
+          # repo/ at ITS top level -- the old installer/flatpak/repo/ source
+          # matched nothing and the new commit was never published.  Find the
+          # OSTree repo (the directory with config + objects/) wherever it is.
+          FP_SRC=""
+          for cand in \
+            "${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/repo" \
+            "${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/repo"; do
+            if [ -f "$cand/config" ] && [ -d "$cand/objects" ]; then FP_SRC="$cand"; break; fi
+          done
+          if [ -n "$FP_SRC" ]; then
+            rsync -a "$FP_SRC/" repo/
+            echo "Flatpak repository synced from $FP_SRC"
+          else
+            echo "::warning::no Flatpak OSTree repository in the artifact; the Flatpak remote is not updated this release"
+          fi
 
           # The bundle, from the release-files copy the GitHub release itself
           # uses: the artifact-path copy above can match nothing, and the R2
@@ -2307,7 +2326,7 @@ jobs:
           # summary).  None was ever generated, so `flatpak remote-add` against
           # repo.sysmanage.org could not work.  Sign the app commit with the
           # archive signing subkey and regenerate the summary.
-          if [ -d repo/refs/heads/app ]; then
+          if [ -d repo/refs/heads/app ] && [ -f repo/config ]; then
             sudo apt-get install -y -qq flatpak >/dev/null 2>&1
             FP_SIGN=""
             if [ -n "${APT_SIGNING_KEY:-}" ]; then
@@ -2327,15 +2346,22 @@ jobs:
               FP_SIGN="--gpg-sign=${APT_SIGNING_KEY_ID%!} --gpg-homedir=$FP_GNUPG"
               # shellcheck disable=SC2086
               flatpak build-sign repo org.sysmanage.Agent master $FP_SIGN \
-                || { echo "::error::flatpak build-sign failed"; exit 1; }
+                || { echo "::warning::flatpak build-sign failed; Flatpak remote not updated"; FP_FAILED=1; }
             else
               echo "::warning::no signing key: publishing an UNSIGNED Flatpak summary (sysmanage.flatpakrepo's GPGKey will reject it)"
             fi
             # shellcheck disable=SC2086
-            flatpak build-update-repo repo $FP_SIGN \
-              || { echo "::error::flatpak build-update-repo failed"; exit 1; }
-            test -f repo/summary || { echo "::error::Flatpak summary was not generated"; exit 1; }
-            echo "Flatpak summary generated (signed: ${FP_SIGN:+yes})"
+            if [ -z "${FP_FAILED:-}" ]; then
+              flatpak build-update-repo repo $FP_SIGN \
+                || { echo "::warning::flatpak build-update-repo failed; Flatpak remote not updated"; FP_FAILED=1; }
+            fi
+            if [ -z "${FP_FAILED:-}" ] && [ -f repo/summary ]; then
+              echo "Flatpak summary generated (signed: ${FP_SIGN:+yes})"
+            else
+              # Never let Flatpak block the deb/rpm/BSD/Windows publish that
+              # follows in this same step (it did for 3.11.0.5).
+              echo "::warning::Flatpak summary not generated; continuing with the other channels"
+            fi
           fi
 
           # Install repository tools
