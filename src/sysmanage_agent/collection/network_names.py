@@ -387,10 +387,12 @@ def _dhcp(payload: bytes) -> Optional[Dict[str, object]]:
     if not names:
         return None
     mac = ":".join(f"{b:02x}" for b in payload[28:34])
-    ciaddr = socket.inet_ntoa(payload[12:16])
+    # ciaddr is all-zero until the client holds a lease (DISCOVER, and a
+    # REQUEST from INIT-REBOOT): no address to report yet.
+    ciaddr = payload[12:16]
     return {
         "mac": mac,
-        "ip": None if ciaddr == "0.0.0.0" else ciaddr,
+        "ip": None if ciaddr == b"\x00\x00\x00\x00" else socket.inet_ntoa(ciaddr),
         "names": names,
     }
 
