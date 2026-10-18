@@ -36,6 +36,9 @@ BuildRequires:  python3-pip
 
 BuildRequires:  python3-setuptools
 BuildRequires:  systemd-rpm-macros
+# Owner of /etc/sudoers.d in the build root, so OBS's filelist check sees
+# the directory our sudoers drop-in lands in as owned.
+BuildRequires:  sudo
 
 %if 0%{?suse_version}
 BuildRequires:  fdupes

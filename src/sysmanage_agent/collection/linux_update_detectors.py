@@ -401,14 +401,31 @@ class LinuxUpdateDetector:
         if not releases:
             return updates
 
+        # fwupd lists a device it will not update right now (no "updatable"
+        # flag, an UpdateError such as "getting efivars free space is not
+        # supported" on older kernels): offering it only queues an install
+        # that can never succeed, however often it is retried.
+        flags = device.get("Flags")
+        if (flags is not None and "updatable" not in flags) or device.get(
+            "UpdateError"
+        ):
+            logger.info(
+                "Skipping firmware for %s: fwupd cannot update it here (%s)",
+                device_name,
+                device.get("UpdateError") or "not updatable",
+            )
+            return updates
+
         current_version = device.get("Version", "unknown")
 
-        for release in releases:
-            update = self._process_fwupd_release(
-                release, device_id, device_name, current_version, device
-            )
-            if update:
-                updates.append(update)
+        # Releases come newest first, and `fwupdmgr update DEVICE` always
+        # installs the newest -- so the device is ONE update, not one per
+        # intermediate release (a cumulative UEFI dbx listed six of them).
+        update = self._process_fwupd_release(
+            releases[0], device_id, device_name, current_version, device
+        )
+        if update:
+            updates.append(update)
 
         return updates
 
@@ -434,6 +451,10 @@ class LinuxUpdateDetector:
         return {
             "package_name": unique_package_name,
             "device_id": device_id,
+            # The server stores and sends back only bundle_id, so the device
+            # id rides there too -- without it every firmware install failed
+            # with "No device ID available" before fwupdmgr ever ran.
+            "bundle_id": device_id,
             "current_version": current_version,
             "available_version": available_version,
             "package_manager": "fwupd",

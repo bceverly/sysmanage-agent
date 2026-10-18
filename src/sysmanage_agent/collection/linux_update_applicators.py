@@ -238,7 +238,8 @@ class LinuxUpdateApplicator:
     def apply_fwupd_updates(packages: List[Dict], results: Dict):
         """Apply firmware updates via fwupd."""
         for package in packages:
-            device_id = package.get("device_id", "")
+            # The server echoes the device id back as bundle_id.
+            device_id = package.get("device_id") or package.get("bundle_id") or ""
             package_name = package["package_name"]
 
             if not device_id:

@@ -275,3 +275,13 @@ Cmnd_Alias SYSMANAGE_DMI_READ = /usr/bin/cat /sys/class/dmi/id/product_uuid, \
     /bin/cat /sys/class/dmi/id/product_serial, \
     /bin/cat /sys/class/dmi/id/board_serial
 sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_DMI_READ
+
+# Compliance evidence (server ROADMAP 24.4): the only root-only reads the
+# compliance checks need -- the EFFECTIVE sshd settings (sshd -T loads the
+# host keys), the loaded audit rules, and two root-only config files.  Exact
+# argument forms, no wildcard; both usrmerged and split paths.
+Cmnd_Alias SYSMANAGE_COMPLIANCE_READ = /usr/sbin/sshd -T, /sbin/sshd -T, \
+    /usr/sbin/auditctl -l, /sbin/auditctl -l, \
+    /usr/bin/cat /etc/audit/auditd.conf, /bin/cat /etc/audit/auditd.conf, \
+    /usr/bin/cat /etc/aide.conf, /bin/cat /etc/aide.conf
+sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_COMPLIANCE_READ

@@ -29,6 +29,7 @@ _UNPRIVILEGED_ARGS = frozenset({"--version", "-V"})
 # What sudo / sudo-rs print when the allowlist does not cover a command.
 _REFUSED = (
     "a password is required",
+    "interactive authentication is required",  # sudo 1.9.15+ with -n
     "is not allowed to execute",
     "may not run sudo",
     "can't do that",

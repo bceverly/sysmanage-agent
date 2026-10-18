@@ -18,6 +18,9 @@ from datetime import datetime, timezone
 
 from src.i18n import _
 from src.sysmanage_agent.communication import send_on_change
+from src.sysmanage_agent.collection.compliance_evidence import (
+    collect_compliance_evidence,
+)
 from src.sysmanage_agent.collection.hardware_health import collect_hardware_health
 from src.sysmanage_agent.collection.time_service import collect_time_status
 
@@ -436,3 +439,24 @@ class DataCollectorSendersMixin:
             sent = await self.agent.send_message(message)
         if not sent:
             self.logger.warning(_("Failed to send hardware health"))
+
+    async def _send_compliance_evidence_update(self):
+        """Send what the compliance checks read (server ROADMAP 24.4): the
+        effective sshd settings, sysctls, file modes, PAM, auditd, AIDE...
+
+        Send-on-change sends it when any of it changes, else daily; the
+        server re-scans the host when fresh evidence arrives.  Nothing is
+        sent on an OS this agent does not collect it for yet.
+        """
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if not host_approval:
+            self.logger.warning(_("Cannot send compliance evidence: no host approval"))
+            return
+        # sshd -T / auditctl / systemctl are subprocesses; off the event loop.
+        payload = await asyncio.to_thread(collect_compliance_evidence)
+        if payload is None:
+            return
+        payload["host_id"] = str(host_approval.host_id)
+        message = self.agent.create_message("compliance_evidence_update", payload)
+        if not await self.agent.send_message(message):
+            self.logger.warning(_("Failed to send compliance evidence"))

@@ -32,7 +32,7 @@ override_dh_auto_install:
 	# Create virtualenv and install production Python dependencies from vendor directory
 	# (Launchpad builds have no network access, so we use pre-downloaded wheels)
 	python3 -m venv debian/sysmanage-agent/opt/sysmanage-agent/.venv
-	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --no-index --find-links=vendor -r requirements-prod.txt
+	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --no-index --prefer-binary --find-links=vendor -r requirements-prod.txt
 
 	# Copy example config
 	install -m 644 installer/ubuntu/sysmanage-agent.yaml.example debian/sysmanage-agent/etc/sysmanage-agent/

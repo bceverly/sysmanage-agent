@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 08:48-0400\n"
+"POT-Creation-Date: 2026-10-18 04:52-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -93,7 +93,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr ""
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:944
+#: src/sysmanage_agent/communication/data_collector.py:948
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr ""
@@ -402,40 +402,40 @@ msgstr ""
 msgid "Failed to apply DNF updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:246
+#: src/sysmanage_agent/collection/linux_update_applicators.py:247
 #, python-format
 msgid "No device ID found for firmware package: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:252
+#: src/sysmanage_agent/collection/linux_update_applicators.py:253
 msgid "No device ID available for firmware update"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:284
+#: src/sysmanage_agent/collection/linux_update_applicators.py:285
 msgid "Firmware update failed"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:287
+#: src/sysmanage_agent/collection/linux_update_applicators.py:288
 #, python-format
 msgid "Failed to update firmware for %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:301
+#: src/sysmanage_agent/collection/linux_update_applicators.py:302
 #, python-format
 msgid "Exception during firmware update for %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:350
+#: src/sysmanage_agent/collection/linux_update_applicators.py:351
 #, python-format
 msgid "Failed to apply Ubuntu release upgrade: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:403
+#: src/sysmanage_agent/collection/linux_update_applicators.py:404
 #, python-format
 msgid "Failed to apply Fedora release upgrade: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:441
+#: src/sysmanage_agent/collection/linux_update_applicators.py:442
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
 msgstr ""
@@ -493,17 +493,17 @@ msgstr ""
 msgid "Unknown Device"
 msgstr ""
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:215
+#: src/sysmanage_agent/collection/network_discovery_collection.py:296
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:434
+#: src/sysmanage_agent/collection/network_discovery_collection.py:553
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:458
+#: src/sysmanage_agent/collection/network_discovery_collection.py:579
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were "
@@ -1306,7 +1306,7 @@ msgstr ""
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:420
+#: src/sysmanage_agent/communication/data_collector.py:424
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr ""
@@ -1475,125 +1475,138 @@ msgstr ""
 msgid "Error collecting/sending hardware health: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:456
+#: src/sysmanage_agent/communication/data_collector.py:420
+#, python-format
+msgid "Error collecting/sending compliance evidence: %s"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector.py:460
 #, python-format
 msgid "Data collector error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:484
+#: src/sysmanage_agent/communication/data_collector.py:488
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:707
+#: src/sysmanage_agent/communication/data_collector.py:711
 #, python-format
 msgid "Error collecting available packages: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:816
+#: src/sysmanage_agent/communication/data_collector.py:820
 #, python-format
 msgid "Error sending package delta: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:895
+#: src/sysmanage_agent/communication/data_collector.py:899
 #, python-format
 msgid "Error sending paginated packages for batch %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:990
+#: src/sysmanage_agent/communication/data_collector.py:994
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:56
+#: src/sysmanage_agent/communication/data_collector_senders.py:59
 msgid "Failed to send periodic software inventory data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:80
+#: src/sysmanage_agent/communication/data_collector_senders.py:83
 msgid "Failed to send periodic user access data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:104
+#: src/sysmanage_agent/communication/data_collector_senders.py:107
 msgid "Failed to send periodic hardware data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:124
+#: src/sysmanage_agent/communication/data_collector_senders.py:127
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:144
+#: src/sysmanage_agent/communication/data_collector_senders.py:147
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:168
+#: src/sysmanage_agent/communication/data_collector_senders.py:171
 msgid "Failed to send periodic OS version data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:189
+#: src/sysmanage_agent/communication/data_collector_senders.py:192
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:223
+#: src/sysmanage_agent/communication/data_collector_senders.py:226
 msgid "Failed to send third-party repository data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:255
+#: src/sysmanage_agent/communication/data_collector_senders.py:258
 msgid "Failed to send antivirus status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:258
+#: src/sysmanage_agent/communication/data_collector_senders.py:261
 msgid "Cannot send antivirus status data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:292
+#: src/sysmanage_agent/communication/data_collector_senders.py:295
 msgid "Failed to send firewall status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:294
+#: src/sysmanage_agent/communication/data_collector_senders.py:297
 msgid "Cannot send firewall status data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:326
+#: src/sysmanage_agent/communication/data_collector_senders.py:329
 msgid "Failed to send Graylog status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:328
+#: src/sysmanage_agent/communication/data_collector_senders.py:331
 msgid "Cannot send Graylog status data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:336
+#: src/sysmanage_agent/communication/data_collector_senders.py:339
 msgid "Cannot send process data: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:366
+#: src/sysmanage_agent/communication/data_collector_senders.py:369
 msgid "Failed to send process status data"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:377
+#: src/sysmanage_agent/communication/data_collector_senders.py:380
 msgid "Cannot send host metrics: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:389
+#: src/sysmanage_agent/communication/data_collector_senders.py:392
 msgid "Failed to send host metrics"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:402
+#: src/sysmanage_agent/communication/data_collector_senders.py:405
 msgid "Cannot send clock status: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:409
+#: src/sysmanage_agent/communication/data_collector_senders.py:412
 msgid "Failed to send clock status"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:423
+#: src/sysmanage_agent/communication/data_collector_senders.py:426
 msgid "Cannot send hardware health: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:438
+#: src/sysmanage_agent/communication/data_collector_senders.py:441
 msgid "Failed to send hardware health"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:453
+msgid "Cannot send compliance evidence: no host approval"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:462
+msgid "Failed to send compliance evidence"
 msgstr ""
 
 #: src/sysmanage_agent/communication/hardware_event_loop.py:86
@@ -2619,23 +2632,23 @@ msgstr ""
 msgid "Restore of %s refused: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:134
+#: src/sysmanage_agent/operations/network_discovery_operations.py:143
 #, python-format
 msgid "Network discovery setting could not be saved: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:165
+#: src/sysmanage_agent/operations/network_discovery_operations.py:175
 #, python-format
 msgid "Error sending network discovery report: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:173
-#: src/sysmanage_agent/operations/network_discovery_operations.py:245
+#: src/sysmanage_agent/operations/network_discovery_operations.py:183
+#: src/sysmanage_agent/operations/network_discovery_operations.py:258
 msgid "Cannot send network discovery report: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/operations/network_discovery_operations.py:186
-#: src/sysmanage_agent/operations/network_discovery_operations.py:263
+#: src/sysmanage_agent/operations/network_discovery_operations.py:196
+#: src/sysmanage_agent/operations/network_discovery_operations.py:276
 msgid "Failed to send network discovery report"
 msgstr ""
 

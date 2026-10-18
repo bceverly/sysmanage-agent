@@ -64,7 +64,7 @@ SNAPSHOT_TYPES = frozenset({
     "antivirus_status_update", "firewall_status_update", "graylog_status_update",
     "child_host_list_update", "fips_compliance_update", "package_updates_update",
     "process_status_update", "host_metrics", "time_status_update",
-    "hardware_health_update",
+    "hardware_health_update", "compliance_evidence_update",
 })  # fmt: skip
 
 # A newer report of these types replaces a still-queued older one (22.1):

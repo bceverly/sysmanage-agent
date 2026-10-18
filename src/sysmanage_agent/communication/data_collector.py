@@ -416,6 +416,10 @@ class DataCollector(DataCollectorSendersMixin):
                 _("Error collecting/sending hardware health: %s"),
             ),
             (
+                self._send_compliance_evidence_update,
+                _("Error collecting/sending compliance evidence: %s"),
+            ),
+            (
                 self.child_host_collector.send_child_hosts_update,
                 _("Error collecting/sending child hosts data: %s"),
             ),

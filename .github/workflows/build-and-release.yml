@@ -3066,13 +3066,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # riscv64 wheels for the Launchpad upload: see riscv64-wheels.yml.  A
+  # failure there costs only the riscv64 build, never the amd64/arm64 upload.
+  build-riscv64-wheels:
+    needs: [release]
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/riscv64-wheels.yml
+
   # Deploy to Launchpad PPA - Matrix strategy for parallel uploads
   deploy-launchpad:
     name: Deploy to Launchpad PPA (${{ matrix.release_name }})
     runs-on: ubuntu-22.04
     timeout-minutes: 60
-    needs: [release]
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [release, build-riscv64-wheels]
+    # Runs even when a riscv64 wheel build failed: that only costs riscv64.
+    if: startsWith(github.ref, 'refs/tags/') && !cancelled() && needs.release.result == 'success'
     strategy:
       matrix:
         include:
@@ -3218,6 +3226,24 @@ jobs:
 
           echo "Downloaded $(ls -1 vendor/*.whl 2>/dev/null | wc -l) wheels and $(ls -1 vendor/*.tar.gz 2>/dev/null | wc -l) source packages"
           ls -lh vendor/
+
+      # pip --find-links picks the wheel matching each builder's arch, so the
+      # riscv64 wheels sit beside the others.  Missing (that build failed):
+      # riscv64 fails on Launchpad, amd64/arm64 still build.
+      - name: Add riscv64 wheels
+        id: riscv64
+        continue-on-error: true
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: riscv64-wheels-${{ matrix.release }}
+          path: vendor
+
+      - name: Report riscv64 wheels
+        run: |
+          if [ "${{ steps.riscv64.outcome }}" != success ]; then
+            echo "::warning::No riscv64 wheels for ${{ matrix.release }}; its Launchpad riscv64 build will fail"
+          fi
+          find vendor -name "*riscv64*.whl" | wc -l
 
       - name: Install SBOM generation tools
         run: |

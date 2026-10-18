@@ -1,0 +1,104 @@
+# Copyright (c) 2024-2026 Bryan Everly
+# Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+# See the LICENSE file in the project root for the full terms.
+
+# riscv64 wheels for the Launchpad source upload.
+#
+# Launchpad builders have no network, and PyPI has no riscv64 wheels for
+# PyYAML, psutil, bcrypt or cryptography -- whose sdists also fetch Rust crates
+# at build time, so they cannot be compiled on the builder either.  Each
+# release's wheels are built in an emulated riscv64 container OF THAT RELEASE,
+# so they match the Python its builder has.
+#
+# That build is slow (Rust under QEMU), so its wheels are cached until the
+# dependency list changes, and for at most a month.  GitHub shares a cache only
+# from the default branch, and the release workflow runs on tags -- so this
+# workflow also runs on main (when dependencies change, and monthly) to keep a
+# cache every release can restore.  A release that finds it costs ~1 minute.
+name: riscv64 wheels
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 1 * *"  # monthly: the cache key turns over with the month
+  push:
+    branches: [main]
+    paths:
+      - "requirements.txt"
+      - "requirements-prod.txt"
+      - "scripts/update-requirements-prod.py"
+      - ".github/workflows/riscv64-wheels.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    name: riscv64 wheels (${{ matrix.release }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        release: [resolute, noble, jammy]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: ./.github/actions/harden-apt
+
+      - name: Generate requirements-prod.txt
+        run: python3 scripts/update-requirements-prod.py
+
+      # The emulated build is slow, so its wheels are reused until the
+      # dependency list changes -- and at most a month, so a fix in a
+      # dependency that has no version floor here still arrives.
+      - name: Cache key
+        id: key
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      - name: Reuse riscv64 wheels
+        id: cache
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: riscv64-wheels
+          key: riscv64-wheels-${{ matrix.release }}-${{ hashFiles('requirements-prod.txt') }}-${{ steps.key.outputs.month }}
+
+      - name: Enable riscv64 emulation
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q qemu-user-static binfmt-support
+          docker run --rm --platform linux/riscv64 "ubuntu:${{ matrix.release }}" uname -m
+
+      - name: Build riscv64 wheels
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          RELEASE: ${{ matrix.release }}
+        run: |
+          mkdir -p riscv64-wheels
+          docker run --rm --platform linux/riscv64 -v "$PWD:/w" -w /w "ubuntu:$RELEASE" bash -euxc '
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -q
+            apt-get install -y -q python3-venv python3-dev build-essential \
+              libffi-dev libssl-dev libyaml-dev pkg-config curl ca-certificates
+            # The distro rustc is too old for current cryptography on jammy.
+            curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs \
+              | sh -s -- -y --profile minimal
+            . "$HOME/.cargo/env"
+            python3 -m venv /tmp/v
+            /tmp/v/bin/pip install -q --upgrade pip wheel
+            # Every requirement, transitive ones included: PyPI riscv64 wheels
+            # where they exist, built from source where they do not.
+            /tmp/v/bin/pip wheel --prefer-binary -r requirements-prod.txt -w riscv64-wheels
+            chown -R "$(stat -c %u:%g /w)" riscv64-wheels
+          '
+          ls -l riscv64-wheels
+
+      - name: Upload riscv64 wheels
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: riscv64-wheels-${{ matrix.release }}
+          path: riscv64-wheels/*.whl
+          retention-days: 7

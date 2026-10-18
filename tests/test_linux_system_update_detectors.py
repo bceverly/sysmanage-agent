@@ -28,6 +28,9 @@ from src.sysmanage_agent.collection.linux_system_update_detectors import (
 from src.sysmanage_agent.collection.linux_update_detectors import (
     LinuxUpdateDetector as LinuxPkgDetector,
 )
+from src.sysmanage_agent.collection.linux_update_applicators import (
+    LinuxUpdateApplicator,
+)
 
 
 @pytest.fixture
@@ -589,6 +592,53 @@ class TestFwupdUpdateDetection:
 # =============================================================================
 # DNF Update Detection Tests
 # =============================================================================
+
+
+class TestFwupdDbxRegressions:
+    """UEFI dbx, as fwupd reports it on real hosts (2026-10-18): six
+    cumulative releases on one device, and a device fwupd will not update."""
+
+    @staticmethod
+    def _dbx(version, flags, update_error=None, releases=("20260707", "20260402")):
+        return {
+            "DeviceId": "362301da643102b9f38477387e2193e57abaa590",
+            "Name": "UEFI dbx",
+            "Vendor": "Microsoft",
+            "Version": version,
+            "Flags": list(flags),
+            "UpdateError": update_error,
+            "Releases": [
+                {"Version": v, "Summary": "UEFI revocation"} for v in releases
+            ],
+        }
+
+    def test_one_update_per_device_carrying_the_device_id(self, pkg_detector):
+        device = self._dbx("20180401", ["internal", "updatable", "needs-reboot"])
+        updates = pkg_detector._process_fwupd_device(device)
+        assert len(updates) == 1
+        assert updates[0]["available_version"] == "20260707"
+        # The server only round-trips bundle_id: the install needs it.
+        assert updates[0]["bundle_id"] == device["DeviceId"]
+
+    def test_a_device_fwupd_will_not_update_is_not_offered(self, pkg_detector):
+        device = self._dbx(
+            "20180401",
+            ["internal", "supported", "updatable-hidden"],
+            update_error="getting efivars free space is not supported",
+        )
+        assert pkg_detector._process_fwupd_device(device) == []
+
+    def test_install_uses_the_device_id_the_server_echoes_as_bundle_id(self):
+        results = {}
+        package = {
+            "package_name": "Microsoft UEFI dbx (→ 20260707)",
+            "bundle_id": "362301da643102b9f38477387e2193e57abaa590",
+            "package_manager": "fwupd",
+        }
+        with patch("subprocess.run", return_value=Mock(returncode=0, stderr="")) as run:
+            LinuxUpdateApplicator.apply_fwupd_updates([package], results)
+        assert package["bundle_id"] in run.call_args[0][0]
+        assert results["updated_packages"][0]["device_id"] == package["bundle_id"]
 
 
 class TestDnfPkgDetection:
