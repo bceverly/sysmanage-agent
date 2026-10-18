@@ -40,6 +40,7 @@ import glob
 import logging
 import os
 import platform
+import posixpath  # the paths here are Linux paths on every OS: see _pam_texts
 import shutil
 import stat
 import subprocess  # nosec B404 -- fixed argv, no shell
@@ -222,7 +223,7 @@ def _root_read(path: str) -> Tuple[Optional[str], str]:
     if status != NOT_PRIVILEGED:
         return text, status
     cat = _tool("cat")
-    if not os.path.isabs(cat):
+    if not posixpath.isabs(cat):
         return None, NOT_PRIVILEGED
     return _privileged([cat, path])
 
@@ -242,7 +243,7 @@ def ssh_config() -> Section:
     """The EFFECTIVE sshd settings (``sshd -T``, includes and defaults
     resolved), not a grep of sshd_config.  No sshd: no SSH rules apply."""
     sshd = _tool("sshd")
-    if not os.path.isabs(sshd):
+    if not posixpath.isabs(sshd):
         return None, ABSENT
     out, status = _privileged([sshd, "-T"])
     return (parse.parse_sshd_t(out), RAN) if status == RAN else (None, status)
@@ -299,7 +300,7 @@ def services() -> Section:
     """``{"cron": {"enabled": True}, ...}`` for the services found; a
     service with no unit at all is left out ("service not found")."""
     systemctl = _tool("systemctl")
-    if not os.path.isabs(systemctl):
+    if not posixpath.isabs(systemctl):
         return None, ABSENT  # not systemd (OpenRC, runit): not collected yet
     found = {}
     for name, units in SERVICE_UNITS.items():
@@ -341,10 +342,13 @@ def umask() -> Section:
 
 
 def _pam_texts() -> Optional[List[str]]:
+    # posixpath, not os.path: on Windows (CI imports every module) os.path
+    # makes /etc/pam.d/* into /etc/pam.d\*, and from Python 3.13 it calls
+    # /usr/sbin/sshd relative -- the paths here are Linux paths everywhere.
     dirs = [d for d in _PAM_DIRS if _isdir(d)]
     if not dirs:
         return None
-    return _texts([p for d in dirs for p in _glob(os.path.join(d, "*"))])
+    return _texts([p for d in dirs for p in _glob(posixpath.join(d, "*"))])
 
 
 def pam_modules() -> Section:
@@ -371,7 +375,7 @@ def auditd_config() -> Section:
 
 def audit_rules() -> Section:
     auditctl = _tool("auditctl")
-    if not os.path.isabs(auditctl):
+    if not posixpath.isabs(auditctl):
         return [], RAN  # no audit tools: no rules are loaded
     out, status = _privileged([auditctl, "-l"])
     return (parse.parse_auditctl(out), RAN) if status == RAN else (None, status)
