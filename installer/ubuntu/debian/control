@@ -2,7 +2,8 @@ Source: sysmanage-agent
 Section: admin
 Priority: optional
 Maintainer: Bryan Everly <bryan@theeverlys.com>
-Build-Depends: debhelper-compat (= 13), python3-all (>= 3.10), python3-venv, python3-pip
+Build-Depends: debhelper-compat (= 13), python3-all (>= 3.10), python3-venv, python3-pip,
+ libyaml-dev [riscv64]
 Standards-Version: 4.6.2
 Homepage: https://github.com/bceverly/sysmanage-agent
 Vcs-Git: https://github.com/bceverly/sysmanage-agent.git
@@ -11,7 +12,7 @@ Rules-Requires-Root: no
 
 Package: sysmanage-agent
 Architecture: any
-Depends: ${misc:Depends},
+Depends: ${misc:Depends}, ${shlibs:Depends},
  python3 (>= 3.10),
  python3-pip,
  python3-venv,

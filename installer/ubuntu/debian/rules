@@ -32,6 +32,9 @@ override_dh_auto_install:
 	# Create virtualenv and install production Python dependencies from vendor directory
 	# (Launchpad builds have no network access, so we use pre-downloaded wheels)
 	python3 -m venv debian/sysmanage-agent/opt/sysmanage-agent/.venv
+	# Upgrade pip from the vendored wheel first: older series' pip rejects
+	# riscv64 manylinux wheels (see the Launchpad vendor step).
+	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --no-index --find-links=vendor --upgrade pip
 	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --no-index --prefer-binary --find-links=vendor -r requirements-prod.txt
 
 	# Copy example config

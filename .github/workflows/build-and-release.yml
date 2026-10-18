@@ -3205,6 +3205,12 @@ jobs:
 
           echo "Downloading wheels for Python $PYTHON_VERSION (Ubuntu $RELEASE)..."
 
+          # A current pip, installed into the build venv first (debian/rules):
+          # the series' own pip (22.0 jammy, 24.0 noble) predates riscv64
+          # manylinux tags and rejects every PyPI riscv64 wheel ("No matching
+          # distribution found for aiohttp", Launchpad 2026-10-18).
+          pip3 download pip -d vendor --only-binary=:all:
+
           # Download wheels for BOTH arches so Launchpad's arm64 builder (control
           # is Architecture: any) can install the matching wheels from the single
           # uploaded source -- pip --find-links picks the right wheel per builder.
