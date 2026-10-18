@@ -37,7 +37,7 @@ jobs:
   wheels:
     name: riscv64 wheels (${{ matrix.release }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 120  # a cold build took 37 min (2026-10-18)
     strategy:
       fail-fast: false
       matrix:
