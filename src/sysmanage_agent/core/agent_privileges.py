@@ -189,6 +189,10 @@ def _parse_sudoers_content(content: str, username: str) -> set:
     return granted_commands
 
 
+# The sudoers tag that marks a password-free grant.
+_NOPASSWD = "NOPASSWD:"
+
+
 def _parse_sudoers_line(line: str, username: str, required_commands: list) -> set:
     """Parse a single sudoers line for NOPASSWD grants matching the given username.
 
@@ -203,10 +207,10 @@ def _parse_sudoers_line(line: str, username: str, required_commands: list) -> se
     if not line or line.startswith("#"):
         return set()
 
-    if "NOPASSWD:" not in line or username not in line:
+    if _NOPASSWD not in line or username not in line:
         return set()
 
-    parts = line.split("NOPASSWD:")
+    parts = line.split(_NOPASSWD)
     if len(parts) <= 1:
         return set()
 
@@ -250,9 +254,9 @@ def _parse_sudo_listing(listing: str) -> set:
     ``    (ALL) NOPASSWD: /usr/bin/apt, /usr/bin/systemctl restart *``."""
     granted: set = set()
     for line in listing.splitlines():
-        if "NOPASSWD:" not in line:
+        if _NOPASSWD not in line:
             continue
-        for spec in line.split("NOPASSWD:", 1)[1].split(","):
+        for spec in line.split(_NOPASSWD, 1)[1].split(","):
             command = spec.strip().split(" ", 1)[0]
             if command == _FULL_SUDO:
                 granted.add(_FULL_SUDO)

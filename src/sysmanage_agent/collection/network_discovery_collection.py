@@ -176,24 +176,29 @@ def ssdp_parse(payload: bytes) -> Tuple[List[str], List[str]]:
     start = lines[0].strip().upper() if lines else ""
     identity: List[str] = []
     searches: List[str] = []
+    searching = start.startswith("M-SEARCH")
     for line in lines[1:]:
         name, _, value = line.partition(":")
         name, value = name.strip().lower(), value.strip()
         if not value:
             continue
-        if start.startswith("M-SEARCH"):
+        if searching:
             if name == "st" and value[:120] not in searches:
                 searches.append(value[:120])
             continue
-        if name in ("server", "nt", "usn"):
-            text = line.strip()[:128]
-        elif name == "st":
-            text = ("RST: " + value)[:128]
-        else:
-            continue
-        if text not in identity:
+        text = _ssdp_identity_line(name, value, line)
+        if text is not None and text not in identity:
             identity.append(text)
     return identity[:MAX_EVIDENCE], searches[:MAX_EVIDENCE]
+
+
+def _ssdp_identity_line(name: str, value: str, line: str) -> Optional[str]:
+    """The evidence text one header of an announcement/reply contributes."""
+    if name in ("server", "nt", "usn"):
+        return line.strip()[:128]
+    if name == "st":
+        return ("RST: " + value)[:128]
+    return None
 
 
 def ssdp_evidence(payload: bytes) -> List[str]:
@@ -219,6 +224,14 @@ def note_names(hostnames: List[Dict[str, str]], names, seen_at: str) -> None:
         else:
             if len(hostnames) < MAX_HOSTNAMES:
                 hostnames.append({"name": name, "source": source, "seen_at": seen_at})
+
+
+def _merge_evidence(row: Dict[str, Any], evidence: Dict[str, Optional[list]]) -> None:
+    """Append new evidence lines to a device row, each list bounded."""
+    for kind, items in evidence.items():
+        for item in items or []:
+            if item not in row[kind] and len(row[kind]) < MAX_EVIDENCE:
+                row[kind].append(item)
 
 
 class _Accumulator:
@@ -255,14 +268,9 @@ class _Accumulator:
                 row["ips"].append(ip)
             row["methods"].add(method)
             row["count"] += 1
-            for kind, items in (
-                ("mdns", mdns or []),
-                ("ssdp", ssdp or []),
-                ("ssdp_searches", searches or []),
-            ):
-                for item in items:
-                    if item not in row[kind] and len(row[kind]) < MAX_EVIDENCE:
-                        row[kind].append(item)
+            _merge_evidence(
+                row, {"mdns": mdns, "ssdp": ssdp, "ssdp_searches": searches}
+            )
             if names:
                 note_names(row["hostnames"], names, _now_iso())
 
@@ -508,11 +516,11 @@ class NetworkDiscoveryCollector:
         self._listener = self._raw_listener()
         if self._listener is not None:
             methods.update(arp_listen=OK, nd_listen=OK, mdns=OK, ssdp=OK)
-            methods.update({name: OK for name in _NAME_METHODS})
+            methods.update(dict.fromkeys(_NAME_METHODS, OK))
         else:
             reason = NOT_ROOT if platform.system() in _CAPTURE_SYSTEMS else UNSUPPORTED
             methods.update(arp_listen=reason, nd_listen=reason)
-            methods.update({name: reason for name in _NAME_METHODS})
+            methods.update(dict.fromkeys(_NAME_METHODS, reason))
             ips = [i["ip"] for i in local_interfaces()]
             listener = _MulticastListener(self.sink, ips)
             methods["mdns"] = OK if "mdns" in listener.sockets else PORT_IN_USE

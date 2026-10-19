@@ -63,13 +63,31 @@ from src.sysmanage_agent.collection.hardware_health import (
 _HW_SENSORS = "hw.sensors"
 
 
+# Prefixes only; the value is the rest of the line.  The old ``\s*(.*)$`` /
+# ``\s*(.+)$`` tails overlapped and backtracked (Sonar S5852).
+_NVME_DEVLIST = re.compile(r"\s*(nvme\d+):")
+_ACPI_THERMAL = re.compile(r"hw\.acpi\.thermal\.(tz\d+)\.(temperature|_CRT|_PSV):")
+
+
+def _rest_after(line: str, match) -> Optional[str]:
+    """What ``\\s*(.+)$`` captured after ``match``: the rest without its
+    leading whitespace, or -- when the rest is ONLY whitespace -- its last
+    character; None when nothing follows."""
+    if match is None:
+        return None
+    rest = line[match.end() :]
+    if not rest:
+        return None
+    return rest.lstrip() or rest[-1]
+
+
 def parse_nvmecontrol_devlist(text: str) -> Dict[str, str]:
     """``nvmecontrol devlist`` -> {controller: model}."""
     controllers = {}
     for line in text.splitlines():
-        match = re.match(r"^\s*(nvme\d+):\s*(.*)$", line)
+        match = _NVME_DEVLIST.match(line)
         if match:
-            controllers[match.group(1)] = match.group(2).strip()
+            controllers[match.group(1)] = line[match.end() :].strip()
     return controllers
 
 
@@ -185,13 +203,12 @@ def parse_acpi_thermal(text: str) -> Dict[str, Dict[str, Optional[float]]]:
     """``sysctl hw.acpi.thermal`` -> {zone: {temperature, critical, passive}}."""
     zones: Dict[str, Dict[str, Optional[float]]] = {}
     for line in text.splitlines():
-        match = re.match(
-            r"^hw\.acpi\.thermal\.(tz\d+)\.(temperature|_CRT|_PSV):\s*(.+)$", line
-        )
-        if match:
+        match = _ACPI_THERMAL.match(line)
+        reading = _rest_after(line, match)
+        if reading is not None:
             key = {"temperature": "temperature", "_CRT": "critical", "_PSV": "passive"}
             zones.setdefault(match.group(1), {})[key[match.group(2)]] = _celsius(
-                match.group(3)
+                reading
             )
     return zones
 

@@ -68,7 +68,12 @@ _BTRFS_COUNTERS = {
     "generation_errs": "generation",
 }
 _BTRFS_STAT = re.compile(r"^\[(.+)\]\.(\w+)\s+(\d+)\s*$")
-_BTRFS_DEVICE = re.compile(r"^\s*devid\s+(\d+)\s+size\s+.*?\spath\s+(.+?)\s*$")
+# ``devid 1 size 1.82TiB used 1.2TiB path /dev/sda``, parsed in linear steps.
+# The old one-line pattern (``size\s+.*?\spath\s+(.+?)\s*$``) stacked
+# overlapping lazy and greedy quantifiers that backtracked (Sonar S5852);
+# _btrfs_device_fields keeps exactly what it captured.
+_BTRFS_DEVICE_HEAD = re.compile(r"\s*devid\s+(\d+)\s+size\s")
+_BTRFS_PATH_WORD = re.compile(r"\spath(?=\s)")
 _BTRFS_LABEL = re.compile(r"^Label:\s+(?:'(.*)'|none)\s+uuid:\s+(\S+)")
 _MISSING_DISK = "<missing disk>"
 
@@ -123,14 +128,49 @@ def parse_btrfs_show(text: str) -> Dict[str, object]:
     return show
 
 
+def _btrfs_path_value(tail: str) -> Optional[str]:
+    """``\\s+(.+?)\\s*$`` over ``tail`` (which starts with whitespace)."""
+    value = tail.lstrip()
+    if value:
+        return value.rstrip()
+    # all whitespace: \s+ gives one character back to the lazy group
+    return tail[-1] if len(tail) >= 2 else None
+
+
+def _btrfs_device_fields(line: str) -> Optional[Tuple[str, str]]:
+    """(devid, path) as the old single pattern captured them, or None."""
+    head = _BTRFS_DEVICE_HEAD.match(line)
+    if not head:
+        return None
+    rest = line[head.end() :]
+    run = len(rest) - len(rest.lstrip())  # what the greedy size\s+ also took
+    pos = run
+    while True:
+        word = _BTRFS_PATH_WORD.search(rest, pos)
+        if word is None:
+            break
+        value = _btrfs_path_value(rest[word.end() :])
+        if value is not None:
+            return head.group(1), value
+        pos = word.start() + 1
+    # Backtracking size\s+ by one character lets the last space of that run
+    # be the \s before "path" (a device line with no size value).
+    tail = rest[run + 4 :]
+    if run and rest[run : run + 4] == "path" and tail[:1].isspace():
+        value = _btrfs_path_value(tail)
+        if value is not None:
+            return head.group(1), value
+    return None
+
+
 def _btrfs_show_device(line: str, devices: List[Dict[str, object]]) -> None:
-    match = _BTRFS_DEVICE.match(line)
-    if not match:
+    fields = _btrfs_device_fields(line)
+    if fields is None:
         return
-    path, missing = match.group(2), False
+    path, missing = fields[1], False
     if path.endswith(" MISSING"):
         path, missing = path[: -len(" MISSING")].strip(), True
-    devid = int(match.group(1))
+    devid = int(fields[0])
     if path == _MISSING_DISK:
         path = f"devid {devid}"
     devices.append({"devid": devid, "path": path, "missing": missing})

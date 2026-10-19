@@ -361,6 +361,8 @@ GLOSSARY: Dict[str, str] = {
     "canary": "a small first deployment that proves a change before it reaches "
     "everything, or a separate watcher program that checks a server from "
     "outside. NOT the bird",
+    "wheel": "a Python package file (.whl), the format pip installs. NOT a "
+    "cartwheel or a steering wheel",
     "cascade": "a database change propagating to the records that depend on it. "
     "NOT a waterfall",
     "idempotent": "safe to repeat: running it twice has the same effect as "

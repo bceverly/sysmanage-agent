@@ -45,8 +45,11 @@ from src.sysmanage_agent.collection.hardware_health import (
 WINDOW_HOURS = 24
 RASDAEMON = "rasdaemon"
 
+# The record's prefix; the error text is the rest of the line without its
+# leading spaces.  The old ``error:\s*(.*)$`` tail overlapped and backtracked
+# (Sonar S5852).
 _MCE_RECORD = re.compile(
-    r"^\s*\d+\s+(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?: [+-]\d{4})?)\s+error:\s*(.*)$"
+    r"\s*\d+\s+(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?: [+-]\d{4})?)\s+error:"
 )
 # Uncorrected in any of rasdaemon's spellings (Intel "Uncorrected_error",
 # AMD "Uncorrected (Fatal)" / "Uncorrected (Non-Fatal)"), or a corrupt
@@ -113,7 +116,7 @@ def _judge_record(line: str, since: datetime) -> Optional[str]:
     stamp = _timestamp(match.group(1)) if match else None
     if stamp is None or stamp < since:
         return None
-    return "fatal" if _FATAL.search(match.group(2)) else "corrected"
+    return "fatal" if _FATAL.search(line[match.end() :].lstrip()) else "corrected"
 
 
 def collect_rasdaemon(

@@ -79,6 +79,44 @@ _CONTROLLER_STATUS = "Controller Status"
 _NO_CONTROLLER = "no controller"
 
 
+# Linear forms of patterns Sonar S5852 flagged as super-linear.  A number
+# never starts right after a digit: a search restarted inside a digit run only
+# re-found what the run's start had already found (or failed the same way).
+_PERCENT = re.compile(r"(?<!\d)(\d+(?:\.\d+)?)\s*%")
+_SEL_CLOCK = re.compile(r"(?<!\d)(\d+/\d+/\d+)\s+(\d+:\d+:\d+)")
+# ``ipmitool sdr`` readings are already stripped (fields split on "|"), so
+# the unit is the first non-space onward -- \s+ and the unit cannot overlap.
+_SDR_READING = re.compile(r"(-?\d+(?:\.\d+)?)\s+(\S.*)$")
+
+
+def _arc_key(line: str) -> Optional[Tuple[str, str]]:
+    """``  Key Name   : value`` -> ("Key Name", "value"), both stripped -- what
+    ``^\\s*(.+?)\\s+:\\s?(.*)$`` captured, then stripped, without its
+    backtracking.  The key ends at the first ":" with whitespace before it and
+    something other than leading whitespace before that."""
+    lead = len(line) - len(line.lstrip())
+    fallback = None
+    for colon, start in _spaced_colons(line):
+        if start > lead:
+            return line[lead:start].strip(), line[colon + 1 :].strip()
+        if fallback is None and colon >= 2:
+            fallback = ("", line[colon + 1 :].strip())
+    return fallback
+
+
+def _spaced_colons(line: str):
+    """``(colon, start of the whitespace before it)`` for each ":" that has
+    whitespace right before it, left to right."""
+    colon = line.find(":")
+    while colon >= 0:
+        start = colon
+        while start > 0 and line[start - 1].isspace():
+            start -= 1
+        if start < colon:
+            yield colon, start
+        colon = line.find(":", colon + 1)
+
+
 def _root() -> bool:
     return hasattr(os, "geteuid") and os.geteuid() == 0
 
@@ -98,7 +136,7 @@ def _judge(value: Optional[str], table: Dict[str, str], default: str) -> str:
 
 
 def _percent(text: str) -> Optional[float]:
-    match = re.search(r"(\d+(?:\.\d+)?)\s*%", text or "")
+    match = _PERCENT.search(text or "")
     return float(match.group(1)) if match else None
 
 
@@ -475,7 +513,6 @@ _ARC_PD_STATES = {
     "rebuilding": WARNING,
     "failed": FAILED,
 }
-_ARC_KEY = re.compile(r"^\s*(.+?)\s+:\s?(.*)$")
 
 
 def _arc_section(state: Dict, stripped: str) -> bool:
@@ -521,13 +558,13 @@ def parse_arcconf(text: str, ctrl: int = 1) -> Dict[str, object]:
         stripped = line.strip()
         if not stripped or set(stripped) == {"-"} or _arc_section(state, stripped):
             continue
-        match = _ARC_KEY.match(line)
+        match = _arc_key(line)
         current = state["current"]
         if current is None:
             continue
         fields = current["fields"] if "fields" in current else current
         if match:
-            fields.setdefault(match.group(1).strip(), match.group(2).strip())
+            fields.setdefault(match[0], match[1])
         elif stripped.startswith("Device is "):
             fields["Device is"] = stripped[len("Device is ") :]
     found = re.search(r"Controllers found:\s*(\d+)", text)
@@ -678,7 +715,7 @@ def parse_sdr_elist(text: str) -> List[Dict[str, object]]:
             continue
         name, sid, status, entity, reading = fields[:5]
         metric, value = None, None
-        number = re.match(r"^(-?\d+(?:\.\d+)?)\s+(.+)$", reading)
+        number = _SDR_READING.match(reading)
         if number:
             unit = number.group(2).strip().lower()
             metric = next((m for u, m in _SDR_UNITS if unit == u), None)
@@ -758,7 +795,7 @@ def parse_sel_elist(text: str) -> List[Dict[str, object]]:
 
 def parse_sel_time(text: str) -> Optional[datetime]:
     """``ipmitool sel time get`` -> the BMC's own clock."""
-    match = re.search(r"(\d+/\d+/\d+)\s+(\d+:\d+:\d+)", text or "")
+    match = _SEL_CLOCK.search(text or "")
     return _sel_time(match.group(1), match.group(2)) if match else None
 
 

@@ -77,6 +77,13 @@ Runner = Callable[[list], Tuple[int, str]]
 Reader = Callable[[str], Optional[str]]
 
 
+# "36 C" in smartctl's attribute text.  A number starts at a "-" or where the
+# previous character is not part of one: without that, search restarted
+# inside every digit run (super-linear, Sonar S5852); a mid-run start only
+# ever re-finds the match the run's start already found.
+_SMART_CELSIUS = re.compile(r"((?:-|(?<![\d.]))[\d.]+) C")
+
+
 def reason(code: str, **params) -> Dict[str, object]:
     """Why a component is not ok: a code the UI translates, and its values."""
     return {"code": code, **params}
@@ -220,7 +227,7 @@ def parse_nvmecontrol_logpage(text: str) -> Dict[str, object]:
             except (ValueError, IndexError):
                 continue
         elif key == "Temperature" and "C" in value:
-            match = re.search(r"(-?[\d.]+) C", value)
+            match = _SMART_CELSIUS.search(value)
             if match:
                 metrics["temperature_c"] = float(match.group(1))
     return metrics

@@ -107,14 +107,17 @@ def _number(pattern: str, text: str) -> Optional[float]:
 def parse_chrony_tracking(text: str) -> Dict[str, object]:
     """``chronyc -n tracking``."""
     stratum = _number(r"^Stratum\s*:\s*(\d+)", text)
-    source = re.search(r"^Reference ID\s*:\s*\S+\s*\(([^)]*)\)", text, re.MULTILINE)
+    # [^\s(]+, not \S+: \S+ also matched the "(" it had to stop before, and
+    # backtracked over it (Sonar S5852).  A reference ID never contains "(".
+    source = re.search(r"^Reference ID\s*:\s*[^\s(]+\s*\(([^)]*)\)", text, re.MULTILINE)
     fast = re.search(
         r"^System time\s*:\s*([\d.]+) seconds (fast|slow)", text, re.MULTILINE
     )
     offset = None
     if fast:
         offset = float(fast.group(1)) * 1000 * (1 if fast.group(2) == "fast" else -1)
-    leap = re.search(r"^Leap status\s*:\s*(.+)$", text, re.MULTILINE)
+    # (\S.*), not (.+): \s* and .+ overlapped (Sonar S5852).
+    leap = re.search(r"^Leap status\s*:\s*(\S.*)$", text, re.MULTILINE)
     synced = bool(leap) and "not synchronised" not in leap.group(1).lower()
     # Stratum 0 / reference 0.0.0.0 is chrony not yet locked to anything.
     if stratum == 0:
@@ -210,9 +213,11 @@ def parse_w32tm_status(text: str) -> Dict[str, object]:
     """``w32tm /query /status``.  No offset estimate is published."""
     if _W32_NOT_STARTED in text:
         return _status(W32TIME, False, False)
-    source = re.search(r"^Source:\s*(.+?)\s*$", text, re.MULTILINE)
+    # (\S.*) then rstrip, not (.+?)\s*$: the overlapping lazy tail
+    # backtracked (Sonar S5852).
+    source = re.search(r"^Source:\s*(\S.*)$", text, re.MULTILINE)
     stratum = _number(r"^Stratum:\s*(\d+)", text)
-    src = source.group(1) if source else None
+    src = source.group(1).rstrip() if source else None
     synced = bool(src) and src.lower() not in _W32_FREE_RUNNING
     if stratum is not None and stratum in (0, 16):
         synced = False

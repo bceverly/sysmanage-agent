@@ -79,6 +79,14 @@ _LINUX_PATTERNS: Tuple[Tuple[str, "re.Pattern[str]"], ...] = (
 )
 
 
+# ``key=value`` fields.  ``(?<!\w)`` stops findall restarting inside a key:
+# without it a long word with no ``=`` was rescanned from every position
+# (super-linear, Sonar S5852).  A match can never start mid-word anyway --
+# the same suffix would already have matched from the word's start.
+_DEVD_FIELD = re.compile(r'(?<!\w)(\w+)=("[^"]*"|\S+)')
+_ZED_FIELD = re.compile(r"(?<!\w)(\w+)=('[^']*'|\S+)")
+
+
 def classify_kernel_line(line: str) -> Optional[str]:
     """The category of a kernel log message, or None for one that is not a
     hardware problem."""
@@ -155,7 +163,7 @@ _DEVD_SYSTEMS = {"ZFS": _zfs, "CAM": _cam, "GEOM": _geom, "ACPI": _acpi}
 def classify_devd_line(line: str) -> Optional[str]:
     """FreeBSD devd: ``!system=ZFS subsystem=ZFS type=...`` and friends --
     classified against what devd really sends (recorded on the lab box)."""
-    fields = {k: v.strip('"') for k, v in re.findall(r'(\w+)=("[^"]*"|\S+)', line)}
+    fields = {k: v.strip('"') for k, v in _DEVD_FIELD.findall(line)}
     judge = _DEVD_SYSTEMS.get(fields.get("system", ""))
     return judge(fields) if judge else None
 
@@ -283,7 +291,7 @@ def _smartd(message: str) -> Optional[str]:
 
 
 def _zed(message: str) -> Optional[str]:
-    fields = {k: v.strip("'") for k, v in re.findall(r"(\w+)=('[^']*'|\S+)", message)}
+    fields = {k: v.strip("'") for k, v in _ZED_FIELD.findall(message)}
     kind = fields.get("class", "").rsplit(".", 1)[-1]
     if kind == "statechange":
         return STORAGE if fields.get("vdev_state") in _ZED_BAD_STATES else None

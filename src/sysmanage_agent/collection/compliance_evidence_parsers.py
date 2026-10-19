@@ -61,14 +61,16 @@ _SSHD_NAMES = {name.lower(): name for name in _SSHD_KEYWORDS}
 
 _COMMENT = re.compile(r"^\s*(#|$)")
 _LOGIN_DEFS = re.compile(r"^\s*([A-Z_][A-Z0-9_]*)\s+(\S+)")
-_EQ_SETTING = re.compile(r"^\s*([A-Za-z_][\w.-]*)\s*=\s*(.*?)\s*$")
+# Key prefixes only: the value is the rest of the line, stripped.  The old
+# ``\s*(.*?)\s*$`` tails backtracked super-linearly (Sonar S5852).
+_EQ_SETTING = re.compile(r"\s*([A-Za-z_][\w.-]*)\s*=")
 _BARE_FLAG = re.compile(r"^\s*([A-Za-z_]\w*)\s*$")
 _BLACKLIST = re.compile(r"^\s*blacklist\s+(\S+)")
 _INSTALL_FALSE = re.compile(r"^\s*install\s+(\S+)\s+(?:/usr)?/bin/(?:true|false)\b")
 _PAM_MODULE = re.compile(r"(?:^|[\s/])(pam_[\w-]+\.so)\b")
 _PAM_ARG = re.compile(r"\b(deny|unlock_time)=(\d+)\b")
 _UMASK = re.compile(r"(?:^|[;&|\s])umask\s+(?:-S\s+)?(0?[0-7]{3})\b")
-_CHRONY = re.compile(r"^\s*([A-Za-z]\w*)\s*(.*?)\s*$")
+_CHRONY = re.compile(r"\s*([A-Za-z]\w*)")
 _AIDE = re.compile(r"^\s*=?(/\S*)\s+(\S+)")
 _WORD = re.compile(r"^[A-Za-z_]+$")
 # The umask every Linux login inherits when nothing sets one (a umask, not a
@@ -120,7 +122,7 @@ def parse_eq_conf(text: Optional[str], lower_words: bool = False) -> Dict[str, o
     for line in _lines(text):
         match = _EQ_SETTING.match(line)
         if match:
-            value = match.group(2)
+            value = line[match.end() :].strip()
             if lower_words and _WORD.match(value):
                 value = value.lower()
             settings[match.group(1)] = value
@@ -209,7 +211,7 @@ def parse_chrony(texts: Iterable[Optional[str]]) -> Dict[str, str]:
                 continue
             match = _CHRONY.match(line)
             if match:
-                key, value = match.group(1).lower(), match.group(2)
+                key, value = match.group(1).lower(), line[match.end() :].strip()
                 settings[key] = f"{settings[key]},{value}" if key in settings else value
     return settings
 

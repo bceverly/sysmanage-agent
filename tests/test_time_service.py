@@ -239,3 +239,28 @@ def test_a_stopped_daemon_is_stopped_not_absent():
 
     status = ts.collect_time_status("FreeBSD", ntpd_down, read=lambda _p: None)
     assert (status["service"], status["running"]) == ("ntpd", False)
+
+
+def test_linear_rewrites_read_real_output_unchanged():
+    """The S5852 rewrites (2026-10-19) read real chrony and w32tm output --
+    CRLF line endings included -- as the old patterns did."""
+    from src.sysmanage_agent.collection import time_service as ts
+
+    tracking = (
+        "Reference ID    : C0A80101 (192.168.1.1)\n"
+        "Stratum         : 3\n"
+        "System time     : 0.000012345 seconds fast of NTP time\n"
+        "Leap status     : Normal\n"
+    )
+    status = ts.parse_chrony_tracking(tracking)
+    assert status["synchronized"] is True
+    unsynced = tracking.replace("Normal", "Not synchronised")
+    assert ts.parse_chrony_tracking(unsynced)["synchronized"] is False
+    w32 = (
+        "Leap Indicator: 0(no warning)\r\n"
+        "Stratum: 4 (secondary reference - syncd by (S)NTP)\r\n"
+        "Source: time.windows.com,0x9   \r\n"
+    )
+    w32_status = ts.parse_w32tm_status(w32)
+    assert w32_status["synchronized"] is True
+    assert w32_status["source"] == "time.windows.com"

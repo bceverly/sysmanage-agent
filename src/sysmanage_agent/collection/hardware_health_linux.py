@@ -171,24 +171,32 @@ def collect_nvme(
     if not _root() and run is not None:
         _nvme_through_smartctl(report, run, read, controllers)
         return
-    if not _root():
+    root = _root()
+    if not root:
         report.source("nvme", SOURCE_FAILED, "not_privileged")
+    failures = _nvme_from_sysfs(report, read, smart_log, controllers, root)
+    if root:
+        if failures:
+            report.source("nvme", SOURCE_FAILED, "; ".join(failures))
+        else:
+            report.source("nvme", RAN)
+
+
+def _nvme_from_sysfs(report: Report, read, smart_log, controllers, root) -> List[str]:
+    """One drive per controller; the log page is read only as root.  The
+    controllers whose log could not be read, with why."""
     failures = []
     for ctrl in controllers:
         model = (read(f"{SYS_NVME}/{ctrl}/model") or "").strip() or None
         metrics: Dict[str, object] = {}
-        if _root():
+        if root:
             try:
                 metrics = parse_nvme_log_page(smart_log(f"/dev/{ctrl}"))
             except OSError as exc:
                 failures.append(f"{ctrl}: {exc}")
         state, reasons = nvme_state(metrics)
         report.add(DRIVE, ctrl, model, state, reasons, metrics, "nvme")
-    if _root():
-        if failures:
-            report.source("nvme", SOURCE_FAILED, "; ".join(failures))
-        else:
-            report.source("nvme", RAN)
+    return failures
 
 
 # --- other drives through smartctl -------------------------------------------
@@ -223,9 +231,12 @@ def collect_smartctl(report: Report, run, read, listdir) -> None:
 
 # --- md software RAID ----------------------------------------------------------
 
-_MD_LINE = re.compile(
-    r"^(md\S+)\s*:\s*(\w+)\s+(?:\((\w+)\)\s+)?(raid\d+|linear)?\s*(.*)$"
-)
+# ``md0 : active (auto-read-only) raid1 sdb1[1] sda1[0]``, matched in two
+# linear steps.  The old single pattern ran ``\s+ (...)? (...)? \s* (.*)``
+# back to back, overlapping quantifiers that backtracked (Sonar S5852); the
+# members are only ever split on whitespace, so leading spaces never mattered.
+_MD_HEAD = re.compile(r"(md\S+)\s*:\s*(\w+)\s+")
+_MD_LEVEL = re.compile(r"(?:\((\w+)\)\s+)?(raid\d+|linear)?")
 
 
 def parse_mdstat(text: str) -> List[Dict[str, object]]:
@@ -233,13 +244,14 @@ def parse_mdstat(text: str) -> List[Dict[str, object]]:
     arrays: List[Dict[str, object]] = []
     current: Optional[Dict[str, object]] = None
     for line in text.splitlines():
-        match = _MD_LINE.match(line)
+        match = _MD_HEAD.match(line)
         if match:
-            members = match.group(5).split()
+            level = _MD_LEVEL.match(line, match.end())
+            members = line[level.end() :].split()
             current = {
                 "name": match.group(1),
                 "activity": match.group(2),
-                "level": match.group(4),
+                "level": level.group(2),
                 "members": len(members),
                 "failed_members": [m.split("[")[0] for m in members if "(F)" in m],
             }

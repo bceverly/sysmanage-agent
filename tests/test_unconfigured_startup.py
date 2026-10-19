@@ -110,3 +110,42 @@ def test_every_systemd_unit_stops_restarting_on_ex_config(distro):
         / "sysmanage-agent.service"
     )
     assert "RestartPreventExitStatus=78" in unit.read_text(encoding="utf-8")
+
+
+def test_reexec_restarts_the_entry_script_and_nothing_else(tmp_path, monkeypatch):
+    """The restart command is the interpreter plus the entry script: never the
+    old command line, which let untrusted input reach exec (Semgrep #168)."""
+    import sys
+    import types
+
+    script = tmp_path / "main.py"
+    script.write_text("pass\n")
+    monkeypatch.setitem(
+        sys.modules, "__main__", types.SimpleNamespace(__file__=str(script))
+    )
+    monkeypatch.setattr(sys, "argv", [str(script), "--evil", "$(reboot)"])
+    calls = []
+    monkeypatch.setattr(uc.os, "execv", lambda path, argv: calls.append((path, argv)))
+    uc._reexec()  # pylint: disable=protected-access
+    assert len(calls) == 1
+    path, argv = calls[0]
+    assert argv == [path, str(script.resolve())]
+    assert "--evil" not in argv
+
+
+def test_reexec_refuses_when_the_entry_script_is_not_a_python_file(
+    tmp_path, monkeypatch
+):
+    import sys
+    import types
+
+    monkeypatch.setitem(sys.modules, "__main__", types.SimpleNamespace(__file__=None))
+    with pytest.raises(RuntimeError):
+        uc._reexec_argv()  # pylint: disable=protected-access
+    bogus = tmp_path / "main.sh"
+    bogus.write_text("")
+    monkeypatch.setitem(
+        sys.modules, "__main__", types.SimpleNamespace(__file__=str(bogus))
+    )
+    with pytest.raises(RuntimeError):
+        uc._reexec_argv()  # pylint: disable=protected-access

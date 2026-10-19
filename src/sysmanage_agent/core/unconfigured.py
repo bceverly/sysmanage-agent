@@ -21,7 +21,7 @@ checks for that and, instead of connecting:
 import os
 import sys
 import time
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
@@ -96,30 +96,55 @@ def ensure_configured(
     print(message, file=sys.stderr)
     if under_systemd:
         sys.exit(EX_CONFIG)
+    _wait_for_configuration(config.config_file, logger, sleep, restart)
+
+
+def _wait_for_configuration(config_file, logger, sleep, restart) -> None:
+    """Re-read ``config_file`` every ``RECHECK_SECONDS``; restart once it
+    names a real server."""
     from src.sysmanage_agent.core.config import ConfigManager  # noqa: PLC0415
 
     while True:
         sleep(RECHECK_SECONDS)
         try:
-            fresh = ConfigManager(config.config_file)
+            fresh = ConfigManager(config_file)
         except Exception:  # pylint: disable=broad-except
             continue  # mid-edit or unreadable: try again next minute
-        if unconfigured_reason(fresh) is None:
-            if restart is None and os.name == "nt":
-                # Re-exec under the Windows service manager would orphan the
-                # service; let the operator restart it, which they must do
-                # anyway after editing the config.
-                logger.info(
-                    _(
-                        "Configuration found; restart the SysManage Agent service to apply it"
-                    )
-                )
-                while True:
-                    sleep(RECHECK_SECONDS * 60)
-            logger.info(_("Configuration found; restarting the agent"))
-            (restart or _reexec)()
-            return
+        if unconfigured_reason(fresh) is not None:
+            continue
+        if restart is None and os.name == "nt":
+            _idle_for_service_restart(logger, sleep)
+        logger.info(_("Configuration found; restarting the agent"))
+        (restart or _reexec)()
+        return
+
+
+def _idle_for_service_restart(logger, sleep) -> None:
+    """Re-exec under the Windows service manager would orphan the service;
+    let the operator restart it, which they must do anyway after editing
+    the config."""
+    logger.info(
+        _("Configuration found; restart the SysManage Agent service to apply it")
+    )
+    while True:
+        sleep(RECHECK_SECONDS * 60)
+
+
+def _reexec_argv() -> List[str]:
+    """The command that restarts this agent: the interpreter and the entry
+    script it is running, resolved to absolute paths.  Nothing is taken from
+    the environment or the old command line -- the agent takes no arguments,
+    so passing ``sys.argv`` through only let untrusted input reach exec."""
+    main_file = getattr(sys.modules.get("__main__"), "__file__", None)
+    script = os.path.realpath(main_file) if main_file else ""
+    interpreter = os.path.realpath(sys.executable or "")
+    if not (script.endswith(".py") and os.path.isfile(script)):
+        raise RuntimeError("cannot locate the agent entry script to restart it")
+    if not os.path.isfile(interpreter):
+        raise RuntimeError("cannot locate the Python interpreter to restart the agent")
+    return [interpreter, script]
 
 
 def _reexec() -> None:
-    os.execv(sys.executable, [sys.executable] + sys.argv)  # nosec B606
+    argv = _reexec_argv()  # interpreter + entry script only, both validated
+    os.execv(argv[0], argv)  # nosec B606

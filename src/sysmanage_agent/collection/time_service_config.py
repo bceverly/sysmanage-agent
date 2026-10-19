@@ -56,10 +56,16 @@ def parse_server_lines(text: str) -> List[str]:
 
 def parse_w32tm_configuration(text: str) -> List[str]:
     """``NtpServer: a,0x8 b,0x9 (Local)`` -> ``["a", "b"]``."""
-    match = re.search(r"^\s*NtpServer:\s*(.+)$", text or "", re.M)
+    # (\S.*), not (.+): \s* and .+ overlapped (Sonar S5852).
+    match = re.search(r"^\s*NtpServer:\s*(\S.*)$", text or "", re.M)
     if not match:
         return []
-    value = re.sub(r"\s*\((?:Local|Policy)\)\s*$", "", match.group(1)).strip()
+    value = match.group(1).rstrip()
+    for marker in ("(Local)", "(Policy)"):  # w32tm's trailing source tag
+        if value.endswith(marker):
+            value = value[: -len(marker)]
+            break
+    value = value.strip()
     return [entry.split(",")[0] for entry in value.split() if entry.split(",")[0]]
 
 

@@ -96,6 +96,26 @@ def clean_name(value) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
+def _pointer_target(data: bytes, offset: int, jumps: int) -> int:
+    """Where the compression pointer at ``offset`` points."""
+    if offset + 1 >= len(data):
+        raise _Malformed("truncated pointer")
+    if jumps > _MAX_POINTERS:
+        raise _Malformed("pointer loop")
+    return ((data[offset] & 0x3F) << 8) | data[offset + 1]
+
+
+def _label(data: bytes, offset: int, length: int, total: int) -> Tuple[str, int]:
+    """The label at ``offset`` and the name's running length."""
+    label = data[offset + 1 : offset + 1 + length]
+    if len(label) != length:
+        raise _Malformed("truncated label")
+    total += length + 1
+    if total > 255:
+        raise _Malformed("name too long")
+    return label.decode("utf-8", "replace"), total
+
+
 def _read_name(data: bytes, offset: int) -> Tuple[str, int]:
     """``(name, offset after it)``; follows compression pointers, bounded."""
     labels: List[str] = []
@@ -107,26 +127,17 @@ def _read_name(data: bytes, offset: int) -> Tuple[str, int]:
             raise _Malformed("name runs past the packet")
         length = data[offset]
         if length & 0xC0 == 0xC0:
-            if offset + 1 >= len(data):
-                raise _Malformed("truncated pointer")
             jumps += 1
-            if jumps > _MAX_POINTERS:
-                raise _Malformed("pointer loop")
             if end is None:
                 end = offset + 2
-            offset = ((length & 0x3F) << 8) | data[offset + 1]
+            offset = _pointer_target(data, offset, jumps)
             continue
         if length & 0xC0:
             raise _Malformed("reserved label type")
         if length == 0:
             return ".".join(labels), (end if end is not None else offset + 1)
-        label = data[offset + 1 : offset + 1 + length]
-        if len(label) != length:
-            raise _Malformed("truncated label")
-        total += length + 1
-        if total > 255:
-            raise _Malformed("name too long")
-        labels.append(label.decode("utf-8", "replace"))
+        label, total = _label(data, offset, length, total)
+        labels.append(label)
         offset += 1 + length
 
 
@@ -412,7 +423,7 @@ PTR_CACHE_MAX = 4096  # one entry per address; MAX_DEVICES is 4096 too
 def _gethostbyaddr(ip: str) -> Optional[str]:
     try:
         return socket.gethostbyaddr(ip)[0]
-    except (OSError, UnicodeError, ValueError):
+    except (OSError, ValueError):  # UnicodeError is a ValueError
         return None
 
 

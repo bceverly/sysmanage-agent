@@ -161,3 +161,11 @@ def test_a_reader_that_breaks_never_raises():
         raise RuntimeError("no")
 
     assert tc.collect_time_config("Windows", "w32time", boom)["enabled"] is None
+
+
+def test_ntpserver_tag_is_dropped_with_crlf_and_spacing():
+    from src.sysmanage_agent.collection import time_service_config as tsc
+
+    text = "NtpServer: time.windows.com,0x9 pool.ntp.org,0x8   (Local)\r\nType: NTP\r\n"
+    assert tsc.parse_w32tm_configuration(text) == ["time.windows.com", "pool.ntp.org"]
+    assert tsc.parse_w32tm_configuration("NtpServer: a,0x8(Policy)") == ["a"]
