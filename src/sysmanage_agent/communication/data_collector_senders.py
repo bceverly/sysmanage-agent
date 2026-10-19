@@ -411,7 +411,18 @@ class DataCollectorSendersMixin:
         if not await self.agent.send_message(message):
             self.logger.warning(_("Failed to send clock status"))
 
-    async def _send_hardware_health_update(self, evidence=None):
+    async def send_requested_hardware_health(self):
+        """Hardware health right now, sent changed or not: an operator asked
+        for this host's data ("Request Host Data", which sends
+        ``update_hardware``), so a fresh install of smartmontools shows on the
+        page at once instead of at the next 15-minute report.  Never fails the
+        caller -- the inventory it rides along with is already sent."""
+        try:
+            await self._send_hardware_health_update(requested=True)
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.error(_("Error collecting/sending hardware health: %s"), error)
+
+    async def _send_hardware_health_update(self, evidence=None, requested=False):
         """Send the host's hardware health (23.1): drives, arrays, pools,
         sensors and memory, each judged, with every source's status.
 
@@ -428,11 +439,13 @@ class DataCollectorSendersMixin:
         # smartctl / zpool / PowerShell are subprocesses; off the event loop.
         payload = await asyncio.to_thread(collect_hardware_health)
         payload["host_id"] = str(host_approval.host_id)
-        payload["trigger"] = "event" if evidence else "periodic"
+        payload["trigger"] = (
+            "event" if evidence else "requested" if requested else "periodic"
+        )
         if evidence:
             payload["evidence"] = evidence
         message = self.agent.create_message("hardware_health_update", payload)
-        if evidence:
+        if evidence or requested:
             with send_on_change.forced():
                 sent = await self.agent.send_message(message)
         else:

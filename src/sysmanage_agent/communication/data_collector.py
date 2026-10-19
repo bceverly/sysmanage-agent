@@ -289,7 +289,7 @@ class DataCollector(DataCollectorSendersMixin):
 
             # Send hardware update to server
             await self.agent.send_message(hardware_message)
-
+            await self.send_requested_hardware_health()  # its health too
             return {"success": True, "result": "Hardware information sent"}
         except Exception as error:
             self.logger.error(_("Failed to update hardware: %s"), error)

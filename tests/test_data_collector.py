@@ -16,6 +16,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.communication.data_collector import DataCollector
 
 
@@ -354,11 +355,46 @@ class TestUpdateMethods:
         )
 
         collector = DataCollector(mock_agent)
+        collector.send_requested_hardware_health = AsyncMock()
         result = await collector.update_hardware()
 
         assert result["success"] is True
         assert "result" in result
         mock_agent.send_message.assert_called_once()
+        # "Request Host Data" sends update_hardware: its health rides along
+        collector.send_requested_hardware_health.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_a_requested_hardware_health_report_is_sent_unchanged_or_not(
+        self, mock_agent
+    ):
+        """An operator asked: send now, past the send-on-change gate, and say
+        why -- a periodic report would wait up to 15 minutes."""
+        mock_agent.registration_manager.get_host_approval_from_db.return_value = Mock(
+            host_id=uuid.uuid4()
+        )
+        mock_agent.create_message = Mock(side_effect=lambda kind, data: data)
+        mock_agent.send_message = AsyncMock(return_value=True)
+        collector = DataCollector(mock_agent)
+        with patch(
+            "src.sysmanage_agent.communication.data_collector_senders."
+            "collect_hardware_health",
+            return_value={"components": []},
+        ), patch.object(send_on_change, "forced") as forced:
+            await collector.send_requested_hardware_health()
+        forced.assert_called_once()
+        (payload,), _ = mock_agent.send_message.call_args
+        assert payload["trigger"] == "requested"
+
+    @pytest.mark.asyncio
+    async def test_a_failed_requested_report_never_fails_the_inventory(
+        self, mock_agent
+    ):
+        mock_agent.registration_manager.get_host_approval_from_db.side_effect = (
+            RuntimeError("db gone")
+        )
+        collector = DataCollector(mock_agent)
+        await collector.send_requested_hardware_health()  # does not raise
 
     @pytest.mark.asyncio
     async def test_update_hardware_error(self, mock_agent):
