@@ -674,6 +674,8 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         "forbid": {"nl": ["vangen"]},  # catching an animal
     },
     "marked down": {"forbid": {"zh_TW": ["下標"]}},  # a subscript
+    # A Python wheel is a package format, not a cartwheel (2026-10-19).
+    "wheel": {"forbid": {"es": ["rueda", "ruedas"], "fr": ["roue", "roues"]}},
     "canary": {
         "canonical": {"ko": "카나리", "zh_CN": "金丝雀", "zh_TW": "金絲雀"},
         # 캔리: misspelled; 金鑰鳥: "key bird".
