@@ -555,3 +555,15 @@ def _no_real_registration_nonce(request):
         return
     with patch("src.database.registration_nonce.get_or_create", return_value="n" * 43):
         yield
+
+
+@pytest.fixture(autouse=True)
+def _fresh_pro_status_cache():
+    """The Ubuntu Pro / Livepatch status cache is module-level (it spans every
+    OSInfoCollector): one test's mocked `pro status` must not answer the next."""
+    # pylint: disable=import-outside-toplevel
+    from src.sysmanage_agent.collection import pro_status_cache
+
+    pro_status_cache.invalidate()
+    yield
+    pro_status_cache.invalidate()

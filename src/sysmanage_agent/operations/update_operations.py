@@ -116,18 +116,38 @@ class UpdateOperations:
             self.logger.error(_("Failed to start updates: %s"), error)
             return {"success": False, "error": str(error)}
 
-    def _drop_unsafe_names(self, packages: list) -> list:
-        """Refuse names a package manager would read as an option or a file."""
-        kept = []
+    @staticmethod
+    def _command_name(package: dict):
+        """What the package manager is actually handed.  fwupd installs by
+        DEVICE id (``fwupdmgr update <id>``); its "name" is a display label
+        such as "Microsoft UEFI dbx (-> 20260707)" that never reaches a
+        command -- checking the label refused every firmware update (beast,
+        2026-10-19)."""
+        if package.get("package_manager") == "fwupd":
+            return package.get("device_id") or package.get("bundle_id")
+        return package.get("name")
+
+    def _drop_unsafe_names(self, packages: list):
+        """Refuse names a package manager would read as an option or a file.
+        Returns (kept, refused) -- a refused package is reported back as
+        failed, never dropped silently."""
+        kept, refused = [], []
         for package in packages:
-            problem = package_name_problem(package.get("name"))
+            problem = package_name_problem(self._command_name(package))
             if problem:
                 self.logger.warning(
                     "Refusing package %r: %s", package.get("name"), problem
                 )
+                refused.append(
+                    {
+                        "package_name": package.get("name"),
+                        "package_manager": package.get("package_manager"),
+                        "error": problem,
+                    }
+                )
                 continue
             kept.append(package)
-        return kept
+        return kept, refused
 
     def _validate_packages_from_list(self, packages_list: list) -> list:
         """Validate packages from new format (packages array with bundle_id)."""
@@ -145,13 +165,14 @@ class UpdateOperations:
             )
 
             if package_name and package_manager:
-                valid_packages.append(
-                    {
-                        "name": package_name,
-                        "package_manager": package_manager,
-                        "bundle_id": bundle_id,
-                    }
-                )
+                entry = {
+                    "name": package_name,
+                    "package_manager": package_manager,
+                    "bundle_id": bundle_id,
+                }
+                if pkg.get("device_id"):
+                    entry["device_id"] = pkg["device_id"]
+                valid_packages.append(entry)
         return valid_packages
 
     def _validate_packages_from_managers_list(
@@ -271,18 +292,22 @@ class UpdateOperations:
                     package_names, package_managers, update_detector
                 )
 
-            valid_packages = self._drop_unsafe_names(valid_packages)
-            if not valid_packages:
+            valid_packages, refused = self._drop_unsafe_names(valid_packages)
+            if valid_packages:
+                # Run update process in executor
+                loop = asyncio.get_event_loop()
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    update_results = await loop.run_in_executor(
+                        executor,
+                        lambda: update_detector.apply_updates(packages=valid_packages),
+                    )
+            elif refused:
+                # Nothing to run, but the server is waiting on these: answer.
+                update_results = {"updated_packages": [], "failed_packages": []}
+            else:
                 self.logger.error(_("No valid packages found for update"))
                 return
-
-            # Run update process in executor
-            loop = asyncio.get_event_loop()
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                update_results = await loop.run_in_executor(
-                    executor,
-                    lambda: update_detector.apply_updates(packages=valid_packages),
-                )
+            update_results.setdefault("failed_packages", []).extend(refused)
 
             system_info = self.agent.registration.get_system_info()
             update_results["hostname"] = system_info["hostname"]

@@ -385,3 +385,60 @@ class TestUpdateOperations:  # pylint: disable=protected-access
 
             # Should handle exception gracefully without crashing
             mock_detector.assert_called_once()
+
+
+DBX_ID = "362301da643102b9f38477387e2193e57abaa590"
+DBX = {
+    "package_name": "Microsoft UEFI dbx (→ 20260707)",
+    "bundle_id": DBX_ID,
+    "device_id": DBX_ID,
+    "package_manager": "fwupd",
+}
+
+
+class TestFirmwareNamesAreCheckedByDevice:  # pylint: disable=protected-access
+    """fwupd installs by device id; its "name" is a display label.  Checking
+    the label refused every firmware update and the request sat at "Update
+    Requested" with no answer (beast, 2026-10-19)."""
+
+    def setup_method(self):
+        agent = Mock()
+        agent.registration.get_system_info.return_value = {"hostname": "beast"}
+        agent.create_message = Mock(side_effect=lambda kind, data: (kind, data))
+        self.ops = UpdateOperations(
+            agent
+        )  # pylint: disable=attribute-defined-outside-init
+
+    def test_a_firmware_label_passes_when_its_device_id_is_safe(self):
+        packages = self.ops._validate_packages_from_list([DBX])
+        assert packages[0]["device_id"] == DBX_ID  # carried to the applicator
+        kept, refused = self.ops._drop_unsafe_names(packages)
+        assert [p["name"] for p in kept] == [DBX["package_name"]] and not refused
+
+    def test_a_hostile_device_id_is_still_refused(self):
+        hostile = dict(DBX, bundle_id="--force", device_id="--force")
+        packages = self.ops._validate_packages_from_list([hostile])
+        kept, refused = self.ops._drop_unsafe_names(packages)
+        assert not kept and refused[0]["package_manager"] == "fwupd"
+
+    def test_a_non_firmware_name_is_still_checked_by_name(self):
+        packages = [{"name": "-o APT::evil", "package_manager": "apt"}]
+        kept, refused = self.ops._drop_unsafe_names(packages)
+        assert not kept and refused[0]["package_name"] == "-o APT::evil"
+
+    @pytest.mark.asyncio
+    async def test_a_refused_batch_still_answers_the_server(self):
+        """Nothing runnable is not silence: the refusal goes back as a failure,
+        or the server shows "Update Requested" forever."""
+        self.ops._send_update_results_with_retry = AsyncMock(return_value=True)
+        self.ops._rescan_and_send_updates = AsyncMock()
+        with patch("src.sysmanage_agent.operations.update_operations.UpdateDetector"):
+            await self.ops._apply_updates_background(
+                [],
+                None,
+                packages_list=[{"package_name": "-x", "package_manager": "apt"}],
+            )
+        (message,), _ = self.ops._send_update_results_with_retry.call_args
+        kind, results = message
+        assert kind == "update_apply_result"
+        assert results["failed_packages"][0]["package_name"] == "-x"

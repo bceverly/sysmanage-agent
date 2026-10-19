@@ -12,6 +12,7 @@ import logging
 import socket
 from typing import Any, Dict
 from src.i18n import _
+from src.sysmanage_agent.collection import pro_status_cache
 
 
 def _pro_streams(result: Dict[str, Any]) -> Dict[str, str]:
@@ -232,6 +233,8 @@ class UbuntuProOperations:
         try:
             # Wait a moment for the pro command to fully complete
             await asyncio.sleep(2)
+            # The cached `pro status` predates this change: ask again.
+            pro_status_cache.invalidate()
 
             # Get updated OS info with new Ubuntu Pro status
             os_info = self.agent_instance.registration.get_os_version_info()

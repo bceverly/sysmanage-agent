@@ -17,6 +17,7 @@ import time
 from typing import Any, Dict, Optional
 
 from src.i18n import _
+from src.sysmanage_agent.collection import pro_status_cache
 
 # Constant for zoneinfo path used in timezone extraction
 ZONEINFO_PATH_SEGMENT = "/zoneinfo/"
@@ -136,8 +137,9 @@ class OSInfoCollector:
         }
 
         try:
-            result = self._run_as_root_if_allowed(
-                ["pro", "status", "--all", "--format", "json"]
+            result = pro_status_cache.cached_run(
+                ["pro", "status", "--all", "--format", "json"],
+                self._run_as_root_if_allowed,
             )
 
             if result.returncode == 0 and result.stdout:
@@ -225,8 +227,9 @@ class OSInfoCollector:
     def _detect_fips_ubuntu_pro(self, info: Dict[str, Any]) -> None:
         """Ubuntu Pro FIPS service status."""
         try:
-            result = self._run_as_root_if_allowed(
-                ["pro", "status", "--all", "--format", "json"]
+            result = pro_status_cache.cached_run(
+                ["pro", "status", "--all", "--format", "json"],
+                self._run_as_root_if_allowed,
             )
             if result.returncode == 0 and result.stdout:
                 for svc in json.loads(result.stdout).get("services", []):
@@ -390,8 +393,9 @@ class OSInfoCollector:
         back to the generic Pro service record.
         """
         try:
-            result = self._run_as_root_if_allowed(
-                ["canonical-livepatch", "status", "--format", "json"]
+            result = pro_status_cache.cached_run(
+                ["canonical-livepatch", "status", "--format", "json"],
+                self._run_as_root_if_allowed,
             )
         except subprocess.TimeoutExpired:
             self.logger.warning(_("Livepatch status check timed out"))
