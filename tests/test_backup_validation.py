@@ -159,6 +159,82 @@ def test_hostile_prune_keys_are_refused(job, why):
         ({"mode": "zfs_snapshot"}, False),
         ({"mode": "btrfs"}, False),
         ({"mode": "none", "extra": 1}, False),
+        # btrfs: read-only snapshots of the subvolume, kept OUTSIDE it
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/backups/restate",
+                "snapshot_dir": "/srv/backups/.snapshots",
+            },
+            True,
+        ),
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/backups/restate",
+                "snapshot_dir": "/srv/backups/restate/.snapshots",
+            },
+            False,
+        ),  # nested
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/backups/restate",
+                "snapshot_dir": "/srv/backups/restate",
+            },
+            False,
+        ),  # the same tree
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/backups/../etc",
+                "snapshot_dir": "/srv/snaps",
+            },
+            False,
+        ),
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "srv/backups",
+                "snapshot_dir": "/srv/snaps",
+            },
+            False,
+        ),  # relative
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/backups/",
+                "snapshot_dir": "/srv/snaps",
+            },
+            False,
+        ),  # not normalized
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/-o evil",
+                "snapshot_dir": "/srv/snaps",
+            },
+            False,
+        ),
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/b",
+                "snapshot_dir": "/srv/-r",
+            },
+            False,
+        ),
+        ({"mode": "btrfs_snapshot", "subvolume": "/", "snapshot_dir": "/srv/s"}, False),
+        ({"mode": "btrfs_snapshot", "subvolume": "/srv/b"}, False),  # missing key
+        (
+            {
+                "mode": "btrfs_snapshot",
+                "subvolume": "/srv/b",
+                "snapshot_dir": "/srv/s",
+                "dataset": "tank",
+            },
+            False,
+        ),  # a key from another mode
     ],
 )
 def test_seal_jobs(seal, ok):

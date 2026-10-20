@@ -7,11 +7,13 @@
 THE PRIVILEGE BOUNDARY
 ----------------------
 restate runs as root; this agent does not.  The agent never builds a restate
-command line.  It validates the server's policy (``backup.job_validation``),
-writes root-owned job files with ``sudo install``, and starts the fixed
+command line from server data.  It validates the server's policy
+(``backup.job_validation``), writes root-owned job files with ``sudo
+install``, and starts the job: on Linux the fixed
 ``restate-job@<policy>.<action>.service`` unit with ``systemctl --no-block
-start``.  systemd runs restate; the agent only watches the unit and reads the
-result file the job names.
+start``; on FreeBSD (a storage host) ``restate run <that job file>`` under
+daemon(8) (``backup.job_runner``).  The agent only watches the run and reads
+the result file the job names.
 
 A run outlives the agent: in-flight runs are recorded in a state file, and an
 agent that restarts picks the watch back up and still reports the result.
@@ -33,15 +35,21 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from src.i18n import _
 from src.sysmanage_agent.backup import job_builder
+from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import restate_contract as contract
+from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import restate_probe
 
 DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
+# The BSDs keep a daemon's state in /var/db (the FreeBSD rc script puts the
+# agent's database there); there is no /var/lib to create one in.
+STATE_DIRS = {"FreeBSD": "/var/db/sysmanage-agent"}
 POLL_SECONDS = 5
 PROGRESS_EVERY_SECONDS = 10
 START_GRACE_SECONDS = 60
 ZFS_PATHS = ("/usr/sbin/zfs", "/sbin/zfs")
+BTRFS_PATHS = ("/usr/bin/btrfs", "/usr/sbin/btrfs", "/sbin/btrfs")
 _ACTIVE = ("active", "activating", "deactivating", "reloading")
 
 
@@ -64,6 +72,33 @@ def _read_text(path: str) -> Optional[str]:
         return None
 
 
+def _first(paths: Tuple[str, ...]) -> str:
+    return next((p for p in paths if os.path.exists(p)), paths[0])
+
+
+def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
+    """The command that seals the repositories, or None for mode none.
+
+    zfs: a snapshot of the dataset.  btrfs: a READ-ONLY snapshot of the
+    subvolume into snapshot_dir (validated to lie outside it), so a host that
+    later deletes or rewrites its repository cannot touch the sealed copy.
+    """
+    mode = seal.get("mode")
+    if mode == "zfs_snapshot":
+        return [_first(ZFS_PATHS), "snapshot", f"{seal['dataset']}@sysmanage-{run_id}"]
+    if mode == "btrfs_snapshot":
+        target = posixpath.join(seal["snapshot_dir"], f"sysmanage-{run_id}")
+        return [
+            _first(BTRFS_PATHS),
+            "subvolume",
+            "snapshot",
+            "-r",
+            seal["subvolume"],
+            target,
+        ]
+    return None
+
+
 class BackupOperations:
     """The agent's half of Phase 24: the restate driver."""
 
@@ -71,10 +106,12 @@ class BackupOperations:
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
         self.state_dir = state_dir or os.environ.get(
-            "SYSMANAGE_BACKUP_STATE_DIR", DEFAULT_STATE_DIR
+            "SYSMANAGE_BACKUP_STATE_DIR",
+            STATE_DIRS.get(platform.system(), DEFAULT_STATE_DIR),
         )
         self._tasks: set = set()
         self._resumed = False
+        self.runner = job_runner.runner_for(platform.system())
 
     # ------------------------------------------------------------------
     # state files
@@ -139,25 +176,31 @@ class BackupOperations:
             with os.fdopen(handle, "w", encoding="utf-8", newline="") as out:
                 out.write(content)
             os.chmod(staged, 0o644)  # root reads it; nothing secret in a job
-            argv = [
-                "install",
-                "-D",
-                "-m",
-                "644",
-                "-o",
-                "0",
-                "-g",
-                "0",
-                "--",
-                staged,
-                dest,
-            ]
-            code, _out, err = await self._run(self._privileged(argv))
-            if code != 0:
-                raise PermissionError(err or f"install exited {code}")
+            for argv in self._install_argvs(staged, dest):
+                code, _out, err = await self._run(self._privileged(argv))
+                if code != 0:
+                    raise PermissionError(err or f"install exited {code}")
         finally:
             if os.path.exists(staged):
                 os.unlink(staged)
+
+    def _install_argvs(self, staged: str, dest: str) -> List[List[str]]:
+        """``install`` a root-owned 0644 file, creating its directory.
+
+        GNU install's ``-D`` creates the parents; FreeBSD's ``-D`` takes a
+        DESTDIR instead, so there the directory is made first with its own
+        ``install -d`` (only when it is missing -- an existing one keeps its
+        mode).
+        """
+        owner = ["-o", "0", "-g", "0"]
+        if self.runner != job_runner.DAEMON:
+            return [["install", "-D", "-m", "644"] + owner + ["--", staged, dest]]
+        argvs = []
+        directory = posixpath.dirname(dest)
+        if not os.path.isdir(directory):
+            argvs.append(["install", "-d", "-m", "755"] + owner + ["--", directory])
+        argvs.append(["install", "-m", "644"] + owner + ["--", staged, dest])
+        return argvs
 
     async def _remove_root_file(self, path: str) -> None:
         await self._run(self._privileged(["rm", "-f", "--", path]))
@@ -196,6 +239,11 @@ class BackupOperations:
             policy = validation.check_policy(
                 parameters, mountinfo=lambda: _read_text("/proc/self/mountinfo") or ""
             )
+            if policy["role"] not in job_runner.ROLES.get(self.runner, ()):
+                return self._refusal(
+                    "wrong_platform",
+                    _("This platform can only be a backup storage host."),
+                )
             return await self._apply_policy(policy)
         except validation.PolicyError as error:
             return self._refusal("invalid_policy", str(error))
@@ -236,12 +284,18 @@ class BackupOperations:
             "seal": policy["jobs"].get("seal"),
         }
         self._save("policies.json", policies)
-        return {
+        reply = {
             "success": True,
             "policy_id": policy_id,
             "installed": sorted(jobs),
             "removed": removed,
         }
+        if policy["role"] == "storage":
+            # Can this filesystem seal at all?  The server warns when not.
+            reply["storage_fs"] = storage_fs.describe(
+                policy["mount_point"], read_text=_read_text
+            )
+        return reply
 
     async def _remove_stale(self, policy_id: str, keep: set) -> List[str]:
         previous = self._load("policies.json").get(policy_id, {}).get("actions", [])
@@ -281,7 +335,7 @@ class BackupOperations:
                 "not_configured",
                 _("That backup action is not configured on this host."),
             )
-        return await self._start_unit(run_id, policy_id, action)
+        return await self._start_job(run_id, policy_id, action)
 
     async def backup_restore(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Restore from a snapshot into a staging directory (never in place)."""
@@ -313,7 +367,7 @@ class BackupOperations:
             return self._refusal("invalid_request", str(error))
         except (OSError, PermissionError) as error:
             return self._refusal("install_failed", str(error))
-        return await self._start_unit(run_id, policy_id, job_builder.RESTORE_ACTION)
+        return await self._start_job(run_id, policy_id, job_builder.RESTORE_ACTION)
 
     async def _unit_state(self, unit: str) -> Dict[str, str]:
         code, out, _err = await self._run(
@@ -324,27 +378,65 @@ class BackupOperations:
             return {}
         return dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
 
-    async def _start_unit(
+    async def _job_state(self, record: Dict[str, Any]) -> Tuple[bool, Optional[int]]:
+        """``(running, exit status)`` of a run; the status only from systemd."""
+        if record.get("pidfile"):
+            return job_runner.pidfile_locked(record["pidfile"]), None
+        state = await self._unit_state(record["unit"])
+        try:
+            code: Optional[int] = int(state.get("ExecMainStatus", ""))
+        except ValueError:
+            code = None
+        return state.get("ActiveState") in _ACTIVE, code
+
+    def _new_record(self, policy_id: str, action: str) -> Dict[str, Any]:
+        record = {"policy_id": policy_id, "action": action,
+                  "started_at": _now(), "started": time.time()}  # fmt: skip
+        if self.runner == job_runner.DAEMON:
+            name = contract.job_name(policy_id, action)
+            record["pidfile"] = job_runner.pidfile(self.state_dir, name)
+            record["log"] = job_runner.logfile(self.state_dir, name)
+        else:
+            record["unit"] = contract.unit_name(policy_id, action)
+        return record
+
+    async def _launch(self, record: Dict[str, Any]) -> Tuple[int, str]:
+        if not record.get("pidfile"):
+            argv = ["systemctl", "--no-block", "start", record["unit"]]
+            code, _out, err = await self._run(self._privileged(argv))
+            return code, err
+        restate = restate_probe.locate(shutil.which)
+        if not restate:
+            return 1, _("restate is not installed on this host.")
+        os.makedirs(job_runner.run_dir(self.state_dir), mode=0o700, exist_ok=True)
+        argv = job_runner.daemon_argv(
+            restate,
+            contract.job_path(record["policy_id"], record["action"]),
+            record["pidfile"],
+            record["log"],
+            self._privileged,
+        )
+        code, _out, err = await self._run(argv)
+        return code, err
+
+    async def _start_job(
         self, run_id: str, policy_id: str, action: str
     ) -> Dict[str, Any]:
-        unit = contract.unit_name(policy_id, action)
-        if (await self._unit_state(unit)).get("ActiveState") in _ACTIVE:
+        record = self._new_record(policy_id, action)
+        if (await self._job_state(record))[0]:
             return {"success": False, "run_id": run_id, "reason": "busy",
                     "error": _("That backup job is already running.")}  # fmt: skip
         for path in (
             job_builder.result_path(self.state_dir, policy_id, action),
             job_builder.progress_path(self.state_dir, policy_id, action),
+            record.get("log"),
         ):
-            if os.path.exists(path):
+            if path and os.path.exists(path):
                 os.unlink(path)
-        code, _out, err = await self._run(
-            self._privileged(["systemctl", "--no-block", "start", unit])
-        )
+        code, err = await self._launch(record)
         if code != 0:
             return {"success": False, "run_id": run_id, "reason": "start_failed",
                     "error": err or _("The backup job could not be started.")}  # fmt: skip
-        record = {"policy_id": policy_id, "action": action, "unit": unit,
-                  "started_at": _now(), "started": time.time()}  # fmt: skip
         inflight = self._load("inflight.json")
         inflight[run_id] = record
         self._save("inflight.json", inflight)
@@ -365,9 +457,8 @@ class BackupOperations:
         started = _now()
         code: Optional[int] = 0
         message = ""
-        if seal.get("mode") == "zfs_snapshot":
-            zfs = next((p for p in ZFS_PATHS if os.path.exists(p)), ZFS_PATHS[0])
-            argv = [zfs, "snapshot", f"{seal['dataset']}@sysmanage-{run_id}"]
+        argv = seal_argv(seal, run_id)
+        if argv:
             code, _out, message = await self._run(self._privileged(argv))
         status = "ok" if code == 0 else "failed"
         await self._report(
@@ -392,7 +483,9 @@ class BackupOperations:
             return
         self._resumed = True
         for run_id, record in self._load("inflight.json").items():
-            if isinstance(record, dict) and record.get("unit"):
+            if isinstance(record, dict) and (
+                record.get("unit") or record.get("pidfile")
+            ):
                 self._spawn(self._watch(run_id, record, resumed=True))
 
     def _new_progress(
@@ -413,22 +506,28 @@ class BackupOperations:
         seen_active, offset, last_sent = resumed, 0, 0.0
         while True:
             await asyncio.sleep(POLL_SECONDS)
-            state = await self._unit_state(record["unit"])
+            active, unit_exit = await self._job_state(record)
             progress, offset = self._new_progress(record, offset)
             if progress and time.time() - last_sent >= PROGRESS_EVERY_SECONDS:
                 last_sent = time.time()
                 await self._send("backup_progress", {"run_id": run_id,
                     "policy_id": record["policy_id"], "action": record["action"],
                     "progress": progress})  # fmt: skip
-            active = state.get("ActiveState") in _ACTIVE
             seen_active = seen_active or active
             waited = time.time() - float(record.get("started") or 0)
-            if not active and (seen_active or waited > START_GRACE_SECONDS):
-                await self._finish(run_id, record, state)
+            # A result file means it ran (the old one was cleared before the
+            # start): a job quicker than one poll need not wait out the grace.
+            ended = seen_active or os.path.exists(
+                job_builder.result_path(
+                    self.state_dir, record["policy_id"], record["action"]
+                )
+            )
+            if not active and (ended or waited > START_GRACE_SECONDS):
+                await self._finish(run_id, record, unit_exit)
                 return
 
     async def _finish(
-        self, run_id: str, record: Dict[str, Any], state: Dict[str, str]
+        self, run_id: str, record: Dict[str, Any], unit_exit: Optional[int]
     ) -> None:
         text = _read_text(
             job_builder.result_path(
@@ -436,11 +535,11 @@ class BackupOperations:
             )
         )
         result = contract.parse_result(text) if text else None
-        try:
-            unit_exit: Optional[int] = int(state.get("ExecMainStatus", ""))
-        except ValueError:
-            unit_exit = None
         status, code = contract.outcome(result, unit_exit)
+        if result is None and record.get("log"):
+            # No result file: what restate said is the only clue to why.
+            tail = job_runner.log_tail(record["log"])
+            result = {"message": tail} if tail else None
         features = self._features() or {}
         await self._report(
             {"run_id": run_id, "policy_id": record["policy_id"], "action": record["action"],

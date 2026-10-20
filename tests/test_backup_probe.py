@@ -21,19 +21,35 @@ def _fresh():
     probe.forget()
 
 
-def _reason(found="/usr/sbin/restate", unit=True, system="Linux"):
+def _reason(found="/usr/sbin/restate", unit=True, system="Linux", fallback=None):
     return probe.unavailable_reason(
         lambda name: found if name == "restate" else None,
         system,
         ask=lambda executable: GOOD,
         unit_exists=lambda path: unit,
+        exists=lambda path: path == fallback,
     )
 
 
-def test_off_linux_backup_is_not_applicable(monkeypatch):
+def test_backup_is_not_applicable_where_no_runner_drives_it(monkeypatch):
     monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
-    for system in ("FreeBSD", "Darwin", "Windows", "OpenBSD"):
+    for system in ("Darwin", "Windows", "OpenBSD", "NetBSD", None):
         assert _reason(system=system) == probe.REASON_WRONG_PLATFORM
+
+
+def test_freebsd_needs_no_systemd_unit(monkeypatch):
+    # daemon(8) runs restate there; restate-job@.service is a Linux thing.
+    monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
+    assert _reason(system="FreeBSD", unit=False) is None
+
+
+def test_freebsd_finds_restate_off_the_rc_path(monkeypatch):
+    # FreeBSD's rc PATH has no /usr/local/sbin, where restate installs.
+    monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
+    found = "/usr/local/sbin/restate"
+    assert probe.locate(lambda _n: None, lambda p: p == found) == found
+    assert _reason(found=None, system="FreeBSD", fallback=found) is None
+    assert _reason(found=None, system="FreeBSD") == probe.REASON_MISSING_TOOL
 
 
 def test_no_restate_is_an_optional_missing_tool():

@@ -6,12 +6,13 @@
 
 The answer has three outcomes, each a reason code the server understands:
 
-* not Linux                     -> ``wrong_platform`` (the driver uses a
-  systemd unit; restate's BSD and macOS builds are not driven yet)
+* not Linux or FreeBSD          -> ``wrong_platform`` (Linux runs jobs
+  through a systemd unit, FreeBSD -- a storage host -- under daemon(8); see
+  ``job_runner``; restate's other BSD and macOS builds are not driven yet)
 * no ``restate`` executable     -> ``missing_tool`` (install it)
-* restate present but too old   -> ``tool_outdated`` (upgrade it): the
-  ``restate-job@.service`` unit is missing, or ``restate features --json``
-  fails, or it reports a major version below 2 or no job keys
+* restate present but too old   -> ``tool_outdated`` (upgrade it): on Linux
+  the ``restate-job@.service`` unit is missing; or ``restate features
+  --json`` fails, or it reports a major version below 2 or no job keys
 
 ONE DELIBERATE EXCEPTION to the capability probes' "no subprocess" rule: the
 version can only be learned by asking restate.  The answer is cached per
@@ -25,6 +26,7 @@ import subprocess  # nosec B404 -- fixed argv, no shell
 import threading
 from typing import Any, Callable, Dict, Optional, Tuple
 
+from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import restate_contract as contract
 
 REASON_MISSING_TOOL = "missing_tool"
@@ -75,10 +77,22 @@ def forget() -> None:
         _cache.clear()
 
 
-def locate(lookup: Callable = shutil.which) -> Optional[str]:
-    """restate's path on the service PATH (systemd's default includes
-    /usr/sbin, where the package installs it), or None."""
-    return lookup("restate") or None
+# Where restate installs when it is not on the service PATH: FreeBSD's rc
+# PATH is /sbin:/bin:/usr/sbin:/usr/bin, and a port or ``gmake install``
+# puts restate in /usr/local/sbin.
+FALLBACK_PATHS = ("/usr/sbin/restate", "/usr/local/sbin/restate")
+
+
+def locate(
+    lookup: Callable = shutil.which, exists: Callable = os.path.exists
+) -> Optional[str]:
+    """restate's path: on the service PATH (systemd's default includes
+    /usr/sbin, where the package installs it), else a fixed install
+    location, else None."""
+    found = lookup("restate")
+    if found:
+        return found
+    return next((path for path in FALLBACK_PATHS if exists(path)), None)
 
 
 def unavailable_reason(
@@ -86,14 +100,16 @@ def unavailable_reason(
     system: Optional[str] = None,
     ask: Callable = _ask,
     unit_exists: Callable = os.path.exists,
+    exists: Callable = os.path.exists,
 ) -> Optional[str]:
     """Why this host cannot run backups, or None when it can."""
-    if (system or "") != "Linux":
+    runner = job_runner.runner_for(system)
+    if runner is None:
         return REASON_WRONG_PLATFORM
-    executable = locate(lookup)
+    executable = locate(lookup, exists)
     if not executable:
         return REASON_MISSING_TOOL
-    if not contract.unit_installed(unit_exists):
+    if runner == job_runner.SYSTEMD and not contract.unit_installed(unit_exists):
         return REASON_TOOL_OUTDATED
     if not contract.features_usable(features(executable, ask)):
         return REASON_TOOL_OUTDATED

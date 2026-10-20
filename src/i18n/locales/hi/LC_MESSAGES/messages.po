@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 04:02-0400\n"
+"POT-Creation-Date: 2026-10-20 08:32-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2165,36 +2165,44 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:183
+#: src/sysmanage_agent/operations/backup_operations.py:226
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:203
+#: src/sysmanage_agent/operations/backup_operations.py:245
+msgid "This platform can only be a backup storage host."
+msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:251
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:224
+#: src/sysmanage_agent/operations/backup_operations.py:272
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
-#: src/sysmanage_agent/operations/backup_operations.py:282
-#: src/sysmanage_agent/operations/backup_operations.py:298
+#: src/sysmanage_agent/operations/backup_operations.py:329
+#: src/sysmanage_agent/operations/backup_operations.py:336
+#: src/sysmanage_agent/operations/backup_operations.py:352
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:333
+#: src/sysmanage_agent/operations/backup_operations.py:410
+msgid "restate is not installed on this host."
+msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:428
 msgid "That backup job is already running."
 msgstr "यह बैकअप जॉब पहले से चल रहा है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:345
+#: src/sysmanage_agent/operations/backup_operations.py:439
 msgid "The backup job could not be started."
 msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:465
+#: src/sysmanage_agent/operations/backup_operations.py:564
 msgid "Could not queue the backup report"
 msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 

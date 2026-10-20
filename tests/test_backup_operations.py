@@ -407,6 +407,53 @@ async def test_seal_snapshots_the_dataset(ops, agent):
 
 
 @pytest.mark.asyncio
+async def test_seal_takes_a_read_only_btrfs_snapshot(ops, agent):
+    await ops.backup_configure(
+        _storage_policy({"mode": "btrfs_snapshot", "subvolume": "/srv/backups/restate",
+                         "snapshot_dir": "/srv/backups/.snapshots"})
+    )  # fmt: skip
+    await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    snap = ops.fake.ran("snapshot")
+    assert snap and snap[0][-5:] == [
+        "subvolume", "snapshot", "-r", "/srv/backups/restate",
+        f"/srv/backups/.snapshots/sysmanage-{RID}",
+    ]  # fmt: skip
+    assert snap[0][-6].endswith("/btrfs")
+    report = _sent(agent, "backup_result")[0]
+    assert (report["action"], report["status"], report["exit"]) == ("seal", "ok", 0)
+
+
+@pytest.mark.asyncio
+async def test_a_failed_btrfs_seal_is_reported(ops, agent):
+    await ops.backup_configure(
+        _storage_policy({"mode": "btrfs_snapshot", "subvolume": "/srv/backups/restate",
+                         "snapshot_dir": "/srv/backups/.snapshots"})
+    )  # fmt: skip
+    for btrfs in ops_module.BTRFS_PATHS:
+        ops.fake.fail[(btrfs, "subvolume")] = (1, "ERROR: not a subvolume")
+    await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    report = _sent(agent, "backup_result")[0]
+    assert report["status"] == "failed"
+    assert report["result"] == {"message": "ERROR: not a subvolume"}
+
+
+def test_btrfs_seal_argv_is_exact():
+    argv = ops_module.seal_argv(
+        {"mode": "btrfs_snapshot", "subvolume": "/srv/b", "snapshot_dir": "/srv/s"}, RID
+    )
+    assert argv[1:] == [
+        "subvolume",
+        "snapshot",
+        "-r",
+        "/srv/b",
+        f"/srv/s/sysmanage-{RID}",
+    ]
+    assert ops_module.seal_argv({"mode": "none"}, RID) is None
+
+
+@pytest.mark.asyncio
 async def test_a_failed_seal_is_reported(ops, agent):
     await ops.backup_configure(
         _storage_policy({"mode": "zfs_snapshot", "dataset": "tank/b"})
@@ -483,3 +530,24 @@ async def test_run_really_spawns_a_process():
         ["/bin/sh", "-c", "echo hi; echo no >&2; exit 3"]
     )
     assert (code, out, err) == (3, "hi\n", "no")
+
+
+@pytest.mark.asyncio
+async def test_storage_configure_reports_the_filesystem(ops, monkeypatch):
+    seen = []
+
+    def describe(path, **_kw):
+        seen.append(path)
+        return {"type": "ext4", "mount_point": "/srv", "path": path,
+                "btrfs_subvolume": None}  # fmt: skip
+
+    monkeypatch.setattr(ops_module.storage_fs, "describe", describe)
+    reply = await ops.backup_configure(_storage_policy({"mode": "none"}))
+    assert reply["success"] and reply["storage_fs"]["type"] == "ext4"
+    assert seen == ["/srv/backups/restate"]
+
+
+@pytest.mark.asyncio
+async def test_host_configure_does_not_report_a_filesystem(ops):
+    reply = await ops.backup_configure(_host_policy())
+    assert reply["success"] and "storage_fs" not in reply

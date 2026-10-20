@@ -177,19 +177,54 @@ def check_job(role: str, action: str, job: Any) -> Dict[str, Any]:
     return checked
 
 
+_SEAL_KEYS = {
+    "none": set(),
+    "zfs_snapshot": {"dataset"},
+    "btrfs_snapshot": {"subvolume", "snapshot_dir"},
+}
+_SEAL_PATH = re.compile(r"^/[A-Za-z0-9_./-]*$")
+
+
+def _seal_path(value: Any, what: str) -> str:
+    """An absolute, normalized btrfs path a root command may be given."""
+    if (
+        not isinstance(value, str)
+        or not _SEAL_PATH.match(value)
+        or posixpath.normpath(value) != value
+        or value == "/"
+        or any(part.startswith("-") or part == ".." for part in value.split("/"))
+    ):
+        raise PolicyError(f"seal {what} must be an absolute, normalized path")
+    return value
+
+
 def check_seal(job: Any) -> Dict[str, Any]:
-    """The storage-side seal: a ZFS snapshot of the dataset, or nothing."""
-    if not isinstance(job, dict) or set(job) - {"mode", "dataset"}:
-        raise PolicyError("seal job must be {mode, dataset}")
-    mode = job.get("mode")
+    """The storage-side seal: a ZFS snapshot of the dataset, a read-only btrfs
+    snapshot of the subvolume, or nothing."""
+    if not isinstance(job, dict) or job.get("mode") not in _SEAL_KEYS:
+        raise PolicyError("seal mode must be zfs_snapshot, btrfs_snapshot or none")
+    mode = job["mode"]
+    if set(job) != {"mode"} | _SEAL_KEYS[mode]:
+        raise PolicyError(
+            f"seal job for {mode} must have exactly {sorted(_SEAL_KEYS[mode])}"
+        )
     if mode == "none":
         return {"mode": "none"}
-    dataset = job.get("dataset")
-    if mode != "zfs_snapshot" or not isinstance(dataset, str):
-        raise PolicyError("seal mode must be zfs_snapshot (with a dataset) or none")
-    if not _DATASET.match(dataset) or ".." in dataset.split("/"):
-        raise PolicyError("seal dataset is not a valid ZFS dataset name")
-    return {"mode": mode, "dataset": dataset}
+    if mode == "zfs_snapshot":
+        dataset = job["dataset"]
+        if (
+            not isinstance(dataset, str)
+            or not _DATASET.match(dataset)
+            or ".." in dataset.split("/")
+        ):
+            raise PolicyError("seal dataset is not a valid ZFS dataset name")
+        return {"mode": mode, "dataset": dataset}
+    subvolume = _seal_path(job["subvolume"], "subvolume")
+    snapshot_dir = _seal_path(job["snapshot_dir"], "snapshot_dir")
+    if snapshot_dir == subvolume or snapshot_dir.startswith(subvolume + "/"):
+        # A snapshot inside the tree it snapshots would nest into the next one.
+        raise PolicyError("seal snapshot_dir must be outside the subvolume")
+    return {"mode": mode, "subvolume": subvolume, "snapshot_dir": snapshot_dir}
 
 
 def check_key(text: Any) -> Optional[str]:
@@ -271,12 +306,13 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
     refused = sorted(set(jobs) - set(ROLES[role]))
     if refused:
         raise PolicyError(f"a {role} policy may not run: {', '.join(refused)}")
-    _mount, repository = check_target(
+    mount_point, repository = check_target(
         role, params.get("target"), mountinfo=mountinfo, **fs
     )
     return {
         "policy_id": policy_id,
         "role": role,
+        "mount_point": mount_point,
         "repository": repository,
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
         "encrypt_key": check_key(params.get("encrypt_key")),

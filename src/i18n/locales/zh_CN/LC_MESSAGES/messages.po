@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 04:02-0400\n"
+"POT-Creation-Date: 2026-10-20 08:32-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2128,36 +2128,44 @@ msgstr "收集代理日志时出错：%s"
 msgid "Error collecting error logs: %s"
 msgstr "收集错误日志时出错：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:183
+#: src/sysmanage_agent/operations/backup_operations.py:226
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate在此主机上不可用：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:203
+#: src/sysmanage_agent/operations/backup_operations.py:245
+msgid "This platform can only be a backup storage host."
+msgstr "此平台只能作为备份存储主机。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:251
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "无法安装备份作业：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:224
+#: src/sysmanage_agent/operations/backup_operations.py:272
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支持：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
-#: src/sysmanage_agent/operations/backup_operations.py:282
-#: src/sysmanage_agent/operations/backup_operations.py:298
+#: src/sysmanage_agent/operations/backup_operations.py:329
+#: src/sysmanage_agent/operations/backup_operations.py:336
+#: src/sysmanage_agent/operations/backup_operations.py:352
 msgid "That backup action is not configured on this host."
 msgstr "该备份操作在此主机上未配置。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:333
+#: src/sysmanage_agent/operations/backup_operations.py:410
+msgid "restate is not installed on this host."
+msgstr "此主机上未安装restate。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:428
 msgid "That backup job is already running."
 msgstr "该备份作业正在运行中。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:345
+#: src/sysmanage_agent/operations/backup_operations.py:439
 msgid "The backup job could not be started."
 msgstr "无法启动备份作业。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:465
+#: src/sysmanage_agent/operations/backup_operations.py:564
 msgid "Could not queue the backup report"
 msgstr "无法将备份报告加入队列"
 

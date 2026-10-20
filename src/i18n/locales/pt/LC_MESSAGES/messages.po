@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 04:02-0400\n"
+"POT-Creation-Date: 2026-10-20 08:32-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2167,36 +2167,44 @@ msgstr "Erro ao coletar logs do agente: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Erro ao coletar logs de erro: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:183
+#: src/sysmanage_agent/operations/backup_operations.py:226
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate não é utilizável neste host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:203
+#: src/sysmanage_agent/operations/backup_operations.py:245
+msgid "This platform can only be a backup storage host."
+msgstr "Esta plataforma só pode ser um host de armazenamento de backups."
+
+#: src/sysmanage_agent/operations/backup_operations.py:251
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Não foi possível instalar as tarefas de backup: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:224
+#: src/sysmanage_agent/operations/backup_operations.py:272
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Esta versão do restate não suporta: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
-#: src/sysmanage_agent/operations/backup_operations.py:282
-#: src/sysmanage_agent/operations/backup_operations.py:298
+#: src/sysmanage_agent/operations/backup_operations.py:329
+#: src/sysmanage_agent/operations/backup_operations.py:336
+#: src/sysmanage_agent/operations/backup_operations.py:352
 msgid "That backup action is not configured on this host."
 msgstr "Essa ação de backup não está configurada neste host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:333
+#: src/sysmanage_agent/operations/backup_operations.py:410
+msgid "restate is not installed on this host."
+msgstr "restate não está instalado neste host."
+
+#: src/sysmanage_agent/operations/backup_operations.py:428
 msgid "That backup job is already running."
 msgstr "Essa tarefa de backup já está em execução."
 
-#: src/sysmanage_agent/operations/backup_operations.py:345
+#: src/sysmanage_agent/operations/backup_operations.py:439
 msgid "The backup job could not be started."
 msgstr "A tarefa de backup não pôde ser iniciada."
 
-#: src/sysmanage_agent/operations/backup_operations.py:465
+#: src/sysmanage_agent/operations/backup_operations.py:564
 msgid "Could not queue the backup report"
 msgstr "Não foi possível colocar o relatório de backup na fila"
 

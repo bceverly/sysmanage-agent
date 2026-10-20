@@ -293,3 +293,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_COMPLIANCE_READ
 # snapshot its backup dataset.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl --no-block start *, /bin/systemctl --no-block start *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs snapshot *
+# The btrfs seal takes a read-only snapshot of the repository subvolume
+# (``btrfs subvolume snapshot -r <subvolume> <dir>/sysmanage-<run id>``); the
+# agent validates both paths before it asks.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume snapshot -r *, /usr/sbin/btrfs subvolume snapshot -r *, /sbin/btrfs subvolume snapshot -r *
