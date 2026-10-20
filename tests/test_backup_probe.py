@@ -229,4 +229,12 @@ def test_every_key_the_agent_renders_is_a_restate_job_key():
         contract.BOOL_KEYS | contract.INT_KEYS | contract.LIST_KEYS
         | contract.SCALAR_KEYS
     )  # fmt: skip
-    assert sorted(ours - RESTATE_2_0_JOB_KEYS) == []
+    # Gated keys are sent only to a restate that lists them.
+    assert sorted(ours - RESTATE_2_0_JOB_KEYS - contract.GATED_KEYS) == []
+    assert not contract.GATED_KEYS & RESTATE_2_0_JOB_KEYS
+
+
+def test_supports_reads_job_keys():
+    assert contract.supports({"job_keys": ["create"]}, "create")
+    assert not contract.supports({"job_keys": ["command"]}, "create")
+    assert not contract.supports(None, "create")

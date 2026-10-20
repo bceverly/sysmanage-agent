@@ -64,6 +64,7 @@ EXIT_STATUS = {
 BOOL_KEYS = frozenset(
     {
         "all",
+        "create",
         "baseline_content",
         "quiesce",
         "one_file_system",
@@ -145,6 +146,18 @@ def features_usable(features: Optional[Dict[str, Any]]) -> bool:
         return False
     keys = features.get("job_keys")
     return _major(features.get("version")) >= MIN_MAJOR and isinstance(keys, list)
+
+
+# Keys sent only when this restate lists them in ``job_keys`` -- newer than
+# the 2.0 contract, so an older restate still gets every job it can run.
+# ``create``: a capture makes its own repository when the directory is
+# missing or empty (and refuses a non-empty one that is not a repository).
+GATED_KEYS = frozenset({"create"})
+
+
+def supports(features: Optional[Dict[str, Any]], key: str) -> bool:
+    """Whether this restate lists ``key`` among its job keys."""
+    return key in set((features or {}).get("job_keys") or [])
 
 
 def unsupported_keys(features: Dict[str, Any], keys: Iterable[str]) -> List[str]:

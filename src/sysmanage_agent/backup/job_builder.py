@@ -61,12 +61,20 @@ _KEYLESS_STORAGE = {
 
 
 def build_jobs(
-    policy: Dict[str, Any], *, state_dir: str, group: str, key_installed: bool
+    policy: Dict[str, Any],
+    *,
+    state_dir: str,
+    group: str,
+    key_installed: bool,
+    can_create: bool = False,
 ) -> Dict[str, Dict[str, Any]]:
     """``{action: full job}`` for every restate action in the policy.
 
     ``seal`` is not a restate job (the agent snapshots the NAS's dataset
-    itself), so it is left out here.
+    itself), so it is left out here.  ``can_create``: this restate takes the
+    capture key ``create``, so a host's first capture makes its repository
+    (over NFS only the HOST can: the storage side's files must belong to the
+    export's mapped user).
     """
     jobs = {}
     for action, keys in policy["jobs"].items():
@@ -78,6 +86,8 @@ def build_jobs(
             job["repository"] = policy["repository"]
         if action == "capture" and key_installed:
             job["encrypt_to"] = contract.key_path(policy["policy_id"])
+        if action == "capture" and can_create:
+            job["create"] = True
         if action in _KEYLESS_STORAGE:
             job.update(_KEYLESS_STORAGE[action])
             job["record"] = record_path(state_dir, policy["policy_id"])

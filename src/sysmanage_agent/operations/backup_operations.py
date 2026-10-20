@@ -257,14 +257,16 @@ class BackupOperations:
             await self._install_root_file(
                 policy["encrypt_key"], contract.key_path(policy_id)
             )
+        features = self._features() or {}
         jobs = job_builder.build_jobs(
             policy,
             state_dir=self.state_dir,
             group=_agent_group(),
             key_installed=bool(policy["encrypt_key"]),
+            can_create=contract.supports(features, "create"),
         )
         missing = contract.unsupported_keys(
-            self._features() or {}, [key for job in jobs.values() for key in job]
+            features, [key for job in jobs.values() for key in job]
         )
         if missing:
             return self._refusal(

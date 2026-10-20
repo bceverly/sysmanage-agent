@@ -218,6 +218,29 @@ async def test_keys_this_restate_lacks_are_refused_as_outdated(ops, monkeypatch)
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("has_create", [True, False], ids=["create", "no-create"])
+async def test_capture_creates_its_repository_only_when_restate_can(
+    ops, monkeypatch, has_create
+):
+    # restate's ``create`` key makes the first capture initialize its own
+    # repository; a restate without it (2.0.0.1) still gets a job it can run.
+    keys = FEATURES["job_keys"] + (["create"] if has_create else [])
+    features = {"version": "2.0.0.1", "job_keys": keys}
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
+    rendered = []
+    real = contract.render_job
+    monkeypatch.setattr(
+        contract, "render_job", lambda job: rendered.append(job) or real(job)
+    )
+    answer = await ops.backup_configure(_host_policy())
+    assert answer["success"], answer
+    capture = next(job for job in rendered if job["command"] == "capture")
+    snapshots = next(job for job in rendered if job["command"] == "snapshots")
+    assert capture.get("create") is (True if has_create else None)
+    assert "create" not in snapshots
+
+
+@pytest.mark.asyncio
 async def test_a_failed_install_is_reported(ops):
     ops.fake.fail[("install",)] = (1, "sudo: a password is required")
     answer = await ops.backup_configure(_host_policy())
