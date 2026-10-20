@@ -28,7 +28,7 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 HOST_ACTIONS = ("capture", "snapshots", "estimate")
-STORAGE_ACTIONS = ("prune", "check", "copy", "seal")
+STORAGE_ACTIONS = ("prune", "check", "copy", "du", "seal")
 ROLES = {"host": HOST_ACTIONS, "storage": STORAGE_ACTIONS}
 
 # Where repositories and their mounts may live.
@@ -58,6 +58,9 @@ SERVER_KEYS = {
     "prune": {"keep_last", "keep_daily", "keep_weekly", "keep_monthly", "whole_packs"},
     "check": {"read_all", "metadata_only"},
     "copy": {"copy_to", "snapshot"},
+    # What the repository holds and what each snapshot alone would free --
+    # from the pack lists, reading no pack, so no key is needed.
+    "du": set(),
 }
 
 BOOLS = {

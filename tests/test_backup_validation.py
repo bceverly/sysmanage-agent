@@ -442,3 +442,17 @@ def test_path_patterns_are_allowed_on_capture_and_estimate_only():
     v.check_job("host", "estimate", {"skip_paths": ["*.iso"]})
     with pytest.raises(v.PolicyError):
         v.check_job("storage", "prune", {"skip_paths": ["*.iso"]})
+
+
+def test_a_storage_du_job_takes_nothing_from_the_server():
+    assert v.check_job("storage", "du", {}) == {}
+    with pytest.raises(v.PolicyError):
+        v.check_job("storage", "du", {"keep_last": 1})
+    assert "du" not in v.ROLES["host"]
+    policy = {"policy_id": PID, "role": "storage", "repository": "/srv/b/h",
+              "jobs": {"du": {}}}  # fmt: skip
+    job = builder.build_jobs(policy, state_dir="/s", group="g", key_installed=False)[
+        "du"
+    ]
+    assert job["command"] == "du" and job["repository"] == "/srv/b/h"
+    assert set(job) == {"command", "repository", "result", "progress", "report_group"}
