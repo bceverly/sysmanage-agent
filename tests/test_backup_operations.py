@@ -33,7 +33,7 @@ FEATURES = {
         {"command", "repository", "result", "progress", "report_group",
          "encrypt_to", "append_only", "quiesce", "keep_last", "restore_root",
          "dry_run", "check_first", "snapshot", "include", "allow_unverified",
-         "read_all", "metadata_only", "record", "whole_packs"}
+         "read_all", "metadata_only", "record", "whole_packs", "rules"}
     ),
 }  # fmt: skip
 # restate is Linux-only; the driver uses POSIX paths and modes throughout.
@@ -238,6 +238,23 @@ async def test_capture_creates_its_repository_only_when_restate_can(
     snapshots = next(job for job in rendered if job["command"] == "snapshots")
     assert capture.get("create") is (True if has_create else None)
     assert "create" not in snapshots
+
+
+@pytest.mark.asyncio
+async def test_path_rules_install_a_rules_file_and_remove_it_when_dropped(
+    ops, monkeypatch, tmp_path
+):
+    rules = tmp_path / "rules.d" / f"{PID}.rules"
+    monkeypatch.setattr(ops_module.job_builder, "rules_path", lambda _pid: str(rules))
+    policy = _host_policy()
+    policy["jobs"]["capture"]["skip_paths"] = ["**/previews"]
+    assert (await ops.backup_configure(policy))["success"]
+    assert str(rules) in [c[-1] for c in ops.fake.ran("install")]
+    rules.parent.mkdir()
+    rules.write_text("old")  # what the install above would have left
+    del policy["jobs"]["capture"]["skip_paths"]
+    assert (await ops.backup_configure(policy))["success"]
+    assert ops.fake.ran("rm", "-f", "--", str(rules))
 
 
 @pytest.mark.asyncio

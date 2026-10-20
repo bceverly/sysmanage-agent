@@ -50,9 +50,11 @@ SERVER_KEYS = {
         "tmpdir",
         "syslog",
         "append_only",
+        "keep_paths",
+        "skip_paths",
     },
     "snapshots": set(),
-    "estimate": {"rules", "all", "baseline_content"},
+    "estimate": {"rules", "all", "baseline_content", "keep_paths", "skip_paths"},
     "prune": {"keep_last", "keep_daily", "keep_weekly", "keep_monthly", "whole_packs"},
     "check": {"read_all", "metadata_only"},
     "copy": {"copy_to", "snapshot"},
@@ -128,7 +130,31 @@ def _list(key: str, value: Any) -> List[Any]:
     return value
 
 
+# Operator path patterns for the capture's own rules file (``keep_paths`` ->
+# ``state``, ``skip_paths`` -> ``expendable``).  One rules-file line each, so
+# no line breaks or control characters, no leading/trailing space (restate
+# reads the rest of the line as the pattern) and no ``#`` (a comment).
+MAX_PATH_PATTERN = 512
+
+
+def check_path_patterns(key: str, value: Any) -> List[str]:
+    patterns = _list(key, value)
+    for pattern in patterns:
+        if (
+            not isinstance(pattern, str)
+            or not pattern
+            or len(pattern) > MAX_PATH_PATTERN
+            or pattern != pattern.strip()
+            or pattern.startswith("#")
+            or any(ord(ch) < 32 or ord(ch) == 127 for ch in pattern)
+        ):
+            raise PolicyError(f"{key} patterns must be single-line text, no '#'")
+    return patterns
+
+
 def _string_value(key: str, value: Any) -> Any:
+    if key in ("keep_paths", "skip_paths"):
+        return check_path_patterns(key, value)
     if key == "rules":
         return [confined_path(v, RULES_ROOTS, key) for v in _list(key, value)]
     if key == "quiesce_with":

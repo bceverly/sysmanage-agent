@@ -41,6 +41,36 @@ def _reports(state_dir: str, policy_id: str, action: str, group: str) -> Dict[st
     }
 
 
+RULES_DIR = "/etc/restate/rules.d"
+# Keys that become the policy's rules file, never job keys.
+_PATH_RULE_KEYS = ("keep_paths", "skip_paths")
+
+
+def rules_path(policy_id: str) -> str:
+    """The policy's own rules file: root-owned, under /etc/restate."""
+    return posixpath.join(RULES_DIR, f"{policy_id}.rules")
+
+
+def policy_rules(policy: Dict[str, Any]) -> Optional[str]:
+    """The rules file for the operator's paths, or None when there are none.
+
+    ``keep_paths`` are ``state`` (kept even where the built-in rules leave
+    them out, e.g. ~/Downloads), ``skip_paths`` are ``expendable`` (left
+    out, as restate treats caches).  restate's LAST matching rule wins, so
+    the skips come after the keeps: a path matching both is left out.
+    """
+    capture = policy["jobs"].get("capture") or {}
+    keep = capture.get("keep_paths") or []
+    skip = capture.get("skip_paths") or []
+    if not keep and not skip:
+        return None
+    lines = ["# Written by sysmanage-agent from the backup policy; replaced on"]
+    lines.append("# every configure.  Later rules win: leave-outs follow keeps.")
+    lines += [f"state {pattern}" for pattern in keep]
+    lines += [f"expendable {pattern}" for pattern in skip]
+    return "\n".join(lines) + "\n"
+
+
 def record_path(state_dir: str, policy_id: str) -> str:
     """The repository-state record shared by ``check`` and ``prune``.
 
@@ -81,6 +111,12 @@ def build_jobs(
         if action == "seal":
             continue
         job = dict(keys)
+        for key in _PATH_RULE_KEYS:
+            job.pop(key, None)
+        if action in ("capture", "estimate") and policy_rules(policy):
+            job["rules"] = list(job.get("rules") or []) + [
+                rules_path(policy["policy_id"])
+            ]
         job["command"] = action
         if action != "estimate":  # estimate reads the live host, no repository
             job["repository"] = policy["repository"]

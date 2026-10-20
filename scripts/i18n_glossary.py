@@ -261,6 +261,15 @@ GLOSSARY: Dict[str, str] = {
     "for the vault, locked. NOT closed in an envelope",
     "prune": "delete old backup snapshots beyond the retention count. NOT "
     "cutting plants",
+    "also back up": "a label: include these paths in the backup as well. A "
+    "short noun-like label, NOT an instruction to the reader, NOT 'briefly', "
+    "NOT 'or'",
+    "leave out": "exclude these paths from the backup. A label, NOT a dangling "
+    "verb form",
+    "backup target": "where backups are stored: the storage host and path "
+    "(es destino, de Ziel, fr cible). NOT a goal or aim",
+    "staging directory": "the folder a restore writes into before the files are "
+    "copied into place. NOT a deployment stage, NOT a theater stage",
     "certificate": "a cryptographic identity document",
     "key": "a cryptographic key. NOT a door key",
     "token": "a string proving identity or authorization",

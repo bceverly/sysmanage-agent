@@ -257,6 +257,7 @@ class BackupOperations:
             await self._install_root_file(
                 policy["encrypt_key"], contract.key_path(policy_id)
             )
+        await self._apply_rules(policy)
         features = self._features() or {}
         jobs = job_builder.build_jobs(
             policy,
@@ -298,6 +299,15 @@ class BackupOperations:
                 policy["mount_point"], read_text=_read_text
             )
         return reply
+
+    async def _apply_rules(self, policy: Dict[str, Any]) -> None:
+        """Install the policy's rules file, or remove one it no longer needs."""
+        path = job_builder.rules_path(policy["policy_id"])
+        text = job_builder.policy_rules(policy)
+        if text:
+            await self._install_root_file(text, path)
+        elif os.path.exists(path):
+            await self._remove_root_file(path)
 
     async def _remove_stale(self, policy_id: str, keep: set) -> List[str]:
         previous = self._load("policies.json").get(policy_id, {}).get("actions", [])

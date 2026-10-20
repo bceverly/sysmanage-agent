@@ -384,3 +384,61 @@ def test_a_server_cannot_choose_the_record_path():
     """record is a PATH restate writes as root: agent-chosen, never sent."""
     assert "record" not in v.SERVER_KEYS["check"]
     assert "record" not in v.BOOLS
+
+
+# ---------------------------------------------------------------------------
+# operator path rules (keep_paths / skip_paths -> the policy's rules file)
+# ---------------------------------------------------------------------------
+
+
+def _rules_policy(keep=None, skip=None):
+    capture = {"quiesce": False}
+    if keep is not None:
+        capture["keep_paths"] = keep
+    if skip is not None:
+        capture["skip_paths"] = skip
+    return {"policy_id": PID, "role": "host", "repository": "/mnt/b/h",
+            "jobs": {"capture": capture, "estimate": {}, "snapshots": {}}}  # fmt: skip
+
+
+def test_path_rules_become_a_rules_file_and_never_job_keys():
+    policy = _rules_policy(
+        keep=["/home/*/Downloads"], skip=["**/previews", "/home/*/.cache"]
+    )
+    text = builder.policy_rules(policy)
+    lines = [l for l in text.splitlines() if not l.startswith("#")]
+    # keeps first, leave-outs last: restate's last matching rule wins
+    assert lines == ["state /home/*/Downloads", "expendable **/previews",
+                     "expendable /home/*/.cache"]  # fmt: skip
+    jobs = builder.build_jobs(policy, state_dir="/s", group="g", key_installed=False)
+    for action in ("capture", "estimate"):
+        assert jobs[action]["rules"] == [builder.rules_path(PID)]
+        assert "keep_paths" not in jobs[action] and "skip_paths" not in jobs[action]
+    assert "rules" not in jobs["snapshots"]
+    assert builder.rules_path(PID).startswith("/etc/restate/")
+
+
+def test_no_path_rules_means_no_rules_file():
+    policy = _rules_policy(keep=[], skip=[])
+    assert builder.policy_rules(policy) is None
+    jobs = builder.build_jobs(policy, state_dir="/s", group="g", key_installed=False)
+    assert "rules" not in jobs["capture"]
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    ["", " /lead", "/trail ", "/a\nstate /etc", "#comment", "/tab\there", "x" * 513, 7],
+    ids=["empty", "leading-space", "trailing-space", "newline", "comment", "tab",
+         "too-long", "not-text"],
+)  # fmt: skip
+def test_a_path_pattern_that_could_break_the_rules_file_is_refused(pattern):
+    with pytest.raises(v.PolicyError):
+        v.check_job("host", "capture", {"skip_paths": [pattern]})
+
+
+def test_path_patterns_are_allowed_on_capture_and_estimate_only():
+    ok = v.check_job("host", "capture", {"keep_paths": ["/srv/data dir/x"]})
+    assert ok["keep_paths"] == ["/srv/data dir/x"]
+    v.check_job("host", "estimate", {"skip_paths": ["*.iso"]})
+    with pytest.raises(v.PolicyError):
+        v.check_job("storage", "prune", {"skip_paths": ["*.iso"]})
