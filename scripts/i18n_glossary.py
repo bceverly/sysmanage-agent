@@ -144,6 +144,11 @@ NEVER_TRANSLATE: Tuple[str, ...] = (
     "Kickstart",
     "AutoYaST",
     "preseed",
+    # Backups (Phase 24), 2026-10-20: "restate" came back as "reafirmar",
+    # "переустановка", "重述" -- it is the product's name, never the verb.
+    "restate",
+    "ZFS",
+    "NFS",
 )
 
 # ---------------------------------------------------------------------------

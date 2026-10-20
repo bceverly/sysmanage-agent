@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 04:52-0400\n"
+"POT-Creation-Date: 2026-10-20 04:02-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -337,13 +337,13 @@ msgstr "Falha ao obter informações de rede do Windows via ipconfig: %s"
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Falha ao obter configuração da rede Windows: %s"
 
-#: src/sysmanage_agent/collection/hardware_events.py:532
+#: src/sysmanage_agent/collection/hardware_events.py:540
 #: src/sysmanage_agent/communication/hardware_event_loop.py:102
 #, python-format
 msgid "Hardware event source %s stopped: %s"
 msgstr "A fonte de eventos de hardware %s parou: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:469
+#: src/sysmanage_agent/collection/hardware_health.py:476
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "Falha ao coletar o estado do hardware: %s"
@@ -485,17 +485,17 @@ msgstr "Erro processando atualizações do fwupd: %s"
 msgid "Unknown Device"
 msgstr "Dispositivo Desconhecido"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:296
+#: src/sysmanage_agent/collection/network_discovery_collection.py:304
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "Descoberta de rede: captura interrompida: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:553
+#: src/sysmanage_agent/collection/network_discovery_collection.py:561
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "Descoberta de rede: captura direta indisponível: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:579
+#: src/sysmanage_agent/collection/network_discovery_collection.py:587
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -504,40 +504,40 @@ msgstr ""
 "A descoberta de rede viu mais de %d dispositivos em uma janela; o restante "
 "não foi registrado"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:147
+#: src/sysmanage_agent/collection/os_info_collection.py:149
 msgid "Ubuntu Pro status check timed out"
 msgstr "Tempo esgotado na verificação de status do Ubuntu Pro"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:152
+#: src/sysmanage_agent/collection/os_info_collection.py:154
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Falha ao obter status Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:307
+#: src/sysmanage_agent/collection/os_info_collection.py:310
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Falha ao analisar saída JSON do Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:313
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Erro ao processar dados do Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:397
+#: src/sysmanage_agent/collection/os_info_collection.py:401
 msgid "Livepatch status check timed out"
 msgstr "Tempo limite excedido na verificação do estado do Livepatch"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:403
+#: src/sysmanage_agent/collection/os_info_collection.py:407
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "Falha ao obter o estado do Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:420
+#: src/sysmanage_agent/collection/os_info_collection.py:424
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "Falha ao analisar o JSON do Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:568
+#: src/sysmanage_agent/collection/os_info_collection.py:572
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "Falha ao obter fuso horário: %s"
@@ -1472,6 +1472,7 @@ msgid "Error collecting/sending clock status: %s"
 msgstr "Erro ao coletar/enviar o status do relógio: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "Erro ao coletar/enviar o estado do hardware: %s"
@@ -1598,19 +1599,19 @@ msgstr "Não é possível enviar o status do relógio: sem aprovação do host"
 msgid "Failed to send clock status"
 msgstr "Falha ao enviar o status do relógio"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:426
+#: src/sysmanage_agent/communication/data_collector_senders.py:437
 msgid "Cannot send hardware health: no host approval"
 msgstr "Não é possível enviar o estado do hardware: sem aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:454
 msgid "Failed to send hardware health"
 msgstr "Falha ao enviar o estado do hardware"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:453
+#: src/sysmanage_agent/communication/data_collector_senders.py:466
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "Não é possível enviar evidências de conformidade: host não aprovado"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:462
+#: src/sysmanage_agent/communication/data_collector_senders.py:475
 msgid "Failed to send compliance evidence"
 msgstr "Falha ao enviar evidências de conformidade"
 
@@ -1932,85 +1933,85 @@ msgstr "Erro do agendador de coleta de pacotes: %s"
 msgid "Failed to build capability report: %s"
 msgstr "Falha ao construir relatório de capacidade: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:448
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID de execução de script %s já processado, ignorando duplicado"
 
-#: src/sysmanage_agent/core/agent_utils.py:492
+#: src/sysmanage_agent/core/agent_utils.py:490
 msgid "Generic command missing nested command_type"
 msgstr "Comando genérico sem command_type aninhado"
 
-#: src/sysmanage_agent/core/agent_utils.py:504
+#: src/sysmanage_agent/core/agent_utils.py:502
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Tipo de comando desconhecido: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:563
+#: src/sysmanage_agent/core/agent_utils.py:561
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Falha ao colocar em fila o resultado da execução do script: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:580
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Erro ao verificar UUID de execução: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:596
+#: src/sysmanage_agent/core/agent_utils.py:594
 msgid "No execution UUID provided, cannot track"
 msgstr "Nenhum UUID de execução fornecido, não é possível rastrear"
 
-#: src/sysmanage_agent/core/agent_utils.py:611
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID de execução %s já existe no banco de dados"
 
-#: src/sysmanage_agent/core/agent_utils.py:636
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Erro ao armazenar UUID de execução: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:701
+#: src/sysmanage_agent/core/agent_utils.py:699
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Erro no manipulador de controlo de serviços: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:746
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Tempo limite excedido no controlo de serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:752
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Erro de controlo de serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:837
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Falha ao %s o serviço %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:847
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Falha ao atualizar funções após controlo de serviço: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:888
+#: src/sysmanage_agent/core/agent_utils.py:886
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Erro no manipulador de estado de serviços: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:931
+#: src/sysmanage_agent/core/agent_utils.py:929
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Tempo limite excedido ao consultar o estado do serviço %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:941
+#: src/sysmanage_agent/core/agent_utils.py:939
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Erro de estado do serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:989
+#: src/sysmanage_agent/core/agent_utils.py:987
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2080,14 +2081,14 @@ msgstr ""
 msgid "SysManage agent not started: %s. %s"
 msgstr "Agente SysManage não iniciado: %s. %s"
 
-#: src/sysmanage_agent/core/unconfigured.py:114
+#: src/sysmanage_agent/core/unconfigured.py:117
+msgid "Configuration found; restarting the agent"
+msgstr "Configuração encontrada; reiniciando o agente"
+
+#: src/sysmanage_agent/core/unconfigured.py:127
 msgid "Configuration found; restart the SysManage Agent service to apply it"
 msgstr ""
 "Configuração encontrada; reinicie o serviço SysManage Agent para aplicá-la"
-
-#: src/sysmanage_agent/core/unconfigured.py:119
-msgid "Configuration found; restarting the agent"
-msgstr "Configuração encontrada; reiniciando o agente"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/core/version.py:201
@@ -2165,6 +2166,39 @@ msgstr "Erro ao coletar logs do agente: %s"
 #, python-format
 msgid "Error collecting error logs: %s"
 msgstr "Erro ao coletar logs de erro: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:183
+#, python-format
+msgid "restate is not usable on this host: %s"
+msgstr "restate não é utilizável neste host: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:203
+#, python-format
+msgid "Could not install the backup jobs: %s"
+msgstr "Não foi possível instalar as tarefas de backup: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:224
+#, python-format
+msgid "This restate does not support: %s"
+msgstr "Esta versão do restate não suporta: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:282
+#: src/sysmanage_agent/operations/backup_operations.py:298
+msgid "That backup action is not configured on this host."
+msgstr "Essa ação de backup não está configurada neste host."
+
+#: src/sysmanage_agent/operations/backup_operations.py:333
+msgid "That backup job is already running."
+msgstr "Essa tarefa de backup já está em execução."
+
+#: src/sysmanage_agent/operations/backup_operations.py:345
+msgid "The backup job could not be started."
+msgstr "A tarefa de backup não pôde ser iniciada."
+
+#: src/sysmanage_agent/operations/backup_operations.py:465
+msgid "Could not queue the backup report"
+msgstr "Não foi possível colocar o relatório de backup na fila"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
 msgid "Homebrew is not installed"
@@ -3155,78 +3189,78 @@ msgid "Failed to send commercial antivirus status update: %s"
 msgstr "Falha ao enviar atualização de status comercial do antivírus: %s"
 
 # Ubuntu Pro functionality
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:54
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
 msgid "Ubuntu Pro token is required"
 msgstr "Token do Ubuntu Pro é necessário"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:75
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr "Assinatura do Ubuntu Pro anexada com sucesso"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:80
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:84
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr "Falha ao anexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:89
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr "Erro ao anexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:111
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr "Assinatura do Ubuntu Pro desanexada com sucesso"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:116
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr "Falha ao desanexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:125
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr "Erro ao desanexar Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:135
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:186
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
 msgid "Service name is required"
 msgstr "Nome do serviço é obrigatório"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:156
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr "Serviço Ubuntu Pro %s habilitado com sucesso"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:163
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:169
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr "Falha ao habilitar serviço Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:175
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr "Erro ao habilitar serviço Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:207
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr "Serviço Ubuntu Pro %s desabilitado com sucesso"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:214
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr "Falha ao desabilitar serviço Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:226
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr "Erro ao desabilitar serviço Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:255
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Falha ao enviar atualização do SO após mudança do Ubuntu Pro: %s"
@@ -3259,40 +3293,40 @@ msgstr "Atualizações iniciadas em segundo plano"
 msgid "Failed to start updates: %s"
 msgstr "Falha ao iniciar atualizações: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:169
+#: src/sysmanage_agent/operations/update_operations.py:190
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "Nenhum gerenciador de pacotes especificado para %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:201
+#: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "Não foi possível determinar o gerenciador de pacotes para %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:214
+#: src/sysmanage_agent/operations/update_operations.py:235
 msgid "Failed to send update results, will retry..."
 msgstr "Falha ao enviar resultados de atualização, tentando novamente..."
 
-#: src/sysmanage_agent/operations/update_operations.py:224
+#: src/sysmanage_agent/operations/update_operations.py:245
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "Falha ao enviar resultados de atualização após %d tentativas"
 
-#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:273
 msgid "Could not send fresh update list - not connected"
 msgstr "Não foi possível enviar nova lista de atualizações - não conectado"
 
-#: src/sysmanage_agent/operations/update_operations.py:276
+#: src/sysmanage_agent/operations/update_operations.py:308
 msgid "No valid packages found for update"
 msgstr "Nenhum pacote válido encontrado para atualização"
 
-#: src/sysmanage_agent/operations/update_operations.py:301
+#: src/sysmanage_agent/operations/update_operations.py:326
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "Falha ao rescanear para atualizações depois de lote: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:305
+#: src/sysmanage_agent/operations/update_operations.py:330
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "Processo de atualização em segundo plano falhou: %s"

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 04:52-0400\n"
+"POT-Creation-Date: 2026-10-20 04:02-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -336,13 +336,13 @@ msgstr "فشل في الحصول على معلومات الشبكة Windows با
 msgid "Failed to get Windows network configuration: %s"
 msgstr "فشل في الحصول على تكوين الشبكة Windows: %s"
 
-#: src/sysmanage_agent/collection/hardware_events.py:532
+#: src/sysmanage_agent/collection/hardware_events.py:540
 #: src/sysmanage_agent/communication/hardware_event_loop.py:102
 #, python-format
 msgid "Hardware event source %s stopped: %s"
 msgstr "توقف مصدر أحداث الأجهزة %s: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:469
+#: src/sysmanage_agent/collection/hardware_health.py:476
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "فشل جمع حالة صحة الأجهزة: %s"
@@ -484,57 +484,57 @@ msgstr "خطأ في معالجة تحديثات fwupd: %s"
 msgid "Unknown Device"
 msgstr "جهاز غير معروف"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:296
+#: src/sysmanage_agent/collection/network_discovery_collection.py:304
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "اكتشاف الشبكة: توقف الالتقاط: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:553
+#: src/sysmanage_agent/collection/network_discovery_collection.py:561
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "اكتشاف الشبكة: الالتقاط المباشر غير متاح: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:579
+#: src/sysmanage_agent/collection/network_discovery_collection.py:587
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
 "recorded"
 msgstr "رصد اكتشاف الشبكة أكثر من %d جهاز في نافذة واحدة؛ ولم يُسجَّل الباقي"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:147
+#: src/sysmanage_agent/collection/os_info_collection.py:149
 msgid "Ubuntu Pro status check timed out"
 msgstr "انتهت مهلة التحقق من حالة Ubuntu Pro"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:152
+#: src/sysmanage_agent/collection/os_info_collection.py:154
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "فشل في الحصول على حالة Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:307
+#: src/sysmanage_agent/collection/os_info_collection.py:310
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "فشل في تحليل خرج JSON Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:313
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "خطأ في معالجة بيانات Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:397
+#: src/sysmanage_agent/collection/os_info_collection.py:401
 msgid "Livepatch status check timed out"
 msgstr "انتهت مهلة فحص حالة Livepatch"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:403
+#: src/sysmanage_agent/collection/os_info_collection.py:407
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "فشل في الحصول على حالة Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:420
+#: src/sysmanage_agent/collection/os_info_collection.py:424
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "فشل في تحليل JSON الخاص بـ Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:568
+#: src/sysmanage_agent/collection/os_info_collection.py:572
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "فشل في الحصول على توقيت المنطقة الزمنية: %s"
@@ -1466,6 +1466,7 @@ msgid "Error collecting/sending clock status: %s"
 msgstr "حدث خطأ أثناء جمع/إرسال حالة الساعة: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "حدث خطأ أثناء جمع/إرسال حالة صحة الأجهزة: %s"
@@ -1589,19 +1590,19 @@ msgstr "لا يمكن إرسال حالة الساعة: لا موافقة على
 msgid "Failed to send clock status"
 msgstr "فشل إرسال حالة الساعة"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:426
+#: src/sysmanage_agent/communication/data_collector_senders.py:437
 msgid "Cannot send hardware health: no host approval"
 msgstr "لا يمكن إرسال حالة صحة الأجهزة: لا موافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:454
 msgid "Failed to send hardware health"
 msgstr "فشل إرسال حالة صحة الأجهزة"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:453
+#: src/sysmanage_agent/communication/data_collector_senders.py:466
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "لا يمكن إرسال أدلة الامتثال: لا موافقة على المضيف"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:462
+#: src/sysmanage_agent/communication/data_collector_senders.py:475
 msgid "Failed to send compliance evidence"
 msgstr "فشل إرسال أدلة الامتثال"
 
@@ -1915,85 +1916,85 @@ msgstr "خطأ في مجدول جمع الحزم: %s"
 msgid "Failed to build capability report: %s"
 msgstr "فشل في بناء تقرير القدرة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:448
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "تمت معالجة UUID تنفيذ النص البرمجي %s بالفعل، تخطي التكرار"
 
-#: src/sysmanage_agent/core/agent_utils.py:492
+#: src/sysmanage_agent/core/agent_utils.py:490
 msgid "Generic command missing nested command_type"
 msgstr "الأمر العام مفقود نوع الأمر المتداخل"
 
-#: src/sysmanage_agent/core/agent_utils.py:504
+#: src/sysmanage_agent/core/agent_utils.py:502
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "نوع أمر غير معروف: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:563
+#: src/sysmanage_agent/core/agent_utils.py:561
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "فشل في وضع علامة على نتيجة تنفيذ النص البرمجي كقيد: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:580
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "خطأ في التحقق من UUID للتنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:596
+#: src/sysmanage_agent/core/agent_utils.py:594
 msgid "No execution UUID provided, cannot track"
 msgstr "لم يتم توفير UUID للتنفيذ، لا يمكن التتبع"
 
-#: src/sysmanage_agent/core/agent_utils.py:611
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID التنفيذ %s موجود بالفعل في قاعدة البيانات"
 
-#: src/sysmanage_agent/core/agent_utils.py:636
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "خطأ في تخزين UUID التنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:701
+#: src/sysmanage_agent/core/agent_utils.py:699
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "خطأ في معالج التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:746
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "انتهت مهلة التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:752
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "خطأ التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:837
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "تعذّر %s للخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:847
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "تعذّر تحديث الأدوار بعد التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:888
+#: src/sysmanage_agent/core/agent_utils.py:886
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "خطأ في معالج حالة الخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:931
+#: src/sysmanage_agent/core/agent_utils.py:929
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "انتهت مهلة فحص حالة الخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:941
+#: src/sysmanage_agent/core/agent_utils.py:939
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "خطأ في حالة الخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:989
+#: src/sysmanage_agent/core/agent_utils.py:987
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2063,13 +2064,13 @@ msgstr ""
 msgid "SysManage agent not started: %s. %s"
 msgstr "لم يبدأ وكيل SysManage: %s. %s"
 
-#: src/sysmanage_agent/core/unconfigured.py:114
-msgid "Configuration found; restart the SysManage Agent service to apply it"
-msgstr "تم العثور على التكوين؛ أعد تشغيل خدمة SysManage Agent لتطبيقه"
-
-#: src/sysmanage_agent/core/unconfigured.py:119
+#: src/sysmanage_agent/core/unconfigured.py:117
 msgid "Configuration found; restarting the agent"
 msgstr "تم العثور على التكوين؛ جارٍ إعادة تشغيل الوكيل"
+
+#: src/sysmanage_agent/core/unconfigured.py:127
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr "تم العثور على التكوين؛ أعد تشغيل خدمة SysManage Agent لتطبيقه"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/core/version.py:201
@@ -2146,6 +2147,39 @@ msgstr "خطأ في جمع سجلات الوكيل: %s"
 #, python-format
 msgid "Error collecting error logs: %s"
 msgstr "خطأ في جمع سجلات الأخطاء: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:183
+#, python-format
+msgid "restate is not usable on this host: %s"
+msgstr "لا يمكن استخدام restate على هذا المضيف: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:203
+#, python-format
+msgid "Could not install the backup jobs: %s"
+msgstr "تعذر تثبيت مهام النسخ الاحتياطي: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:224
+#, python-format
+msgid "This restate does not support: %s"
+msgstr "إصدار restate هذا لا يدعم: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:282
+#: src/sysmanage_agent/operations/backup_operations.py:298
+msgid "That backup action is not configured on this host."
+msgstr "إجراء النسخ الاحتياطي هذا غير مُهيأ على هذا المضيف."
+
+#: src/sysmanage_agent/operations/backup_operations.py:333
+msgid "That backup job is already running."
+msgstr "مهمة النسخ الاحتياطي هذه قيد التشغيل بالفعل."
+
+#: src/sysmanage_agent/operations/backup_operations.py:345
+msgid "The backup job could not be started."
+msgstr "تعذر بدء مهمة النسخ الاحتياطي."
+
+#: src/sysmanage_agent/operations/backup_operations.py:465
+msgid "Could not queue the backup report"
+msgstr "تعذر إدراج تقرير النسخ الاحتياطي في قائمة الانتظار"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
 msgid "Homebrew is not installed"
@@ -3130,78 +3164,78 @@ msgid "Failed to send commercial antivirus status update: %s"
 msgstr "فشل في إرسال تحديث حالة برنامج مكافحة الفيروسات التجاري: %s"
 
 # Ubuntu Pro functionality
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:54
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
 msgid "Ubuntu Pro token is required"
 msgstr "رمز Ubuntu Pro مطلوب"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:75
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr "تم ربط اشتراك Ubuntu Pro بنجاح"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:80
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:84
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr "فشل في ربط Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:89
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr "خطأ في ربط Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:111
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr "تم إلغاء ربط اشتراك Ubuntu Pro بنجاح"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:116
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr "فشل في إلغاء ربط Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:125
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr "خطأ في إلغاء ربط Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:135
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:186
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
 msgid "Service name is required"
 msgstr "يجب توفير اسم الخدمة"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:156
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr "تم تفعيل خدمة Ubuntu Pro %s بنجاح"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:163
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:169
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr "فشل تفعيل خدمة Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:175
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr "خطأ في تفعيل خدمة Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:207
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr "تم تعطيل خدمة Ubuntu Pro %s بنجاح"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:214
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr "فشل تعطيل خدمة Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:226
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr "خطأ في تعطيل خدمة Ubuntu Pro %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:255
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "فشل في إرسال تحديث نظام التشغيل بعد تغيير Ubuntu Pro: %s"
@@ -3234,40 +3268,40 @@ msgstr "تم بدء التحديثات في الخلفية"
 msgid "Failed to start updates: %s"
 msgstr "فشل في بدء التحديثات: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:169
+#: src/sysmanage_agent/operations/update_operations.py:190
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "اسم مدير الحزم مطلوب لـ %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:201
+#: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "تعذر تحديد مدير الحزم لـ %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:214
+#: src/sysmanage_agent/operations/update_operations.py:235
 msgid "Failed to send update results, will retry..."
 msgstr "فشل في إرسال نتائج التحديث، سيتم المحاولة مرة أخرى..."
 
-#: src/sysmanage_agent/operations/update_operations.py:224
+#: src/sysmanage_agent/operations/update_operations.py:245
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "فشل إرسال نتائج التحديث بعد %d محاولة"
 
-#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:273
 msgid "Could not send fresh update list - not connected"
 msgstr "لا يمكن إرسال الرسالة: غير متصل بالخادم"
 
-#: src/sysmanage_agent/operations/update_operations.py:276
+#: src/sysmanage_agent/operations/update_operations.py:308
 msgid "No valid packages found for update"
 msgstr "لم يتم العثور على حزم صحيحة للتحديث"
 
-#: src/sysmanage_agent/operations/update_operations.py:301
+#: src/sysmanage_agent/operations/update_operations.py:326
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "فشل في إعادة المسح للتحديثات بعد المجموعة: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:305
+#: src/sysmanage_agent/operations/update_operations.py:330
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "فشل عملية تحديث الخلفية: %s"

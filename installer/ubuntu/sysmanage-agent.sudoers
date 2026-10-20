@@ -320,3 +320,13 @@ Cmnd_Alias SYSMANAGE_COMPLIANCE_READ = /usr/sbin/sshd -T, /sbin/sshd -T, \
     /usr/bin/cat /etc/audit/auditd.conf, /bin/cat /etc/audit/auditd.conf, \
     /usr/bin/cat /etc/aide.conf, /bin/cat /etc/aide.conf
 sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_COMPLIANCE_READ
+
+# Backups with restate (server ROADMAP Phase 24).  The agent starts the fixed
+# restate-job@<policy>.<action> unit restate ships; the job file it runs was
+# validated by the agent and installed root-owned with ``install`` above.
+# ``--no-block`` comes before ``start``, so the ``start *`` rule does not
+# cover it (and sudo refuses a partial wildcard like ``restate-job@*``; this
+# grants nothing ``start *`` does not).  The seal rule lets a NAS's agent
+# snapshot its backup dataset.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl --no-block start *, /bin/systemctl --no-block start *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs snapshot *

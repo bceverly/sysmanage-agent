@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 04:52-0400\n"
+"POT-Creation-Date: 2026-10-20 04:02-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -334,13 +334,13 @@ msgstr "ipconfig를 사용하여 Windows 네트워크 정보를 가져오는 데
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Windows 네트워크 구성 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_events.py:532
+#: src/sysmanage_agent/collection/hardware_events.py:540
 #: src/sysmanage_agent/communication/hardware_event_loop.py:102
 #, python-format
 msgid "Hardware event source %s stopped: %s"
 msgstr "하드웨어 이벤트 소스 %s 중지됨: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:469
+#: src/sysmanage_agent/collection/hardware_health.py:476
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "하드웨어 상태 수집 실패: %s"
@@ -482,57 +482,57 @@ msgstr "fwupd 업데이트 처리 중 오류 발생: %s"
 msgid "Unknown Device"
 msgstr "알 수 없는 디바이스"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:296
+#: src/sysmanage_agent/collection/network_discovery_collection.py:304
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "네트워크 검색: 캡처가 중지되었습니다: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:553
+#: src/sysmanage_agent/collection/network_discovery_collection.py:561
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "네트워크 검색: 직접 캡처를 사용할 수 없습니다: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:579
+#: src/sysmanage_agent/collection/network_discovery_collection.py:587
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
 "recorded"
 msgstr "네트워크 검색이 한 구간에서 %d개가 넘는 장치를 발견했습니다. 나머지는 기록되지 않았습니다"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:147
+#: src/sysmanage_agent/collection/os_info_collection.py:149
 msgid "Ubuntu Pro status check timed out"
 msgstr "Ubuntu Pro 상태 확인 시간 초과"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:152
+#: src/sysmanage_agent/collection/os_info_collection.py:154
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Ubuntu Pro 상태를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:307
+#: src/sysmanage_agent/collection/os_info_collection.py:310
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Ubuntu Pro JSON 출력을 파싱하는데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:313
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Ubuntu Pro 데이터 처리 오류: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:397
+#: src/sysmanage_agent/collection/os_info_collection.py:401
 msgid "Livepatch status check timed out"
 msgstr "Livepatch 상태 확인 시간이 초과되었습니다"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:403
+#: src/sysmanage_agent/collection/os_info_collection.py:407
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "Livepatch 상태를 가져오지 못했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:420
+#: src/sysmanage_agent/collection/os_info_collection.py:424
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "Livepatch JSON 구문 분석에 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:568
+#: src/sysmanage_agent/collection/os_info_collection.py:572
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "타임존 정보를 가져오는 데 실패했습니다: %s"
@@ -1464,6 +1464,7 @@ msgid "Error collecting/sending clock status: %s"
 msgstr "시계 상태 수집/전송 중 오류: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "하드웨어 상태 수집/전송 중 오류: %s"
@@ -1587,19 +1588,19 @@ msgstr "호스트 승인 없음으로 시계 상태 전송 불가"
 msgid "Failed to send clock status"
 msgstr "시계 상태 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:426
+#: src/sysmanage_agent/communication/data_collector_senders.py:437
 msgid "Cannot send hardware health: no host approval"
 msgstr "호스트 승인 없음으로 하드웨어 상태 전송 불가"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:454
 msgid "Failed to send hardware health"
 msgstr "하드웨어 상태 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:453
+#: src/sysmanage_agent/communication/data_collector_senders.py:466
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "규정 준수 증거를 전송할 수 없음: 호스트 승인 없음"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:462
+#: src/sysmanage_agent/communication/data_collector_senders.py:475
 msgid "Failed to send compliance evidence"
 msgstr "규정 준수 증거 전송 실패"
 
@@ -1904,85 +1905,85 @@ msgstr "패키지 수집 스케줄러 오류: %s"
 msgid "Failed to build capability report: %s"
 msgstr "능력 보고서 생성 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:448
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:492
+#: src/sysmanage_agent/core/agent_utils.py:490
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:504
+#: src/sysmanage_agent/core/agent_utils.py:502
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:563
+#: src/sysmanage_agent/core/agent_utils.py:561
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "스크립트 실행 결과 큐에 오류 발생: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:580
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "실행 UUID 확인 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:596
+#: src/sysmanage_agent/core/agent_utils.py:594
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:611
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:636
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "실행 UUID 저장 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:701
+#: src/sysmanage_agent/core/agent_utils.py:699
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:746
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:752
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:837
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:847
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:888
+#: src/sysmanage_agent/core/agent_utils.py:886
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:931
+#: src/sysmanage_agent/core/agent_utils.py:929
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:941
+#: src/sysmanage_agent/core/agent_utils.py:939
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:989
+#: src/sysmanage_agent/core/agent_utils.py:987
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "진행 중 저널에 대한 합성 command_result를 큐에 넣지 못했습니다: %s"
@@ -2048,13 +2049,13 @@ msgstr ""
 msgid "SysManage agent not started: %s. %s"
 msgstr "SysManage 에이전트가 시작되지 않았습니다: %s. %s"
 
-#: src/sysmanage_agent/core/unconfigured.py:114
-msgid "Configuration found; restart the SysManage Agent service to apply it"
-msgstr "구성을 찾았습니다. 적용하려면 SysManage Agent 서비스를 다시 시작하세요"
-
-#: src/sysmanage_agent/core/unconfigured.py:119
+#: src/sysmanage_agent/core/unconfigured.py:117
 msgid "Configuration found; restarting the agent"
 msgstr "구성을 찾았습니다. 에이전트를 다시 시작합니다"
+
+#: src/sysmanage_agent/core/unconfigured.py:127
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr "구성을 찾았습니다. 적용하려면 SysManage Agent 서비스를 다시 시작하세요"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/core/version.py:201
@@ -2132,6 +2133,39 @@ msgstr "Agent 로그 수집 중 오류: %s"
 #, python-format
 msgid "Error collecting error logs: %s"
 msgstr "에러 로그 수집 중 오류: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:183
+#, python-format
+msgid "restate is not usable on this host: %s"
+msgstr "restate는 이 호스트에서 사용할 수 없습니다: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:203
+#, python-format
+msgid "Could not install the backup jobs: %s"
+msgstr "백업 작업을 설치할 수 없습니다: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:224
+#, python-format
+msgid "This restate does not support: %s"
+msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:282
+#: src/sysmanage_agent/operations/backup_operations.py:298
+msgid "That backup action is not configured on this host."
+msgstr "이 호스트에는 해당 백업 동작이 구성되어 있지 않습니다."
+
+#: src/sysmanage_agent/operations/backup_operations.py:333
+msgid "That backup job is already running."
+msgstr "해당 백업 작업은 이미 실행 중입니다."
+
+#: src/sysmanage_agent/operations/backup_operations.py:345
+msgid "The backup job could not be started."
+msgstr "백업 작업을 시작할 수 없습니다."
+
+#: src/sysmanage_agent/operations/backup_operations.py:465
+msgid "Could not queue the backup report"
+msgstr "백업 보고서를 대기열에 추가할 수 없습니다"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
 msgid "Homebrew is not installed"
@@ -3113,78 +3147,78 @@ msgid "Failed to send commercial antivirus status update: %s"
 msgstr "_상업용_ANTIVIRUS_ 상태 업데이트 전송 실패: %s"
 
 # Ubuntu Pro functionality
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:54
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
 msgid "Ubuntu Pro token is required"
 msgstr "Ubuntu Pro 토큰이 필요합니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:75
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr "Ubuntu Pro 구독이 성공적으로 연결되었습니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:80
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:84
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 연결 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:89
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 연결 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:111
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr "Ubuntu Pro 구독이 성공적으로 분리되었습니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:116
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 분리 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:125
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 분리 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:135
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:186
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
 msgid "Service name is required"
 msgstr "서비스 이름은 필수입니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:156
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr "Ubuntu Pro 서비스 %s 성공적으로 활성화됨"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:163
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:169
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 활성화 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:175
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 활성화 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:207
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr "Ubuntu Pro 서비스 %s 성공적으로 비활성화됨"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:214
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 비활성화 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:226
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 비활성화 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:255
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro 변경 후 OS 업데이트 전송 실패: %s"
@@ -3217,40 +3251,40 @@ msgstr "백그라운드에서 업데이트가 시작되었습니다"
 msgid "Failed to start updates: %s"
 msgstr "_업데이트_ 시작 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:169
+#: src/sysmanage_agent/operations/update_operations.py:190
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "패키지 매니저를 지정하지 않은 %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:201
+#: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "%s에 대한 패키지 관리자를 확인할 수 없음"
 
-#: src/sysmanage_agent/operations/update_operations.py:214
+#: src/sysmanage_agent/operations/update_operations.py:235
 msgid "Failed to send update results, will retry..."
 msgstr "업데이트 결과 전송에 실패했습니다. 다시 시도합니다..."
 
-#: src/sysmanage_agent/operations/update_operations.py:224
+#: src/sysmanage_agent/operations/update_operations.py:245
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d번의 시도 후 업데이트 결과 전송 실패"
 
-#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:273
 msgid "Could not send fresh update list - not connected"
 msgstr "최신 업데이트 목록을 보낼 수 없음 - 연결되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:276
+#: src/sysmanage_agent/operations/update_operations.py:308
 msgid "No valid packages found for update"
 msgstr "업데이트할 유효한 패키지를 찾을 수 없습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:301
+#: src/sysmanage_agent/operations/update_operations.py:326
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "배치 후 업데이트 스캔 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:305
+#: src/sysmanage_agent/operations/update_operations.py:330
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "배경 업데이트 프로세스 실패: %s"

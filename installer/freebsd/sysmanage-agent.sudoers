@@ -107,3 +107,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/bin/freshclam ""
 # Stop a clamd started before its configuration was deployed (the plan
 # then waits, unprivileged, for it to exit).  Exactly these arguments.
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/pkill -x clamd
+
+# Backups with restate (server ROADMAP Phase 24): the seal step lets a NAS's
+# agent snapshot its backup dataset, so a host can never delete history.
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs snapshot *

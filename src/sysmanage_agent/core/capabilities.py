@@ -173,6 +173,9 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     "malware": ("run_malware_scan", "quarantine_file", "restore_file"),
     # Phase 23.3 S5: step the clock through the host's own time service.
     "time_sync": ("resync_clock",),
+    # Phase 24: backups with restate.  Its own group: a host is fully
+    # manageable without it, so a missing restate is an optional tool.
+    "backup": ("backup_configure", "backup_run", "backup_restore"),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",

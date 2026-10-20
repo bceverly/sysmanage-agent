@@ -42,6 +42,7 @@ import platform
 import shutil
 from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
 
+from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.collection import malware_scan
 from src.sysmanage_agent.operations import config_mgmt_locator
 
@@ -156,6 +157,15 @@ _REQUIRED_LOCATORS: Dict[str, Tuple[Callable[..., bool], str]] = {
 }
 
 
+# A locator that knows WHY a command is unusable, not just that it is: backup
+# can be inapplicable (not Linux), missing (no restate) or outdated (restate
+# older than the driver needs), and the operator must be told which.
+_REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
+    command: restate_probe.unavailable_reason
+    for command in ("backup_configure", "backup_run", "backup_restore")
+}
+
+
 def _distro_ids(os_release_path: str = "/etc/os-release") -> frozenset:
     """``{ID}`` plus ``ID_LIKE`` entries from os-release, lowercased.
 
@@ -215,7 +225,8 @@ def _suppression_reason(command, this_system, these_distros, lookup):
     if probe is not None and not probe(lookup, this_system):
         return probe_reason
 
-    return None
+    reasoner = _REASONED_LOCATORS.get(command)
+    return reasoner(lookup, this_system) if reasoner is not None else None
 
 
 def detect_suppressed(

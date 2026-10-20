@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 04:52-0400\n"
+"POT-Creation-Date: 2026-10-20 04:02-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -334,13 +334,13 @@ msgstr "無法透過ipconfig取得Windows網路資訊：%s"
 msgid "Failed to get Windows network configuration: %s"
 msgstr "無法取得Windows網路配置：%s"
 
-#: src/sysmanage_agent/collection/hardware_events.py:532
+#: src/sysmanage_agent/collection/hardware_events.py:540
 #: src/sysmanage_agent/communication/hardware_event_loop.py:102
 #, python-format
 msgid "Hardware event source %s stopped: %s"
 msgstr "硬體事件來源 %s 已停止：%s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:469
+#: src/sysmanage_agent/collection/hardware_health.py:476
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "收集硬體健康狀況失敗：%s"
@@ -482,57 +482,57 @@ msgstr "處理fwupd更新時發生錯誤：%s"
 msgid "Unknown Device"
 msgstr "未知裝置"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:296
+#: src/sysmanage_agent/collection/network_discovery_collection.py:304
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "網路探索：擷取已停止：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:553
+#: src/sysmanage_agent/collection/network_discovery_collection.py:561
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "網路探索：無法進行原始擷取：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:579
+#: src/sysmanage_agent/collection/network_discovery_collection.py:587
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
 "recorded"
 msgstr "網路探索在一個時間區間內看到超過 %d 台裝置；其餘裝置未被記錄"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:147
+#: src/sysmanage_agent/collection/os_info_collection.py:149
 msgid "Ubuntu Pro status check timed out"
 msgstr "Ubuntu Pro 狀態檢查逾時"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:152
+#: src/sysmanage_agent/collection/os_info_collection.py:154
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "無法取得Ubuntu Pro狀態：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:307
+#: src/sysmanage_agent/collection/os_info_collection.py:310
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "解析Ubuntu Pro JSON輸出失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:313
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "處理 Ubuntu Pro 數據時發生錯誤：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:397
+#: src/sysmanage_agent/collection/os_info_collection.py:401
 msgid "Livepatch status check timed out"
 msgstr "Livepatch 狀態檢查逾時"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:403
+#: src/sysmanage_agent/collection/os_info_collection.py:407
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "取得 Livepatch 狀態失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:420
+#: src/sysmanage_agent/collection/os_info_collection.py:424
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "解析 Livepatch JSON 失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:568
+#: src/sysmanage_agent/collection/os_info_collection.py:572
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "無法取得時區：%s"
@@ -1461,6 +1461,7 @@ msgid "Error collecting/sending clock status: %s"
 msgstr "收集/發送時鐘狀態時發生錯誤：%s"
 
 #: src/sysmanage_agent/communication/data_collector.py:416
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "收集/發送硬體健康狀況時發生錯誤：%s"
@@ -1583,19 +1584,19 @@ msgstr "無法發送時鐘狀態：沒有主機批准"
 msgid "Failed to send clock status"
 msgstr "無法發送時鐘狀態"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:426
+#: src/sysmanage_agent/communication/data_collector_senders.py:437
 msgid "Cannot send hardware health: no host approval"
 msgstr "無法發送硬體健康狀況：沒有主機核准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:454
 msgid "Failed to send hardware health"
 msgstr "發送硬體健康狀況失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:453
+#: src/sysmanage_agent/communication/data_collector_senders.py:466
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "無法傳送合規證據：主機未獲核准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:462
+#: src/sysmanage_agent/communication/data_collector_senders.py:475
 msgid "Failed to send compliance evidence"
 msgstr "傳送合規證據失敗"
 
@@ -1897,85 +1898,85 @@ msgstr "套件收集排程器錯誤：%s"
 msgid "Failed to build capability report: %s"
 msgstr "建立能力報告失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:450
+#: src/sysmanage_agent/core/agent_utils.py:448
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:492
+#: src/sysmanage_agent/core/agent_utils.py:490
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:504
+#: src/sysmanage_agent/core/agent_utils.py:502
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:563
+#: src/sysmanage_agent/core/agent_utils.py:561
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "無法將腳本執行結果排隊：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:580
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "檢查執行 UUID 時出錯：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:596
+#: src/sysmanage_agent/core/agent_utils.py:594
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:611
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:636
+#: src/sysmanage_agent/core/agent_utils.py:634
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存儲執行 UUID 時發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:701
+#: src/sysmanage_agent/core/agent_utils.py:699
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:748
+#: src/sysmanage_agent/core/agent_utils.py:746
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:754
+#: src/sysmanage_agent/core/agent_utils.py:752
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:837
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:849
+#: src/sysmanage_agent/core/agent_utils.py:847
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:888
+#: src/sysmanage_agent/core/agent_utils.py:886
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:931
+#: src/sysmanage_agent/core/agent_utils.py:929
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:941
+#: src/sysmanage_agent/core/agent_utils.py:939
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:989
+#: src/sysmanage_agent/core/agent_utils.py:987
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "無法將合成的 command_result 加入執行中日誌佇列：%s"
@@ -2041,13 +2042,13 @@ msgstr ""
 msgid "SysManage agent not started: %s. %s"
 msgstr "SysManage 代理程式未啟動：%s。%s"
 
-#: src/sysmanage_agent/core/unconfigured.py:114
-msgid "Configuration found; restart the SysManage Agent service to apply it"
-msgstr "已找到設定；請重新啟動 SysManage Agent 服務以套用設定"
-
-#: src/sysmanage_agent/core/unconfigured.py:119
+#: src/sysmanage_agent/core/unconfigured.py:117
 msgid "Configuration found; restarting the agent"
 msgstr "已找到設定；正在重新啟動代理程式"
+
+#: src/sysmanage_agent/core/unconfigured.py:127
+msgid "Configuration found; restart the SysManage Agent service to apply it"
+msgstr "已找到設定；請重新啟動 SysManage Agent 服務以套用設定"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/core/version.py:201
@@ -2125,6 +2126,39 @@ msgstr "收集代理日誌時發生錯誤：%s"
 #, python-format
 msgid "Error collecting error logs: %s"
 msgstr "收集錯誤日誌時發生錯誤：%s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:183
+#, python-format
+msgid "restate is not usable on this host: %s"
+msgstr "restate在此主機上不可用：%s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:203
+#, python-format
+msgid "Could not install the backup jobs: %s"
+msgstr "無法安裝備份作業：%s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:224
+#, python-format
+msgid "This restate does not support: %s"
+msgstr "此版本的 restate 不支援：%s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:282
+#: src/sysmanage_agent/operations/backup_operations.py:298
+msgid "That backup action is not configured on this host."
+msgstr "此主機上未設定該備份操作。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:333
+msgid "That backup job is already running."
+msgstr "該備份作業已在執行中。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:345
+msgid "The backup job could not be started."
+msgstr "無法啟動備份作業。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:465
+msgid "Could not queue the backup report"
+msgstr "無法將備份報告加入佇列"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
 msgid "Homebrew is not installed"
@@ -3106,78 +3140,78 @@ msgid "Failed to send commercial antivirus status update: %s"
 msgstr "傳送商業防毒狀態更新失敗：%s"
 
 # Ubuntu Pro functionality
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:54
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
 msgid "Ubuntu Pro token is required"
 msgstr "需要 Ubuntu Pro 權杖"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:75
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr "Ubuntu Pro 訂閱附加成功"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:80
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:84
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr "附加 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:89
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr "附加 Ubuntu Pro 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:111
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr "Ubuntu Pro 訂閱分離成功"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:116
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:120
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr "分離 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:125
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr "分離 Ubuntu Pro 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:135
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:186
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
 msgid "Service name is required"
 msgstr "服務名稱是必需的"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:156
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr "Ubuntu Pro 服務 %s 已成功啟用"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:163
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:169
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr "啟用 Ubuntu Pro 服務 %s 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:175
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr "啟用 Ubuntu Pro 服務 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:207
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr "Ubuntu Pro 服務 %s 已成功停用"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:214
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:220
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr "停用 Ubuntu Pro 服務 %s 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:226
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr "停用 Ubuntu Pro 服務 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:255
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro 變更後傳送作業系統更新失敗：%s"
@@ -3210,40 +3244,40 @@ msgstr "背景開始更新"
 msgid "Failed to start updates: %s"
 msgstr "啟動更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:169
+#: src/sysmanage_agent/operations/update_operations.py:190
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "未為 %s 指定套件管理器"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:201
+#: src/sysmanage_agent/operations/update_operations.py:222
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "無法確定 %s 的套件管理員"
 
-#: src/sysmanage_agent/operations/update_operations.py:214
+#: src/sysmanage_agent/operations/update_operations.py:235
 msgid "Failed to send update results, will retry..."
 msgstr "發送更新結果失敗，將重試..."
 
-#: src/sysmanage_agent/operations/update_operations.py:224
+#: src/sysmanage_agent/operations/update_operations.py:245
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d 次嘗試後傳送更新結果失敗"
 
-#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:273
 msgid "Could not send fresh update list - not connected"
 msgstr "無法傳送新的更新清單 - 未連線"
 
-#: src/sysmanage_agent/operations/update_operations.py:276
+#: src/sysmanage_agent/operations/update_operations.py:308
 msgid "No valid packages found for update"
 msgstr "未找到有效的更新套件"
 
-#: src/sysmanage_agent/operations/update_operations.py:301
+#: src/sysmanage_agent/operations/update_operations.py:326
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "批次後重新掃描更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:305
+#: src/sysmanage_agent/operations/update_operations.py:330
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "背景更新過程失敗：%s"

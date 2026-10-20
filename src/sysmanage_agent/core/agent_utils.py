@@ -391,14 +391,12 @@ class MessageProcessor:
             "resync_clock": self.agent.resync_clock,
             "quarantine_file": self.agent.quarantine_file,
             "restore_file": self.agent.restore_file,
-            # Phase 10.2 step 7 close-out (2026-05-14): the legacy
-            # "deploy_opentelemetry" / "remove_opentelemetry" /
-            # "attach_to_graylog" handlers were removed when the
-            # underlying ``opentelemetry_operations.py`` /
-            # ``graylog_attachment.py`` agent modules were deleted.
-            # Every observability operation is now driven server-
-            # side by the Pro+ ``observability_engine`` plan-builders
-            # and dispatched via ``apply_deployment_plan`` above.
+            # Phase 10.2: observability runs through apply_deployment_plan
+            # (Pro+ observability_engine plans); its legacy handlers are gone.
+            # Phase 24: backups with restate (bare references: params ride along).
+            "backup_configure": self.agent.backup_ops.backup_configure,
+            "backup_run": self.agent.backup_ops.backup_run,
+            "backup_restore": self.agent.backup_ops.backup_restore,
             "list_third_party_repositories": self.agent.list_third_party_repositories,
             "add_third_party_repository": self.agent.add_third_party_repository,
             "delete_third_party_repositories": self.agent.delete_third_party_repositories,

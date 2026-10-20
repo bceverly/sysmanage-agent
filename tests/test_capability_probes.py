@@ -257,7 +257,25 @@ def _report_for(system, distro_ids, tools):
     return build_capability_report(handlers, suppressed)
 
 
-_LINUX_VIRT_TOOLS = {"virsh", "qemu-system-x86_64", "modprobe", "ip", "lxd"}
+# Phase 24: restate drives backups on Linux, so a fully equipped Linux host
+# has it (the fixture below makes a present restate a usable one).
+_LINUX_VIRT_TOOLS = {"virsh", "qemu-system-x86_64", "modprobe", "ip", "lxd", "restate"}
+
+
+@pytest.fixture(autouse=True)
+def _restate_present_means_usable(monkeypatch):
+    """A restate the fake ``which`` finds is a current one with its unit:
+    these tests are about OTHER groups, and the backup probe's version and
+    unit checks have their own tests (test_backup_probe.py)."""
+    from src.sysmanage_agent.backup import restate_contract, restate_probe
+
+    monkeypatch.setattr(
+        restate_probe,
+        "features",
+        lambda executable, ask=None: {"version": "2.0.0.0", "job_keys": []},
+    )
+    monkeypatch.setattr(restate_contract, "unit_installed", lambda exists=None: True)
+
 
 # Phase 20.1 made config management a real capability with a real prerequisite,
 # so a host that is meant to read as FULLY equipped has to carry its executor

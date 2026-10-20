@@ -64,6 +64,7 @@ from src.sysmanage_agent.operations.network_discovery_operations import (
     NetworkDiscoveryOperations,
 )
 from src.sysmanage_agent.operations.malware_scan_operations import MalwareScanOperations
+from src.sysmanage_agent.operations.backup_operations import BackupOperations
 from src.sysmanage_agent.operations.query_pack_operations import (
     QueryPackOperations,
 )
@@ -204,6 +205,7 @@ class SysManageAgent(
         self.config_mgmt_ops = ConfigMgmtOperations(self)
         self.query_pack_ops = QueryPackOperations(self)
         self.malware_scan_ops = MalwareScanOperations(self)
+        self.backup_ops = BackupOperations(self)
 
         # Initialize diagnostic collector
         self.diagnostic_collector = DiagnosticCollector(self)
@@ -718,13 +720,8 @@ class SysManageAgent(
         sender_task = asyncio.create_task(self.message_handler.message_sender())
         receiver_task = asyncio.create_task(self.message_handler.message_receiver())
         update_checker_task = asyncio.create_task(self.update_checker())
-        # data_collector() is the LOOP variant -- it waits for the
-        # initial sleep (5 min) BEFORE collecting, which gives the
-        # WebSocket handshake time to complete.  Previously this
-        # scheduled the one-shot ``_collect_and_send_periodic_data``
-        # which raced ``self.agent.connected`` and silently bailed,
-        # so OS / hardware / software inventory never landed on the
-        # server (Hosts page stayed at "OS Updated: never").
+        # The LOOP variant: it sleeps BEFORE collecting so the handshake
+        # completes (the one-shot raced ``connected`` and sent nothing).
         data_collector_task = asyncio.create_task(self.data_collector.data_collector())
         package_collector_task = asyncio.create_task(self.package_collector())
         child_host_heartbeat_task = asyncio.create_task(self.child_host_heartbeat())
@@ -742,6 +739,7 @@ class SysManageAgent(
             self.network_discovery_ops.run_report_loop()
         )
         hardware_events_task = asyncio.create_task(self.hardware_events.run())
+        await self.backup_ops.resume_in_flight()  # Phase 24: once per process
 
         done, pending = await asyncio.wait(
             [sender_task, receiver_task],
