@@ -117,6 +117,10 @@ def test_unit_installed_checks_every_unit_dir():
     assert not contract.unit_installed(lambda p: seen.append(p) or False)
     assert len(seen) == len(contract.UNIT_DIRS)
     assert contract.unit_installed(lambda p: p.startswith("/etc/systemd"))
+    # a source build of restate installs here (t14, 2026-10-20)
+    assert contract.unit_installed(
+        lambda p: p == "/usr/local/lib/systemd/system/restate-job@.service"
+    )
 
 
 def test_render_job_puts_command_first_and_repeats_lists():
@@ -174,3 +178,55 @@ def test_last_progress_takes_the_newest_parsable_line():
     lines = ['{"phase": "walk"}', "garbage", '{"phase": "write", "paths": 9}', "[]"]
     assert contract.last_progress(lines) == {"phase": "write", "paths": 9}
     assert contract.last_progress([]) is None
+
+
+# ``restate features --json`` job_keys from restate 2.0.0.1 (t14, 2026-10-20).
+# The agent wrote ``progress_file`` -- the command-line option's name -- and
+# every restate refused every job ("does not support: progress_file"), found
+# only in the lab.  Every key the agent can render must be one restate takes.
+RESTATE_2_0_JOB_KEYS = frozenset(
+    [
+        "all",
+        "allow_unverified",
+        "append_only",
+        "baseline_content",
+        "check_first",
+        "command",
+        "copy_to",
+        "dry_run",
+        "encrypt_to",
+        "exclude",
+        "include",
+        "keep_daily",
+        "keep_last",
+        "keep_monthly",
+        "keep_weekly",
+        "metadata_only",
+        "one_file_system",
+        "progress",
+        "quiesce",
+        "quiesce_with",
+        "read_all",
+        "record",
+        "report_group",
+        "repository",
+        "restore_root",
+        "result",
+        "root",
+        "rules",
+        "sign_with",
+        "snapshot",
+        "syslog",
+        "tmpdir",
+        "trusted_key",
+        "whole_packs",
+    ]
+)
+
+
+def test_every_key_the_agent_renders_is_a_restate_job_key():
+    ours = (
+        contract.BOOL_KEYS | contract.INT_KEYS | contract.LIST_KEYS
+        | contract.SCALAR_KEYS
+    )  # fmt: skip
+    assert sorted(ours - RESTATE_2_0_JOB_KEYS) == []

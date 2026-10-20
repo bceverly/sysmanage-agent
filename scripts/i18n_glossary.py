@@ -149,6 +149,7 @@ NEVER_TRANSLATE: Tuple[str, ...] = (
     "restate",
     "ZFS",
     "NFS",
+    "btrfs",
 )
 
 # ---------------------------------------------------------------------------
@@ -253,7 +254,13 @@ GLOSSARY: Dict[str, str] = {
     "secret": "a stored credential such as a password or key",
     "vault": "the encrypted store holding secrets. NOT a bank vault",
     "lease": "time-limited access to a secret. NOT a rental agreement",
-    "seal": "locking the vault so secrets cannot be read",
+    "seal": "locking the vault so secrets cannot be read; for backups, making "
+    "a backup immutable with a read-only filesystem snapshot on the storage "
+    "host. NOT a stamp, NOT an animal",
+    "sealed": "for backups, made immutable by a read-only filesystem snapshot; "
+    "for the vault, locked. NOT closed in an envelope",
+    "prune": "delete old backup snapshots beyond the retention count. NOT "
+    "cutting plants",
     "certificate": "a cryptographic identity document",
     "key": "a cryptographic key. NOT a door key",
     "token": "a string proving identity or authorization",

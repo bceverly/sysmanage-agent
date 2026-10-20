@@ -36,7 +36,7 @@ def restore_root(state_dir: str, run_id: str) -> str:
 def _reports(state_dir: str, policy_id: str, action: str, group: str) -> Dict[str, Any]:
     return {
         "result": result_path(state_dir, policy_id, action),
-        "progress_file": progress_path(state_dir, policy_id, action),
+        "progress": progress_path(state_dir, policy_id, action),
         "report_group": group,
     }
 

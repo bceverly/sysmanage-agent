@@ -23,7 +23,7 @@ The contract was agreed with the restate project on 2026-10-20 for restate
 * ``restate-job@.service`` runs ``/usr/sbin/restate run
   /etc/restate/jobs.d/%i.conf``.
 * The result is one JSON object written atomically to the job's ``result``
-  path; progress is NDJSON appended to ``progress_file``.  restate runs with
+  path; progress is NDJSON appended to the ``progress`` path.  restate runs with
   umask 077, so both are 0600 root unless ``report_group`` names a group --
   which is why every job names the agent's own group.
 """
@@ -36,8 +36,15 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 JOBS_DIR = "/etc/restate/jobs.d"
 KEYS_DIR = "/etc/restate/keys"
 UNIT_TEMPLATE = "restate-job@.service"
-# Where a package or a local install puts the unit (any one will do).
-UNIT_DIRS = ("/usr/lib/systemd/system", "/lib/systemd/system", "/etc/systemd/system")
+# Where a package or a local install puts the unit (any one will do).  A
+# source build's ``make install`` uses /usr/local/lib/systemd/system, which
+# systemd also loads from.
+UNIT_DIRS = (
+    "/usr/lib/systemd/system",
+    "/lib/systemd/system",
+    "/etc/systemd/system",
+    "/usr/local/lib/systemd/system",
+)
 
 MIN_MAJOR = 2
 RESULT_SCHEMA = 1
@@ -83,7 +90,7 @@ SCALAR_KEYS = frozenset(
         "tmpdir",
         "encrypt_to",
         "result",
-        "progress_file",
+        "progress",
         "report_group",
         "sign_with",
     }

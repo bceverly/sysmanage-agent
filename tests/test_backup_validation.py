@@ -256,6 +256,9 @@ def test_seal_jobs(seal, ok):
         "x" * (v.MAX_KEY_BYTES + 1),
         123,
     ],
+    # Short ids: the oversized key as an id overflowed Windows' 32767-character
+    # PYTEST_CURRENT_TEST environment variable (CI, 2026-10-20).
+    ids=["not-a-key", "private-block", "private-trailer", "oversized", "not-text"],
 )
 def test_only_an_armored_public_key_is_accepted(key):
     with pytest.raises(v.PolicyError):
@@ -290,9 +293,7 @@ def test_the_agent_fills_the_keys_it_controls():
     assert capture["repository"] == "/mnt/sysmanage-backup/nas-1a2b3c4d"
     assert capture["encrypt_to"] == f"/etc/restate/keys/{PID}.asc"
     assert capture["result"] == f"/var/lib/a/backup/{PID}.capture.result.json"
-    assert (
-        capture["progress_file"] == f"/var/lib/a/backup/{PID}.capture.progress.ndjson"
-    )
+    assert capture["progress"] == f"/var/lib/a/backup/{PID}.capture.progress.ndjson"
     assert capture["report_group"] == "sysmanage-agent"
     assert "repository" not in jobs["estimate"]  # estimate reads the live host
     assert "encrypt_to" not in jobs["snapshots"]

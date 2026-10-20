@@ -257,9 +257,11 @@ def _report_for(system, distro_ids, tools):
     return build_capability_report(handlers, suppressed)
 
 
-# Phase 24: restate drives backups on Linux, so a fully equipped Linux host
-# has it (the fixture below makes a present restate a usable one).
+# Phase 24: restate drives backups on Linux, and on FreeBSD (a storage host),
+# so a fully equipped host there has it (the fixture below makes a present
+# restate a usable one).
 _LINUX_VIRT_TOOLS = {"virsh", "qemu-system-x86_64", "modprobe", "ip", "lxd", "restate"}
+_FREEBSD_TOOLS = {"bhyve", "restate"}
 
 
 @pytest.fixture(autouse=True)
@@ -275,6 +277,9 @@ def _restate_present_means_usable(monkeypatch):
         lambda executable, ask=None: {"version": "2.0.0.0", "job_keys": []},
     )
     monkeypatch.setattr(restate_contract, "unit_installed", lambda exists=None: True)
+    # Only the fake ``which`` decides: a restate installed on the machine
+    # running the tests must not be found through the fixed fallback paths.
+    monkeypatch.setattr(restate_probe, "FALLBACK_PATHS", ())
 
 
 # Phase 20.1 made config management a real capability with a real prerequisite,
@@ -300,7 +305,7 @@ def test_linux_host_is_not_partial_for_lacking_bhyve_vmm_and_wsl():
 def test_bsd_host_is_not_partial_for_lacking_kvm_and_lxd():
     """The mirror image -- fixing only the reported direction is half a fix."""
     for system in ("FreeBSD", "OpenBSD"):
-        report = _report_for(system, [], {"bhyve"} | _POSIX_CFG_TOOLS)
+        report = _report_for(system, [], _FREEBSD_TOOLS | _POSIX_CFG_TOOLS)
         assert "virtualization" not in report["partial"], system
         assert not report["unavailable"], system
 
@@ -339,7 +344,7 @@ def test_inapplicable_groups_never_make_a_host_limited():
     for system, distro, tools in (
         ("Linux", ["ubuntu"], _LINUX_VIRT_TOOLS | {"pro"} | _POSIX_CFG_TOOLS),
         ("Linux", ["alpine"], _LINUX_VIRT_TOOLS | _POSIX_CFG_TOOLS),
-        ("FreeBSD", [], {"bhyve"} | _POSIX_CFG_TOOLS),
+        ("FreeBSD", [], _FREEBSD_TOOLS | _POSIX_CFG_TOOLS),
         ("OpenBSD", [], _POSIX_CFG_TOOLS),
         ("Darwin", [], _POSIX_CFG_TOOLS),
         ("Windows", [], _WINDOWS_CFG_TOOLS),

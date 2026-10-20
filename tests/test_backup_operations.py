@@ -20,6 +20,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from src.sysmanage_agent.backup import job_builder
+from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.operations import backup_operations as ops_module
 from src.sysmanage_agent.operations.backup_operations import BackupOperations
@@ -29,7 +30,7 @@ RID = "7b1c0000-0000-4000-8000-0000000000aa"
 FEATURES = {
     "version": "2.0.0.0",
     "job_keys": sorted(
-        {"command", "repository", "result", "progress_file", "report_group",
+        {"command", "repository", "result", "progress", "report_group",
          "encrypt_to", "append_only", "quiesce", "keep_last", "restore_root",
          "dry_run", "check_first", "snapshot", "include", "allow_unverified",
          "read_all", "metadata_only", "record", "whole_packs"}
@@ -85,6 +86,9 @@ def agent():
 @pytest.fixture
 def ops(agent, tmp_path, monkeypatch):
     backup = BackupOperations(agent, state_dir=str(tmp_path))
+    # The runner comes from platform.system(); these tests are the Linux
+    # (systemd) driver on every CI leg, macOS included.
+    backup.runner = job_runner.SYSTEMD
     fake = FakeRun()
     monkeypatch.setattr(backup, "_run", fake)
     monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: FEATURES))

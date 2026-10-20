@@ -38,7 +38,7 @@ TMP_ROOTS = ("/var/tmp",) + BACKUP_ROOTS  # nosec B108  # an allow-list, not a f
 NFS_TYPES = ("nfs", "nfs4")
 
 # The keys the SERVER may send for each action.  The agent fills command,
-# repository, result, progress_file, report_group and encrypt_to itself.
+# repository, result, progress, report_group and encrypt_to itself.
 SERVER_KEYS = {
     "capture": {
         "rules",
