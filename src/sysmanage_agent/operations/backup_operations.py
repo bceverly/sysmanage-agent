@@ -286,6 +286,9 @@ class BackupOperations:
             key_installed=bool(policy["encrypt_key"]),
             can_create=contract.supports(features, "create"),
         )
+        for action in contract.GATED_COMMANDS & set(jobs):
+            if not contract.supports_command(features, action):
+                del jobs[action]  # this restate cannot run it: no job file
         missing = contract.unsupported_keys(
             features, [key for job in jobs.values() for key in job]
         )

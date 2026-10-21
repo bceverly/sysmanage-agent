@@ -270,6 +270,11 @@ GLOSSARY: Dict[str, str] = {
     "(es destino, de Ziel, fr cible). NOT a goal or aim",
     "staging directory": "the folder a restore writes into before the files are "
     "copied into place. NOT a deployment stage, NOT a theater stage",
+    "pack": "one of restate's backup data files holding many backed-up "
+    "files' content. NOT a software package, NOT a bundle for shipping",
+    "plan": "for a restore, a preview worked out from the snapshot index "
+    "without reading the backed-up data. NOT a schedule, NOT a subscription "
+    "plan",
     "certificate": "a cryptographic identity document",
     "key": "a cryptographic key. NOT a door key",
     "token": "a string proving identity or authorization",

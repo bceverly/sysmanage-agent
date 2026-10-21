@@ -28,7 +28,7 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 HOST_ACTIONS = ("capture", "snapshots", "estimate")
-STORAGE_ACTIONS = ("prune", "check", "copy", "du", "seal")
+STORAGE_ACTIONS = ("prune", "check", "copy", "du", "repack", "seal")
 ROLES = {"host": HOST_ACTIONS, "storage": STORAGE_ACTIONS}
 
 # Where repositories and their mounts may live.
@@ -61,6 +61,9 @@ SERVER_KEYS = {
     # What the repository holds and what each snapshot alone would free --
     # from the pack lists, reading no pack, so no key is needed.
     "du": set(),
+    # Rewrite old packs as seekable ones (restate 2.0.0.8): restores of a
+    # few files then read only the segments they need.  Keyless, local.
+    "repack": {"dry_run"},
 }
 
 BOOLS = {

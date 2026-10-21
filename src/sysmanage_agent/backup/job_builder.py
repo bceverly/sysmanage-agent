@@ -87,6 +87,9 @@ def record_path(state_dir: str, policy_id: str) -> str:
 _KEYLESS_STORAGE = {
     "prune": {"whole_packs": True},
     "check": {"metadata_only": True, "read_all": False},
+    # repack rewrites packs, so it shares the record like prune: its own
+    # removals must not read as tampering on the next check.
+    "repack": {},
 }
 
 

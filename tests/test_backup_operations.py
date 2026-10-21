@@ -258,6 +258,32 @@ async def test_path_rules_install_a_rules_file_and_remove_it_when_dropped(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("has_repack", [True, False], ids=["repack", "no-repack"])
+async def test_repack_is_installed_only_where_restate_has_it(
+    ops, monkeypatch, has_repack
+):
+    commands = ["capture", "prune", "check", "du"] + (["repack"] if has_repack else [])
+    features = dict(FEATURES, commands=commands)
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
+    rendered = []
+    real = contract.render_job
+    monkeypatch.setattr(
+        contract, "render_job", lambda job: rendered.append(job) or real(job)
+    )
+    policy = _storage_policy({"mode": "none"})
+    policy["jobs"]["repack"] = {}
+    answer = await ops.backup_configure(policy)
+    assert answer["success"], answer
+    assert ("repack" in answer["installed"]) is has_repack
+    repack = [job for job in rendered if job["command"] == "repack"]
+    if has_repack:
+        assert repack[0]["record"] == job_builder.record_path(ops.state_dir, PID)
+        assert repack[0]["repository"].endswith(STORAGE_TARGET["repo_dir"])
+    else:
+        assert not repack
+
+
+@pytest.mark.asyncio
 async def test_a_failed_install_is_reported(ops):
     ops.fake.fail[("install",)] = (1, "sudo: a password is required")
     answer = await ops.backup_configure(_host_policy())

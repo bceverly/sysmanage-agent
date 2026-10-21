@@ -163,6 +163,16 @@ def supports(features: Optional[Dict[str, Any]], key: str) -> bool:
     return key in set((features or {}).get("job_keys") or [])
 
 
+def supports_command(features: Optional[Dict[str, Any]], command: str) -> bool:
+    """Whether this restate has ``command`` (``repack`` arrived in 2.0.0.8)."""
+    return command in set((features or {}).get("commands") or [])
+
+
+# Storage actions that need a newer restate than the 2.0 contract: their job
+# file is installed only when ``restate features`` lists the command.
+GATED_COMMANDS = frozenset({"repack"})
+
+
 def unsupported_keys(features: Dict[str, Any], keys: Iterable[str]) -> List[str]:
     """Keys a job uses that this restate does not list."""
     known = set(features.get("job_keys") or [])
