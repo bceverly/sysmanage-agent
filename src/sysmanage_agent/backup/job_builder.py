@@ -155,8 +155,14 @@ def build_restore_job(
     state_dir: str,
     group: str,
     trusted_key: Optional[str] = None,
+    can_plan: bool = False,
 ) -> Dict[str, Any]:
     """A restore job into a staging directory the AGENT chooses.
+
+    A preview (``dry_run``) becomes restate's ``plan`` when this restate
+    takes it: the plan comes from the snapshot's index and the host's files,
+    reading no pack, so it takes seconds; ``dry_run`` reads (and checks)
+    every byte of the snapshot first.
 
     Never in place in this slice: ``restore_root`` is always
     ``<state>/restore/<run_id>``, whatever the server sends.  Unsigned
@@ -177,6 +183,9 @@ def build_restore_job(
         "dry_run": dry_run,
         "check_first": True,
     }
+    if dry_run and can_plan:
+        job["plan"] = True
+        del job["dry_run"], job["check_first"]  # both read the packs
     if params.get("snapshot"):
         job["snapshot"] = v.check_snapshot(params["snapshot"])
     include = _patterns(params.get("include"), "include")

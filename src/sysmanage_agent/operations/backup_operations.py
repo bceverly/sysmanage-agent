@@ -388,6 +388,7 @@ class BackupOperations:
                 repository=policy["repository"],
                 state_dir=self.state_dir,
                 group=_agent_group(),
+                can_plan=contract.supports(self._features(), "plan"),
             )
             run_id = validation.check_uuid(params.get("run_id"), "run_id")
             os.makedirs(job["restore_root"], mode=0o700, exist_ok=True)

@@ -456,3 +456,20 @@ def test_a_storage_du_job_takes_nothing_from_the_server():
     ]
     assert job["command"] == "du" and job["repository"] == "/srv/b/h"
     assert set(job) == {"command", "repository", "result", "progress", "report_group"}
+
+
+@pytest.mark.parametrize("can_plan", [True, False], ids=["plan", "no-plan"])
+def test_a_restore_preview_plans_from_the_index_when_restate_can(can_plan):
+    params = {"run_id": "7b1c0000-0000-4000-8000-0000000000aa", "policy_id": PID,
+              "snapshot": "20261021T153126Z", "dry_run": True}  # fmt: skip
+    job = builder.build_restore_job(params, repository="/mnt/b/h", state_dir="/s",
+                                    group="g", can_plan=can_plan)  # fmt: skip
+    if can_plan:
+        assert job.get("plan") is True
+        assert "dry_run" not in job and "check_first" not in job
+    else:
+        assert job["dry_run"] is True and "plan" not in job
+    real = dict(params, dry_run=False)
+    job = builder.build_restore_job(real, repository="/mnt/b/h", state_dir="/s",
+                                    group="g", can_plan=True)  # fmt: skip
+    assert "plan" not in job and job["dry_run"] is False  # a real restore

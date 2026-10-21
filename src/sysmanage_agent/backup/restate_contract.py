@@ -74,6 +74,7 @@ BOOL_KEYS = frozenset(
         "record",
         "whole_packs",
         "dry_run",
+        "plan",
         "check_first",
         "allow_unverified",
         "syslog",
@@ -152,7 +153,9 @@ def features_usable(features: Optional[Dict[str, Any]]) -> bool:
 # the 2.0 contract, so an older restate still gets every job it can run.
 # ``create``: a capture makes its own repository when the directory is
 # missing or empty (and refuses a non-empty one that is not a repository).
-GATED_KEYS = frozenset({"create"})
+# ``plan``: a restore preview worked out from the snapshot's index alone,
+# reading no pack -- seconds, where ``dry_run`` reads the whole snapshot.
+GATED_KEYS = frozenset({"create", "plan"})
 
 
 def supports(features: Optional[Dict[str, Any]], key: str) -> bool:
