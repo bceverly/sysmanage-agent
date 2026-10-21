@@ -222,8 +222,20 @@ async def test_a_restarted_freebsd_agent_resumes_a_daemon_run(bsd, agent):
     assert (report["run_id"], report["status"], report["exit"]) == (RID, "busy", 5)
 
 
+def test_backup_state_lives_beside_the_agents_database(agent, monkeypatch, tmp_path):
+    # A fixed /var/lib/sysmanage-agent made a checkout agent switch to a new,
+    # empty database there on restart and lose its identity (2026-10-20).
+    monkeypatch.delenv("SYSMANAGE_BACKUP_STATE_DIR", raising=False)
+    database = tmp_path / "checkout" / "agent.db"
+    monkeypatch.setattr(ops_module, "current_database_path", lambda: str(database))
+    assert ops_module.BackupOperations(agent).state_dir == str(database.parent)
+    monkeypatch.setenv("SYSMANAGE_BACKUP_STATE_DIR", "/srv/state")
+    assert ops_module.BackupOperations(agent).state_dir == "/srv/state"
+
+
 def test_the_state_directory_follows_the_platform(agent, monkeypatch):
     monkeypatch.delenv("SYSMANAGE_BACKUP_STATE_DIR", raising=False)
+    monkeypatch.setattr(ops_module, "current_database_path", lambda: None)
     monkeypatch.setattr(ops_module.platform, "system", lambda: "FreeBSD")
     backup = ops_module.BackupOperations(agent)
     assert backup.state_dir == "/var/db/sysmanage-agent"

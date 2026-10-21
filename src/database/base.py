@@ -10,6 +10,7 @@ import logging
 import os
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -116,6 +117,12 @@ def get_database_manager(database_path: str = None) -> DatabaseManager:
     if _db_manager is None:
         _db_manager = DatabaseManager(database_path)
     return _db_manager
+
+
+def current_database_path() -> Optional[str]:
+    """The open database's path, or None before ``initialize_database`` --
+    read-only: unlike ``get_database_manager`` it never creates one."""
+    return _db_manager.database_path if _db_manager is not None else None
 
 
 @contextmanager

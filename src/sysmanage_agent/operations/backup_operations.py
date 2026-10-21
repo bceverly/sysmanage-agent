@@ -33,6 +33,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.database.base import current_database_path
 from src.i18n import _
 from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
@@ -45,6 +46,28 @@ DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
 # The BSDs keep a daemon's state in /var/db (the FreeBSD rc script puts the
 # agent's database there); there is no /var/lib to create one in.
 STATE_DIRS = {"FreeBSD": "/var/db/sysmanage-agent"}
+
+
+def default_state_dir() -> str:
+    """Where backup job state lives: beside the agent's own database.
+
+    NEVER a fixed /var/lib/sysmanage-agent: the database lookup takes that
+    directory's mere existence as "use the system database there", so an
+    agent whose database is elsewhere (a source checkout's ./agent.db) that
+    created it for backup state switched to a new, empty database on its
+    next restart and lost its host identity (lab, 2026-10-20).  Packaged
+    agents keep their database in /var/lib (Linux) or /var/db (FreeBSD), so
+    nothing moves for them.
+    """
+    configured = os.environ.get("SYSMANAGE_BACKUP_STATE_DIR")
+    if configured:
+        return configured
+    database = current_database_path()
+    if database:
+        return os.path.dirname(os.path.abspath(database))
+    return STATE_DIRS.get(platform.system(), DEFAULT_STATE_DIR)
+
+
 POLL_SECONDS = 5
 PROGRESS_EVERY_SECONDS = 10
 START_GRACE_SECONDS = 60
@@ -105,10 +128,7 @@ class BackupOperations:
     def __init__(self, agent_instance, state_dir: Optional[str] = None):
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
-        self.state_dir = state_dir or os.environ.get(
-            "SYSMANAGE_BACKUP_STATE_DIR",
-            STATE_DIRS.get(platform.system(), DEFAULT_STATE_DIR),
-        )
+        self.state_dir = state_dir or default_state_dir()
         self._tasks: set = set()
         self._resumed = False
         self.runner = job_runner.runner_for(platform.system())
