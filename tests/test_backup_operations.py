@@ -166,7 +166,8 @@ async def test_every_command_refuses_when_restate_is_unusable(
 async def test_configure_installs_root_owned_job_files(ops):
     answer = await ops.backup_configure(_host_policy())
     assert answer == {"success": True, "policy_id": PID,
-                      "installed": ["capture", "snapshots"], "removed": []}  # fmt: skip
+                      "installed": ["capture", "snapshots"], "removed": [],
+                      "hooks": []}  # fmt: skip
     installs = ops.fake.ran("install")
     assert [c[-1] for c in installs] == [
         contract.job_path(PID, "capture"), contract.job_path(PID, "snapshots")
@@ -284,6 +285,38 @@ async def test_repack_is_installed_only_where_restate_has_it(
         assert repack[0]["repository"].endswith(STORAGE_TARGET["repo_dir"])
     else:
         assert not repack
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("has_protect", [True, False], ids=["protect", "no-protect"])
+async def test_protect_is_installed_only_where_restate_has_it(
+    ops, monkeypatch, has_protect
+):
+    commands = ["capture", "prune", "check", "du"] + (
+        ["protect"] if has_protect else []
+    )
+    features = dict(FEATURES, commands=commands,
+                    job_keys=FEATURES["job_keys"] + ["group"])  # fmt: skip
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
+    rendered = []
+    real = contract.render_job
+    monkeypatch.setattr(
+        contract, "render_job", lambda job: rendered.append(job) or real(job)
+    )
+    policy = _storage_policy({"mode": "none"})
+    policy["jobs"]["protect"] = {}
+    policy["target"] = dict(STORAGE_TARGET, service_account="backup_1")
+    answer = await ops.backup_configure(policy)
+    assert answer["success"], answer
+    assert ("protect" in answer["installed"]) is has_protect
+    protect = [job for job in rendered if job["command"] == "protect"]
+    if has_protect:
+        # the hosts' mapped group may add, never change or remove
+        assert protect[0]["group"] == "backup_1"
+        assert protect[0]["repository"].endswith(STORAGE_TARGET["repo_dir"])
+        assert "record" not in protect[0]
+    else:
+        assert not protect
 
 
 @pytest.mark.asyncio
@@ -824,3 +857,11 @@ async def test_a_host_job_never_runs_against_the_local_disk(ops, job_files, moun
     )
     assert answer["reason"] == "mount_failed" and "not mounted" in answer["error"]
     assert not ops.fake.ran("--no-block", "start")
+
+
+@pytest.mark.asyncio
+async def test_a_host_reports_the_quiesce_hooks_its_restate_finds(ops, monkeypatch):
+    features = dict(FEATURES, hooks=["lxd", "docker", "Bad Name", 7])
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
+    answer = await ops.backup_configure(_host_policy())
+    assert answer["success"] and answer["hooks"] == ["docker", "lxd"]

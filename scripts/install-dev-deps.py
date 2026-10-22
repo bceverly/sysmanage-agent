@@ -103,17 +103,22 @@ def main():
     # 26.3.1 -> 26.10.0 every run), so `make security` saw a stale venv no
     # matter how often install-dev ran.  One pass reports the conflict.
     print("\n=== Installing requirements-dev.txt + requirements.txt ===")
-    if not install_packages_with_env(
-        [
-            "--upgrade",
-            "--upgrade-strategy",
-            "eager",
-            "-r",
-            "requirements-dev.txt",
-            "-r",
-            "requirements.txt",
-        ]
-    ):
+    args = [
+        "--upgrade",
+        "--upgrade-strategy",
+        "eager",
+        "-r",
+        "requirements-dev.txt",
+        "-r",
+        "requirements.txt",
+    ]
+    # OpenBSD packages linked into the venv (scripts/link-openbsd-package.sh)
+    # stay at their packaged versions: an eager upgrade would otherwise try
+    # to build them from source (cryptography cannot build on 8.0).
+    constraints = os.path.join(sys.prefix, "openbsd-constraints.txt")
+    if os.path.isfile(constraints):
+        args += ["-c", constraints]
+    if not install_packages_with_env(args):
         print("ERROR: Failed to install development dependencies")
         sys.exit(1)
     print("✓ Development dependencies installed")

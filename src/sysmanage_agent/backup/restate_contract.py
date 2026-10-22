@@ -31,6 +31,7 @@ The contract was agreed with the restate project on 2026-10-20 for restate
 import json
 import os
 import posixpath
+import re
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 JOBS_DIR = "/etc/restate/jobs.d"
@@ -168,9 +169,22 @@ def supports_command(features: Optional[Dict[str, Any]], command: str) -> bool:
     return command in set((features or {}).get("commands") or [])
 
 
-# Storage actions that need a newer restate than the 2.0 contract: their job
-# file is installed only when ``restate features`` lists the command.
-GATED_COMMANDS = frozenset({"repack"})
+# Storage actions that need a newer restate than the 2.0 contract (repack
+# 2.0.0.8, protect 2.1.0.1): their job file is installed only when
+# ``restate features`` lists the command.
+GATED_COMMANDS = frozenset({"repack", "protect"})
+
+
+_HOOK = re.compile(r"^[a-z0-9_-]{1,32}$")
+
+
+def present_hooks(features: Optional[Dict[str, Any]]) -> List[str]:
+    """Quiesce hooks this restate lists (2.1+ lists only hooks whose app is
+    present on the host); malformed names dropped."""
+    hooks = (features or {}).get("hooks") or []
+    if not isinstance(hooks, list):
+        return []
+    return sorted({h for h in hooks if isinstance(h, str) and _HOOK.match(h)})
 
 
 def unsupported_keys(features: Dict[str, Any], keys: Iterable[str]) -> List[str]:

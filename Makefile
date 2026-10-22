@@ -555,6 +555,7 @@ else
 		else \
 			echo "✓ All Python dependencies already installed"; \
 		fi; \
+		sh scripts/link-openbsd-package.sh $(PYTHON) py3-cryptography '?py3-grpcio' || exit 1; \
 		$(PYTHON) scripts/install-dev-deps.py; \
 	elif [ "$$(uname -s)" = "NetBSD" ]; then \
 		echo "[INFO] NetBSD detected - configuring for grpcio + cryptography build..."; \

@@ -130,6 +130,11 @@ def build_jobs(
         if action in _KEYLESS_STORAGE:
             job.update(_KEYLESS_STORAGE[action])
             job["record"] = record_path(state_dir, policy["policy_id"])
+        if action == "protect":
+            # After each capture, on the storage host: finished packs and
+            # snapshots become root's and read-only, the directories sticky
+            # and writable by the hosts' (mapped) group -- hosts append only.
+            job["group"] = policy.get("service_account") or "restate"
         job.update(_reports(state_dir, policy["policy_id"], action, group))
         jobs[action] = job
     return jobs

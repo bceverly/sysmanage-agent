@@ -330,6 +330,10 @@ class BackupOperations:
             "installed": sorted(jobs),
             "removed": removed,
         }
+        if policy["role"] == "host":
+            # The quiesce hooks this host's restate finds present (2.1+): the
+            # server offers them in the policy dialog.
+            reply["hooks"] = contract.present_hooks(features)
         if policy["role"] == "storage":
             # Can this filesystem seal at all?  The server warns when not.
             reply["storage_fs"] = storage_fs.describe(

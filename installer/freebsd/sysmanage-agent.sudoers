@@ -113,12 +113,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/pkill -x clamd
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs snapshot *
 # A FreeBSD storage host has no systemd, so the agent starts restate itself,
 # under daemon(8) (daemon runs as the agent; only restate is elevated):
-# exactly ``restate run /etc/restate/jobs.d/<policy uuid>.<prune|check|copy|du|repack>.conf``.
+# exactly ``restate run /etc/restate/jobs.d/<policy uuid>.<prune|check|copy|du|repack|protect>.conf``.
 # A regular expression, not a wildcard: ``*`` would also match extra options
 # such as ``--result PATH`` -- a root-owned write anywhere.  restate itself
 # refuses a job file that is not root's and in a directory only root can
 # change.  Needs sudo 1.9.10 or later (FreeBSD 14 ships 1.9.17).
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate ^run /etc/restate/jobs\.d/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(prune|check|copy|du|repack)\.conf$
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate ^run /etc/restate/jobs\.d/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(prune|check|copy|du|repack|protect)\.conf$
 # "Prepare storage for this host" (Phase 24, started by an administrator from
 # the Backups page): the repository becomes its own ZFS dataset, exported to
 # that one host's address only with every client mapped to the backup service

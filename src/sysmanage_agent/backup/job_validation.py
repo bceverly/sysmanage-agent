@@ -29,7 +29,7 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 HOST_ACTIONS = ("capture", "snapshots", "estimate")
-STORAGE_ACTIONS = ("prune", "check", "copy", "du", "repack", "seal")
+STORAGE_ACTIONS = ("prune", "check", "copy", "du", "repack", "protect", "seal")
 ROLES = {"host": HOST_ACTIONS, "storage": STORAGE_ACTIONS}
 
 # Where repositories and their mounts may live.
@@ -65,6 +65,9 @@ SERVER_KEYS = {
     # Rewrite old packs as seekable ones (restate 2.0.0.8): restores of a
     # few files then read only the segments they need.  Keyless, local.
     "repack": {"dry_run"},
+    # Make finished packs and snapshots root's and read-only (restate
+    # 2.1.0.1); the agent fills ``group`` from the validated service account.
+    "protect": set(),
 }
 
 BOOLS = {

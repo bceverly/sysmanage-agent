@@ -21,6 +21,11 @@ from tests.lucky13.conftest import REPO
 
 # (check, repo-relative path) -> why this occurrence is safe.
 ALLOWED = {
+    ("6", "src/sysmanage_agent/backup/storage_audit.py"): (
+        "the read-only storage audit TESTS for write bits (mode & 0o222) on "
+        "finished backup packs to report ones a host could still change; it "
+        "never sets a mode or changes a file"
+    ),
     ("4", "scripts/translate_i18n.py"): (
         "developer translation tool loading this repository's own i18n_strict.py; "
         "never shipped in the agent"
