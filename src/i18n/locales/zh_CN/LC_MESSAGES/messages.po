@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 08:32-0400\n"
+"POT-Creation-Date: 2026-10-22 09:11-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:78
+#: src/database/base.py:79
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "创建数据库目录 %s 失败：%s"
 
-#: src/database/base.py:88
+#: src/database/base.py:89
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "创建数据库表失败：%s"
@@ -69,6 +69,77 @@ msgstr "消息 %s (类型: %s) 超过最大重试次数，标记为失败"
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  无法访问 {config_dir}，回退到 {fallback_dir}"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:82
+#, python-format
+msgid ""
+"The backup service account %(account)s (user and group) does not exist on "
+"this storage host. Create it, then prepare again."
+msgstr "此存储主机上不存在备份服务账户 %(account)s（用户和组）。请创建它，然后重新准备。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:112
+#, python-format
+msgid ""
+"The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
+"Run the agent as root, or move the directory aside, then prepare again."
+msgstr "代理无法读取 %(path)s，因此无法判断其中是否有备份。请以 root 身份运行代理，或将该目录移到别处，然后重新准备。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:123
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own ZFS dataset, and preparing "
+"never moves backups. Either 1) rename it (for example to %(path)s.old), "
+"prepare again, and copy its contents into the new dataset as root; or 2) "
+"remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s 中已有文件，但它不是独立的 ZFS 数据集，而准备操作从不移动备份。请 1) 将其重命名（例如改为 "
+"%(path)s.old），重新准备，再以 root 身份将其内容复制到新数据集中；或 2) 如果不再需要这些备份，则将其删除。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:131
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own btrfs subvolume, and "
+"preparing never moves backups. Either 1) rename it (for example to "
+"%(path)s.old), prepare again, and copy its contents into the new subvolume "
+"as root; or 2) remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s 中已有文件，但它不是独立的 btrfs 子卷，而准备操作从不移动备份。请 1) 将其重命名（例如改为 "
+"%(path)s.old），重新准备，再以 root 身份将其内容复制到新子卷中；或 2) 如果不再需要这些备份，则将其删除。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:160
+msgid ""
+"The server does not know the backed-up host's IP address yet, so its export "
+"cannot be limited to it. Wait for that host to report its network details, "
+"then prepare again."
+msgstr "服务器尚不知道被备份主机的 IP 地址，因此无法将其导出限制为该地址。请等待该主机报告其网络信息，然后重新准备。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:174
+#, python-format
+msgid "Preparing storage is not supported on %(system)s."
+msgstr "%(system)s 不支持准备存储。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:182
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr "FreeBSD 导出的是整个文件系统，因此每台主机的存储库都需要独立的 ZFS 数据集。请将存储路径放在 ZFS 上，然后重新准备。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:226
+#, python-format
+msgid ""
+"The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
+"dataset would not land at the repository. Create a dataset mounted there "
+"(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
+msgstr ""
+"存储路径 %(path)s 处未挂载 ZFS 数据集，因此子数据集不会位于存储库所在位置。请在该处创建一个挂载的数据集（zfs create -o "
+"mountpoint=%(path)s POOL/NAME），然后重新准备。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:253
+#, python-format
+msgid ""
+"%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
+"root), then prepare again."
+msgstr "%(path)s 是空目录，不是 btrfs 子卷。请将其删除（以 root 身份执行 rmdir），然后重新准备。"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2128,44 +2199,54 @@ msgstr "收集代理日志时出错：%s"
 msgid "Error collecting error logs: %s"
 msgstr "收集错误日志时出错：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:226
+#: src/sysmanage_agent/operations/backup_operations.py:255
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate在此主机上不可用：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:245
+#: src/sysmanage_agent/operations/backup_operations.py:274
 msgid "This platform can only be a backup storage host."
 msgstr "此平台只能作为备份存储主机。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:251
+#: src/sysmanage_agent/operations/backup_operations.py:280
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "无法安装备份作业：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:272
+#: src/sysmanage_agent/operations/backup_operations.py:307
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支持：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:329
-#: src/sysmanage_agent/operations/backup_operations.py:336
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:380
+#: src/sysmanage_agent/operations/backup_operations.py:390
+#: src/sysmanage_agent/operations/backup_operations.py:406
 msgid "That backup action is not configured on this host."
 msgstr "该备份操作在此主机上未配置。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:410
+#: src/sysmanage_agent/operations/backup_operations.py:465
 msgid "restate is not installed on this host."
 msgstr "此主机上未安装restate。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:428
+#: src/sysmanage_agent/operations/backup_operations.py:483
 msgid "That backup job is already running."
 msgstr "该备份作业正在运行中。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:439
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid "The backup job could not be started."
 msgstr "无法启动备份作业。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:564
+#: src/sysmanage_agent/operations/backup_operations.py:595
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr "无法为策略 %s 准备备份存储：%s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:699
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "无法运行存储审核：%s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:717
 msgid "Could not queue the backup report"
 msgstr "无法将备份报告加入队列"
 

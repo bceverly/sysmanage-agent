@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 08:32-0400\n"
+"POT-Creation-Date: 2026-10-22 09:11-0400\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:78
+#: src/database/base.py:79
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "データベースディレクトリ%sを作成できませんでした: %s"
 
-#: src/database/base.py:88
+#: src/database/base.py:89
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "データベーステーブルの作成に失敗しました: %s"
@@ -69,6 +69,89 @@ msgstr "メッセージ %s (タイプ: %s) は最大再試行回数を超え、�
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  {config_dir} にアクセスできません、{fallback_dir} にフォールバック"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:82
+#, python-format
+msgid ""
+"The backup service account %(account)s (user and group) does not exist on "
+"this storage host. Create it, then prepare again."
+msgstr ""
+"バックアップ用サービスアカウント %(account)s (ユーザーとグループ) "
+"がこのストレージホストに存在しません。作成してから、もう一度準備してください。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:112
+#, python-format
+msgid ""
+"The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
+"Run the agent as root, or move the directory aside, then prepare again."
+msgstr ""
+"エージェントは %(path)s を読み取れないため、バックアップが含まれているか判断できません。エージェントを root "
+"で実行するか、ディレクトリを別の場所に移動してから、もう一度準備してください。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:123
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own ZFS dataset, and preparing "
+"never moves backups. Either 1) rename it (for example to %(path)s.old), "
+"prepare again, and copy its contents into the new dataset as root; or 2) "
+"remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s にはすでにファイルがありますが、独自の ZFS データセットではありません。準備ではバックアップを移動しません。1) 名前を変更し "
+"(例: %(path)s.old)、もう一度準備して、その内容を root で新しいデータセットにコピーするか、2) "
+"それらのバックアップが不要なら削除してください。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:131
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own btrfs subvolume, and "
+"preparing never moves backups. Either 1) rename it (for example to "
+"%(path)s.old), prepare again, and copy its contents into the new subvolume "
+"as root; or 2) remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s にはすでにファイルがありますが、独自の btrfs サブボリュームではありません。準備ではバックアップを移動しません。1) "
+"名前を変更し (例: %(path)s.old)、もう一度準備して、その内容を root で新しいサブボリュームにコピーするか、2) "
+"それらのバックアップが不要なら削除してください。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:160
+msgid ""
+"The server does not know the backed-up host's IP address yet, so its export "
+"cannot be limited to it. Wait for that host to report its network details, "
+"then prepare again."
+msgstr ""
+"サーバーはバックアップ対象ホストの IP "
+"アドレスをまだ把握していないため、そのエクスポートをそのアドレスに限定できません。そのホストがネットワーク情報を報告するまで待ってから、もう一度準備してください。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:174
+#, python-format
+msgid "Preparing storage is not supported on %(system)s."
+msgstr "%(system)s ではストレージの準備はサポートされていません。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:182
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr ""
+"FreeBSD はファイルシステム全体をエクスポートするため、各ホストのリポジトリには独自の ZFS データセットが必要です。ストレージパスを ZFS "
+"上に置いてから、もう一度準備してください。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:226
+#, python-format
+msgid ""
+"The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
+"dataset would not land at the repository. Create a dataset mounted there "
+"(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
+msgstr ""
+"ストレージパス %(path)s には ZFS "
+"データセットがマウントされていないため、子データセットはリポジトリの位置に作成されません。そこにマウントされるデータセットを作成してから (zfs "
+"create -o mountpoint=%(path)s POOL/NAME)、もう一度準備してください。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:253
+#, python-format
+msgid ""
+"%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
+"root), then prepare again."
+msgstr ""
+"%(path)s は空のディレクトリで、btrfs サブボリュームではありません。削除してから (root で rmdir)、もう一度準備してください。"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2134,44 +2217,54 @@ msgstr "エージェントログの収集に失敗しました: %s"
 msgid "Error collecting error logs: %s"
 msgstr "エラーログの収集に失敗しました: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:226
+#: src/sysmanage_agent/operations/backup_operations.py:255
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "このホストではrestateを使用できません: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:245
+#: src/sysmanage_agent/operations/backup_operations.py:274
 msgid "This platform can only be a backup storage host."
 msgstr "このプラットフォームはバックアップのストレージホストとしてのみ使用できます。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:251
+#: src/sysmanage_agent/operations/backup_operations.py:280
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "バックアップジョブのインストールに失敗しました: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:272
+#: src/sysmanage_agent/operations/backup_operations.py:307
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "このrestateは以下の機能をサポートしていません: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:329
-#: src/sysmanage_agent/operations/backup_operations.py:336
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:380
+#: src/sysmanage_agent/operations/backup_operations.py:390
+#: src/sysmanage_agent/operations/backup_operations.py:406
 msgid "That backup action is not configured on this host."
 msgstr "このホストでは、そのバックアップアクションは設定されていません。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:410
+#: src/sysmanage_agent/operations/backup_operations.py:465
 msgid "restate is not installed on this host."
 msgstr "このホストにはrestateがインストールされていません。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:428
+#: src/sysmanage_agent/operations/backup_operations.py:483
 msgid "That backup job is already running."
 msgstr "そのバックアップジョブはすでに実行中です。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:439
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid "The backup job could not be started."
 msgstr "バックアップジョブを開始できませんでした。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:564
+#: src/sysmanage_agent/operations/backup_operations.py:595
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr "ポリシー %s のバックアップストレージを準備できませんでした: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:699
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "ストレージの監査を実行できませんでした: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:717
 msgid "Could not queue the backup report"
 msgstr "バックアップレポートをキューに追加できませんでした"
 

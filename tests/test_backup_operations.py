@@ -472,6 +472,7 @@ async def test_seal_snapshots_the_dataset(ops, agent):
     await _drain(ops)
     snap = ops.fake.ran("snapshot")
     assert snap and snap[0][-1] == f"tank/b@sysmanage-{RID}"
+    assert "-r" in snap[0]  # each host's repository is a child dataset
     report = _sent(agent, "backup_result")[0]
     assert (report["action"], report["status"], report["exit"]) == ("seal", "ok", 0)
 
@@ -614,10 +615,93 @@ async def test_storage_configure_reports_the_filesystem(ops, monkeypatch):
     monkeypatch.setattr(ops_module.storage_fs, "describe", describe)
     reply = await ops.backup_configure(_storage_policy({"mode": "none"}))
     assert reply["success"] and reply["storage_fs"]["type"] == "ext4"
-    assert seen == ["/srv/backups/restate"]
+    assert seen[0] == "/srv/backups/restate"  # then the audit asks about the repository
 
 
 @pytest.mark.asyncio
 async def test_host_configure_does_not_report_a_filesystem(ops):
     reply = await ops.backup_configure(_host_policy())
     assert reply["success"] and "storage_fs" not in reply
+
+
+# --- prepare: one host's own filesystem and export -------------------------
+
+
+@pytest.fixture
+def prepare_env(ops, monkeypatch):
+    prep = ops_module.storage_prepare
+    monkeypatch.setattr(prep.pwd, "getpwnam", lambda n: SimpleNamespace(pw_uid=1002))
+    monkeypatch.setattr(prep.grp, "getgrnam", lambda n: SimpleNamespace(gr_gid=1003))
+    monkeypatch.setattr(ops_module.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(ops_module.storage_fs, "describe",
+                        lambda *a, **k: {"type": "btrfs"})  # fmt: skip
+    monkeypatch.setattr(ops, "_zfs_datasets", AsyncMock(return_value={}))
+    monkeypatch.setattr(ops, "_audit", lambda policy: [{"code": "export_own",
+                        "level": "ok", "params": {}}])  # fmt: skip
+    return ops
+
+
+def _prepare_policy():
+    target = dict(STORAGE_TARGET, client_address="192.168.4.196")
+    return {"policy_id": PID, "role": "storage", "target": target,
+            "jobs": {"check": {"read_all": True}}}  # fmt: skip
+
+
+@pytest.mark.asyncio
+async def test_prepare_creates_exports_and_protects_in_order(prepare_env, agent):
+    ops = prepare_env
+    await ops.backup_configure(_prepare_policy())
+    ops.fake.calls.clear()
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "prepare"}
+    )
+    assert answer["status"] == "started"
+    await _drain(ops)
+    bare = [c[2:] if c[:2] == ["sudo", "-n"] else c for c in ops.fake.calls]
+    repo = "/srv/backups/restate/h-1"
+    create = next(
+        i for i, c in enumerate(bare) if c[1:] == ["subvolume", "create", repo]
+    )
+    install = next(i for i, c in enumerate(bare)
+                   if c[0] == "install" and c[-1].startswith("/etc/exports.d/"))  # fmt: skip
+    reload_ = bare.index(["exportfs", "-ra"])
+    chown = bare.index(["chown", "root:restate", repo])
+    assert create < install < reload_ < chown < bare.index(["chmod", "1770", repo])
+    report = _sent(agent, "backup_result")[0]
+    assert (report["action"], report["status"]) == ("prepare", "ok")
+    assert report["storage_audit"][0]["code"] == "export_own"  # re-audited
+
+
+@pytest.mark.asyncio
+async def test_a_refused_prepare_reports_why(prepare_env, agent, monkeypatch):
+    monkeypatch.setattr(ops_module.platform, "system", lambda: "FreeBSD")
+    monkeypatch.setattr(ops_module.storage_fs, "describe",
+                        lambda *a, **k: {"type": "ufs"})  # fmt: skip
+    await prepare_env.backup_configure(_prepare_policy())
+    await prepare_env.backup_run({"run_id": RID, "policy_id": PID, "action": "prepare"})
+    await _drain(prepare_env)
+    report = _sent(agent, "backup_result")[0]
+    assert report["status"] == "failed"
+    assert report["result"]["reason"] == "zfs_required" and report["result"]["errors"]
+
+
+@pytest.mark.asyncio
+async def test_a_failed_prepare_command_is_reported(prepare_env, agent):
+    await prepare_env.backup_configure(_prepare_policy())
+    for path in ops_module.BTRFS_PATHS:
+        prepare_env.fake.fail[(path,)] = (1, "ERROR: cannot create")
+    await prepare_env.backup_run({"run_id": RID, "policy_id": PID, "action": "prepare"})
+    await _drain(prepare_env)
+    report = _sent(agent, "backup_result")[0]
+    assert report["status"] == "failed"
+    assert report["result"]["reason"] == "command_failed"
+    assert not prepare_env.fake.ran("exportfs")  # stopped at the first failure
+
+
+@pytest.mark.asyncio
+async def test_a_host_policy_cannot_prepare(ops):
+    await ops.backup_configure(_host_policy())
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "prepare"}
+    )
+    assert answer["success"] is False and answer["reason"] == "not_configured"

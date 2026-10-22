@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 08:32-0400\n"
+"POT-Creation-Date: 2026-10-22 09:11-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:78
+#: src/database/base.py:79
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "데이터베이스 디렉토리 생성 실패 %s: %s"
 
-#: src/database/base.py:88
+#: src/database/base.py:89
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "데이터베이스 테이블 생성 실패: %s"
@@ -69,6 +69,87 @@ msgstr "메시지 %s (유형: %s)가 최대 재시도 횟수를 초과하여 실
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  {config_dir}에 접근 불가, {fallback_dir}로 대체"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:82
+#, python-format
+msgid ""
+"The backup service account %(account)s (user and group) does not exist on "
+"this storage host. Create it, then prepare again."
+msgstr ""
+"백업 서비스 계정 %(account)s(사용자 및 그룹)이(가) 이 스토리지 호스트에 없습니다. 계정을 만든 다음 다시 준비하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:112
+#, python-format
+msgid ""
+"The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
+"Run the agent as root, or move the directory aside, then prepare again."
+msgstr ""
+"에이전트가 %(path)s을(를) 읽을 수 없어 백업이 들어 있는지 알 수 없습니다. 에이전트를 root로 실행하거나 디렉터리를 다른 "
+"곳으로 옮긴 다음 다시 준비하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:123
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own ZFS dataset, and preparing "
+"never moves backups. Either 1) rename it (for example to %(path)s.old), "
+"prepare again, and copy its contents into the new dataset as root; or 2) "
+"remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s에 이미 파일이 있지만 자체 ZFS 데이터셋이 아니며, 준비 작업은 백업을 절대 옮기지 않습니다. 1) 이름을 바꾸고(예:"
+" %(path)s.old) 다시 준비한 뒤 root로 그 내용을 새 데이터셋에 복사하거나, 2) 해당 백업이 더 이상 필요 없으면 "
+"삭제하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:131
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own btrfs subvolume, and "
+"preparing never moves backups. Either 1) rename it (for example to "
+"%(path)s.old), prepare again, and copy its contents into the new subvolume "
+"as root; or 2) remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s에 이미 파일이 있지만 자체 btrfs 하위 볼륨이 아니며, 준비 작업은 백업을 절대 옮기지 않습니다. 1) 이름을 "
+"바꾸고(예: %(path)s.old) 다시 준비한 뒤 root로 그 내용을 새 하위 볼륨에 복사하거나, 2) 해당 백업이 더 이상 필요 "
+"없으면 삭제하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:160
+msgid ""
+"The server does not know the backed-up host's IP address yet, so its export "
+"cannot be limited to it. Wait for that host to report its network details, "
+"then prepare again."
+msgstr ""
+"서버가 아직 백업 대상 호스트의 IP 주소를 모르므로 해당 내보내기를 그 주소로 제한할 수 없습니다. 그 호스트가 네트워크 정보를 보고할"
+" 때까지 기다린 다음 다시 준비하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:174
+#, python-format
+msgid "Preparing storage is not supported on %(system)s."
+msgstr "%(system)s에서는 스토리지 준비가 지원되지 않습니다."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:182
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr ""
+"FreeBSD는 파일 시스템 전체를 내보내므로 각 호스트의 저장소에는 자체 ZFS 데이터셋이 필요합니다. 스토리지 경로를 ZFS에 둔 "
+"다음 다시 준비하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:226
+#, python-format
+msgid ""
+"The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
+"dataset would not land at the repository. Create a dataset mounted there "
+"(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
+msgstr ""
+"스토리지 경로 %(path)s에 ZFS 데이터셋이 마운트되어 있지 않아 하위 데이터셋이 저장소 위치에 만들어지지 않습니다. 그곳에 "
+"마운트되는 데이터셋을 만든 다음(zfs create -o mountpoint=%(path)s POOL/NAME) 다시 준비하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:253
+#, python-format
+msgid ""
+"%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
+"root), then prepare again."
+msgstr ""
+"%(path)s은(는) 빈 디렉터리이며 btrfs 하위 볼륨이 아닙니다. 삭제한 다음(root로 rmdir) 다시 준비하세요."
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2134,44 +2215,54 @@ msgstr "Agent 로그 수집 중 오류: %s"
 msgid "Error collecting error logs: %s"
 msgstr "에러 로그 수집 중 오류: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:226
+#: src/sysmanage_agent/operations/backup_operations.py:255
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate는 이 호스트에서 사용할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:245
+#: src/sysmanage_agent/operations/backup_operations.py:274
 msgid "This platform can only be a backup storage host."
 msgstr "이 플랫폼은 백업 스토리지 호스트로만 사용할 수 있습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:251
+#: src/sysmanage_agent/operations/backup_operations.py:280
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "백업 작업을 설치할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:272
+#: src/sysmanage_agent/operations/backup_operations.py:307
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:329
-#: src/sysmanage_agent/operations/backup_operations.py:336
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:380
+#: src/sysmanage_agent/operations/backup_operations.py:390
+#: src/sysmanage_agent/operations/backup_operations.py:406
 msgid "That backup action is not configured on this host."
 msgstr "이 호스트에는 해당 백업 동작이 구성되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:410
+#: src/sysmanage_agent/operations/backup_operations.py:465
 msgid "restate is not installed on this host."
 msgstr "이 호스트에는 restate가 설치되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:428
+#: src/sysmanage_agent/operations/backup_operations.py:483
 msgid "That backup job is already running."
 msgstr "해당 백업 작업은 이미 실행 중입니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:439
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid "The backup job could not be started."
 msgstr "백업 작업을 시작할 수 없습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:564
+#: src/sysmanage_agent/operations/backup_operations.py:595
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr "정책 %s의 백업 스토리지를 준비하지 못했습니다: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:699
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "스토리지 감사를 실행할 수 없습니다: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:717
 msgid "Could not queue the backup report"
 msgstr "백업 보고서를 대기열에 추가할 수 없습니다"
 

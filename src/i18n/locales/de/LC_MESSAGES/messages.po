@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 08:32-0400\n"
+"POT-Creation-Date: 2026-10-22 09:11-0400\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:78
+#: src/database/base.py:79
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "Fehler beim Erstellen des Datenbankverzeichnisses %s: %s"
 
-#: src/database/base.py:88
+#: src/database/base.py:89
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "Fehler beim Erstellen der Datenbanktabellen: %s"
@@ -74,6 +74,100 @@ msgstr ""
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr ""
 "⚠️  Zugriff auf {config_dir} nicht möglich, Rückgriff auf {fallback_dir}"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:82
+#, python-format
+msgid ""
+"The backup service account %(account)s (user and group) does not exist on "
+"this storage host. Create it, then prepare again."
+msgstr ""
+"Das Sicherungs-Dienstkonto %(account)s (Benutzer und Gruppe) existiert auf "
+"diesem Speicher-Host nicht. Legen Sie es an und bereiten Sie dann erneut "
+"vor."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:112
+#, python-format
+msgid ""
+"The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
+"Run the agent as root, or move the directory aside, then prepare again."
+msgstr ""
+"Der Agent kann %(path)s nicht lesen und daher nicht feststellen, ob dort "
+"Sicherungen liegen. Führen Sie den Agenten als root aus oder verschieben Sie"
+" das Verzeichnis, und bereiten Sie dann erneut vor."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:123
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own ZFS dataset, and preparing "
+"never moves backups. Either 1) rename it (for example to %(path)s.old), "
+"prepare again, and copy its contents into the new dataset as root; or 2) "
+"remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s enthält bereits Dateien, ist aber kein eigenes ZFS-Dataset, und "
+"beim Vorbereiten werden nie Sicherungen verschoben. Entweder 1) benennen Sie"
+" es um (zum Beispiel in %(path)s.old), bereiten erneut vor und kopieren "
+"seinen Inhalt als root in das neue Dataset; oder 2) entfernen Sie es, wenn "
+"diese Sicherungen nicht mehr benötigt werden."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:131
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own btrfs subvolume, and "
+"preparing never moves backups. Either 1) rename it (for example to "
+"%(path)s.old), prepare again, and copy its contents into the new subvolume "
+"as root; or 2) remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s enthält bereits Dateien, ist aber kein eigenes btrfs-Subvolume, und"
+" beim Vorbereiten werden nie Sicherungen verschoben. Entweder 1) benennen "
+"Sie es um (zum Beispiel in %(path)s.old), bereiten erneut vor und kopieren "
+"seinen Inhalt als root in das neue Subvolume; oder 2) entfernen Sie es, wenn"
+" diese Sicherungen nicht mehr benötigt werden."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:160
+msgid ""
+"The server does not know the backed-up host's IP address yet, so its export "
+"cannot be limited to it. Wait for that host to report its network details, "
+"then prepare again."
+msgstr ""
+"Der Server kennt die IP-Adresse des gesicherten Hosts noch nicht, daher kann"
+" seine Freigabe nicht darauf beschränkt werden. Warten Sie, bis dieser Host "
+"seine Netzwerkdaten meldet, und bereiten Sie dann erneut vor."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:174
+#, python-format
+msgid "Preparing storage is not supported on %(system)s."
+msgstr ""
+"Das Vorbereiten des Speichers wird unter %(system)s nicht unterstützt."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:182
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr ""
+"FreeBSD gibt ganze Dateisysteme frei, daher braucht das Repository jedes "
+"Hosts ein eigenes ZFS-Dataset. Legen Sie den Speicherpfad auf ZFS an und "
+"bereiten Sie dann erneut vor."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:226
+#, python-format
+msgid ""
+"The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
+"dataset would not land at the repository. Create a dataset mounted there "
+"(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
+msgstr ""
+"Am Speicherpfad %(path)s ist kein ZFS-Dataset eingehängt, daher würde ein "
+"untergeordnetes Dataset nicht am Repository liegen. Legen Sie dort ein "
+"eingehängtes Dataset an (zfs create -o mountpoint=%(path)s POOL/NAME) und "
+"bereiten Sie dann erneut vor."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:253
+#, python-format
+msgid ""
+"%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
+"root), then prepare again."
+msgstr ""
+"%(path)s ist ein leeres Verzeichnis, kein btrfs-Subvolume. Entfernen Sie es "
+"(rmdir als root) und bereiten Sie dann erneut vor."
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2193,44 +2287,56 @@ msgstr "Fehler beim Sammeln von Agent-Protokollen: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Fehler beim Sammeln von Fehlerprotokollen: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:226
+#: src/sysmanage_agent/operations/backup_operations.py:255
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate ist auf diesem Host nicht verwendbar: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:245
+#: src/sysmanage_agent/operations/backup_operations.py:274
 msgid "This platform can only be a backup storage host."
 msgstr "Diese Plattform kann nur ein Backup-Speicherhost sein."
 
-#: src/sysmanage_agent/operations/backup_operations.py:251
+#: src/sysmanage_agent/operations/backup_operations.py:280
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Die Backup-Aufträge konnten nicht installiert werden: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:272
+#: src/sysmanage_agent/operations/backup_operations.py:307
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Diese restate-Version unterstützt nicht: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:329
-#: src/sysmanage_agent/operations/backup_operations.py:336
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:380
+#: src/sysmanage_agent/operations/backup_operations.py:390
+#: src/sysmanage_agent/operations/backup_operations.py:406
 msgid "That backup action is not configured on this host."
 msgstr "Diese Backup-Aktion ist auf diesem Host nicht konfiguriert."
 
-#: src/sysmanage_agent/operations/backup_operations.py:410
+#: src/sysmanage_agent/operations/backup_operations.py:465
 msgid "restate is not installed on this host."
 msgstr "restate ist auf diesem Host nicht installiert."
 
-#: src/sysmanage_agent/operations/backup_operations.py:428
+#: src/sysmanage_agent/operations/backup_operations.py:483
 msgid "That backup job is already running."
 msgstr "Dieser Backup-Auftrag wird bereits ausgeführt."
 
-#: src/sysmanage_agent/operations/backup_operations.py:439
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid "The backup job could not be started."
 msgstr "Der Backup-Auftrag konnte nicht gestartet werden."
 
-#: src/sysmanage_agent/operations/backup_operations.py:564
+#: src/sysmanage_agent/operations/backup_operations.py:595
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr ""
+"Der Sicherungsspeicher für die Richtlinie %s konnte nicht vorbereitet "
+"werden: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:699
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "Die Speicherprüfung konnte nicht ausgeführt werden: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:717
 msgid "Could not queue the backup report"
 msgstr "Der Backup-Bericht konnte nicht in die Warteschlange gestellt werden."
 

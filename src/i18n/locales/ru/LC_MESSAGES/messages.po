@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 08:32-0400\n"
+"POT-Creation-Date: 2026-10-22 09:11-0400\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:78
+#: src/database/base.py:79
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "Не удалось создать базу данных в каталоге %s: %s"
 
-#: src/database/base.py:88
+#: src/database/base.py:89
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "Не удалось создать таблицы базы данных: %s"
@@ -73,6 +73,98 @@ msgstr ""
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  Нет доступа к {config_dir}, возврат к {fallback_dir}"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:82
+#, python-format
+msgid ""
+"The backup service account %(account)s (user and group) does not exist on "
+"this storage host. Create it, then prepare again."
+msgstr ""
+"Служебной учетной записи резервного копирования %(account)s (пользователя и "
+"группы) нет на этом хосте хранения. Создайте ее и повторите подготовку."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:112
+#, python-format
+msgid ""
+"The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
+"Run the agent as root, or move the directory aside, then prepare again."
+msgstr ""
+"Агент не может прочитать %(path)s и поэтому не может определить, есть ли там"
+" резервные копии. Запустите агент от root или переместите каталог в другое "
+"место, затем повторите подготовку."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:123
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own ZFS dataset, and preparing "
+"never moves backups. Either 1) rename it (for example to %(path)s.old), "
+"prepare again, and copy its contents into the new dataset as root; or 2) "
+"remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s уже содержит файлы, но не является отдельным набором данных ZFS, а "
+"подготовка никогда не перемещает резервные копии. Либо 1) переименуйте его "
+"(например, в %(path)s.old), повторите подготовку и скопируйте его содержимое"
+" в новый набор данных от root; либо 2) удалите его, если эти резервные копии"
+" больше не нужны."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:131
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own btrfs subvolume, and "
+"preparing never moves backups. Either 1) rename it (for example to "
+"%(path)s.old), prepare again, and copy its contents into the new subvolume "
+"as root; or 2) remove it if those backups are no longer needed."
+msgstr ""
+"%(path)s уже содержит файлы, но не является отдельным подтомом btrfs, а "
+"подготовка никогда не перемещает резервные копии. Либо 1) переименуйте его "
+"(например, в %(path)s.old), повторите подготовку и скопируйте его содержимое"
+" в новый подтом от root; либо 2) удалите его, если эти резервные копии "
+"больше не нужны."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:160
+msgid ""
+"The server does not know the backed-up host's IP address yet, so its export "
+"cannot be limited to it. Wait for that host to report its network details, "
+"then prepare again."
+msgstr ""
+"Серверу еще неизвестен IP-адрес резервируемого хоста, поэтому его экспорт "
+"нельзя ограничить этим адресом. Дождитесь, пока этот хост сообщит свои "
+"сетевые данные, затем повторите подготовку."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:174
+#, python-format
+msgid "Preparing storage is not supported on %(system)s."
+msgstr "Подготовка хранилища не поддерживается в %(system)s."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:182
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr ""
+"FreeBSD экспортирует файловые системы целиком, поэтому репозиторию каждого "
+"хоста нужен собственный набор данных ZFS. Разместите путь хранения на ZFS, "
+"затем повторите подготовку."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:226
+#, python-format
+msgid ""
+"The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
+"dataset would not land at the repository. Create a dataset mounted there "
+"(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
+msgstr ""
+"По пути хранения %(path)s не смонтирован набор данных ZFS, поэтому дочерний "
+"набор данных не окажется на месте репозитория. Создайте набор данных, "
+"смонтированный там (zfs create -o mountpoint=%(path)s POOL/NAME), затем "
+"повторите подготовку."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:253
+#, python-format
+msgid ""
+"%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
+"root), then prepare again."
+msgstr ""
+"%(path)s - пустой каталог, а не подтом btrfs. Удалите его (rmdir от root), "
+"затем повторите подготовку."
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2182,44 +2274,54 @@ msgstr "Ошибка сбора журналов агента: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Ошибка сбора журналов ошибок: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:226
+#: src/sysmanage_agent/operations/backup_operations.py:255
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate не может использоваться на этом хосте: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:245
+#: src/sysmanage_agent/operations/backup_operations.py:274
 msgid "This platform can only be a backup storage host."
 msgstr "Эта платформа может быть только хостом хранения резервных копий."
 
-#: src/sysmanage_agent/operations/backup_operations.py:251
+#: src/sysmanage_agent/operations/backup_operations.py:280
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Не удалось установить задания резервного копирования: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:272
+#: src/sysmanage_agent/operations/backup_operations.py:307
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Эта версия restate не поддерживает: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:329
-#: src/sysmanage_agent/operations/backup_operations.py:336
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:380
+#: src/sysmanage_agent/operations/backup_operations.py:390
+#: src/sysmanage_agent/operations/backup_operations.py:406
 msgid "That backup action is not configured on this host."
 msgstr "Это действие резервного копирования не настроено на этом хосте."
 
-#: src/sysmanage_agent/operations/backup_operations.py:410
+#: src/sysmanage_agent/operations/backup_operations.py:465
 msgid "restate is not installed on this host."
 msgstr "restate не установлен на этом хосте."
 
-#: src/sysmanage_agent/operations/backup_operations.py:428
+#: src/sysmanage_agent/operations/backup_operations.py:483
 msgid "That backup job is already running."
 msgstr "Это задание резервного копирования уже выполняется."
 
-#: src/sysmanage_agent/operations/backup_operations.py:439
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid "The backup job could not be started."
 msgstr "Не удалось запустить задание резервного копирования."
 
-#: src/sysmanage_agent/operations/backup_operations.py:564
+#: src/sysmanage_agent/operations/backup_operations.py:595
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr "Не удалось подготовить хранилище резервных копий для политики %s: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:699
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "Не удалось выполнить проверку хранилища: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:717
 msgid "Could not queue the backup report"
 msgstr "Не удалось поставить отчет о резервном копировании в очередь"
 

@@ -334,3 +334,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs snapshot *
 # (``btrfs subvolume snapshot -r <subvolume> <dir>/sysmanage-<run id>``); the
 # agent validates both paths before it asks.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume snapshot -r *, /usr/sbin/btrfs subvolume snapshot -r *, /sbin/btrfs subvolume snapshot -r *
+# "Prepare storage for this host" (started by an administrator from the
+# Backups page): the repository becomes its own ZFS dataset or btrfs
+# subvolume, exported to that one host only through an /etc/exports.d file
+# (installed with ``install``, then ``exportfs -ra``).  The agent builds every
+# argument from the policy it validated; ownership uses chown/chmod above.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs create *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume create *, /usr/sbin/btrfs subvolume create *, /sbin/btrfs subvolume create *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/exportfs -ra

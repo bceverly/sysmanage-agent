@@ -119,3 +119,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs snapshot *
 # refuses a job file that is not root's and in a directory only root can
 # change.  Needs sudo 1.9.10 or later (FreeBSD 14 ships 1.9.17).
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate ^run /etc/restate/jobs\.d/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(prune|check|copy|du|repack)\.conf$
+# "Prepare storage for this host" (Phase 24, started by an administrator from
+# the Backups page): the repository becomes its own ZFS dataset, exported to
+# that one host's address only with every client mapped to the backup service
+# account; run again it re-exports (the host's address changed).  Regular
+# expressions, so only a sharenfs of exactly that shape can be set -- never
+# another property.  (Ownership uses the chown/chmod grants above.)
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^create -o sharenfs=-mapall=[a-z_][a-z0-9_-]*:[a-z_][a-z0-9_-]* [0-9a-fA-F.:]+ [A-Za-z0-9_.:/-]+$
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^set sharenfs=-mapall=[a-z_][a-z0-9_-]*:[a-z_][a-z0-9_-]* [0-9a-fA-F.:]+ [A-Za-z0-9_.:/-]+$

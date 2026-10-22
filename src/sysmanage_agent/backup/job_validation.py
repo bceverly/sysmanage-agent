@@ -22,6 +22,7 @@ The rules, in short:
   patterns, and an unknown key is an error.
 """
 
+import ipaddress
 import posixpath
 import re
 import uuid
@@ -82,6 +83,7 @@ MAX_COUNT = 10000
 MAX_LIST = 64
 
 _NAME = re.compile(r"^[a-z0-9_-]{1,64}$")
+_ACCOUNT = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$")
 _REPO_DIR = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$")
 _SNAPSHOT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9:._-]{0,127}$")
 _DATASET = re.compile(r"^[A-Za-z0-9_.][A-Za-z0-9_./-]{0,254}$")
@@ -309,8 +311,14 @@ def check_target(
     if not isinstance(repo_dir, str) or not _REPO_DIR.match(repo_dir):
         raise PolicyError("repo_dir must be a single directory name")
     if role == "host":
-        fstype = mount_types(mountinfo()).get(mount_point)
-        if fstype not in NFS_TYPES:
+        # The share at the mount point, or -- one export per host -- the
+        # host's own repository mounted at <mount_point>/<repo_dir>.
+        mounts = mount_types(mountinfo())
+        own = posixpath.join(mount_point, repo_dir)
+        if (
+            mounts.get(mount_point) not in NFS_TYPES
+            and mounts.get(own) not in NFS_TYPES
+        ):
             raise PolicyError("mount_point is not an NFS mount on this host")
     elif not isdir(mount_point):
         raise PolicyError("mount_point is not a directory on this host")
@@ -322,6 +330,26 @@ def check_target(
     ):
         raise PolicyError("repository escapes the mount point")
     return real_mount, posixpath.join(real_mount, repo_dir)
+
+
+def check_address(value: Any) -> Optional[str]:
+    """The backed-up host's address (storage side: whom its export may
+    serve), or None when the server does not know it."""
+    if value in (None, ""):
+        return None
+    try:
+        return str(ipaddress.ip_address(str(value)))
+    except ValueError as error:
+        raise PolicyError("client_address is not an IP address") from error
+
+
+def check_account(value: Any) -> str:
+    """The storage host's backup service account (default ``restate``)."""
+    if value in (None, ""):
+        return "restate"
+    if not isinstance(value, str) or not _ACCOUNT.match(value):
+        raise PolicyError("service_account is not a valid account name")
+    return value
 
 
 def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str, Any]:
@@ -341,11 +369,14 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
     mount_point, repository = check_target(
         role, params.get("target"), mountinfo=mountinfo, **fs
     )
+    target = params.get("target") or {}
     return {
         "policy_id": policy_id,
         "role": role,
         "mount_point": mount_point,
         "repository": repository,
+        "client_address": check_address(target.get("client_address")),
+        "service_account": check_account(target.get("service_account")),
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
         "encrypt_key": check_key(params.get("encrypt_key")),
     }

@@ -473,3 +473,32 @@ def test_a_restore_preview_plans_from_the_index_when_restate_can(can_plan):
     job = builder.build_restore_job(real, repository="/mnt/b/h", state_dir="/s",
                                     group="g", can_plan=True)  # fmt: skip
     assert "plan" not in job and job["dry_run"] is False  # a real restore
+
+
+def test_a_host_may_mount_its_own_repository_rather_than_the_share():
+    # one export per host: /mnt/backups/<repo_dir> is the NFS mount itself
+    info = "36 25 0:31 / /mnt/backups/h-1 rw shared:1 - nfs4 nas:/h-1 rw\n"
+    target = {"mount_point": "/mnt/backups", "repo_dir": "h-1"}
+    _mount, repo = v.check_target("host", target, mountinfo=lambda: info,
+                                 realpath=lambda p: p, isdir=lambda p: True)  # fmt: skip
+    assert repo == "/mnt/backups/h-1"
+    with pytest.raises(v.PolicyError):
+        v.check_target("host", target, mountinfo=lambda: "", realpath=lambda p: p,
+                       isdir=lambda p: True)  # fmt: skip
+
+
+@pytest.mark.parametrize(
+    "address,account,ok",
+    [("192.168.4.196", "restate", True), (None, None, True), ("fe80::1", "backup_1", True),
+     ("192.168.4.196; rm", "restate", False), ("192.168.4.196", "Root!", False),
+     ("192.168.4.196", "-mapall", False)],
+    ids=["v4", "defaults", "v6", "bad-address", "bad-account", "option-account"],
+)  # fmt: skip
+def test_storage_target_address_and_account_are_validated(address, account, ok):
+    if ok:
+        assert v.check_address(address) in (None, address)
+        assert v.check_account(account) == (account or "restate")
+    else:
+        with pytest.raises(v.PolicyError):
+            v.check_address(address)
+            v.check_account(account)

@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 08:32-0400\n"
+"POT-Creation-Date: 2026-10-22 09:11-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:78
+#: src/database/base.py:79
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "فشل في إنشاء دليل قاعدة البيانات %s: %s"
 
-#: src/database/base.py:88
+#: src/database/base.py:89
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "فشل في إنشاء جداول قاعدة البيانات: %s"
@@ -71,6 +71,93 @@ msgstr ""
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  لا يمكن الوصول إلى {config_dir}، العودة إلى {fallback_dir}"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:82
+#, python-format
+msgid ""
+"The backup service account %(account)s (user and group) does not exist on "
+"this storage host. Create it, then prepare again."
+msgstr ""
+"حساب خدمة النسخ الاحتياطي %(account)s (المستخدم والمجموعة) غير موجود على "
+"مضيف التخزين هذا. أنشئه، ثم أعد التحضير."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:112
+#, python-format
+msgid ""
+"The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
+"Run the agent as root, or move the directory aside, then prepare again."
+msgstr ""
+"لا يستطيع الوكيل قراءة %(path)s، لذا لا يمكنه معرفة ما إذا كان يحتوي على نسخ"
+" احتياطية. شغّل الوكيل بصلاحيات root أو انقل الدليل إلى مكان آخر، ثم أعد "
+"التحضير."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:123
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own ZFS dataset, and preparing "
+"never moves backups. Either 1) rename it (for example to %(path)s.old), "
+"prepare again, and copy its contents into the new dataset as root; or 2) "
+"remove it if those backups are no longer needed."
+msgstr ""
+"يحتوي %(path)s على ملفات بالفعل لكنه ليس مجموعة بيانات ZFS خاصة به، والتحضير"
+" لا ينقل النسخ الاحتياطية أبدًا. إما 1) أعد تسميته (مثلًا إلى %(path)s.old)،"
+" وأعد التحضير، وانسخ محتواه إلى مجموعة البيانات الجديدة بصلاحيات root؛ أو 2)"
+" احذفه إذا لم تعد هذه النسخ الاحتياطية مطلوبة."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:131
+#, python-format
+msgid ""
+"%(path)s already holds files but is not its own btrfs subvolume, and "
+"preparing never moves backups. Either 1) rename it (for example to "
+"%(path)s.old), prepare again, and copy its contents into the new subvolume "
+"as root; or 2) remove it if those backups are no longer needed."
+msgstr ""
+"يحتوي %(path)s على ملفات بالفعل لكنه ليس وحدة btrfs فرعية خاصة به، والتحضير "
+"لا ينقل النسخ الاحتياطية أبدًا. إما 1) أعد تسميته (مثلًا إلى %(path)s.old)، "
+"وأعد التحضير، وانسخ محتواه إلى الوحدة الفرعية الجديدة بصلاحيات root؛ أو 2) "
+"احذفه إذا لم تعد هذه النسخ الاحتياطية مطلوبة."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:160
+msgid ""
+"The server does not know the backed-up host's IP address yet, so its export "
+"cannot be limited to it. Wait for that host to report its network details, "
+"then prepare again."
+msgstr ""
+"لا يعرف الخادم بعد عنوان IP للمضيف المنسوخ احتياطيًا، لذا لا يمكن قصر تصديره"
+" عليه. انتظر حتى يبلّغ ذلك المضيف عن بيانات شبكته، ثم أعد التحضير."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:174
+#, python-format
+msgid "Preparing storage is not supported on %(system)s."
+msgstr "تحضير التخزين غير مدعوم على %(system)s."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:182
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr ""
+"يصدّر FreeBSD أنظمة ملفات كاملة، لذا يحتاج مستودع كل مضيف إلى مجموعة بيانات "
+"ZFS خاصة به. ضع مسار التخزين على ZFS، ثم أعد التحضير."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:226
+#, python-format
+msgid ""
+"The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
+"dataset would not land at the repository. Create a dataset mounted there "
+"(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
+msgstr ""
+"لا توجد مجموعة بيانات ZFS مركّبة عند مسار التخزين %(path)s، لذا لن تقع "
+"مجموعة بيانات فرعية في موضع المستودع. أنشئ مجموعة بيانات مركّبة هناك (zfs "
+"create -o mountpoint=%(path)s POOL/NAME)، ثم أعد التحضير."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:253
+#, python-format
+msgid ""
+"%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
+"root), then prepare again."
+msgstr ""
+"%(path)s دليل فارغ، وليس وحدة btrfs فرعية. احذفه (rmdir بصلاحيات root)، ثم "
+"أعد التحضير."
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2148,44 +2235,54 @@ msgstr "خطأ في جمع سجلات الوكيل: %s"
 msgid "Error collecting error logs: %s"
 msgstr "خطأ في جمع سجلات الأخطاء: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:226
+#: src/sysmanage_agent/operations/backup_operations.py:255
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "لا يمكن استخدام restate على هذا المضيف: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:245
+#: src/sysmanage_agent/operations/backup_operations.py:274
 msgid "This platform can only be a backup storage host."
 msgstr "لا يمكن لهذه المنصة أن تكون إلا مضيف تخزين للنسخ الاحتياطية."
 
-#: src/sysmanage_agent/operations/backup_operations.py:251
+#: src/sysmanage_agent/operations/backup_operations.py:280
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "تعذر تثبيت مهام النسخ الاحتياطي: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:272
+#: src/sysmanage_agent/operations/backup_operations.py:307
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "إصدار restate هذا لا يدعم: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:329
-#: src/sysmanage_agent/operations/backup_operations.py:336
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:380
+#: src/sysmanage_agent/operations/backup_operations.py:390
+#: src/sysmanage_agent/operations/backup_operations.py:406
 msgid "That backup action is not configured on this host."
 msgstr "إجراء النسخ الاحتياطي هذا غير مُهيأ على هذا المضيف."
 
-#: src/sysmanage_agent/operations/backup_operations.py:410
+#: src/sysmanage_agent/operations/backup_operations.py:465
 msgid "restate is not installed on this host."
 msgstr "restate غير مثبت على هذا المضيف."
 
-#: src/sysmanage_agent/operations/backup_operations.py:428
+#: src/sysmanage_agent/operations/backup_operations.py:483
 msgid "That backup job is already running."
 msgstr "مهمة النسخ الاحتياطي هذه قيد التشغيل بالفعل."
 
-#: src/sysmanage_agent/operations/backup_operations.py:439
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid "The backup job could not be started."
 msgstr "تعذر بدء مهمة النسخ الاحتياطي."
 
-#: src/sysmanage_agent/operations/backup_operations.py:564
+#: src/sysmanage_agent/operations/backup_operations.py:595
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr "تعذّر تحضير تخزين النسخ الاحتياطي للسياسة %s: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:699
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "تعذر تشغيل تدقيق التخزين: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:717
 msgid "Could not queue the backup report"
 msgstr "تعذر إدراج تقرير النسخ الاحتياطي في قائمة الانتظار"
 

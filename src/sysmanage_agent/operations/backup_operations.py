@@ -39,7 +39,9 @@ from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import restate_contract as contract
+from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
+from src.sysmanage_agent.backup import storage_prepare
 from src.sysmanage_agent.backup import restate_probe
 
 DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
@@ -102,13 +104,20 @@ def _first(paths: Tuple[str, ...]) -> str:
 def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
     """The command that seals the repositories, or None for mode none.
 
-    zfs: a snapshot of the dataset.  btrfs: a READ-ONLY snapshot of the
+    zfs: a RECURSIVE snapshot of the dataset -- each host's repository is
+    its own child dataset (its own export), and a plain snapshot of the
+    parent would leave every one of them out.  btrfs: a READ-ONLY snapshot of the
     subvolume into snapshot_dir (validated to lie outside it), so a host that
     later deletes or rewrites its repository cannot touch the sealed copy.
     """
     mode = seal.get("mode")
     if mode == "zfs_snapshot":
-        return [_first(ZFS_PATHS), "snapshot", f"{seal['dataset']}@sysmanage-{run_id}"]
+        return [
+            _first(ZFS_PATHS),
+            "snapshot",
+            "-r",
+            f"{seal['dataset']}@sysmanage-{run_id}",
+        ]
     if mode == "btrfs_snapshot":
         target = posixpath.join(seal["snapshot_dir"], f"sysmanage-{run_id}")
         return [
@@ -306,8 +315,11 @@ class BackupOperations:
         policies[policy_id] = {
             "role": policy["role"],
             "repository": policy["repository"],
+            "mount_point": policy["mount_point"],
             "actions": sorted(policy["jobs"]),
             "seal": policy["jobs"].get("seal"),
+            "client_address": policy.get("client_address"),
+            "service_account": policy.get("service_account", "restate"),
         }
         self._save("policies.json", policies)
         reply = {
@@ -321,6 +333,7 @@ class BackupOperations:
             reply["storage_fs"] = storage_fs.describe(
                 policy["mount_point"], read_text=_read_text
             )
+            reply["storage_audit"] = self._audit(policies[policy_id])
         return reply
 
     async def _apply_rules(self, policy: Dict[str, Any]) -> None:
@@ -358,13 +371,19 @@ class BackupOperations:
             return self._refusal("invalid_request", str(error))
         action = parameters.get("action")
         policy = self._policy(policy_id)
-        if not policy or action not in policy.get("actions", []):
+        allowed = list(policy.get("actions", [])) if policy else []
+        if policy and policy.get("role") == "storage":
+            allowed.append(storage_prepare.ACTION)
+        if action not in allowed:
             return self._refusal(
                 "not_configured",
                 _("That backup action is not configured on this host."),
             )
         if action == "seal":
             return self._start_seal(run_id, policy_id, policy.get("seal") or {})
+        if action == storage_prepare.ACTION and policy.get("role") == "storage":
+            self._spawn(self._prepare(run_id, policy_id, policy))
+            return {"success": True, "run_id": run_id, "status": "started"}
         if not os.path.exists(contract.job_path(policy_id, action)):
             return self._refusal(
                 "not_configured",
@@ -504,6 +523,86 @@ class BackupOperations:
         )
 
     # ------------------------------------------------------------------
+    # prepare: the storage host gives one host its own export
+    # ------------------------------------------------------------------
+
+    async def _zfs_datasets(self) -> Dict[str, str]:
+        zfs = shutil.which("zfs") or _first(ZFS_PATHS)
+        if not os.path.exists(zfs):
+            return {}
+        code, out, _err = await self._run(
+            [zfs, "list", "-H", "-t", "filesystem", "-o", "name,mountpoint"]
+        )
+        return storage_prepare.zfs_datasets(out) if code == 0 else {}
+
+    @staticmethod
+    def _is_subvolume(path: str) -> bool:
+        try:
+            return os.stat(path).st_ino == storage_fs.BTRFS_SUBVOLUME_ROOT_INODE
+        except OSError:
+            return False
+
+    async def _prepare_steps(self, policy_id: str, steps: Dict[str, Any]) -> None:
+        tools = {storage_prepare.ZFS: _first(ZFS_PATHS),
+                 storage_prepare.BTRFS: _first(BTRFS_PATHS)}  # fmt: skip
+        commands = steps["commands"]
+        # The dataset / subvolume / directory first, then its export, then
+        # its ownership (chown needs the new mount, not the directory under it).
+        protect = commands[-2:]
+        for argv in commands[:-2]:
+            await self._checked([tools.get(argv[0], argv[0])] + argv[1:])
+        if steps["export_file"]:
+            path, text = steps["export_file"]
+            await self._install_root_file(text, path)
+            await self._checked(["exportfs", "-ra"])
+        for argv in protect:
+            await self._checked(argv)
+        self.logger.info(
+            "Prepared backup storage for policy %s (%s)", policy_id, steps["kind"]
+        )
+
+    async def _checked(self, argv: List[str]) -> None:
+        code, _out, err = await self._run(self._privileged(argv))
+        if code != 0:
+            raise PermissionError(f"{' '.join(argv)}: {err or code}")
+
+    async def _prepare(
+        self, run_id: str, policy_id: str, policy: Dict[str, Any]
+    ) -> None:
+        started = _now()
+        result: Dict[str, Any] = {}
+        try:
+            mount_point = policy.get("mount_point") or posixpath.dirname(
+                policy["repository"]
+            )
+            steps = storage_prepare.plan(
+                dict(policy, policy_id=policy_id),
+                system=platform.system(),
+                fstype=storage_fs.describe(mount_point, read_text=_read_text)["type"],
+                datasets=await self._zfs_datasets(),
+                is_subvolume=self._is_subvolume,
+            )
+            await self._prepare_steps(policy_id, steps)
+            status, code = "ok", 0
+            result = {"kind": steps["kind"]}
+        except storage_prepare.PrepareRefused as refused:
+            status, code = "failed", 1
+            result = {"reason": refused.code, "errors": [str(refused)]}
+        except (OSError, PermissionError) as error:
+            status, code = "failed", 1
+            result = {"reason": "command_failed", "errors": [str(error)]}
+            self.logger.error(
+                _("Could not prepare backup storage for policy %s: %s"),
+                policy_id,
+                error,
+            )
+        await self._report(
+            {"run_id": run_id, "policy_id": policy_id,
+             "action": storage_prepare.ACTION, "status": status, "exit": code,
+             "result": result, "started_at": started, "finished_at": _now()}  # fmt: skip
+        )
+
+    # ------------------------------------------------------------------
     # watching a run
     # ------------------------------------------------------------------
 
@@ -587,7 +686,25 @@ class BackupOperations:
         inflight.pop(run_id, None)
         self._save("inflight.json", inflight)
 
+    def _audit(self, policy: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+        """The storage audit for one repository; None if it cannot run."""
+        try:
+            return storage_audit.audit(
+                policy["repository"],
+                client=policy.get("client_address"),
+                account=policy.get("service_account") or "restate",
+                read_text=_read_text,
+            )
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.warning(_("The storage audit could not run: %s"), error)
+            return None
+
     async def _report(self, data: Dict[str, Any]) -> None:
+        # The storage side reports its audit with every job, so the server's
+        # picture of the append-only set-up never goes stale.
+        policy = self._policy(str(data.get("policy_id") or ""))
+        if policy and policy.get("role") == "storage":
+            data = dict(data, storage_audit=self._audit(policy))
         await self._send("backup_result", data)
 
     async def _send(self, message_type: str, data: Dict[str, Any]) -> None:
