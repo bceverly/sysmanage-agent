@@ -55,6 +55,14 @@ from .update_detection_pkgin import (  # pylint: disable=wrong-import-position
 logger = logging.getLogger(__name__)
 
 
+def _release_tuple(version: str) -> tuple:
+    """``"8.0"`` -> ``(8, 0)``; anything unparseable sorts lowest."""
+    try:
+        return tuple(int(part) for part in version.split("."))
+    except ValueError:
+        return ()
+
+
 class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
     """BSD-specific update detection methods."""
 
@@ -440,17 +448,22 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
                     html_content = response.read().decode("utf-8")
 
                 logger.debug("Successfully fetched OpenBSD website, parsing version")
-                # Look for the current release version on the page
-                # The page typically contains text like "OpenBSD 7.8" or similar
-                match = re.search(r"OpenBSD\s+(\d+\.\d+)", html_content)
+                # The page says "The current release is <a ...>OpenBSD 8.0</a>";
+                # fall back to its first "OpenBSD X.Y" if that wording changes.
+                match = re.search(
+                    r"current release is\s*(?:<[^>]*>\s*)*OpenBSD\s+(\d+\.\d+)",
+                    html_content,
+                    re.IGNORECASE,
+                ) or re.search(r"OpenBSD\s+(\d+\.\d+)", html_content)
                 if match:
                     latest_version = match.group(1)
                     logger.info(
                         "Latest OpenBSD version from website: %s", latest_version
                     )
 
-                    # Compare versions
-                    if latest_version != current_version:
+                    # Only ever offer a NEWER release: a page that mentions an
+                    # older one first must not suggest a "downgrade".
+                    if _release_tuple(latest_version) > _release_tuple(current_version):
                         logger.info(
                             "OpenBSD upgrade available: %s -> %s",
                             current_version,

@@ -28,21 +28,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # OpenBSD supports only the latest two releases; 7.7 is EOL.
-        openbsd-version: ['7.8', '7.9']
+        # OpenBSD supports only the latest two releases; 7.8 is EOL since 8.0 (2026-10).
+        openbsd-version: ['7.9', '8.0']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Build on OpenBSD ${{ matrix.openbsd-version }}
-        uses: vmactions/openbsd-vm@18edb32f4e48dae5865d7b8b3a9587bc01218a20 # v1.4.4
+        uses: vmactions/openbsd-vm@f1ca8bc8ecc5b6ef7218e5b914836e067e1546d3 # v1.4.9
         env:
           # The user-controllable workflow input goes through an env var and is
           # forwarded into the VM via `envs:` below -- NEVER interpolated into the
           # run: script (that is a shell-injection sink; semgrep
           # run-shell-injection).  matrix.openbsd-version is a fixed allow-list
-          # value (7.8/7.9) and is safe to interpolate directly.
+          # value (7.9/8.0) and is safe to interpolate directly.
           RELEASE_VERSION: ${{ github.event.inputs.version }}
         with:
           release: ${{ matrix.openbsd-version }}
@@ -108,27 +108,6 @@ jobs:
             sed -i "s/^GH_TAGNAME.*=.*/GH_TAGNAME = v${VERSION}/" Makefile
             sed -i "s/^REVISION.*=.*/REVISION = 0/" Makefile
 
-            # Workaround for OpenBSD 7.6: The ports tarball is missing the lang/python/3 directory
-            # but the Makefile references it. We fetch it from OpenBSD 7.5's ports tree.
-            if [ "$OPENBSD_VERSION" = "7.6" ]; then
-              echo "=== Applying OpenBSD 7.6 Python 3 workaround ==="
-              echo "The 7.6 ports tarball is missing lang/python/3 directory."
-              echo "Fetching Python 3.11 port from OpenBSD 7.5 ports tree..."
-
-              cd /tmp
-              PORTS75_URL="https://ftp.openbsd.org/pub/OpenBSD/7.5/ports.tar.gz"
-              if ftp -4 -o - "$PORTS75_URL" 2>/dev/null | gunzip | tar xf - ports/lang/python/3.11; then
-                echo "Successfully extracted Python 3.11 port from 7.5"
-                cp -R /tmp/ports/lang/python/3.11 /usr/ports/lang/python/3
-                echo "Copied to /usr/ports/lang/python/3"
-                ls -la /usr/ports/lang/python/
-              else
-                echo "ERROR: Failed to fetch Python 3.11 port from 7.5"
-                exit 1
-              fi
-
-              cd /usr/ports/mystuff/sysutils/sysmanage-agent
-            fi
 
             echo "=== Makefile contents ==="
             cat Makefile
@@ -149,16 +128,18 @@ jobs:
 
             # Step 5: Find and copy the package
             echo "=== Step 5: Finding built package ==="
-            find /usr/ports/packages -name "*.tgz" -type f 2>/dev/null || true
-
-            PKG_FILE=$(find /usr/ports/packages -name "sysmanage-agent*.tgz" -type f 2>/dev/null | head -1)
-            if [ -n "$PKG_FILE" ]; then
+            # Ask the ports framework where it wrote the package: an
+            # /etc/mk.conf PACKAGE_REPOSITORY (the ports FAQ layout puts it in
+            # /usr/packages) moves it out of /usr/ports/packages.
+            PKG_FILE=$(make show=PKGFILE)
+            echo "Package: $PKG_FILE"
+            if [ -f "$PKG_FILE" ]; then
               cp "$PKG_FILE" "$GITHUB_WORKSPACE/sysmanage-agent-${VERSION}-openbsd${OPENBSD_VERSION_NODOT}.tgz"
               echo "SUCCESS: Package copied to workspace"
               ls -la $GITHUB_WORKSPACE/*.tgz
             else
               echo "ERROR: Package file not found!"
-              find /usr/ports/packages -type f 2>/dev/null || echo "No files in /usr/ports/packages"
+              find /usr/ports/packages /usr/packages -type f 2>/dev/null || echo "No packages under /usr/ports/packages or /usr/packages"
               exit 1
             fi
 

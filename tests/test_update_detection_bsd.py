@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from src.sysmanage_agent.collection import update_detection_bsd
 from src.sysmanage_agent.collection.update_detection_bsd import (
     BSDUpdateDetector,
 )
@@ -568,6 +569,42 @@ class TestDetectOpenbsdVersionUpgrades:
             if u.get("package_manager") == "openbsd-upgrade"
         ]
         assert len(upgrades) == 0
+
+    @staticmethod
+    def _upgrades_seen(detector, uname, html):
+        result = Mock(returncode=0, stdout=uname)
+        with patch("subprocess.run", return_value=result):
+            with patch("urllib.request.urlopen") as mock_urlopen:
+                response = Mock()
+                response.read.return_value = html
+                response.__enter__ = Mock(return_value=response)
+                response.__exit__ = Mock(return_value=False)
+                mock_urlopen.return_value = response
+                detector._detect_openbsd_version_upgrades()
+        return [
+            u
+            for u in detector.available_updates
+            if u.get("package_manager") == "openbsd-upgrade"
+        ]
+
+    def test_the_current_release_line_wins_over_other_mentions(self, detector):
+        # openbsd.org, 2026-10-20: older releases appear before the real one.
+        html = (
+            b'<img alt="[OpenBSD 7.9]"> The current release is\n'
+            b'<a href="80.html">OpenBSD 8.0</a>, released Oct 20, 2026.'
+        )
+        upgrades = self._upgrades_seen(detector, "7.9\n", html)
+        assert [u["available_version"] for u in upgrades] == ["8.0"]
+
+    def test_a_newer_host_is_never_offered_an_older_release(self, detector):
+        html = b"<html><body>OpenBSD 7.9 released!</body></html>"
+        assert not self._upgrades_seen(detector, "8.0\n", html)
+
+    def test_release_numbers_compare_numerically(self):
+        assert update_detection_bsd._release_tuple(
+            "8.0"
+        ) > update_detection_bsd._release_tuple("7.10")
+        assert update_detection_bsd._release_tuple("current") == ()
 
 
 # =============================================================================

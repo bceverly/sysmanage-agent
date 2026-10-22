@@ -176,6 +176,24 @@ else
     DEL_CMD = rm -f
 endif
 
+# A venv made by a Python this system no longer has -- an OS upgrade replaced
+# the interpreter (OpenBSD 7.9 -> 8.0 swapped 3.13 for 3.14) -- still has a
+# bin/python, but its packages sit under lib/python<old>/ and nothing imports,
+# while its activate file keeps make from ever rebuilding it.  Such a venv is
+# removed here (with what records its packages as installed), so the rules
+# below rebuild it on this run.
+ifneq ($(OS),Windows_NT)
+stale_venv = $(shell d=$(1); [ -f "$$d/pyvenv.cfg" ] || exit 0; \
+	cfg=$$(sed -n 's/^version[_a-z]* *= *\([0-9]*\.[0-9]*\).*/\1/p' "$$d/pyvenv.cfg" | head -1); \
+	run=$$("$$d/bin/python" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null); \
+	if [ -z "$$run" ] || [ "$$cfg" != "$$run" ]; then echo "$$d"; fi)
+STALE_VENVS := $(strip $(call stale_venv,$(VENV)))
+ifneq ($(STALE_VENVS),)
+$(info [INFO] Rebuilding virtual environment(s) made by a Python this system no longer has: $(STALE_VENVS))
+$(shell rm -rf $(STALE_VENVS))
+endif
+endif
+
 # Create or repair virtual environment
 $(VENV_ACTIVATE):
 	@echo "Creating/repairing virtual environment..."
