@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 09:11-0400\n"
+"POT-Creation-Date: 2026-10-22 12:43-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2255,54 +2255,79 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:255
+#: src/sysmanage_agent/operations/backup_operations.py:256
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:274
+#: src/sysmanage_agent/operations/backup_operations.py:275
 msgid "This platform can only be a backup storage host."
 msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:280
+#: src/sysmanage_agent/operations/backup_operations.py:281
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:307
+#: src/sysmanage_agent/operations/backup_operations.py:308
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:380
-#: src/sysmanage_agent/operations/backup_operations.py:390
-#: src/sysmanage_agent/operations/backup_operations.py:406
+#: src/sysmanage_agent/operations/backup_operations.py:387
+#: src/sysmanage_agent/operations/backup_operations.py:397
+#: src/sysmanage_agent/operations/backup_operations.py:413
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:465
+#: src/sysmanage_agent/operations/backup_operations.py:472
 msgid "restate is not installed on this host."
 msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:483
+#: src/sysmanage_agent/operations/backup_operations.py:490
 msgid "That backup job is already running."
 msgstr "यह बैकअप जॉब पहले से चल रहा है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:494
+#: src/sysmanage_agent/operations/backup_operations.py:506
 msgid "The backup job could not be started."
 msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:595
+#: src/sysmanage_agent/operations/backup_operations.py:538
+#, python-format
+msgid ""
+"The backup storage is not mounted at %(where)s, and the server has not sent "
+"where to mount it from yet."
+msgstr ""
+"बैकअप स्टोरेज %(where)s पर माउंट नहीं है, और सर्वर ने अभी तक यह नहीं भेजा है"
+" कि इसे कहाँ से माउंट करना है।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:552
+#, python-format
+msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
+msgstr ""
+"बैकअप स्टोरेज %(source)s को %(where)s पर माउंट नहीं किया जा सका: %(error)s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:556
+#, python-format
+msgid "The backup storage is not mounted at %(where)s after mounting it."
+msgstr "माउंट करने के बाद भी बैकअप स्टोरेज %(where)s पर माउंट नहीं है।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:579
+#, python-format
+msgid "Could not unmount the backup storage at %s: %s"
+msgstr "%s पर बैकअप स्टोरेज को अनमाउंट नहीं किया जा सका: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:679
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:699
+#: src/sysmanage_agent/operations/backup_operations.py:784
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:717
+#: src/sysmanage_agent/operations/backup_operations.py:802
 msgid "Could not queue the backup report"
 msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 

@@ -150,3 +150,15 @@ def test_linux_crossmnt_still_reaches_a_child_filesystem(account):
         read=lambda p, t=text: t if p == "/var/lib/nfs/etab" else "",
     ))  # fmt: skip
     assert found["export_shared"] == "error"
+
+
+def test_the_client_path_is_relative_to_the_nfsv4_root():
+    text = "V4: /srv/backups -sec=sys\n/srv/backups/restate -alldirs 192.168.4.196\n"
+    read = _exports(text)
+    assert a.client_path("FreeBSD", REPO, read) == "/restate/t14-1"
+    assert a.client_path("FreeBSD", "/elsewhere/r", read) is None
+    assert a.client_path("FreeBSD", REPO, lambda p: "") is None  # no V4: line
+    etab = f"/srv\t*(ro,fsid=0)\n{REPO}\t192.168.4.196(rw)\n"
+    linux = lambda p: etab if p == "/var/lib/nfs/etab" else ""  # noqa: E731
+    assert a.client_path("Linux", REPO, linux) == "/backups/restate/t14-1"
+    assert a.client_path("Linux", REPO, lambda p: "") == REPO

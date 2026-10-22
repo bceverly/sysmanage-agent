@@ -502,3 +502,23 @@ def test_storage_target_address_and_account_are_validated(address, account, ok):
         with pytest.raises(v.PolicyError):
             v.check_address(address)
             v.check_account(account)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [{"server": "nas.lab", "path": "/restate/x"},
+     {"server": "192.168.4.10", "path": "restate/x"},
+     {"server": "192.168.4.10", "path": "/restate/../etc"},
+     {"server": "192.168.4.10", "path": "/a b"},
+     {"server": "192.168.4.10"},
+     {"server": "192.168.4.10", "path": "/x", "options": "suid"}],
+)  # fmt: skip
+def test_a_bad_nfs_source_is_refused(value):
+    with pytest.raises(v.PolicyError):
+        v.check_nfs_source(value)
+
+
+def test_a_good_nfs_source_is_normalized():
+    got = v.check_nfs_source({"server": "fe80::1", "path": "/restate/t14-1"})
+    assert got == {"server": "fe80::1", "path": "/restate/t14-1"}
+    assert v.check_nfs_source(None) is None

@@ -302,6 +302,7 @@ def check_target(
     mountinfo: Callable[[], str],
     realpath: Callable[[str], str] = posixpath.realpath,
     isdir: Callable[[str], bool] = posixpath.isdir,
+    managed: bool = False,
 ) -> Tuple[str, str]:
     """``(mount_point, repository)`` for the target, both real paths."""
     if not isinstance(target, dict):
@@ -310,9 +311,10 @@ def check_target(
     repo_dir = target.get("repo_dir")
     if not isinstance(repo_dir, str) or not _REPO_DIR.match(repo_dir):
         raise PolicyError("repo_dir must be a single directory name")
-    if role == "host":
+    if role == "host" and not managed:
         # The share at the mount point, or -- one export per host -- the
         # host's own repository mounted at <mount_point>/<repo_dir>.
+        # (managed: the agent mounts that export itself while a job runs.)
         mounts = mount_types(mountinfo())
         own = posixpath.join(mount_point, repo_dir)
         if (
@@ -320,7 +322,7 @@ def check_target(
             and mounts.get(own) not in NFS_TYPES
         ):
             raise PolicyError("mount_point is not an NFS mount on this host")
-    elif not isdir(mount_point):
+    elif role == "storage" and not isdir(mount_point):
         raise PolicyError("mount_point is not a directory on this host")
     real_mount = realpath(mount_point)
     repository = posixpath.join(mount_point, repo_dir)
@@ -352,6 +354,31 @@ def check_account(value: Any) -> str:
     return value
 
 
+_NFS_PATH = re.compile(r"^/[A-Za-z0-9_.@+/-]*$")
+
+
+def check_nfs_source(value: Any) -> Optional[Dict[str, str]]:
+    """``{"server", "path"}`` -- the export to mount -- or None when the
+    server did not send one (the operator mounts it)."""
+    if value in (None, {}):
+        return None
+    if not isinstance(value, dict) or set(value) != {"server", "path"}:
+        raise PolicyError("nfs must have exactly server and path")
+    try:
+        server = str(ipaddress.ip_address(str(value["server"])))
+    except ValueError as error:
+        raise PolicyError("nfs server is not an IP address") from error
+    path = value["path"]
+    if (
+        not isinstance(path, str)
+        or not _NFS_PATH.match(path)
+        or posixpath.normpath(path) != path
+        or ".." in path.split("/")
+    ):
+        raise PolicyError("nfs path must be an absolute, normalized path")
+    return {"server": server, "path": path}
+
+
 def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str, Any]:
     """The whole ``backup_configure`` request, validated and normalized."""
     if not isinstance(params, dict):
@@ -366,10 +393,15 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
     refused = sorted(set(jobs) - set(ROLES[role]))
     if refused:
         raise PolicyError(f"a {role} policy may not run: {', '.join(refused)}")
-    mount_point, repository = check_target(
-        role, params.get("target"), mountinfo=mountinfo, **fs
-    )
     target = params.get("target") or {}
+    nfs = (
+        check_nfs_source(target.get("nfs"))
+        if role == "host" and isinstance(target, dict)
+        else None
+    )
+    mount_point, repository = check_target(
+        role, params.get("target"), mountinfo=mountinfo, managed=nfs is not None, **fs
+    )
     return {
         "policy_id": policy_id,
         "role": role,
@@ -377,6 +409,7 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         "repository": repository,
         "client_address": check_address(target.get("client_address")),
         "service_account": check_account(target.get("service_account")),
+        "nfs": nfs,
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
         "encrypt_key": check_key(params.get("encrypt_key")),
     }

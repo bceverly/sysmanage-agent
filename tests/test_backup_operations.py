@@ -97,6 +97,9 @@ def ops(agent, tmp_path, monkeypatch):
     monkeypatch.setattr(ops_module, "POLL_SECONDS", 0)
     monkeypatch.setattr(ops_module, "PROGRESS_EVERY_SECONDS", 0)
     monkeypatch.setattr(ops_module.validation, "check_target", _fake_target)
+    # The host's repository is on NFS unless a test says otherwise.
+    monkeypatch.setattr(BackupOperations, "_mounts",
+                        staticmethod(lambda: {"/mnt/sysmanage-backup": "nfs4"}))  # fmt: skip
     backup.fake = fake
     return backup
 
@@ -705,3 +708,119 @@ async def test_a_host_policy_cannot_prepare(ops):
         {"run_id": RID, "policy_id": PID, "action": "prepare"}
     )
     assert answer["success"] is False and answer["reason"] == "not_configured"
+
+
+# --- managed mount: the host's export only while a job runs -----------------
+
+NFS = {"server": "192.168.4.10", "path": "/restate/nas-1"}
+WHERE = "/mnt/sysmanage-backup/nas-1"
+
+
+@pytest.fixture
+def mounts(ops, monkeypatch):
+    """Fake mount table: mount/umount through FakeRun change it."""
+    table = {}
+    real = ops.fake.__call__
+
+    async def run(argv):
+        bare = argv[2:] if argv[:2] == ["sudo", "-n"] else argv
+        if bare[:1] == ["mount"] and ("mount",) not in ops.fake.fail:
+            table[bare[-1]] = "nfs4"
+        if bare[:1] == ["umount"]:
+            table.pop(bare[-1], None)
+        return await real(argv)
+
+    monkeypatch.setattr(ops, "_run", run)
+    monkeypatch.setattr(BackupOperations, "_mounts", staticmethod(lambda: dict(table)))
+    return table
+
+
+async def _capture_to_the_end(ops, run_id=RID):
+    unit = contract.unit_name(PID, "capture")
+    answer = await ops.backup_run(
+        {"run_id": run_id, "policy_id": PID, "action": "capture"}
+    )
+    _write(job_builder.result_path(ops.state_dir, PID, "capture"),
+           json.dumps({"schema": 1, "exit": 0, "status": "ok"}))  # fmt: skip
+    ops.fake.active.discard(unit)
+    return answer
+
+
+@pytest.mark.asyncio
+async def test_the_export_is_mounted_for_the_job_and_unmounted_after(
+    ops, agent, job_files, mounts
+):
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    answer = await _capture_to_the_end(ops)
+    assert answer["status"] == "started"
+    mount = ops.fake.ran("mount", "-t", "nfs4")
+    assert mount and mount[0][-2:] == ["192.168.4.10:/restate/nas-1", WHERE]
+    assert "hard" in mount[0][mount[0].index("-o") + 1]
+    start = ops.fake.calls.index(ops.fake.ran("--no-block", "start")[0])
+    assert ops.fake.calls.index(mount[0]) < start  # mounted before restate starts
+    await _drain(ops)
+    assert ops.fake.ran("umount", WHERE) and WHERE not in mounts
+    assert ops._load("mounts.json") == {}
+    assert _sent(agent, "backup_result")[0]["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_an_operators_own_mount_is_used_and_left_alone(ops, job_files, mounts):
+    mounts[WHERE] = "nfs4"  # fstab / autofs
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    await _capture_to_the_end(ops)
+    await _drain(ops)
+    assert not ops.fake.ran("mount", "-t", "nfs4") and not ops.fake.ran("umount")
+
+
+@pytest.mark.asyncio
+async def test_a_failed_mount_refuses_the_run_and_starts_nothing(
+    ops, job_files, mounts
+):
+    ops.fake.fail[("mount",)] = (32, "mount.nfs4: access denied by server")
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "capture"}
+    )
+    assert answer["reason"] == "mount_failed" and "access denied" in answer["error"]
+    assert not ops.fake.ran("--no-block", "start")
+
+
+@pytest.mark.asyncio
+async def test_without_an_nfs_source_nothing_is_mounted(ops, job_files, mounts):
+    mounts["/mnt/sysmanage-backup"] = "nfs4"
+    await ops.backup_configure(_host_policy())
+    _touch_jobs(job_files, "capture")
+    await _capture_to_the_end(ops)
+    await _drain(ops)
+    assert not ops.fake.ran("mount", "-t", "nfs4")
+
+
+@pytest.mark.asyncio
+async def test_an_operators_shared_mount_is_used_without_stacking(
+    ops, job_files, mounts
+):
+    mounts["/mnt/sysmanage-backup"] = "nfs4"  # the whole share, mounted by hand
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    await _capture_to_the_end(ops)
+    await _drain(ops)
+    assert not ops.fake.ran("mount", "-t", "nfs4") and not ops.fake.ran("umount")
+
+
+@pytest.mark.asyncio
+async def test_a_host_job_never_runs_against_the_local_disk(ops, job_files, mounts):
+    await ops.backup_configure(_host_policy())  # no nfs source sent yet
+    _touch_jobs(job_files, "capture")
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "capture"}
+    )
+    assert answer["reason"] == "mount_failed" and "not mounted" in answer["error"]
+    assert not ops.fake.ran("--no-block", "start")

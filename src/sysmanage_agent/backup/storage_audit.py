@@ -219,6 +219,36 @@ def export_findings(
     return found
 
 
+def client_path(system: str, repository: str, read=_read) -> Optional[str]:
+    """The path a host mounts over NFSv4 to reach ``repository``, or None
+    when this server's set-up does not export it under NFSv4 at all.
+
+    FreeBSD: relative to the ``V4:`` root in /etc/exports.  Linux: relative
+    to an ``fsid=0`` / ``fsid=root`` export if there is one, else the path
+    itself (Linux's pseudo-root mirrors the real tree)."""
+    root = None
+    if system == "FreeBSD":
+        for line in read("/etc/exports").splitlines():
+            fields = line.split("#", 1)[0].split()
+            if fields[:1] == ["V4:"] and len(fields) > 1:
+                root = fields[1]
+        if root is None:
+            return None
+    else:
+        for line in _export_lines(system, read):
+            export = _parse_export(system, line)
+            if {"fsid=0", "fsid=root"} & set(export["options"]):
+                root = export["path"]
+        if root is None:
+            return repository
+    root = posixpath.normpath(root)
+    if repository == root:
+        return "/"
+    if not repository.startswith(root.rstrip("/") + "/"):
+        return None
+    return "/" + posixpath.relpath(repository, root)
+
+
 # ---------------------------------------------------------------------------
 # the repository itself
 # ---------------------------------------------------------------------------

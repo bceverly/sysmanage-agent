@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 09:11-0400\n"
+"POT-Creation-Date: 2026-10-22 12:43-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2215,54 +2215,76 @@ msgstr "Agent 로그 수집 중 오류: %s"
 msgid "Error collecting error logs: %s"
 msgstr "에러 로그 수집 중 오류: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:255
+#: src/sysmanage_agent/operations/backup_operations.py:256
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate는 이 호스트에서 사용할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:274
+#: src/sysmanage_agent/operations/backup_operations.py:275
 msgid "This platform can only be a backup storage host."
 msgstr "이 플랫폼은 백업 스토리지 호스트로만 사용할 수 있습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:280
+#: src/sysmanage_agent/operations/backup_operations.py:281
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "백업 작업을 설치할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:307
+#: src/sysmanage_agent/operations/backup_operations.py:308
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:380
-#: src/sysmanage_agent/operations/backup_operations.py:390
-#: src/sysmanage_agent/operations/backup_operations.py:406
+#: src/sysmanage_agent/operations/backup_operations.py:387
+#: src/sysmanage_agent/operations/backup_operations.py:397
+#: src/sysmanage_agent/operations/backup_operations.py:413
 msgid "That backup action is not configured on this host."
 msgstr "이 호스트에는 해당 백업 동작이 구성되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:465
+#: src/sysmanage_agent/operations/backup_operations.py:472
 msgid "restate is not installed on this host."
 msgstr "이 호스트에는 restate가 설치되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:483
+#: src/sysmanage_agent/operations/backup_operations.py:490
 msgid "That backup job is already running."
 msgstr "해당 백업 작업은 이미 실행 중입니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:494
+#: src/sysmanage_agent/operations/backup_operations.py:506
 msgid "The backup job could not be started."
 msgstr "백업 작업을 시작할 수 없습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:595
+#: src/sysmanage_agent/operations/backup_operations.py:538
+#, python-format
+msgid ""
+"The backup storage is not mounted at %(where)s, and the server has not sent "
+"where to mount it from yet."
+msgstr "백업 스토리지가 %(where)s에 마운트되어 있지 않으며, 서버가 아직 마운트할 위치를 보내지 않았습니다."
+
+#: src/sysmanage_agent/operations/backup_operations.py:552
+#, python-format
+msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
+msgstr "백업 스토리지 %(source)s을(를) %(where)s에 마운트하지 못했습니다: %(error)s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:556
+#, python-format
+msgid "The backup storage is not mounted at %(where)s after mounting it."
+msgstr "마운트한 후에도 백업 스토리지가 %(where)s에 마운트되어 있지 않습니다."
+
+#: src/sysmanage_agent/operations/backup_operations.py:579
+#, python-format
+msgid "Could not unmount the backup storage at %s: %s"
+msgstr "%s의 백업 스토리지를 마운트 해제하지 못했습니다: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:679
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "정책 %s의 백업 스토리지를 준비하지 못했습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:699
+#: src/sysmanage_agent/operations/backup_operations.py:784
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "스토리지 감사를 실행할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:717
+#: src/sysmanage_agent/operations/backup_operations.py:802
 msgid "Could not queue the backup report"
 msgstr "백업 보고서를 대기열에 추가할 수 없습니다"
 

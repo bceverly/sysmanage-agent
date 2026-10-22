@@ -35,6 +35,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from src.database.base import current_database_path
 from src.i18n import _
+from src.sysmanage_agent.backup import host_mount
 from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
@@ -320,6 +321,7 @@ class BackupOperations:
             "seal": policy["jobs"].get("seal"),
             "client_address": policy.get("client_address"),
             "service_account": policy.get("service_account", "restate"),
+            "nfs": policy.get("nfs"),
         }
         self._save("policies.json", policies)
         reply = {
@@ -334,6 +336,11 @@ class BackupOperations:
                 policy["mount_point"], read_text=_read_text
             )
             reply["storage_audit"] = self._audit(policies[policy_id])
+            # Where a host mounts its repository over NFSv4 (the server
+            # sends it to the host, which mounts it only while a job runs).
+            reply["nfs_path"] = storage_audit.client_path(
+                platform.system(), policy["repository"]
+            )
         return reply
 
     async def _apply_rules(self, policy: Dict[str, Any]) -> None:
@@ -488,8 +495,13 @@ class BackupOperations:
         ):
             if path and os.path.exists(path):
                 os.unlink(path)
+        error = await self._ensure_mount(run_id, policy_id)
+        if error:
+            return {"success": False, "run_id": run_id, "reason": "mount_failed",
+                    "error": error}  # fmt: skip
         code, err = await self._launch(record)
         if code != 0:
+            await self._release_mount(run_id, policy_id)
             return {"success": False, "run_id": run_id, "reason": "start_failed",
                     "error": err or _("The backup job could not be started.")}  # fmt: skip
         inflight = self._load("inflight.json")
@@ -497,6 +509,78 @@ class BackupOperations:
         self._save("inflight.json", inflight)
         self._spawn(self._watch(run_id, record, resumed=False))
         return {"success": True, "run_id": run_id, "status": "started"}
+
+    # ------------------------------------------------------------------
+    # the host's own export, mounted only while a job runs
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _mounts() -> Dict[str, str]:
+        return validation.mount_types(_read_text("/proc/self/mountinfo") or "")
+
+    async def _ensure_mount(self, run_id: str, policy_id: str) -> Optional[str]:
+        """Mount the policy's export for this run; None, or why it failed."""
+        policy = self._policy(policy_id) or {}
+        if policy.get("role") != "host":
+            return None
+        source = policy.get("nfs")
+        where = policy["repository"]
+        state = self._load("mounts.json")
+        entry = state.get(where)
+        mounts = self._mounts()
+        if not source and not (
+            host_mount.mounted_nfs(where, mounts)
+            or host_mount.mounted_nfs(posixpath.dirname(where), mounts)
+        ):
+            # Never let restate run against the host's own disk: it would
+            # write (or create) a repository there, not on the storage.
+            return _(
+                "The backup storage is not mounted at %(where)s, and the server "
+                "has not sent where to mount it from yet."
+            ) % {"where": where}
+        if not source or (
+            entry is None and host_mount.mounted_nfs(posixpath.dirname(where), mounts)
+        ):
+            return None  # the operator mounted the shared export: use it
+        if host_mount.mounted_nfs(where, mounts):
+            if entry is None:
+                return None  # the operator's own mount: used, never unmounted
+        else:
+            for argv in (["mkdir", "-p", where], host_mount.mount_argv(source, where)):
+                code, _out, err = await self._run(self._privileged(argv))
+                if code != 0:
+                    return _("Could not mount the backup storage %(source)s at %(where)s: %(error)s") % {
+                        "source": host_mount.device(source), "where": where,
+                        "error": err or code}  # fmt: skip
+            if not host_mount.mounted_nfs(where, self._mounts()):
+                return _("The backup storage is not mounted at %(where)s after mounting it.") % {
+                    "where": where}  # fmt: skip
+            entry = {"runs": []}
+        entry["runs"] = sorted(set(entry.get("runs", [])) | {run_id})
+        state[where] = entry
+        self._save("mounts.json", state)
+        return None
+
+    async def _release_mount(self, run_id: str, policy_id: str) -> None:
+        """This run is done with the export; unmount after the last one."""
+        policy = self._policy(policy_id) or {}
+        where = policy.get("repository")
+        state = self._load("mounts.json")
+        entry = state.get(where) if where else None
+        if entry is None:
+            return
+        entry["runs"] = [r for r in entry.get("runs", []) if r != run_id]
+        if entry["runs"]:
+            self._save("mounts.json", state)
+            return
+        code, _out, err = await self._run(self._privileged(["umount", where]))
+        if code != 0 and host_mount.mounted_nfs(where, self._mounts()):
+            self.logger.warning(
+                _("Could not unmount the backup storage at %s: %s"), where, err
+            )
+            return  # keep the record: the next run's release tries again
+        del state[where]
+        self._save("mounts.json", state)
 
     # ------------------------------------------------------------------
     # seal: the NAS snapshots its own dataset
@@ -685,6 +769,7 @@ class BackupOperations:
         inflight = self._load("inflight.json")
         inflight.pop(run_id, None)
         self._save("inflight.json", inflight)
+        await self._release_mount(run_id, record["policy_id"])
 
     def _audit(self, policy: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
         """The storage audit for one repository; None if it cannot run."""
