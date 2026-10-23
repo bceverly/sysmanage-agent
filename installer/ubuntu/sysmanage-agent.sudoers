@@ -342,3 +342,9 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume snapshot -r *, /usr
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume create *, /usr/sbin/btrfs subvolume create *, /sbin/btrfs subvolume create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/exportfs -ra
+# Seal retention: after each seal the storage host removes its own seals
+# older than the target's "keep seals for" days, never the newest -- only
+# ``<dataset>@sysmanage-<run id>`` snapshots it listed itself (ZFS, recursive:
+# every host's child dataset was sealed too) or btrfs seals it recorded making.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs destroy -r *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume delete *, /usr/sbin/btrfs subvolume delete *, /sbin/btrfs subvolume delete *

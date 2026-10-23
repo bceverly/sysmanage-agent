@@ -15,8 +15,11 @@ Between jobs nothing is mounted, so ransomware on the host finds no
 repository to reach at all; while one is, the export itself is append-only.
 """
 
+import os
 import posixpath
-from typing import Dict, List
+from typing import Dict, List, Optional
+
+from src.i18n import _
 
 from src.sysmanage_agent.backup.job_validation import NFS_TYPES
 
@@ -41,3 +44,43 @@ def mount_argv(source: Dict[str, str], where: str) -> List[str]:
 def mounted_nfs(where: str, mounts: Dict[str, str]) -> bool:
     """Is ``where`` itself an NFS mount right now?"""
     return mounts.get(posixpath.normpath(where)) in NFS_TYPES
+
+
+# Pre-flight before a capture writes anything (24.1): the repository's mount
+# must take a new file, lock it -- NFS locking is what keeps a capture and a
+# storage-side prune apart -- and have room.  Read-only jobs skip it.
+MIN_FREE_BYTES = 1 << 30
+MIN_FREE_FRACTION = 0.01
+PREFLIGHT_SECONDS = 30
+PROBE = ".sysmanage-preflight-"
+
+
+def preflight(where: str, run_id: str) -> Optional[str]:
+    """None when the repository can take a capture, else why not.  Blocking
+    file I/O on an NFS mount: call it off the event loop, with a timeout."""
+    import fcntl  # pylint: disable=import-outside-toplevel  # Unix only
+
+    probe = posixpath.join(where, PROBE + run_id)
+    try:
+        handle = os.open(probe, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+    except OSError as error:
+        return _("The backup storage at %(where)s cannot take new files: %(error)s") % {
+            "where": where, "error": error.strerror}  # fmt: skip
+    try:
+        fcntl.lockf(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.lockf(handle, fcntl.LOCK_UN)
+    except OSError as error:
+        return _("Locking does not work on the backup storage at %(where)s: %(error)s") % {
+            "where": where, "error": error.strerror}  # fmt: skip
+    finally:
+        os.close(handle)
+        try:
+            os.unlink(probe)
+        except OSError:
+            pass
+    stats = os.statvfs(where)
+    free, total = stats.f_bavail * stats.f_frsize, stats.f_blocks * stats.f_frsize
+    if free < MIN_FREE_BYTES or (total and free < total * MIN_FREE_FRACTION):
+        return _("The backup storage at %(where)s is nearly full (%(free)d MB free).") % {
+            "where": where, "free": free // (1 << 20)}  # fmt: skip
+    return None

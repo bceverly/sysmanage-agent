@@ -133,3 +133,8 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^set sharenfs=-mapall=[a-z_][a-z0-
 # own, a file's owner may delete its own (restate 2.1.0.2's protect does the
 # same).  Exactly these three entries, inserted at the front, on one path.
 sysmanage-agent ALL=(ALL) NOPASSWD: /bin/setfacl ^-a 0 (group@:D::deny|owner@:d:f:allow|owner@:d:d:allow) /[A-Za-z0-9_./-]+$
+# Seal retention: the storage host removes its own seals older than the
+# target's "keep seals for" days, never the newest -- exactly
+# ``zfs destroy -r <dataset>@sysmanage-<run id>`` (recursive: every host's
+# child dataset was sealed too), and nothing else can be destroyed.
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^destroy -r [A-Za-z0-9_.:/-]+@sysmanage-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$

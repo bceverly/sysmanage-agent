@@ -44,6 +44,7 @@ from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import storage_prepare
 from src.sysmanage_agent.backup import restate_probe
+from src.sysmanage_agent.backup import seal_retention
 
 DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
 # The BSDs keep a daemon's state in /var/db (the FreeBSD rc script puts the
@@ -503,6 +504,12 @@ class BackupOperations:
         if error:
             return {"success": False, "run_id": run_id, "reason": "mount_failed",
                     "error": error}  # fmt: skip
+        if action == "capture":
+            error = await self._preflight(run_id, policy_id)
+            if error:
+                await self._release_mount(run_id, policy_id)
+                return {"success": False, "run_id": run_id,
+                        "reason": "preflight_failed", "error": error}  # fmt: skip
         code, err = await self._launch(record)
         if code != 0:
             await self._release_mount(run_id, policy_id)
@@ -565,6 +572,23 @@ class BackupOperations:
         self._save("mounts.json", state)
         return None
 
+    async def _preflight(self, run_id: str, policy_id: str) -> Optional[str]:
+        """Can the repository take this capture?  Off the event loop: a hard
+        NFS mount to a storage host that is down would block it."""
+        policy = self._policy(policy_id) or {}
+        if policy.get("role") != "host":
+            return None
+        loop = asyncio.get_event_loop()
+        try:
+            return await asyncio.wait_for(
+                loop.run_in_executor(
+                    None, host_mount.preflight, policy["repository"], run_id
+                ),
+                host_mount.PREFLIGHT_SECONDS,
+            )
+        except asyncio.TimeoutError:
+            return _("The backup storage at %s did not answer.") % policy["repository"]
+
     async def _release_mount(self, run_id: str, policy_id: str) -> None:
         """This run is done with the export; unmount after the last one."""
         policy = self._policy(policy_id) or {}
@@ -601,14 +625,59 @@ class BackupOperations:
         code: Optional[int] = 0
         message = ""
         argv = seal_argv(seal, run_id)
+        result: Dict[str, Any] = {}
         if argv:
             code, _out, message = await self._run(self._privileged(argv))
+        if code == 0 and argv and seal.get("mode") == "btrfs_snapshot":
+            ledger = self._load("seals.json")
+            ledger[argv[-1]] = time.time()
+            self._save("seals.json", ledger)
+        if code == 0 and seal.get("keep_days"):
+            result = await self._expire_seals(seal)
+            message = message or "; ".join(result.get("errors", []))
+        if message:
+            result["message"] = message
         status = "ok" if code == 0 else "failed"
         await self._report(
             {"run_id": run_id, "policy_id": policy_id, "action": "seal",
-             "status": status, "exit": code, "result": {"message": message} if message else None,
+             "status": status, "exit": code, "result": result or None,
              "started_at": started, "finished_at": _now()}  # fmt: skip
         )
+
+    async def _expire_seals(self, seal: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove this agent's seals older than ``keep_days`` (never the
+        newest).  A failure is reported but never fails the seal itself."""
+        keep, now = seal["keep_days"], time.time()
+        if seal["mode"] == "zfs_snapshot":
+            zfs = _first(ZFS_PATHS)
+            code, out, err = await self._run(
+                seal_retention.zfs_list_argv(zfs, seal["dataset"])
+            )
+            if code != 0:
+                return {"errors": [_("Could not list the sealed snapshots: %s") % err]}
+            seals = seal_retention.zfs_seals(out, seal["dataset"])
+            tool = zfs
+        else:
+            ledger = self._load("seals.json")
+            seals = seal_retention.btrfs_seals(ledger, seal["snapshot_dir"])
+            tool = _first(BTRFS_PATHS)
+        removed, errors = [], []
+        for name in seal_retention.expired(seals, keep, now):
+            code, _out, err = await self._run(
+                self._privileged(seal_retention.delete_argv(seal["mode"], tool, name))
+            )
+            if code == 0:
+                removed.append(name)
+            else:
+                errors.append(_("Could not remove the old sealed snapshot %(name)s: %(error)s")
+                              % {"name": name, "error": err or code})  # fmt: skip
+        if seal["mode"] == "btrfs_snapshot" and removed:
+            ledger = self._load("seals.json")
+            for path in removed:
+                ledger.pop(path, None)
+            self._save("seals.json", ledger)
+        return {"seals_removed": len(removed), "seals_kept": len(seals) - len(removed),
+                "errors": errors}  # fmt: skip
 
     # ------------------------------------------------------------------
     # prepare: the storage host gives one host its own export

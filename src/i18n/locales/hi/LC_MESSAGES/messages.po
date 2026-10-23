@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 12:43-0400\n"
+"POT-Creation-Date: 2026-10-23 17:08-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -71,7 +71,22 @@ msgstr ""
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  {config_dir} तक पहुँच नहीं, {fallback_dir} पर वापस"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:82
+#: src/sysmanage_agent/backup/host_mount.py:67
+#, python-format
+msgid "The backup storage at %(where)s cannot take new files: %(error)s"
+msgstr "%(where)s पर बैकअप स्टोरेज नई फ़ाइलें नहीं ले सकता: %(error)s"
+
+#: src/sysmanage_agent/backup/host_mount.py:73
+#, python-format
+msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
+msgstr "%(where)s पर बैकअप स्टोरेज में लॉकिंग काम नहीं करती: %(error)s"
+
+#: src/sysmanage_agent/backup/host_mount.py:84
+#, python-format
+msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
+msgstr "%(where)s पर बैकअप स्टोरेज लगभग भर गया है (%(free)d MB खाली)।"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:94
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -80,7 +95,7 @@ msgstr ""
 "बैकअप सेवा खाता %(account)s (उपयोगकर्ता और समूह) इस स्टोरेज होस्ट पर मौजूद "
 "नहीं है। इसे बनाएँ, फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:112
+#: src/sysmanage_agent/backup/storage_prepare.py:124
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -90,7 +105,7 @@ msgstr ""
 "या नहीं। एजेंट को root के रूप में चलाएँ या डायरेक्टरी को कहीं और ले जाएँ, "
 "फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:123
+#: src/sysmanage_agent/backup/storage_prepare.py:135
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -103,7 +118,7 @@ msgstr ""
 "%(path)s.old), दोबारा तैयार करें, और root के रूप में इसकी सामग्री नए डेटासेट"
 " में कॉपी करें; या 2) अगर उन बैकअप की अब ज़रूरत नहीं है तो इसे हटा दें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:131
+#: src/sysmanage_agent/backup/storage_prepare.py:143
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -117,7 +132,7 @@ msgstr ""
 "सबवॉल्यूम में कॉपी करें; या 2) अगर उन बैकअप की अब ज़रूरत नहीं है तो इसे हटा "
 "दें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:160
+#: src/sysmanage_agent/backup/storage_prepare.py:174
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -127,12 +142,12 @@ msgstr ""
 "एक्सपोर्ट उस पते तक सीमित नहीं किया जा सकता। उस होस्ट के अपनी नेटवर्क "
 "जानकारी भेजने तक प्रतीक्षा करें, फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:174
+#: src/sysmanage_agent/backup/storage_prepare.py:192
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s पर स्टोरेज तैयार करना समर्थित नहीं है।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:182
+#: src/sysmanage_agent/backup/storage_prepare.py:200
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -141,7 +156,7 @@ msgstr ""
 " अपना अलग ZFS डेटासेट चाहिए। स्टोरेज पाथ को ZFS पर रखें, फिर दोबारा तैयार "
 "करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:226
+#: src/sysmanage_agent/backup/storage_prepare.py:244
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -152,7 +167,7 @@ msgstr ""
 "रिपॉज़िटरी की जगह पर नहीं बनेगा। वहाँ माउंट होने वाला डेटासेट बनाएँ (zfs "
 "create -o mountpoint=%(path)s POOL/NAME), फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:253
+#: src/sysmanage_agent/backup/storage_prepare.py:271
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -998,98 +1013,98 @@ msgstr "उपलब्ध अपडेट का निहितार्थ �
 msgid "Failed to install package %s: %s"
 msgstr "पैकेज %s इंस्टॉल करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:114
+#: src/sysmanage_agent/collection/update_detection_bsd.py:122
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "pkg अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:152
+#: src/sysmanage_agent/collection/update_detection_bsd.py:160
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "पैकेज अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:200
+#: src/sysmanage_agent/collection/update_detection_bsd.py:208
 msgid "OpenBSD upgrade failed"
 msgstr "OpenBSD अपग्रेड विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:215
+#: src/sysmanage_agent/collection/update_detection_bsd.py:223
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "OpenBSD अपग्रेड 30 मिनट के बाद टाइमआउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:314
+#: src/sysmanage_agent/collection/update_detection_bsd.py:322
 msgid "FreeBSD upgrade failed"
 msgstr "FreeBSD अपग्रेड विफल हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:327
+#: src/sysmanage_agent/collection/update_detection_bsd.py:335
 msgid "FreeBSD upgrade install failed"
 msgstr "FreeBSD अपग्रेड इंस्टॉल विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:333
+#: src/sysmanage_agent/collection/update_detection_bsd.py:341
 msgid "FreeBSD upgrade timed out"
 msgstr "FreeBSD अपग्रेड की समय सीमा समाप्त हो गई"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:399
+#: src/sysmanage_agent/collection/update_detection_bsd.py:407
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "syspatch कमांड एक्ज़िट कोड %d के साथ विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:402
+#: src/sysmanage_agent/collection/update_detection_bsd.py:410
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:405
+#: src/sysmanage_agent/collection/update_detection_bsd.py:413
 msgid "OpenBSD system update detection timed out"
 msgstr "OpenBSD सिस्टम अपडेशन डिटेक्शन 30 मिनट के बाद टाइमआउट हो गई"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:410
+#: src/sysmanage_agent/collection/update_detection_bsd.py:418
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "OpenBSD प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:427
+#: src/sysmanage_agent/collection/update_detection_bsd.py:435
 msgid "Failed to get current OpenBSD version"
 msgstr "वर्तमान OpenBSD संस्करण प्राप्त करने में विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:476
+#: src/sysmanage_agent/collection/update_detection_bsd.py:489
 msgid "Could not parse OpenBSD version from website"
 msgstr "वेबसाइट से OpenBSD संस्करण पार्स नहीं हो सका"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:480
+#: src/sysmanage_agent/collection/update_detection_bsd.py:493
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "OpenBSD वेबसाइट से अद्यतन खोजने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:486
+#: src/sysmanage_agent/collection/update_detection_bsd.py:499
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "OpenBSD संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:684
+#: src/sysmanage_agent/collection/update_detection_bsd.py:697
 msgid "syspatch command failed"
 msgstr "syspatch कमांड विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:686
-#: src/sysmanage_agent/collection/update_detection_bsd.py:707
+#: src/sysmanage_agent/collection/update_detection_bsd.py:699
+#: src/sysmanage_agent/collection/update_detection_bsd.py:720
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "सिसपैच अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:697
+#: src/sysmanage_agent/collection/update_detection_bsd.py:710
 msgid "syspatch command timed out"
 msgstr "syspatch कमांड टाईम-आउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:703
+#: src/sysmanage_agent/collection/update_detection_bsd.py:716
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch 10 मिनटों के बाद टाइमआउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:848
+#: src/sysmanage_agent/collection/update_detection_bsd.py:861
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "असमर्थित पैकेज प्रबंधक: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:904
+#: src/sysmanage_agent/collection/update_detection_bsd.py:917
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -2255,44 +2270,44 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:256
+#: src/sysmanage_agent/operations/backup_operations.py:257
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:276
 msgid "This platform can only be a backup storage host."
 msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:281
+#: src/sysmanage_agent/operations/backup_operations.py:282
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:308
+#: src/sysmanage_agent/operations/backup_operations.py:309
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:387
-#: src/sysmanage_agent/operations/backup_operations.py:397
-#: src/sysmanage_agent/operations/backup_operations.py:413
+#: src/sysmanage_agent/operations/backup_operations.py:392
+#: src/sysmanage_agent/operations/backup_operations.py:402
+#: src/sysmanage_agent/operations/backup_operations.py:418
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:472
+#: src/sysmanage_agent/operations/backup_operations.py:477
 msgid "restate is not installed on this host."
 msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:490
+#: src/sysmanage_agent/operations/backup_operations.py:495
 msgid "That backup job is already running."
 msgstr "यह बैकअप जॉब पहले से चल रहा है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:506
+#: src/sysmanage_agent/operations/backup_operations.py:517
 msgid "The backup job could not be started."
 msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:538
+#: src/sysmanage_agent/operations/backup_operations.py:549
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2301,33 +2316,48 @@ msgstr ""
 "बैकअप स्टोरेज %(where)s पर माउंट नहीं है, और सर्वर ने अभी तक यह नहीं भेजा है"
 " कि इसे कहाँ से माउंट करना है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:552
+#: src/sysmanage_agent/operations/backup_operations.py:563
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "बैकअप स्टोरेज %(source)s को %(where)s पर माउंट नहीं किया जा सका: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:556
+#: src/sysmanage_agent/operations/backup_operations.py:567
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "माउंट करने के बाद भी बैकअप स्टोरेज %(where)s पर माउंट नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:590
+#, python-format
+msgid "The backup storage at %s did not answer."
+msgstr "%s पर बैकअप स्टोरेज ने जवाब नहीं दिया।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:607
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "%s पर बैकअप स्टोरेज को अनमाउंट नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:679
+#: src/sysmanage_agent/operations/backup_operations.py:657
+#, python-format
+msgid "Could not list the sealed snapshots: %s"
+msgstr "सील किए गए स्नैपशॉट की सूची नहीं बन सकी: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:672
+#, python-format
+msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
+msgstr "पुराना सील किया गया स्नैपशॉट %(name)s हटाया नहीं जा सका: %(error)s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:750
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:784
+#: src/sysmanage_agent/operations/backup_operations.py:855
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:802
+#: src/sysmanage_agent/operations/backup_operations.py:873
 msgid "Could not queue the backup report"
 msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 

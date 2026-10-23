@@ -33,11 +33,17 @@ NFSv4, lock sharing, the ``V4:`` line, the account itself) is the operator's,
 documented and audited -- never edited here.
 """
 
-import grp
 import os
 import posixpath
-import pwd
 from typing import Any, Callable, Dict, Optional, Tuple
+
+# Unix-only: the agent also runs on Windows, where these modules do not
+# exist and a storage host never runs (main.py imports this module there).
+try:
+    import grp
+    import pwd
+except ImportError:  # pragma: no cover - Windows
+    grp = pwd = None  # type: ignore[assignment]
 
 from src.i18n import _
 

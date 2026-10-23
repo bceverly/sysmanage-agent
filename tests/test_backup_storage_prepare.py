@@ -73,6 +73,7 @@ def test_freebsd_sudoers_regex_accepts_exactly_the_planned_command():
     with open(SUDOERS, encoding="utf-8") as handle:
         rules = handle.read()
     patterns = re.findall(r"/sbin/zfs (\^\S.*\$)$", rules, re.M)
+    patterns = [rx for rx in patterns if rx.startswith(("^create", "^set"))]
     assert len(patterns) == 2
     for steps in (_plan("FreeBSD", "zfs", {MOUNT: "tank/backups"}),
                   _plan("FreeBSD", "zfs", {REPO: "tank/backups/t14-1"})):  # fmt: skip

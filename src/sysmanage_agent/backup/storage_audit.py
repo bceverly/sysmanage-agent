@@ -19,14 +19,20 @@ service account, and its directories enforce append-only (finished packs
 and snapshots owned by root, the directories sticky and group-writable).
 """
 
-import grp
 import os
 import platform
 import posixpath
-import pwd
 import stat
 import subprocess  # nosec B404 -- fixed argv, no shell
 from typing import Any, Callable, Dict, List, Optional
+
+# Unix-only: the agent also runs on Windows, where these modules do not
+# exist and a storage host never runs (main.py imports this module there).
+try:
+    import grp
+    import pwd
+except ImportError:  # pragma: no cover - Windows
+    grp = pwd = None  # type: ignore[assignment]
 
 from src.sysmanage_agent.backup import storage_fs
 

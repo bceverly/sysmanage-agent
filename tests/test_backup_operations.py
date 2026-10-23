@@ -97,6 +97,8 @@ def ops(agent, tmp_path, monkeypatch):
     monkeypatch.setattr(ops_module, "POLL_SECONDS", 0)
     monkeypatch.setattr(ops_module, "PROGRESS_EVERY_SECONDS", 0)
     monkeypatch.setattr(ops_module.validation, "check_target", _fake_target)
+    # The storage takes the capture unless a test says otherwise.
+    monkeypatch.setattr(ops_module.host_mount, "preflight", lambda where, run_id: None)
     # The host's repository is on NFS unless a test says otherwise.
     monkeypatch.setattr(BackupOperations, "_mounts",
                         staticmethod(lambda: {"/mnt/sysmanage-backup": "nfs4"}))  # fmt: skip
@@ -865,3 +867,120 @@ async def test_a_host_reports_the_quiesce_hooks_its_restate_finds(ops, monkeypat
     monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
     answer = await ops.backup_configure(_host_policy())
     assert answer["success"] and answer["hooks"] == ["docker", "lxd"]
+
+
+# --- seal retention -----------------------------------------------------------
+
+DS = "tank/b"
+
+
+@pytest.mark.asyncio
+async def test_a_seal_removes_its_own_seals_past_the_age(ops, agent, monkeypatch):
+    now = 1_800_000_000.0
+    monkeypatch.setattr(ops_module.time, "time", lambda: now)
+    old = f"{DS}@sysmanage-6ed601a3-f093-4506-bc52-7a8ae504f03b"
+    recent = f"{DS}@sysmanage-b4f0e030-409e-4861-b743-2e640a04e304"
+    real = ops.fake.__call__
+
+    async def run(argv):
+        bare = argv[2:] if argv[:2] == ["sudo", "-n"] else argv
+        if "list" in bare and "snapshot" in bare:
+            ops.fake.calls.append(list(argv))
+            return (
+                0,
+                f"{old}\t{int(now - 30 * 86400)}\n{recent}\t{int(now - 3600)}\n",
+                "",
+            )
+        return await real(argv)
+
+    monkeypatch.setattr(ops, "_run", run)
+    await ops.backup_configure(
+        _storage_policy({"mode": "zfs_snapshot", "dataset": DS, "keep_days": 14})
+    )
+    await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    destroyed = [c for c in ops.fake.calls if "destroy" in c]
+    assert [c[-1] for c in destroyed] == [old]  # never the recent one, nor the new seal
+    assert destroyed[0][-2:] == ["-r", old]
+    report = _sent(agent, "backup_result")[0]
+    assert report["status"] == "ok" and report["result"]["seals_removed"] == 1
+
+
+@pytest.mark.asyncio
+async def test_a_failed_removal_never_fails_the_seal(ops, agent, monkeypatch):
+    now = 1_800_000_000.0
+    monkeypatch.setattr(ops_module.time, "time", lambda: now)
+    old = f"{DS}@sysmanage-6ed601a3-f093-4506-bc52-7a8ae504f03b"
+    real = ops.fake.__call__
+
+    async def run(argv):
+        bare = argv[2:] if argv[:2] == ["sudo", "-n"] else argv
+        if "list" in bare and "snapshot" in bare:
+            return (
+                0,
+                f"{old}\t{int(now - 30 * 86400)}\n{DS}@sysmanage-{RID}\t{int(now)}\n",
+                "",
+            )
+        if "destroy" in bare:
+            return 1, "", "dataset is busy"
+        return await real(argv)
+
+    monkeypatch.setattr(ops, "_run", run)
+    await ops.backup_configure(
+        _storage_policy({"mode": "zfs_snapshot", "dataset": DS, "keep_days": 14})
+    )
+    await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    report = _sent(agent, "backup_result")[0]
+    assert report["status"] == "ok"
+    assert "dataset is busy" in report["result"]["message"]
+
+
+@pytest.mark.asyncio
+async def test_btrfs_seals_are_recorded_and_only_recorded_ones_expire(ops, monkeypatch):
+    clock = {"t": 1_800_000_000.0}
+    monkeypatch.setattr(ops_module.time, "time", lambda: clock["t"])
+    seal = {"mode": "btrfs_snapshot", "subvolume": "/srv/backups/restate",
+            "snapshot_dir": "/srv/backups/.snapshots", "keep_days": 1}  # fmt: skip
+    await ops.backup_configure(_storage_policy(seal))
+    first = "11111111-1111-4111-8111-111111111111"
+    await ops.backup_run({"run_id": first, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    assert f"/srv/backups/.snapshots/sysmanage-{first}" in ops._load("seals.json")
+    clock["t"] += 3 * 86400
+    await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    deleted = [c for c in ops.fake.calls if "delete" in c]
+    assert [c[-1] for c in deleted] == [f"/srv/backups/.snapshots/sysmanage-{first}"]
+    assert list(ops._load("seals.json")) == [f"/srv/backups/.snapshots/sysmanage-{RID}"]
+
+
+@pytest.mark.asyncio
+async def test_a_failed_preflight_refuses_the_capture_and_unmounts(
+    ops, job_files, mounts, monkeypatch
+):
+    monkeypatch.setattr(ops_module.host_mount, "preflight",
+                        lambda where, run_id: "The backup storage is nearly full")  # fmt: skip
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "capture"}
+    )
+    assert answer["reason"] == "preflight_failed" and "nearly full" in answer["error"]
+    assert not ops.fake.ran("--no-block", "start")
+    assert ops.fake.ran("umount", WHERE)  # the mount it made for this run is released
+
+
+@pytest.mark.asyncio
+async def test_read_only_jobs_skip_the_preflight(ops, job_files, monkeypatch):
+    def never(where, run_id):
+        raise AssertionError("preflight must not run for a listing")
+
+    monkeypatch.setattr(ops_module.host_mount, "preflight", never)
+    await ops.backup_configure(_host_policy())
+    _touch_jobs(job_files, "snapshots")
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "snapshots"}
+    )
+    assert answer["status"] == "started"

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 12:43-0400\n"
+"POT-Creation-Date: 2026-10-23 17:08-0400\n"
 "Language: it\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -74,7 +74,25 @@ msgstr ""
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  Impossibile accedere a {config_dir}, ripiego su {fallback_dir}"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:82
+#: src/sysmanage_agent/backup/host_mount.py:67
+#, python-format
+msgid "The backup storage at %(where)s cannot take new files: %(error)s"
+msgstr ""
+"L'archiviazione dei backup su %(where)s non accetta nuovi file: %(error)s"
+
+#: src/sysmanage_agent/backup/host_mount.py:73
+#, python-format
+msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
+msgstr ""
+"I lock non funzionano sull'archiviazione dei backup su %(where)s: %(error)s"
+
+#: src/sysmanage_agent/backup/host_mount.py:84
+#, python-format
+msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
+msgstr ""
+"L'archiviazione dei backup su %(where)s è quasi piena (%(free)d MB liberi)."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:94
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -83,7 +101,7 @@ msgstr ""
 "L'account di servizio per i backup %(account)s (utente e gruppo) non esiste "
 "su questo host di archiviazione. Crealo, quindi prepara di nuovo."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:112
+#: src/sysmanage_agent/backup/storage_prepare.py:124
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -93,7 +111,7 @@ msgstr ""
 " Esegui l'agente come root o sposta altrove la directory, quindi prepara di "
 "nuovo."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:123
+#: src/sysmanage_agent/backup/storage_prepare.py:135
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -106,7 +124,7 @@ msgstr ""
 "%(path)s.old), prepara di nuovo e copia il suo contenuto nel nuovo dataset "
 "come root; oppure 2) eliminalo se quei backup non servono più."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:131
+#: src/sysmanage_agent/backup/storage_prepare.py:143
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -119,7 +137,7 @@ msgstr ""
 "%(path)s.old), prepara di nuovo e copia il suo contenuto nel nuovo subvolume"
 " come root; oppure 2) eliminalo se quei backup non servono più."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:160
+#: src/sysmanage_agent/backup/storage_prepare.py:174
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -129,12 +147,12 @@ msgstr ""
 "quindi la sua esportazione non può essere limitata a esso. Attendi che "
 "quell'host comunichi i suoi dati di rete, quindi prepara di nuovo."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:174
+#: src/sysmanage_agent/backup/storage_prepare.py:192
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "La preparazione dell'archiviazione non è supportata su %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:182
+#: src/sysmanage_agent/backup/storage_prepare.py:200
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -143,7 +161,7 @@ msgstr ""
 "richiede un proprio dataset ZFS. Sposta il percorso di archiviazione su ZFS,"
 " quindi prepara di nuovo."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:226
+#: src/sysmanage_agent/backup/storage_prepare.py:244
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -155,7 +173,7 @@ msgstr ""
 "montato (zfs create -o mountpoint=%(path)s POOL/NAME), quindi prepara di "
 "nuovo."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:253
+#: src/sysmanage_agent/backup/storage_prepare.py:271
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -1008,98 +1026,98 @@ msgstr "Impossibile rilevare gli aggiornamenti disponibili: %s"
 msgid "Failed to install package %s: %s"
 msgstr "Errore nell'installazione del pacchetto %s: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:114
+#: src/sysmanage_agent/collection/update_detection_bsd.py:122
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "Impossibile rilevare gli aggiornamenti da pkg: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:152
+#: src/sysmanage_agent/collection/update_detection_bsd.py:160
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "Impossibile applicare gli aggiornamenti pkg: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:200
+#: src/sysmanage_agent/collection/update_detection_bsd.py:208
 msgid "OpenBSD upgrade failed"
 msgstr "Aggiornamento OpenBSD fallito"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:215
+#: src/sysmanage_agent/collection/update_detection_bsd.py:223
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "Aggiornamento OpenBSD scaduto dopo 30 minuti"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:314
+#: src/sysmanage_agent/collection/update_detection_bsd.py:322
 msgid "FreeBSD upgrade failed"
 msgstr "L'aggiornamento FreeBSD non è riuscito"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:327
+#: src/sysmanage_agent/collection/update_detection_bsd.py:335
 msgid "FreeBSD upgrade install failed"
 msgstr "Installazione aggiornamento FreeBSD fallita"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:333
+#: src/sysmanage_agent/collection/update_detection_bsd.py:341
 msgid "FreeBSD upgrade timed out"
 msgstr "L'aggiornamento FreeBSD ha esaurito il tempo di attesa"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:399
+#: src/sysmanage_agent/collection/update_detection_bsd.py:407
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "Comando syspatch fallito con codice di uscita %d"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:402
+#: src/sysmanage_agent/collection/update_detection_bsd.py:410
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:405
+#: src/sysmanage_agent/collection/update_detection_bsd.py:413
 msgid "OpenBSD system update detection timed out"
 msgstr "Rilevamento aggiornamento del sistema OpenBSD scaduto"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:410
+#: src/sysmanage_agent/collection/update_detection_bsd.py:418
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "Impossibile rilevare gli aggiornamenti del sistema OpenBSD: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:427
+#: src/sysmanage_agent/collection/update_detection_bsd.py:435
 msgid "Failed to get current OpenBSD version"
 msgstr "Errore nel recupero della versione corrente di OpenBSD"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:476
+#: src/sysmanage_agent/collection/update_detection_bsd.py:489
 msgid "Could not parse OpenBSD version from website"
 msgstr "Impossibile analizzare la versione OpenBSD dal sito web"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:480
+#: src/sysmanage_agent/collection/update_detection_bsd.py:493
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "Impossibile controllare il sito web OpenBSD per gli aggiornamenti: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:486
+#: src/sysmanage_agent/collection/update_detection_bsd.py:499
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "Impossibile rilevare gli aggiornamenti della versione di OpenBSD: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:684
+#: src/sysmanage_agent/collection/update_detection_bsd.py:697
 msgid "syspatch command failed"
 msgstr "Comando syspatch fallito"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:686
-#: src/sysmanage_agent/collection/update_detection_bsd.py:707
+#: src/sysmanage_agent/collection/update_detection_bsd.py:699
+#: src/sysmanage_agent/collection/update_detection_bsd.py:720
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "Impossibile applicare gli aggiornamenti syspatch: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:697
+#: src/sysmanage_agent/collection/update_detection_bsd.py:710
 msgid "syspatch command timed out"
 msgstr "comando syspatch terminato per timeout"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:703
+#: src/sysmanage_agent/collection/update_detection_bsd.py:716
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch terminato per timeout dopo 10 minuti"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:848
+#: src/sysmanage_agent/collection/update_detection_bsd.py:861
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "Gestore pacchetti non supportato: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:904
+#: src/sysmanage_agent/collection/update_detection_bsd.py:917
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -2279,45 +2297,45 @@ msgstr "Errore durante la raccolta dei log dell'agente: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Errore durante la raccolta dei log di errore: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:256
+#: src/sysmanage_agent/operations/backup_operations.py:257
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate non è utilizzabile su questo host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:276
 msgid "This platform can only be a backup storage host."
 msgstr ""
 "Questa piattaforma può essere solo un host di archiviazione dei backup."
 
-#: src/sysmanage_agent/operations/backup_operations.py:281
+#: src/sysmanage_agent/operations/backup_operations.py:282
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Impossibile installare i processi di backup: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:308
+#: src/sysmanage_agent/operations/backup_operations.py:309
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Questa versione di restate non supporta: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:387
-#: src/sysmanage_agent/operations/backup_operations.py:397
-#: src/sysmanage_agent/operations/backup_operations.py:413
+#: src/sysmanage_agent/operations/backup_operations.py:392
+#: src/sysmanage_agent/operations/backup_operations.py:402
+#: src/sysmanage_agent/operations/backup_operations.py:418
 msgid "That backup action is not configured on this host."
 msgstr "Quell'azione di backup non è configurata su questo host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:472
+#: src/sysmanage_agent/operations/backup_operations.py:477
 msgid "restate is not installed on this host."
 msgstr "restate non è installato su questo host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:490
+#: src/sysmanage_agent/operations/backup_operations.py:495
 msgid "That backup job is already running."
 msgstr "Quel processo di backup è già in esecuzione."
 
-#: src/sysmanage_agent/operations/backup_operations.py:506
+#: src/sysmanage_agent/operations/backup_operations.py:517
 msgid "The backup job could not be started."
 msgstr "Impossibile avviare il processo di backup."
 
-#: src/sysmanage_agent/operations/backup_operations.py:538
+#: src/sysmanage_agent/operations/backup_operations.py:549
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2326,37 +2344,53 @@ msgstr ""
 "L'archiviazione dei backup non è montata su %(where)s e il server non ha "
 "ancora indicato da dove montarla."
 
-#: src/sysmanage_agent/operations/backup_operations.py:552
+#: src/sysmanage_agent/operations/backup_operations.py:563
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "Impossibile montare l'archiviazione dei backup %(source)s su %(where)s: "
 "%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:556
+#: src/sysmanage_agent/operations/backup_operations.py:567
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 "L'archiviazione dei backup non risulta montata su %(where)s dopo il "
 "montaggio."
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:590
+#, python-format
+msgid "The backup storage at %s did not answer."
+msgstr "L'archiviazione dei backup su %s non ha risposto."
+
+#: src/sysmanage_agent/operations/backup_operations.py:607
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Impossibile smontare l'archiviazione dei backup su %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:679
+#: src/sysmanage_agent/operations/backup_operations.py:657
+#, python-format
+msgid "Could not list the sealed snapshots: %s"
+msgstr "Impossibile elencare gli snapshot sigillati: %s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:672
+#, python-format
+msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
+msgstr ""
+"Impossibile rimuovere il vecchio snapshot sigillato %(name)s: %(error)s"
+
+#: src/sysmanage_agent/operations/backup_operations.py:750
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 "Impossibile preparare l'archiviazione dei backup per il criterio %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:784
+#: src/sysmanage_agent/operations/backup_operations.py:855
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "Impossibile eseguire la verifica dell'archiviazione: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:802
+#: src/sysmanage_agent/operations/backup_operations.py:873
 msgid "Could not queue the backup report"
 msgstr "Impossibile mettere in coda il report di backup"
 

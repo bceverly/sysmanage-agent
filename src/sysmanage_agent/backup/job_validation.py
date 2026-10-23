@@ -241,12 +241,19 @@ def check_seal(job: Any) -> Dict[str, Any]:
     if not isinstance(job, dict) or job.get("mode") not in _SEAL_KEYS:
         raise PolicyError("seal mode must be zfs_snapshot, btrfs_snapshot or none")
     mode = job["mode"]
-    if set(job) != {"mode"} | _SEAL_KEYS[mode]:
+    keys = set(job) - {"keep_days"}
+    if keys != {"mode"} | _SEAL_KEYS[mode]:
         raise PolicyError(
             f"seal job for {mode} must have exactly {sorted(_SEAL_KEYS[mode])}"
         )
     if mode == "none":
         return {"mode": "none"}
+    # How long the storage host keeps its seals (24.5); absent: kept for ever.
+    keep = {}
+    if job.get("keep_days") is not None:
+        keep["keep_days"] = _count("keep_days", job["keep_days"])
+        if not 1 <= keep["keep_days"] <= 3650:
+            raise PolicyError("seal keep_days must be between 1 and 3650")
     if mode == "zfs_snapshot":
         dataset = job["dataset"]
         if (
@@ -255,13 +262,13 @@ def check_seal(job: Any) -> Dict[str, Any]:
             or ".." in dataset.split("/")
         ):
             raise PolicyError("seal dataset is not a valid ZFS dataset name")
-        return {"mode": mode, "dataset": dataset}
+        return {"mode": mode, "dataset": dataset, **keep}
     subvolume = _seal_path(job["subvolume"], "subvolume")
     snapshot_dir = _seal_path(job["snapshot_dir"], "snapshot_dir")
     if snapshot_dir == subvolume or snapshot_dir.startswith(subvolume + "/"):
         # A snapshot inside the tree it snapshots would nest into the next one.
         raise PolicyError("seal snapshot_dir must be outside the subvolume")
-    return {"mode": mode, "subvolume": subvolume, "snapshot_dir": snapshot_dir}
+    return {"mode": mode, "subvolume": subvolume, "snapshot_dir": snapshot_dir, **keep}
 
 
 def check_key(text: Any) -> Optional[str]:
