@@ -27,6 +27,15 @@ SUDOERS = os.path.join(
     os.path.dirname(__file__), "..", "installer", "freebsd", "sysmanage-agent.sudoers"
 )
 PROTECT = [["chown", "root:restate", REPO], ["chmod", "1770", REPO]]
+# FreeBSD: no sticky bit (its NFS server refuses creates in a sticky
+# directory); the same rule as an NFSv4 ACL, as restate 2.1.0.2 protects.
+PROTECT_FREEBSD = [
+    ["chown", "root:restate", REPO],
+    ["chmod", "0770", REPO],
+    ["setfacl", "-a", "0", "group@:D::deny", REPO],
+    ["setfacl", "-a", "0", "owner@:d:f:allow", REPO],
+    ["setfacl", "-a", "0", "owner@:d:d:allow", REPO],
+]
 
 
 @pytest.fixture(autouse=True)
@@ -55,7 +64,8 @@ def test_freebsd_zfs_creates_a_child_dataset_shared_to_the_host_only():
     assert steps["commands"] == [
         ["zfs", "create", "-o", "sharenfs=-mapall=restate:restate 192.168.4.196",
          "tank/backups/t14-1"],
-    ] + PROTECT  # fmt: skip
+    ]  # fmt: skip
+    assert steps["protect"] == PROTECT_FREEBSD
     assert steps["export_file"] is None and steps["reload"] is False
 
 
@@ -82,7 +92,8 @@ def test_an_existing_dataset_is_only_re_exported():
 
 def test_linux_zfs_exports_through_its_own_exports_d_file():
     steps = _plan("Linux", "zfs", {MOUNT: "tank/backups"})
-    assert steps["commands"] == [["zfs", "create", "tank/backups/t14-1"]] + PROTECT
+    assert steps["commands"] == [["zfs", "create", "tank/backups/t14-1"]]
+    assert steps["protect"] == PROTECT
     path, text = steps["export_file"]
     assert path == f"/etc/exports.d/sysmanage-{PID}.exports"
     assert text == (f"{REPO} 192.168.4.196(rw,sync,no_subtree_check,all_squash,"
@@ -100,7 +111,7 @@ def test_btrfs_creates_a_subvolume_and_plain_creates_a_directory():
     plain = _plan("Linux", "ext4")
     assert plain["kind"] == p.PLAIN and plain["commands"][0][0] == "mkdir"
     again = _plan("Linux", "btrfs", listdir=lambda _p: ["packs"], subvolume=True)
-    assert again["commands"] == PROTECT  # an existing subvolume: export + perms
+    assert again["commands"] == [] and again["protect"] == PROTECT  # export + perms
 
 
 @pytest.mark.parametrize(

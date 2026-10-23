@@ -47,6 +47,12 @@ BTRFS = "btrfs"
 PLAIN = "directory"
 EXPORTS_D = "/etc/exports.d"
 PROTECTED_MODE = "1770"
+# FreeBSD (ZFS, NFSv4 ACLs): its NFS server refuses a file made in a sticky
+# directory -- after making it -- so a capture could never write a pack.  The
+# same rule as an ACL instead (as restate 2.1.0.2's protect does): the group
+# may not delete what it does not own; a file's owner may delete its own.
+ACL_DIR_MODE = "0770"
+APPEND_ONLY_ACL = ("group@:D::deny", "owner@:d:f:allow", "owner@:d:d:allow")
 
 
 class PrepareRefused(Exception):
@@ -147,7 +153,9 @@ def plan(  # pylint: disable=too-many-arguments
     listdir: Callable = os.listdir,
 ) -> Dict[str, Any]:
     """What to run: ``{"kind", "commands": [argv...], "export_file": (path,
-    text) | None, "reload": bool}``.  Raises ``PrepareRefused``."""
+    text) | None, "reload": bool, "protect": [argv...]}`` -- the filesystem
+    and its export, then the ownership and append-only rule (after the new
+    mount exists).  Raises ``PrepareRefused``."""
     repository = posixpath.normpath(policy["repository"])
     mount_point = posixpath.normpath(
         policy.get("mount_point") or posixpath.dirname(repository)
@@ -164,10 +172,14 @@ def plan(  # pylint: disable=too-many-arguments
         )
     account = policy.get("service_account") or "restate"
     uid, gid = _ids(account)  # also proves the account exists
-    protect = [
-        ["chown", f"root:{account}", repository],
-        ["chmod", PROTECTED_MODE, repository],
-    ]
+    protect = [["chown", f"root:{account}", repository]]
+    if system == "FreeBSD":
+        # chmod first: with aclmode=discard it resets the ACL, so a re-run
+        # never stacks duplicate entries.
+        protect.append(["chmod", ACL_DIR_MODE, repository])
+        protect += [["setfacl", "-a", "0", ace, repository] for ace in APPEND_ONLY_ACL]
+    else:
+        protect.append(["chmod", PROTECTED_MODE, repository])
     if system not in ("FreeBSD", "Linux"):
         raise PrepareRefused(
             "unsupported",
@@ -208,7 +220,7 @@ def plan(  # pylint: disable=too-many-arguments
         )
         steps["reload"] = True
     steps.pop("exists")
-    steps["commands"] += protect
+    steps["protect"] = protect
     return steps
 
 

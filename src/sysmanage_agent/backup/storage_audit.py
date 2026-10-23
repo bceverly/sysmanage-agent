@@ -254,19 +254,42 @@ def client_path(system: str, repository: str, read=_read) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
-def _protected_dir(st: os.stat_result, gid: int) -> bool:
-    return (
-        st.st_uid == 0
-        and st.st_gid == gid
-        and stat.S_IMODE(st.st_mode) == PROTECTED_DIR_MODE
-    )
+ACL_DIR_MODE = 0o770
+
+
+def acl_denies_delete(path: str, run=_run) -> bool:
+    """Does ``path``'s NFSv4 ACL deny the group delete_child?  restate
+    2.1.0.2 protects with that instead of the sticky bit where the
+    filesystem has NFSv4 ACLs (ZFS on FreeBSD): FreeBSD's NFS server refuses
+    a file made in a sticky directory, after making it."""
+    text = run(["getfacl", path]) or ""
+    for line in text.splitlines():
+        fields = line.strip().split(":")
+        if (
+            len(fields) >= 4
+            and fields[0] == "group@"
+            and "D" in fields[1]
+            and fields[-1] == "deny"
+        ):
+            return True
+    return False
+
+
+def _protected_dir(st: os.stat_result, gid: int, path: str, acl: Callable) -> bool:
+    """root's and the hosts' group, and either sticky 1770 or 0770 with an
+    NFSv4 ACL that denies the group deleting what it does not own."""
+    if st.st_uid != 0 or st.st_gid != gid:
+        return False
+    mode = stat.S_IMODE(st.st_mode)
+    return mode == PROTECTED_DIR_MODE or (mode == ACL_DIR_MODE and acl(path))
 
 
 def layout_findings(
-    repository: str, account: str, lstat=os.lstat
+    repository: str, account: str, lstat=os.lstat, acl=acl_denies_delete
 ) -> List[Dict[str, Any]]:
-    """Directories sticky + group-writable and root-owned; finished packs
-    and snapshots root-owned and read-only."""
+    """Directories root-owned, group-writable and append-only (sticky, or an
+    NFSv4 ACL saying the same); finished packs and snapshots root-owned and
+    read-only."""
     try:
         gid = grp.getgrnam(account).gr_gid
     except KeyError:
@@ -274,7 +297,8 @@ def layout_findings(
     loose = []
     for sub in ("", "packs", "snapshots"):
         try:
-            if not _protected_dir(lstat(posixpath.join(repository, sub)), gid):
+            path = posixpath.join(repository, sub)
+            if not _protected_dir(lstat(path), gid, path, acl):
                 loose.append(sub or ".")
         except OSError:
             continue  # not created yet (no capture so far)

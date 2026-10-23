@@ -633,17 +633,15 @@ class BackupOperations:
     async def _prepare_steps(self, policy_id: str, steps: Dict[str, Any]) -> None:
         tools = {storage_prepare.ZFS: _first(ZFS_PATHS),
                  storage_prepare.BTRFS: _first(BTRFS_PATHS)}  # fmt: skip
-        commands = steps["commands"]
         # The dataset / subvolume / directory first, then its export, then
         # its ownership (chown needs the new mount, not the directory under it).
-        protect = commands[-2:]
-        for argv in commands[:-2]:
+        for argv in steps["commands"]:
             await self._checked([tools.get(argv[0], argv[0])] + argv[1:])
         if steps["export_file"]:
             path, text = steps["export_file"]
             await self._install_root_file(text, path)
             await self._checked(["exportfs", "-ra"])
-        for argv in protect:
+        for argv in steps["protect"]:
             await self._checked(argv)
         self.logger.info(
             "Prepared backup storage for policy %s (%s)", policy_id, steps["kind"]

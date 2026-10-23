@@ -136,6 +136,48 @@ def test_layout_needs_sticky_root_directories_and_root_owned_packs(
     assert found[0]["params"]["unprotected_files"] == 1
 
 
+FREEBSD_ACL = """# file: /srv/backups/restate/t14/packs
+# owner: root
+# group: restate
+            owner@:-----d--------:-d-----:allow
+            owner@:-----d--------:f------:allow
+            group@:----D---------:-------:deny
+            owner@:rwxp--aARWcCos:-------:allow
+            group@:rwxp--a-R-c--s:-------:allow
+         everyone@:------a-R-c--s:-------:allow
+"""
+
+
+def test_an_nfsv4_acl_counts_as_append_only_where_sticky_cannot_be_used(
+    account, tmp_path
+):
+    # restate 2.1.0.2 on ZFS/FreeBSD: 0770 + "group@ may not delete_child"
+    repo = tmp_path / "r"
+    (repo / "packs").mkdir(parents=True)
+
+    def dirs(mode):
+        return lambda path: SimpleNamespace(st_uid=0, st_gid=1003,
+                                            st_mode=stat.S_IFDIR | mode)  # fmt: skip
+
+    def with_acl(_path):
+        return True
+
+    def without(_path):
+        return False
+
+    assert _codes(a.layout_findings(str(repo), "restate", lstat=dirs(0o770),
+                                    acl=with_acl)) == {"append_only_layout": "ok"}  # fmt: skip
+    found = a.layout_findings(str(repo), "restate", lstat=dirs(0o770), acl=without)
+    assert found[0]["level"] == "warning"  # plain 0770: a host could delete
+
+
+def test_the_acl_reader_finds_the_group_delete_deny():
+    assert a.acl_denies_delete("/x", run=lambda argv: FREEBSD_ACL)
+    plain = "\n".join(l for l in FREEBSD_ACL.splitlines() if ":deny" not in l)
+    assert not a.acl_denies_delete("/x", run=lambda argv: plain)
+    assert not a.acl_denies_delete("/x", run=lambda argv: None)
+
+
 def test_a_parent_export_does_not_reach_a_repository_on_its_own_filesystem(account):
     text = f"/srv/backups -alldirs -mapall=restate:restate 192.168.4.0/24\n{REPO} -mapall=restate:restate 192.168.4.196\n"
     found = _codes(a.export_findings("FreeBSD", REPO, "192.168.4.196", "restate",
