@@ -5,7 +5,7 @@
 """FreeBSD storage hosts: restate under daemon(8) instead of systemd (Phase 24).
 
 The pidfile lock and log helpers run for real; the driver's subprocesses go
-through the same recording fake as ``test_backup_operations``.
+through the same recording fake as ``backup_ops_support``.
 """
 
 # pylint: disable=protected-access,redefined-outer-name,unused-import
@@ -20,7 +20,7 @@ from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.operations import backup_operations as ops_module
-from tests.test_backup_operations import (  # noqa: F401  # fixtures
+from tests.backup_ops_support import (  # noqa: F401  # fixtures
     PID,
     RID,
     _drain,
