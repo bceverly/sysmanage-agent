@@ -44,6 +44,12 @@ def _reports(state_dir: str, policy_id: str, action: str, group: str) -> Dict[st
 RULES_DIR = "/etc/restate/rules.d"
 # Keys that become the policy's rules file, never job keys.
 _PATH_RULE_KEYS = ("keep_paths", "skip_paths")
+# What decides which paths a capture walks and records.  A status must walk
+# the same tree, or every path the backup leaves out on purpose (a rules
+# file's ``expendable``, the built-in caches) shows up as "added" -- and is
+# read, since the snapshot has nothing to compare it with (lab 2026-10-24:
+# 76,461 false additions and 38 GB read without them).
+WALK_KEYS = ("rules", "all", "one_file_system")
 
 
 def rules_path(policy_id: str) -> str:
@@ -248,11 +254,22 @@ def build_list_job(
     return job
 
 
+def walk_keys(capture: Dict[str, Any]) -> Dict[str, Any]:
+    """The capture job's keys that decide what it walks (WALK_KEYS)."""
+    return {key: capture[key] for key in WALK_KEYS if key in capture}
+
+
 def build_status_job(
-    params: Any, *, repository: str, state_dir: str, group: str
+    params: Any,
+    *,
+    repository: str,
+    state_dir: str,
+    group: str,
+    walk: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """What changed on this host since a snapshot (restate ``status`` as a
-    job, 2.1.0.4+), the newest unless one is named."""
+    job, 2.1.0.4+), the newest unless one is named.  ``walk``: the capture's
+    WALK_KEYS, so the status compares the tree the backup actually records."""
     if not isinstance(params, dict):
         raise v.PolicyError("parameters must be an object")
     policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
@@ -261,5 +278,6 @@ def build_status_job(
         job["snapshot"] = f"{repository}::{v.check_snapshot(params['snapshot'])}"
     else:
         job["repository"] = repository
+    job.update(walk_keys(walk or {}))
     job.update(_reports(state_dir, policy_id, STATUS_ACTION, group))
     return job

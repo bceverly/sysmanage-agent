@@ -55,6 +55,15 @@ def test_status_defaults_to_the_newest_snapshot():
     assert named["snapshot"] == f"{REPO}::s1" and "repository" not in named
 
 
+def test_status_walks_what_the_capture_walks():
+    capture = {"command": "capture", "rules": ["/etc/restate/rules.d/p.rules"],
+               "all": False, "one_file_system": True, "quiesce": True}  # fmt: skip
+    job = b.build_status_job({"policy_id": PID}, walk=capture, **KW)
+    assert job["rules"] == ["/etc/restate/rules.d/p.rules"]
+    assert job["all"] is False and job["one_file_system"] is True
+    assert "quiesce" not in job and job["command"] == "status"
+
+
 def test_abilities_come_only_from_what_restate_lists():
     assert contract.host_abilities({"commands": ["status", "capture"]}) == []
     new = {"job_commands": ["capture", "status", "list"],

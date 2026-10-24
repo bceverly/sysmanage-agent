@@ -323,6 +323,7 @@ class BackupOperations:
             "client_address": policy.get("client_address"),
             "service_account": policy.get("service_account", "restate"),
             "nfs": policy.get("nfs"),
+            "walk": job_builder.walk_keys(jobs.get("capture", {})),
         }
         self._save("policies.json", policies)
         reply = {
@@ -423,14 +424,15 @@ class BackupOperations:
                 "tool_outdated",
                 _("This restate cannot run %s as a job; upgrade restate.") % action,
             )
-        build = (
-            job_builder.build_list_job
-            if action == job_builder.LIST_ACTION
-            else job_builder.build_status_job
-        )
+        common = {"repository": policy["repository"],
+                  "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
         try:
-            job = build(params, repository=policy["repository"],
-                        state_dir=self.state_dir, group=_agent_group())  # fmt: skip
+            if action == job_builder.LIST_ACTION:
+                job = job_builder.build_list_job(params, **common)
+            else:
+                job = job_builder.build_status_job(
+                    params, walk=policy.get("walk"), **common
+                )
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
             )

@@ -388,6 +388,27 @@ async def test_a_listing_installs_its_job_and_starts_it(ops, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_what_changed_uses_the_captures_rules(ops, monkeypatch):
+    """Lab 2026-10-24: without the capture's rules file, a status reported
+    every left-out path (~/Nextcloud) as added and read 38 GB."""
+    features = dict(FEATURES, job_commands=["capture", "list", "status"])
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
+    rendered = []
+    real = contract.render_job
+    monkeypatch.setattr(
+        contract, "render_job", lambda job: rendered.append(job) or real(job)
+    )
+    policy = _host_policy()
+    policy["jobs"]["capture"]["skip_paths"] = ["/home/*/Nextcloud"]
+    await ops.backup_configure(policy)
+    answer = await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "status"})
+    assert answer["status"] == "started", answer
+    capture = [j for j in rendered if j["command"] == "capture"][0]
+    status = [j for j in rendered if j["command"] == "status"][0]
+    assert status["rules"] == capture["rules"] == [job_builder.rules_path(PID)]
+
+
+@pytest.mark.asyncio
 async def test_an_older_restate_cannot_list(ops):
     await ops.backup_configure(_host_policy())
     answer = await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "list",
