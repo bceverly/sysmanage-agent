@@ -77,11 +77,22 @@ Runner = Callable[[list], Tuple[int, str]]
 Reader = Callable[[str], Optional[str]]
 
 
-# "36 C" in smartctl's attribute text.  A number starts at a "-" or where the
-# previous character is not part of one: without that, search restarted
-# inside every digit run (super-linear, Sonar S5852); a mid-run start only
-# ever re-finds the match the run's start already found.
-_SMART_CELSIUS = re.compile(r"((?:-|(?<![\d.]))[\d.]+) C")
+def _smart_celsius(value: str) -> Optional[str]:
+    """The first ``-?[\\d.]+`` directly before " C" in smartctl's attribute
+    text ("36 C"), as ``re.search(r"(-?[\\d.]+) C", value)`` finds it.  A
+    scan back from each " C": every regex form was flagged as super-linear
+    (Sonar S5852)."""
+    at = value.find(" C")
+    while at != -1:
+        start = at
+        while start > 0 and (value[start - 1].isdecimal() or value[start - 1] == "."):
+            start -= 1
+        if start < at:
+            if start > 0 and value[start - 1] == "-":
+                start -= 1
+            return value[start:at]
+        at = value.find(" C", at + 1)
+    return None
 
 
 def reason(code: str, **params) -> Dict[str, object]:
@@ -227,9 +238,9 @@ def parse_nvmecontrol_logpage(text: str) -> Dict[str, object]:
             except (ValueError, IndexError):
                 continue
         elif key == "Temperature" and "C" in value:
-            match = _SMART_CELSIUS.search(value)
-            if match:
-                metrics["temperature_c"] = float(match.group(1))
+            celsius = _smart_celsius(value)
+            if celsius:
+                metrics["temperature_c"] = float(celsius)
     return metrics
 
 

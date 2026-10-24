@@ -79,11 +79,86 @@ _CONTROLLER_STATUS = "Controller Status"
 _NO_CONTROLLER = "no controller"
 
 
-# Linear forms of patterns Sonar S5852 flagged as super-linear.  A number
-# never starts right after a digit: a search restarted inside a digit run only
-# re-found what the run's start had already found (or failed the same way).
-_PERCENT = re.compile(r"(?<!\d)(\d+(?:\.\d+)?)\s*%")
-_SEL_CLOCK = re.compile(r"(?<!\d)(\d+/\d+/\d+)\s+(\d+:\d+:\d+)")
+# ``_first_percent`` and ``_first_clock`` are hand scanners for patterns
+# Sonar S5852 flagged as super-linear in every regex form: each tries a match
+# only where a digit run starts, so the text is read a bounded number of times.
+
+
+def _digits_end(text: str, pos: int) -> int:
+    """Past the run of decimal digits starting at ``pos``."""
+    while pos < len(text) and text[pos].isdecimal():
+        pos += 1
+    return pos
+
+
+def _space_end(text: str, pos: int) -> int:
+    while pos < len(text) and text[pos].isspace():
+        pos += 1
+    return pos
+
+
+def _run_starts(text: str) -> Iterable[int]:
+    """Every position where a run of decimal digits starts."""
+    for pos, char in enumerate(text):
+        if char.isdecimal() and (pos == 0 or not text[pos - 1].isdecimal()):
+            yield pos
+
+
+def _percent_at(text: str, start: int) -> Optional[str]:
+    """``\\d+(?:\\.\\d+)?\\s*%`` at ``start``: the number, or None."""
+    whole = _digits_end(text, start)
+    ends = [whole]
+    if whole + 1 < len(text) and text[whole] == "." and text[whole + 1].isdecimal():
+        ends.insert(0, _digits_end(text, whole + 1))  # the fraction is tried first
+    for end in ends:
+        after = _space_end(text, end)
+        if after < len(text) and text[after] == "%":
+            return text[start:end]
+    return None
+
+
+def _first_percent(text: str) -> Optional[str]:
+    """As ``re.search(r"(\\d+(?:\\.\\d+)?)\\s*%", text).group(1)``."""
+    for start in _run_starts(text):
+        found = _percent_at(text, start)
+        if found is not None:
+            return found
+    return None
+
+
+def _triple_end(text: str, start: int, sep: str) -> Optional[int]:
+    """Past ``\\d+<sep>\\d+<sep>\\d+`` at ``start``, or None."""
+    pos = _digits_end(text, start)
+    for _ in range(2):
+        if pos == start or pos >= len(text) or text[pos] != sep:
+            return None
+        start = pos + 1
+        pos = _digits_end(text, start)
+    return pos if pos > start else None
+
+
+def _clock_at(text: str, start: int) -> Optional[Tuple[str, str]]:
+    date_end = _triple_end(text, start, "/")
+    if date_end is None:
+        return None
+    time_start = _space_end(text, date_end)
+    if time_start == date_end:
+        return None
+    time_end = _triple_end(text, time_start, ":")
+    if time_end is None:
+        return None
+    return text[start:date_end], text[time_start:time_end]
+
+
+def _first_clock(text: str) -> Optional[Tuple[str, str]]:
+    """As ``re.search(r"(\\d+/\\d+/\\d+)\\s+(\\d+:\\d+:\\d+)", text).groups()``."""
+    for start in _run_starts(text):
+        found = _clock_at(text, start)
+        if found is not None:
+            return found
+    return None
+
+
 # ``ipmitool sdr`` readings are already stripped (fields split on "|"), so
 # the unit is the first non-space onward -- \s+ and the unit cannot overlap.
 _SDR_READING = re.compile(r"(-?\d+(?:\.\d+)?)\s+(\S.*)$")
@@ -136,8 +211,8 @@ def _judge(value: Optional[str], table: Dict[str, str], default: str) -> str:
 
 
 def _percent(text: str) -> Optional[float]:
-    match = _PERCENT.search(text or "")
-    return float(match.group(1)) if match else None
+    found = _first_percent(text or "")
+    return float(found) if found is not None else None
 
 
 # --- Broadcom / LSI MegaRAID (storcli, perccli) -------------------------------
@@ -795,8 +870,8 @@ def parse_sel_elist(text: str) -> List[Dict[str, object]]:
 
 def parse_sel_time(text: str) -> Optional[datetime]:
     """``ipmitool sel time get`` -> the BMC's own clock."""
-    match = _SEL_CLOCK.search(text or "")
-    return _sel_time(match.group(1), match.group(2)) if match else None
+    found = _first_clock(text or "")
+    return _sel_time(*found) if found else None
 
 
 def sel_component(text: str, now: datetime) -> Dict[str, object]:

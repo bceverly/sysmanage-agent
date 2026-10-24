@@ -123,6 +123,7 @@ def test_a_storage_target_must_be_a_directory():
         ({"quiesce_with": ["Nextcloud"]}, "a-z0-9"),
         ({"quiesce_with": ["a b"]}, "a-z0-9"),
         ({"tmpdir": "/tmp"}, "outside"),
+        ({"tmpdir": "/var/tmp/restate"}, "outside"),
     ],
 )
 def test_hostile_capture_keys_are_refused(job, why):

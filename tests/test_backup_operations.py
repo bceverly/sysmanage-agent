@@ -361,8 +361,8 @@ async def test_a_restarted_agent_resumes_and_reports_once(ops, agent):
     ops._save("inflight.json", {RID: record, "junk": "not a record"})
     _write(job_builder.result_path(ops.state_dir, PID, "capture"),
            '{"schema": 1, "exit": 0, "status": "ok"}')  # fmt: skip
-    await ops.resume_in_flight()
-    await ops.resume_in_flight()  # once per process
+    ops.resume_in_flight()
+    ops.resume_in_flight()  # once per process
     await _drain(ops)
     reports = _sent(agent, "backup_result")
     assert [r["run_id"] for r in reports] == [RID]

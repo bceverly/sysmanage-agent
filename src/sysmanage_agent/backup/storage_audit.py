@@ -42,6 +42,9 @@ FINISHED_SUFFIXES = (".tar.gz", ".idx", ".sum", ".seek")
 TIMEOUT = 10
 
 
+EXPORTS_FILE = "/etc/exports"
+
+
 def _finding(code: str, level: str, **params) -> Dict[str, Any]:
     return {"code": code, "level": level, "params": params}
 
@@ -83,7 +86,7 @@ def _freebsd_baseline(run: Callable, read: Callable) -> List[Dict[str, Any]]:
     locks = run(["sysctl", "-n", "vfs.nfsd.enable_locallocks"])
     found.append(_finding("nfs_local_locks", OK if locks == "1" else ERROR))
     root = any(
-        line.strip().startswith("V4:") for line in read("/etc/exports").splitlines()
+        line.strip().startswith("V4:") for line in read(EXPORTS_FILE).splitlines()
     )
     found.append(_finding("nfs_v4_root", OK if root else ERROR))
     return found
@@ -126,20 +129,25 @@ def _export_lines(system: str, read: Callable) -> List[str]:
     """Every export line in effect (FreeBSD: exports + ZFS sharenfs file;
     Linux: the kernel's active table, else the configured files)."""
     if system == "FreeBSD":
-        text = read("/etc/exports") + "\n" + read("/etc/zfs/exports")
+        text = read(EXPORTS_FILE) + "\n" + read("/etc/zfs/exports")
     else:
-        text = read("/var/lib/nfs/etab") or read("/etc/exports")
-        exports_d = "/etc/exports.d"
-        if os.path.isdir(exports_d):
-            for name in sorted(os.listdir(exports_d)):
-                if name.endswith(".exports"):
-                    text += "\n" + read(posixpath.join(exports_d, name))
+        text = _linux_exports_text(read)
     lines = []
     for raw in text.splitlines():
         line = raw.split("#", 1)[0].strip()
         if line and not line.startswith("V4:"):
             lines.append(line)
     return lines
+
+
+def _linux_exports_text(read: Callable) -> str:
+    text = read("/var/lib/nfs/etab") or read(EXPORTS_FILE)
+    exports_d = "/etc/exports.d"
+    if os.path.isdir(exports_d):
+        for name in sorted(os.listdir(exports_d)):
+            if name.endswith(".exports"):
+                text += "\n" + read(posixpath.join(exports_d, name))
+    return text
 
 
 def _covers(export: Dict[str, Any], path: str, own_fs: bool) -> bool:
@@ -220,7 +228,12 @@ def export_findings(
     except KeyError:
         uid = gid = -1
     mapping = {_mapping(system, e["options"], uid, gid) for e in own}
-    level = OK if mapping == {"ok"} else ERROR if "missing" in mapping else WARNING
+    if mapping == {"ok"}:
+        level = OK
+    elif "missing" in mapping:
+        level = ERROR
+    else:
+        level = WARNING
     found.append(_finding("export_mapping", level, mapping=sorted(mapping)))
     return found
 
@@ -232,19 +245,12 @@ def client_path(system: str, repository: str, read=_read) -> Optional[str]:
     FreeBSD: relative to the ``V4:`` root in /etc/exports.  Linux: relative
     to an ``fsid=0`` / ``fsid=root`` export if there is one, else the path
     itself (Linux's pseudo-root mirrors the real tree)."""
-    root = None
     if system == "FreeBSD":
-        for line in read("/etc/exports").splitlines():
-            fields = line.split("#", 1)[0].split()
-            if fields[:1] == ["V4:"] and len(fields) > 1:
-                root = fields[1]
+        root = _freebsd_v4_root(read)
         if root is None:
             return None
     else:
-        for line in _export_lines(system, read):
-            export = _parse_export(system, line)
-            if {"fsid=0", "fsid=root"} & set(export["options"]):
-                root = export["path"]
+        root = _linux_v4_root(system, read)
         if root is None:
             return repository
     root = posixpath.normpath(root)
@@ -253,6 +259,26 @@ def client_path(system: str, repository: str, read=_read) -> Optional[str]:
     if not repository.startswith(root.rstrip("/") + "/"):
         return None
     return "/" + posixpath.relpath(repository, root)
+
+
+def _freebsd_v4_root(read: Callable) -> Optional[str]:
+    """The last ``V4:`` root in /etc/exports, or None."""
+    root = None
+    for line in read(EXPORTS_FILE).splitlines():
+        fields = line.split("#", 1)[0].split()
+        if fields[:1] == ["V4:"] and len(fields) > 1:
+            root = fields[1]
+    return root
+
+
+def _linux_v4_root(system: str, read: Callable) -> Optional[str]:
+    """The last ``fsid=0`` / ``fsid=root`` export's path, or None."""
+    root = None
+    for line in _export_lines(system, read):
+        export = _parse_export(system, line)
+        if {"fsid=0", "fsid=root"} & set(export["options"]):
+            root = export["path"]
+    return root
 
 
 # ---------------------------------------------------------------------------
@@ -300,6 +326,18 @@ def layout_findings(
         gid = grp.getgrnam(account).gr_gid
     except KeyError:
         return [_finding("append_only_layout", ERROR, reason="no_account")]
+    loose = _loose_directories(repository, gid, lstat, acl)
+    unprotected = _unprotected_packs(repository, lstat)
+    if loose or unprotected:
+        return [_finding("append_only_layout", WARNING, directories=loose,
+                         unprotected_files=unprotected)]  # fmt: skip
+    return [_finding("append_only_layout", OK)]
+
+
+def _loose_directories(
+    repository: str, gid: int, lstat: Callable, acl: Callable
+) -> List[str]:
+    """The repository's directories that are not append-only."""
     loose = []
     for sub in ("", "packs", "snapshots"):
         try:
@@ -308,24 +346,27 @@ def layout_findings(
                 loose.append(sub or ".")
         except OSError:
             continue  # not created yet (no capture so far)
-    unprotected = 0
+    return loose
+
+
+def _unprotected_packs(repository: str, lstat: Callable) -> int:
+    """How many finished packs are not root's and read-only."""
     packs = posixpath.join(repository, "packs")
     try:
         names = os.listdir(packs)
     except OSError:
-        names = []
+        return 0
+    unprotected = 0
     for name in names:
-        if name.endswith(FINISHED_SUFFIXES) and not name.startswith("."):
-            try:
-                st = lstat(posixpath.join(packs, name))
-            except OSError:
-                continue
-            if st.st_uid != 0 or stat.S_IMODE(st.st_mode) & 0o222:
-                unprotected += 1
-    if loose or unprotected:
-        return [_finding("append_only_layout", WARNING, directories=loose,
-                         unprotected_files=unprotected)]  # fmt: skip
-    return [_finding("append_only_layout", OK)]
+        if not name.endswith(FINISHED_SUFFIXES) or name.startswith("."):
+            continue
+        try:
+            st = lstat(posixpath.join(packs, name))
+        except OSError:
+            continue
+        if st.st_uid != 0 or stat.S_IMODE(st.st_mode) & 0o222:
+            unprotected += 1
+    return unprotected
 
 
 def filesystem_findings(repository: str, read_text: Callable) -> List[Dict[str, Any]]:

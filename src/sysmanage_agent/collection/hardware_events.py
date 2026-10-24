@@ -79,12 +79,49 @@ _LINUX_PATTERNS: Tuple[Tuple[str, "re.Pattern[str]"], ...] = (
 )
 
 
-# ``key=value`` fields.  ``(?<!\w)`` stops findall restarting inside a key:
-# without it a long word with no ``=`` was rescanned from every position
-# (super-linear, Sonar S5852).  A match can never start mid-word anyway --
-# the same suffix would already have matched from the word's start.
-_DEVD_FIELD = re.compile(r'(?<!\w)(\w+)=("[^"]*"|\S+)')
-_ZED_FIELD = re.compile(r"(?<!\w)(\w+)=('[^']*'|\S+)")
+# ``key=value`` fields, as ``re.findall(r'(\w+)=("[^"]*"|\S+)', text)`` would
+# give them (with the quote character of the source).  A hand scanner, one
+# pass over the text: every regex form of this was flagged as super-linear
+# (Sonar S5852), lookbehind or not.
+
+
+def _is_word(char: str) -> bool:
+    return char.isalnum() or char == "_"
+
+
+def _value_end(text: str, start: int, quote: str) -> int:
+    """Where a value starting at ``start`` ends: past its closing quote when
+    it is quoted and closed, else at the next whitespace (``start`` when the
+    value would be empty)."""
+    if start < len(text) and text[start] == quote:
+        close = text.find(quote, start + 1)
+        if close != -1:
+            return close + 1
+    end = start
+    while end < len(text) and not text[end].isspace():
+        end += 1
+    return end
+
+
+def _key_values(text: str, quote: str) -> List[Tuple[str, str]]:
+    """``[(key, value)]`` in order; values keep their quotes."""
+    found = []
+    pos, size = 0, len(text)
+    while pos < size:
+        if not _is_word(text[pos]):
+            pos += 1
+            continue
+        key_end = pos
+        while key_end < size and _is_word(text[key_end]):
+            key_end += 1
+        if key_end < size and text[key_end] == "=":
+            value_end = _value_end(text, key_end + 1, quote)
+            if value_end > key_end + 1:
+                found.append((text[pos:key_end], text[key_end + 1 : value_end]))
+                pos = value_end
+                continue
+        pos = key_end
+    return found
 
 
 def classify_kernel_line(line: str) -> Optional[str]:
@@ -163,7 +200,7 @@ _DEVD_SYSTEMS = {"ZFS": _zfs, "CAM": _cam, "GEOM": _geom, "ACPI": _acpi}
 def classify_devd_line(line: str) -> Optional[str]:
     """FreeBSD devd: ``!system=ZFS subsystem=ZFS type=...`` and friends --
     classified against what devd really sends (recorded on the lab box)."""
-    fields = {k: v.strip('"') for k, v in _DEVD_FIELD.findall(line)}
+    fields = {k: v.strip('"') for k, v in _key_values(line, '"')}
     judge = _DEVD_SYSTEMS.get(fields.get("system", ""))
     return judge(fields) if judge else None
 
@@ -291,7 +328,7 @@ def _smartd(message: str) -> Optional[str]:
 
 
 def _zed(message: str) -> Optional[str]:
-    fields = {k: v.strip("'") for k, v in _ZED_FIELD.findall(message)}
+    fields = {k: v.strip("'") for k, v in _key_values(message, "'")}
     kind = fields.get("class", "").rsplit(".", 1)[-1]
     if kind == "statechange":
         return STORAGE if fields.get("vdev_state") in _ZED_BAD_STATES else None

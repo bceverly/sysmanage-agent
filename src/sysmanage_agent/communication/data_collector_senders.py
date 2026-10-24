@@ -439,9 +439,12 @@ class DataCollectorSendersMixin:
         # smartctl / zpool / PowerShell are subprocesses; off the event loop.
         payload = await asyncio.to_thread(collect_hardware_health)
         payload["host_id"] = str(host_approval.host_id)
-        payload["trigger"] = (
-            "event" if evidence else "requested" if requested else "periodic"
-        )
+        if evidence:
+            payload["trigger"] = "event"
+        elif requested:
+            payload["trigger"] = "requested"
+        else:
+            payload["trigger"] = "periodic"
         if evidence:
             payload["evidence"] = evidence
         message = self.agent.create_message("hardware_health_update", payload)

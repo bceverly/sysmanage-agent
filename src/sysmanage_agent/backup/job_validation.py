@@ -35,7 +35,10 @@ ROLES = {"host": HOST_ACTIONS, "storage": STORAGE_ACTIONS}
 # Where repositories and their mounts may live.
 BACKUP_ROOTS = ("/srv", "/mnt", "/media", "/var/backups")
 RULES_ROOTS = ("/etc/restate", "/usr/share/restate")
-TMP_ROOTS = ("/var/tmp",) + BACKUP_ROOTS  # nosec B108  # an allow-list, not a file
+# A tmpdir for restate (run as root) only under the backup roots: never a
+# world-writable directory such as /tmp or /var/tmp, where another local user
+# could plant the path first and steer root's temporary files.
+TMP_ROOTS = BACKUP_ROOTS
 NFS_TYPES = ("nfs", "nfs4")
 
 # The keys the SERVER may send for each action.  The agent fills command,

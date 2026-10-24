@@ -47,6 +47,11 @@ from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.backup import seal_retention
 
 DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
+# The driver's own state files, in its state directory.
+POLICIES_FILE = "policies.json"
+INFLIGHT_FILE = "inflight.json"
+MOUNTS_FILE = "mounts.json"
+SEALS_FILE = "seals.json"
 # The BSDs keep a daemon's state in /var/db (the FreeBSD rc script puts the
 # agent's database there); there is no /var/lib to create one in.
 STATE_DIRS = {"FreeBSD": "/var/db/sysmanage-agent"}
@@ -97,6 +102,17 @@ def _read_text(path: str) -> Optional[str]:
             return handle.read()
     except OSError:
         return None
+
+
+def _stage_file(content: str, directory: str) -> str:
+    """Write ``content`` to a new private (0600) file in ``directory``; its
+    path.  ``sudo install`` then copies it into place root-owned with the
+    mode the job file needs, so the staged copy never has to be readable by
+    anyone else."""
+    handle, staged = tempfile.mkstemp(dir=directory, prefix=".job-")
+    with os.fdopen(handle, "w", encoding="utf-8", newline="") as out:
+        out.write(content)
+    return staged
 
 
 def _first(paths: Tuple[str, ...]) -> str:
@@ -202,11 +218,8 @@ class BackupOperations:
     async def _install_root_file(self, content: str, dest: str) -> None:
         """Write ``content`` to ``dest`` root-owned 0644 via ``sudo install``."""
         self._ensure_dirs()
-        handle, staged = tempfile.mkstemp(dir=self._backup_dir(), prefix=".job-")
+        staged = _stage_file(content, self._backup_dir())
         try:
-            with os.fdopen(handle, "w", encoding="utf-8", newline="") as out:
-                out.write(content)
-            os.chmod(staged, 0o644)  # root reads it; nothing secret in a job
             for argv in self._install_argvs(staged, dest):
                 code, _out, err = await self._run(self._privileged(argv))
                 if code != 0:
@@ -249,6 +262,12 @@ class BackupOperations:
     def _refusal(reason: str, message: str) -> Dict[str, Any]:
         return {"success": False, "reason": reason, "error": message}
 
+    @classmethod
+    def _not_configured(cls) -> Dict[str, Any]:
+        return cls._refusal(
+            "not_configured", _("That backup action is not configured on this host.")
+        )
+
     def _unusable(self) -> Optional[Dict[str, Any]]:
         reason = restate_probe.unavailable_reason(shutil.which, platform.system())
         if reason is None:
@@ -278,7 +297,7 @@ class BackupOperations:
             return await self._apply_policy(policy)
         except validation.PolicyError as error:
             return self._refusal("invalid_policy", str(error))
-        except (OSError, PermissionError) as error:
+        except OSError as error:
             self.logger.error(_("Could not install the backup jobs: %s"), error)
             return self._refusal("install_failed", str(error))
 
@@ -313,7 +332,7 @@ class BackupOperations:
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
         removed = await self._remove_stale(policy_id, set(jobs))
-        policies = self._load("policies.json")
+        policies = self._load(POLICIES_FILE)
         policies[policy_id] = {
             "role": policy["role"],
             "repository": policy["repository"],
@@ -325,7 +344,7 @@ class BackupOperations:
             "nfs": policy.get("nfs"),
             "walk": job_builder.walk_keys(jobs.get("capture", {})),
         }
-        self._save("policies.json", policies)
+        self._save(POLICIES_FILE, policies)
         reply = {
             "success": True,
             "policy_id": policy_id,
@@ -360,7 +379,7 @@ class BackupOperations:
             await self._remove_root_file(path)
 
     async def _remove_stale(self, policy_id: str, keep: set) -> List[str]:
-        previous = self._load("policies.json").get(policy_id, {}).get("actions", [])
+        previous = self._load(POLICIES_FILE).get(policy_id, {}).get("actions", [])
         stale = sorted(a for a in previous if a not in keep and a != "seal")
         for action in stale:
             await self._remove_root_file(contract.job_path(policy_id, action))
@@ -371,7 +390,7 @@ class BackupOperations:
     # ------------------------------------------------------------------
 
     def _policy(self, policy_id: str) -> Optional[Dict[str, Any]]:
-        return self._load("policies.json").get(policy_id)
+        return self._load(POLICIES_FILE).get(policy_id)
 
     async def backup_run(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Start one action of a configured policy; report when it ends."""
@@ -391,10 +410,7 @@ class BackupOperations:
         if policy and policy.get("role") == "host":
             allowed += [job_builder.LIST_ACTION, job_builder.STATUS_ACTION]
         if action not in allowed:
-            return self._refusal(
-                "not_configured",
-                _("That backup action is not configured on this host."),
-            )
+            return self._not_configured()
         if action == "seal":
             return self._start_seal(run_id, policy_id, policy.get("seal") or {})
         if action in (job_builder.LIST_ACTION, job_builder.STATUS_ACTION):
@@ -403,10 +419,7 @@ class BackupOperations:
             self._spawn(self._prepare(run_id, policy_id, policy))
             return {"success": True, "run_id": run_id, "status": "started"}
         if not os.path.exists(contract.job_path(policy_id, action)):
-            return self._refusal(
-                "not_configured",
-                _("That backup action is not configured on this host."),
-            )
+            return self._not_configured()
         return await self._start_job(run_id, policy_id, action)
 
     async def _start_browse(
@@ -438,7 +451,7 @@ class BackupOperations:
             )
         except validation.PolicyError as error:
             return self._refusal("invalid_request", str(error))
-        except (OSError, PermissionError) as error:
+        except OSError as error:
             return self._refusal("install_failed", str(error))
         return await self._start_job(run_id, policy_id, action)
 
@@ -452,10 +465,7 @@ class BackupOperations:
             policy_id = validation.check_uuid(params.get("policy_id"), "policy_id")
             policy = self._policy(policy_id)
             if not policy or policy.get("role") != "host":
-                return self._refusal(
-                    "not_configured",
-                    _("That backup action is not configured on this host."),
-                )
+                return self._not_configured()
             job = job_builder.build_restore_job(
                 params,
                 repository=policy["repository"],
@@ -471,7 +481,7 @@ class BackupOperations:
             )
         except validation.PolicyError as error:
             return self._refusal("invalid_request", str(error))
-        except (OSError, PermissionError) as error:
+        except OSError as error:
             return self._refusal("install_failed", str(error))
         return await self._start_job(run_id, policy_id, job_builder.RESTORE_ACTION)
 
@@ -482,7 +492,12 @@ class BackupOperations:
         )  # fmt: skip
         if code != 0:
             return {}
-        return dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
+        state = {}
+        for line in out.splitlines():
+            key, sep, value = line.partition("=")
+            if sep:
+                state[key] = value
+        return state
 
     async def _job_state(self, record: Dict[str, Any]) -> Tuple[bool, Optional[int]]:
         """``(running, exit status)`` of a run; the status only from systemd."""
@@ -554,9 +569,9 @@ class BackupOperations:
             await self._release_mount(run_id, policy_id)
             return {"success": False, "run_id": run_id, "reason": "start_failed",
                     "error": err or _("The backup job could not be started.")}  # fmt: skip
-        inflight = self._load("inflight.json")
+        inflight = self._load(INFLIGHT_FILE)
         inflight[run_id] = record
-        self._save("inflight.json", inflight)
+        self._save(INFLIGHT_FILE, inflight)
         self._spawn(self._watch(run_id, record, resumed=False))
         return {"success": True, "run_id": run_id, "status": "started"}
 
@@ -575,40 +590,52 @@ class BackupOperations:
             return None
         source = policy.get("nfs")
         where = policy["repository"]
-        state = self._load("mounts.json")
+        state = self._load(MOUNTS_FILE)
         entry = state.get(where)
         mounts = self._mounts()
-        if not source and not (
-            host_mount.mounted_nfs(where, mounts)
-            or host_mount.mounted_nfs(posixpath.dirname(where), mounts)
-        ):
-            # Never let restate run against the host's own disk: it would
-            # write (or create) a repository there, not on the storage.
-            return _(
-                "The backup storage is not mounted at %(where)s, and the server "
-                "has not sent where to mount it from yet."
-            ) % {"where": where}
-        if not source or (
-            entry is None and host_mount.mounted_nfs(posixpath.dirname(where), mounts)
-        ):
+        if not source:
+            return self._unmanaged_mount(where, mounts)
+        if entry is None and host_mount.mounted_nfs(posixpath.dirname(where), mounts):
             return None  # the operator mounted the shared export: use it
         if host_mount.mounted_nfs(where, mounts):
             if entry is None:
                 return None  # the operator's own mount: used, never unmounted
         else:
-            for argv in (["mkdir", "-p", where], host_mount.mount_argv(source, where)):
-                code, _out, err = await self._run(self._privileged(argv))
-                if code != 0:
-                    return _("Could not mount the backup storage %(source)s at %(where)s: %(error)s") % {
-                        "source": host_mount.device(source), "where": where,
-                        "error": err or code}  # fmt: skip
-            if not host_mount.mounted_nfs(where, self._mounts()):
-                return _("The backup storage is not mounted at %(where)s after mounting it.") % {
-                    "where": where}  # fmt: skip
+            failed = await self._mount_export(source, where)
+            if failed:
+                return failed
             entry = {"runs": []}
         entry["runs"] = sorted(set(entry.get("runs", [])) | {run_id})
         state[where] = entry
-        self._save("mounts.json", state)
+        self._save(MOUNTS_FILE, state)
+        return None
+
+    @staticmethod
+    def _unmanaged_mount(where: str, mounts: Dict[str, str]) -> Optional[str]:
+        """No export to mount from: the repository (or its parent) must
+        already be an NFS mount.  Never let restate run against the host's
+        own disk: it would write (or create) a repository there, not on the
+        storage."""
+        if host_mount.mounted_nfs(where, mounts) or host_mount.mounted_nfs(
+            posixpath.dirname(where), mounts
+        ):
+            return None
+        return _(
+            "The backup storage is not mounted at %(where)s, and the server "
+            "has not sent where to mount it from yet."
+        ) % {"where": where}
+
+    async def _mount_export(self, source: Dict[str, Any], where: str) -> Optional[str]:
+        """Mount ``source`` at ``where``; None, or why it failed."""
+        for argv in (["mkdir", "-p", where], host_mount.mount_argv(source, where)):
+            code, _out, err = await self._run(self._privileged(argv))
+            if code != 0:
+                return _("Could not mount the backup storage %(source)s at %(where)s: %(error)s") % {
+                    "source": host_mount.device(source), "where": where,
+                    "error": err or code}  # fmt: skip
+        if not host_mount.mounted_nfs(where, self._mounts()):
+            return _("The backup storage is not mounted at %(where)s after mounting it.") % {
+                "where": where}  # fmt: skip
         return None
 
     async def _preflight(self, run_id: str, policy_id: str) -> Optional[str]:
@@ -632,13 +659,13 @@ class BackupOperations:
         """This run is done with the export; unmount after the last one."""
         policy = self._policy(policy_id) or {}
         where = policy.get("repository")
-        state = self._load("mounts.json")
+        state = self._load(MOUNTS_FILE)
         entry = state.get(where) if where else None
         if entry is None:
             return
         entry["runs"] = [r for r in entry.get("runs", []) if r != run_id]
         if entry["runs"]:
-            self._save("mounts.json", state)
+            self._save(MOUNTS_FILE, state)
             return
         code, _out, err = await self._run(self._privileged(["umount", where]))
         if code != 0 and host_mount.mounted_nfs(where, self._mounts()):
@@ -647,7 +674,7 @@ class BackupOperations:
             )
             return  # keep the record: the next run's release tries again
         del state[where]
-        self._save("mounts.json", state)
+        self._save(MOUNTS_FILE, state)
 
     # ------------------------------------------------------------------
     # seal: the NAS snapshots its own dataset
@@ -668,9 +695,9 @@ class BackupOperations:
         if argv:
             code, _out, message = await self._run(self._privileged(argv))
         if code == 0 and argv and seal.get("mode") == "btrfs_snapshot":
-            ledger = self._load("seals.json")
+            ledger = self._load(SEALS_FILE)
             ledger[argv[-1]] = time.time()
-            self._save("seals.json", ledger)
+            self._save(SEALS_FILE, ledger)
         if code == 0 and seal.get("keep_days"):
             result = await self._expire_seals(seal)
             message = message or "; ".join(result.get("errors", []))
@@ -697,7 +724,7 @@ class BackupOperations:
             seals = seal_retention.zfs_seals(out, seal["dataset"])
             tool = zfs
         else:
-            ledger = self._load("seals.json")
+            ledger = self._load(SEALS_FILE)
             seals = seal_retention.btrfs_seals(ledger, seal["snapshot_dir"])
             tool = _first(BTRFS_PATHS)
         removed, errors = [], []
@@ -711,10 +738,10 @@ class BackupOperations:
                 errors.append(_("Could not remove the old sealed snapshot %(name)s: %(error)s")
                               % {"name": name, "error": err or code})  # fmt: skip
         if seal["mode"] == "btrfs_snapshot" and removed:
-            ledger = self._load("seals.json")
+            ledger = self._load(SEALS_FILE)
             for path in removed:
                 ledger.pop(path, None)
-            self._save("seals.json", ledger)
+            self._save(SEALS_FILE, ledger)
         return {"seals_removed": len(removed), "seals_kept": len(seals) - len(removed),
                 "errors": errors}  # fmt: skip
 
@@ -782,7 +809,7 @@ class BackupOperations:
         except storage_prepare.PrepareRefused as refused:
             status, code = "failed", 1
             result = {"reason": refused.code, "errors": [str(refused)]}
-        except (OSError, PermissionError) as error:
+        except OSError as error:
             status, code = "failed", 1
             result = {"reason": "command_failed", "errors": [str(error)]}
             self.logger.error(
@@ -805,13 +832,13 @@ class BackupOperations:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
-    async def resume_in_flight(self) -> None:
+    def resume_in_flight(self) -> None:
         """After a restart: watch every run the last agent left running.
         Once per process -- the task loop that calls it runs per connection."""
         if self._resumed:
             return
         self._resumed = True
-        for run_id, record in self._load("inflight.json").items():
+        for run_id, record in self._load(INFLIGHT_FILE).items():
             if isinstance(record, dict) and (
                 record.get("unit") or record.get("pidfile")
             ):
@@ -876,9 +903,9 @@ class BackupOperations:
              "started_at": record.get("started_at"), "finished_at": _now(),
              "restate_version": features.get("version")}  # fmt: skip
         )
-        inflight = self._load("inflight.json")
+        inflight = self._load(INFLIGHT_FILE)
         inflight.pop(run_id, None)
-        self._save("inflight.json", inflight)
+        self._save(INFLIGHT_FILE, inflight)
         await self._release_mount(run_id, record["policy_id"])
 
     def _audit(self, policy: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:

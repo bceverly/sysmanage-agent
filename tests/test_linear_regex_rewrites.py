@@ -85,10 +85,19 @@ def test_key_value_fields():
         [
             '!system=CAM subsystem=periph type=error device=ada0 serial="WD-1 2"',
             "class=ereport.fs.zfs.checksum pool='tank' vdev_path=/dev/da0",
+            'a="unclosed b=1',
+            "k= v=x",
+            "==a=b",
+            'x=""',
+            "é=1 ü_2='a b'",
+            "a=b=c d",
+            'k="a"b',
+            "tab=\tx",
+            "\na=1\n",
         ],
     ):
-        assert re.findall(r'(\w+)=("[^"]*"|\S+)', line) == he._DEVD_FIELD.findall(line)
-        assert re.findall(r"(\w+)=('[^']*'|\S+)", line) == he._ZED_FIELD.findall(line)
+        assert re.findall(r'(\w+)=("[^"]*"|\S+)', line) == he._key_values(line, '"')
+        assert re.findall(r"(\w+)=('[^']*'|\S+)", line) == he._key_values(line, "'")
 
 
 # -- smartctl / FreeBSD ------------------------------------------------------
@@ -97,11 +106,11 @@ def test_key_value_fields():
 def test_smart_celsius():
     for value in _corpus(
         _tokens(" ", "C", "-", ".", "1", "9", "a", "(", "/"),
-        ["36 C", "40 C (Min/Max 20/45)", "-5 C", "5-3 C", "1.2.3 C", "a.5 C"],
-    ):
+        ["36 C", "40 C (Min/Max 20/45)", "-5 C", "5-3 C", "1.2.3 C", "a.5 C",
+         " C 3 C", "--3 C", ". C", "x C 7 C", "-.5 C", "3C 4 C"],
+    ):  # fmt: skip
         old = re.search(r"(-?[\d.]+) C", value)
-        new = hh._SMART_CELSIUS.search(value)
-        assert (old and old.group(1)) == (new and new.group(1))
+        assert (old and old.group(1)) == hh._smart_celsius(value)
 
 
 def test_nvme_devlist():
@@ -229,14 +238,14 @@ def test_mce_record():
 def test_percent_and_sel_clock():
     for text in _corpus(
         _tokens(" ", "%", ".", "1", "9", "a", "/", ":"),
-        ["Rebuild 45% done", "12.5 %", "1.2.3 %", "07/14/2026 21:04:05"],
-    ):
+        ["Rebuild 45% done", "12.5 %", "1.2.3 %", "07/14/2026 21:04:05",
+         "0%", "1. %", "1.%", ".5%", "1 2 %", "1/2/3 4:5:6", "1/2/ 3:4:5",
+         "1/2/3  4:5:6", "1/2/3 4:5", "1//2 3:4:5 9/8/7\t6:5:4", "x 0/0/0 0:0:0"],
+    ):  # fmt: skip
         old = re.search(r"(\d+(?:\.\d+)?)\s*%", text)
-        new = hv._PERCENT.search(text)
-        assert (old and old.group(1)) == (new and new.group(1))
+        assert (old and old.group(1)) == hv._first_percent(text)
         old = re.search(r"(\d+/\d+/\d+)\s+(\d+:\d+:\d+)", text)
-        new = hv._SEL_CLOCK.search(text)
-        assert (old and old.groups()) == (new and new.groups())
+        assert (old and old.groups()) == hv._first_clock(text)
 
 
 def test_arc_key():

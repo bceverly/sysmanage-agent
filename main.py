@@ -739,7 +739,7 @@ class SysManageAgent(
             self.network_discovery_ops.run_report_loop()
         )
         hardware_events_task = asyncio.create_task(self.hardware_events.run())
-        await self.backup_ops.resume_in_flight()  # Phase 24: once per process
+        self.backup_ops.resume_in_flight()  # Phase 24: once per process
 
         done, pending = await asyncio.wait(
             [sender_task, receiver_task],

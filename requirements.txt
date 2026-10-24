@@ -92,7 +92,7 @@ babel>=2.12.0  # pybabel CLI for i18n-validate
 # lint runs on 3.10+ only.  Exactly the requirements-dev.txt pin: a looser
 # spec here let `make install-dev` upgrade black past it on its second pass,
 # so `make security` reported the venv stale forever (2026-10-08).
-black==26.3.1; python_version >= '3.10'
+black==26.10.1; python_version >= '3.10'
 pylint>=3.0.0
 isort>=5.12.0
 bandit>=1.8.6

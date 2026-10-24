@@ -35,7 +35,7 @@ documented and audited -- never edited here.
 
 import os
 import posixpath
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Unix-only: the agent also runs on Windows, where these modules do not
 # exist and a storage host never runs (main.py imports this module there).
@@ -178,14 +178,7 @@ def plan(  # pylint: disable=too-many-arguments
         )
     account = policy.get("service_account") or "restate"
     uid, gid = _ids(account)  # also proves the account exists
-    protect = [["chown", f"root:{account}", repository]]
-    if system == "FreeBSD":
-        # chmod first: with aclmode=discard it resets the ACL, so a re-run
-        # never stacks duplicate entries.
-        protect.append(["chmod", ACL_DIR_MODE, repository])
-        protect += [["setfacl", "-a", "0", ace, repository] for ace in APPEND_ONLY_ACL]
-    else:
-        protect.append(["chmod", PROTECTED_MODE, repository])
+    protect = _protect_steps(system, account, repository)
     if system not in ("FreeBSD", "Linux"):
         raise PrepareRefused(
             "unsupported",
@@ -207,15 +200,7 @@ def plan(  # pylint: disable=too-many-arguments
     else:
         steps = _plain_steps(repository, listdir)
     if system == "FreeBSD":
-        # FreeBSD: the export is the dataset's sharenfs (ZFS writes it to
-        # /etc/zfs/exports and has mountd reread it).
-        dataset = steps.pop("dataset")
-        value = f"sharenfs={sharenfs(address, account)}"
-        if steps["exists"]:
-            steps["commands"].append([ZFS, "set", value, dataset])
-        else:
-            steps["commands"] = [[ZFS, "create", "-o", value, dataset]]
-        steps["export_file"], steps["reload"] = None, False
+        _freebsd_export(steps, address, account)
     else:
         # Linux: one /etc/exports.d file per policy, whatever the filesystem
         # (rewritten when the host's address changes), then exportfs -ra.
@@ -228,6 +213,32 @@ def plan(  # pylint: disable=too-many-arguments
     steps.pop("exists")
     steps["protect"] = protect
     return steps
+
+
+def _protect_steps(system: str, account: str, repository: str) -> List[List[str]]:
+    """Ownership, then the append-only rule: FreeBSD 0770 plus the NFSv4 ACL,
+    Linux sticky 1770."""
+    protect = [["chown", f"root:{account}", repository]]
+    if system == "FreeBSD":
+        # chmod first: with aclmode=discard it resets the ACL, so a re-run
+        # never stacks duplicate entries.
+        protect.append(["chmod", ACL_DIR_MODE, repository])
+        protect += [["setfacl", "-a", "0", ace, repository] for ace in APPEND_ONLY_ACL]
+    else:
+        protect.append(["chmod", PROTECTED_MODE, repository])
+    return protect
+
+
+def _freebsd_export(steps: Dict[str, Any], address: str, account: str) -> None:
+    """FreeBSD: the export is the dataset's sharenfs (ZFS writes it to
+    /etc/zfs/exports and has mountd reread it)."""
+    dataset = steps.pop("dataset")
+    value = f"sharenfs={sharenfs(address, account)}"
+    if steps["exists"]:
+        steps["commands"].append([ZFS, "set", value, dataset])
+    else:
+        steps["commands"] = [[ZFS, "create", "-o", value, dataset]]
+    steps["export_file"], steps["reload"] = None, False
 
 
 def _zfs_steps(

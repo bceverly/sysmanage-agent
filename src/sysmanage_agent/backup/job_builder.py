@@ -44,6 +44,7 @@ def _reports(state_dir: str, policy_id: str, action: str, group: str) -> Dict[st
 RULES_DIR = "/etc/restate/rules.d"
 # Keys that become the policy's rules file, never job keys.
 _PATH_RULE_KEYS = ("keep_paths", "skip_paths")
+NOT_AN_OBJECT = "parameters must be an object"
 # What decides which paths a capture walks and records.  A status must walk
 # the same tree, or every path the backup leaves out on purpose (a rules
 # file's ``expendable``, the built-in caches) shows up as "added" -- and is
@@ -119,20 +120,9 @@ def build_jobs(
     for action, keys in policy["jobs"].items():
         if action == "seal":
             continue
-        job = dict(keys)
-        for key in _PATH_RULE_KEYS:
-            job.pop(key, None)
-        if action in ("capture", "estimate") and policy_rules(policy):
-            job["rules"] = list(job.get("rules") or []) + [
-                rules_path(policy["policy_id"])
-            ]
-        job["command"] = action
-        if action != "estimate":  # estimate reads the live host, no repository
-            job["repository"] = policy["repository"]
-        if action == "capture" and key_installed:
-            job["encrypt_to"] = contract.key_path(policy["policy_id"])
-        if action == "capture" and can_create:
-            job["create"] = True
+        job = _action_keys(policy, action, keys)
+        if action == "capture":
+            job.update(_capture_keys(policy, key_installed, can_create))
         if action in _KEYLESS_STORAGE:
             job.update(_KEYLESS_STORAGE[action])
             job["record"] = record_path(state_dir, policy["policy_id"])
@@ -144,6 +134,31 @@ def build_jobs(
         job.update(_reports(state_dir, policy["policy_id"], action, group))
         jobs[action] = job
     return jobs
+
+
+def _action_keys(
+    policy: Dict[str, Any], action: str, keys: Dict[str, Any]
+) -> Dict[str, Any]:
+    """The server's keys for ``action``, its rules file and repository."""
+    job = {key: value for key, value in keys.items() if key not in _PATH_RULE_KEYS}
+    if action in ("capture", "estimate") and policy_rules(policy):
+        job["rules"] = list(job.get("rules") or []) + [rules_path(policy["policy_id"])]
+    job["command"] = action
+    if action != "estimate":  # estimate reads the live host, no repository
+        job["repository"] = policy["repository"]
+    return job
+
+
+def _capture_keys(
+    policy: Dict[str, Any], key_installed: bool, can_create: bool
+) -> Dict[str, Any]:
+    """What only a capture gets: the encryption key and ``create``."""
+    extra: Dict[str, Any] = {}
+    if key_installed:
+        extra["encrypt_to"] = contract.key_path(policy["policy_id"])
+    if can_create:
+        extra["create"] = True
+    return extra
 
 
 def _patterns(value: Any, what: str) -> List[str]:
@@ -183,7 +198,7 @@ def build_restore_job(
     snapshots are restored only when the server explicitly allows it.
     """
     if not isinstance(params, dict):
-        raise v.PolicyError("parameters must be an object")
+        raise v.PolicyError(NOT_AN_OBJECT)
     run_id = v.check_uuid(params.get("run_id"), "run_id")
     policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
     dry_run = params.get("dry_run", True)
@@ -242,7 +257,7 @@ def build_list_job(
     """Browse one directory of a snapshot from its index alone (restate
     ``list``, 2.1.0.4+): no pack is read, so it takes seconds."""
     if not isinstance(params, dict):
-        raise v.PolicyError("parameters must be an object")
+        raise v.PolicyError(NOT_AN_OBJECT)
     policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
     name = v.check_snapshot(params.get("snapshot"))
     job = {
@@ -271,7 +286,7 @@ def build_status_job(
     job, 2.1.0.4+), the newest unless one is named.  ``walk``: the capture's
     WALK_KEYS, so the status compares the tree the backup actually records."""
     if not isinstance(params, dict):
-        raise v.PolicyError("parameters must be an object")
+        raise v.PolicyError(NOT_AN_OBJECT)
     policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
     job: Dict[str, Any] = {"command": STATUS_ACTION, "root": "/"}
     if params.get("snapshot"):

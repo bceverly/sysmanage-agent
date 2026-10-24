@@ -216,7 +216,7 @@ async def test_a_restarted_freebsd_agent_resumes_a_daemon_run(bsd, agent):
     bsd._save("inflight.json", {RID: record})
     _write(job_builder.result_path(bsd.state_dir, PID, "check"),
            '{"schema": 1, "exit": 5, "status": "busy"}')  # fmt: skip
-    await bsd.resume_in_flight()
+    bsd.resume_in_flight()
     await _drain(bsd)
     report = _sent(agent, "backup_result")[0]
     assert (report["run_id"], report["status"], report["exit"]) == (RID, "busy", 5)
