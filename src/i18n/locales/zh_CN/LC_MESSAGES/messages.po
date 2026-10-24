@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 17:08-0400\n"
+"POT-Creation-Date: 2026-10-23 20:50-0400\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2233,72 +2233,77 @@ msgstr "无法安装备份作业：%s"
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支持：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:392
-#: src/sysmanage_agent/operations/backup_operations.py:402
-#: src/sysmanage_agent/operations/backup_operations.py:418
+#: src/sysmanage_agent/operations/backup_operations.py:395
+#: src/sysmanage_agent/operations/backup_operations.py:407
+#: src/sysmanage_agent/operations/backup_operations.py:455
 msgid "That backup action is not configured on this host."
 msgstr "该备份操作在此主机上未配置。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:477
+#: src/sysmanage_agent/operations/backup_operations.py:424
+#, python-format
+msgid "This restate cannot run %s as a job; upgrade restate."
+msgstr "此 restate 无法将 %s 作为作业运行；请升级 restate。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:514
 msgid "restate is not installed on this host."
 msgstr "此主机上未安装restate。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:495
+#: src/sysmanage_agent/operations/backup_operations.py:532
 msgid "That backup job is already running."
 msgstr "该备份作业正在运行中。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:517
+#: src/sysmanage_agent/operations/backup_operations.py:554
 msgid "The backup job could not be started."
 msgstr "无法启动备份作业。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:549
+#: src/sysmanage_agent/operations/backup_operations.py:586
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
 "where to mount it from yet."
 msgstr "备份存储未挂载在 %(where)s，并且服务器尚未发送挂载来源。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:563
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr "无法将备份存储 %(source)s 挂载到 %(where)s：%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:567
+#: src/sysmanage_agent/operations/backup_operations.py:604
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "挂载后，备份存储仍未挂载在 %(where)s。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:590
+#: src/sysmanage_agent/operations/backup_operations.py:627
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "%s 处的备份存储没有响应。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:607
+#: src/sysmanage_agent/operations/backup_operations.py:644
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "无法卸载 %s 处的备份存储：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:657
+#: src/sysmanage_agent/operations/backup_operations.py:694
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "无法列出封存快照：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:672
+#: src/sysmanage_agent/operations/backup_operations.py:709
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "无法删除旧的封存快照 %(name)s：%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:750
+#: src/sysmanage_agent/operations/backup_operations.py:787
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "无法为策略 %s 准备备份存储：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:855
+#: src/sysmanage_agent/operations/backup_operations.py:892
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "无法运行存储审核：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:873
+#: src/sysmanage_agent/operations/backup_operations.py:910
 msgid "Could not queue the backup report"
 msgstr "无法将备份报告加入队列"
 

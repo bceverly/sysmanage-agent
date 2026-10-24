@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 17:08-0400\n"
+"POT-Creation-Date: 2026-10-23 20:50-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2228,72 +2228,77 @@ msgstr ""
 msgid "This restate does not support: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:392
-#: src/sysmanage_agent/operations/backup_operations.py:402
-#: src/sysmanage_agent/operations/backup_operations.py:418
+#: src/sysmanage_agent/operations/backup_operations.py:395
+#: src/sysmanage_agent/operations/backup_operations.py:407
+#: src/sysmanage_agent/operations/backup_operations.py:455
 msgid "That backup action is not configured on this host."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:477
+#: src/sysmanage_agent/operations/backup_operations.py:424
+#, python-format
+msgid "This restate cannot run %s as a job; upgrade restate."
+msgstr ""
+
+#: src/sysmanage_agent/operations/backup_operations.py:514
 msgid "restate is not installed on this host."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:495
+#: src/sysmanage_agent/operations/backup_operations.py:532
 msgid "That backup job is already running."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:517
+#: src/sysmanage_agent/operations/backup_operations.py:554
 msgid "The backup job could not be started."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:549
+#: src/sysmanage_agent/operations/backup_operations.py:586
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not "
 "sent where to mount it from yet."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:563
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:567
+#: src/sysmanage_agent/operations/backup_operations.py:604
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:590
+#: src/sysmanage_agent/operations/backup_operations.py:627
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:607
+#: src/sysmanage_agent/operations/backup_operations.py:644
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:657
+#: src/sysmanage_agent/operations/backup_operations.py:694
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:672
+#: src/sysmanage_agent/operations/backup_operations.py:709
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:750
+#: src/sysmanage_agent/operations/backup_operations.py:787
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:855
+#: src/sysmanage_agent/operations/backup_operations.py:892
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:873
+#: src/sysmanage_agent/operations/backup_operations.py:910
 msgid "Could not queue the backup report"
 msgstr ""
 

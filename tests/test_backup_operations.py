@@ -169,7 +169,7 @@ async def test_configure_installs_root_owned_job_files(ops):
     answer = await ops.backup_configure(_host_policy())
     assert answer == {"success": True, "policy_id": PID,
                       "installed": ["capture", "snapshots"], "removed": [],
-                      "hooks": []}  # fmt: skip
+                      "hooks": [], "abilities": []}  # fmt: skip
     installs = ops.fake.ran("install")
     assert [c[-1] for c in installs] == [
         contract.job_path(PID, "capture"), contract.job_path(PID, "snapshots")
@@ -984,3 +984,44 @@ async def test_read_only_jobs_skip_the_preflight(ops, job_files, monkeypatch):
         {"run_id": RID, "policy_id": PID, "action": "snapshots"}
     )
     assert answer["status"] == "started"
+
+
+# --- browse / what changed (restate 2.1.0.4) -----------------------------------
+
+
+@pytest.mark.asyncio
+async def test_a_listing_installs_its_job_and_starts_it(ops, monkeypatch):
+    features = dict(FEATURES, job_commands=["capture", "list", "status"])
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
+    rendered = []
+    real = contract.render_job
+    monkeypatch.setattr(
+        contract, "render_job", lambda job: rendered.append(job) or real(job)
+    )
+    await ops.backup_configure(_host_policy())
+    answer = await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "list",
+                                   "snapshot": "20261023T161149Z", "path": "/etc"})  # fmt: skip
+    assert answer["status"] == "started", answer
+    job = [j for j in rendered if j["command"] == "list"][0]
+    assert job["snapshot"].endswith("::20261023T161149Z") and job["path"] == "/etc"
+    assert ops.fake.ran(
+        "systemctl", "--no-block", "start", contract.unit_name(PID, "list")
+    )
+
+
+@pytest.mark.asyncio
+async def test_an_older_restate_cannot_list(ops):
+    await ops.backup_configure(_host_policy())
+    answer = await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "list",
+                                   "snapshot": "s1"})  # fmt: skip
+    assert answer["reason"] == "tool_outdated"
+
+
+@pytest.mark.asyncio
+async def test_a_storage_policy_cannot_list(ops, monkeypatch):
+    features = dict(FEATURES, job_commands=["list"])
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
+    await ops.backup_configure(_storage_policy({"mode": "none"}))
+    answer = await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "list",
+                                   "snapshot": "s1"})  # fmt: skip
+    assert answer["reason"] == "not_configured"

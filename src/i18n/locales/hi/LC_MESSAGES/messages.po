@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 17:08-0400\n"
+"POT-Creation-Date: 2026-10-23 20:50-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2289,25 +2289,30 @@ msgstr "बैकअप जॉब्स इंस्टॉल नहीं क�
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:392
-#: src/sysmanage_agent/operations/backup_operations.py:402
-#: src/sysmanage_agent/operations/backup_operations.py:418
+#: src/sysmanage_agent/operations/backup_operations.py:395
+#: src/sysmanage_agent/operations/backup_operations.py:407
+#: src/sysmanage_agent/operations/backup_operations.py:455
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:477
+#: src/sysmanage_agent/operations/backup_operations.py:424
+#, python-format
+msgid "This restate cannot run %s as a job; upgrade restate."
+msgstr "यह restate %s को जॉब के रूप में नहीं चला सकता; restate अपग्रेड करें।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:514
 msgid "restate is not installed on this host."
 msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:495
+#: src/sysmanage_agent/operations/backup_operations.py:532
 msgid "That backup job is already running."
 msgstr "यह बैकअप जॉब पहले से चल रहा है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:517
+#: src/sysmanage_agent/operations/backup_operations.py:554
 msgid "The backup job could not be started."
 msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:549
+#: src/sysmanage_agent/operations/backup_operations.py:586
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2316,48 +2321,48 @@ msgstr ""
 "बैकअप स्टोरेज %(where)s पर माउंट नहीं है, और सर्वर ने अभी तक यह नहीं भेजा है"
 " कि इसे कहाँ से माउंट करना है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:563
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "बैकअप स्टोरेज %(source)s को %(where)s पर माउंट नहीं किया जा सका: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:567
+#: src/sysmanage_agent/operations/backup_operations.py:604
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "माउंट करने के बाद भी बैकअप स्टोरेज %(where)s पर माउंट नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:590
+#: src/sysmanage_agent/operations/backup_operations.py:627
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "%s पर बैकअप स्टोरेज ने जवाब नहीं दिया।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:607
+#: src/sysmanage_agent/operations/backup_operations.py:644
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "%s पर बैकअप स्टोरेज को अनमाउंट नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:657
+#: src/sysmanage_agent/operations/backup_operations.py:694
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "सील किए गए स्नैपशॉट की सूची नहीं बन सकी: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:672
+#: src/sysmanage_agent/operations/backup_operations.py:709
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "पुराना सील किया गया स्नैपशॉट %(name)s हटाया नहीं जा सका: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:750
+#: src/sysmanage_agent/operations/backup_operations.py:787
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:855
+#: src/sysmanage_agent/operations/backup_operations.py:892
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:873
+#: src/sysmanage_agent/operations/backup_operations.py:910
 msgid "Could not queue the backup report"
 msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 

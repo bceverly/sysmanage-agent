@@ -175,6 +175,23 @@ def supports_command(features: Optional[Dict[str, Any]], command: str) -> bool:
 GATED_COMMANDS = frozenset({"repack", "protect"})
 
 
+def supports_job_command(features: Optional[Dict[str, Any]], command: str) -> bool:
+    """Whether this restate runs ``command`` from a job file (2.1.0.4 lists
+    them as ``job_commands``: ``list``, and ``status`` -- which existed
+    before only as a command line)."""
+    return command in set((features or {}).get("job_commands") or [])
+
+
+def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
+    """What a backed-up host's restate can do beyond the 2.0 contract that
+    the server offers in the UI: browse a snapshot, show what changed, and
+    report its write cache."""
+    found = [c for c in ("list", "status") if supports_job_command(features, c)]
+    if "capture.cache" in set((features or {}).get("result_members") or []):
+        found.append("cache")
+    return found
+
+
 _HOOK = re.compile(r"^[a-z0-9_-]{1,32}$")
 
 

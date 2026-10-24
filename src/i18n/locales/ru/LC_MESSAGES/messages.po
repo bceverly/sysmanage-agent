@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 17:08-0400\n"
+"POT-Creation-Date: 2026-10-23 20:50-0400\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2312,25 +2312,30 @@ msgstr "Не удалось установить задания резервно
 msgid "This restate does not support: %s"
 msgstr "Эта версия restate не поддерживает: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:392
-#: src/sysmanage_agent/operations/backup_operations.py:402
-#: src/sysmanage_agent/operations/backup_operations.py:418
+#: src/sysmanage_agent/operations/backup_operations.py:395
+#: src/sysmanage_agent/operations/backup_operations.py:407
+#: src/sysmanage_agent/operations/backup_operations.py:455
 msgid "That backup action is not configured on this host."
 msgstr "Это действие резервного копирования не настроено на этом хосте."
 
-#: src/sysmanage_agent/operations/backup_operations.py:477
+#: src/sysmanage_agent/operations/backup_operations.py:424
+#, python-format
+msgid "This restate cannot run %s as a job; upgrade restate."
+msgstr "Этот restate не может выполнить %s как задание; обновите restate."
+
+#: src/sysmanage_agent/operations/backup_operations.py:514
 msgid "restate is not installed on this host."
 msgstr "restate не установлен на этом хосте."
 
-#: src/sysmanage_agent/operations/backup_operations.py:495
+#: src/sysmanage_agent/operations/backup_operations.py:532
 msgid "That backup job is already running."
 msgstr "Это задание резервного копирования уже выполняется."
 
-#: src/sysmanage_agent/operations/backup_operations.py:517
+#: src/sysmanage_agent/operations/backup_operations.py:554
 msgid "The backup job could not be started."
 msgstr "Не удалось запустить задание резервного копирования."
 
-#: src/sysmanage_agent/operations/backup_operations.py:549
+#: src/sysmanage_agent/operations/backup_operations.py:586
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2339,50 +2344,50 @@ msgstr ""
 "Хранилище резервных копий не смонтировано в %(where)s, а сервер еще не "
 "сообщил, откуда его монтировать."
 
-#: src/sysmanage_agent/operations/backup_operations.py:563
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "Не удалось смонтировать хранилище резервных копий %(source)s в %(where)s: "
 "%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:567
+#: src/sysmanage_agent/operations/backup_operations.py:604
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 "После монтирования хранилище резервных копий не смонтировано в %(where)s."
 
-#: src/sysmanage_agent/operations/backup_operations.py:590
+#: src/sysmanage_agent/operations/backup_operations.py:627
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "Хранилище резервных копий в %s не ответило."
 
-#: src/sysmanage_agent/operations/backup_operations.py:607
+#: src/sysmanage_agent/operations/backup_operations.py:644
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Не удалось отмонтировать хранилище резервных копий в %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:657
+#: src/sysmanage_agent/operations/backup_operations.py:694
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Не удалось получить список запечатанных снимков: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:672
+#: src/sysmanage_agent/operations/backup_operations.py:709
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Не удалось удалить старый запечатанный снимок %(name)s: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:750
+#: src/sysmanage_agent/operations/backup_operations.py:787
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "Не удалось подготовить хранилище резервных копий для политики %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:855
+#: src/sysmanage_agent/operations/backup_operations.py:892
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "Не удалось выполнить проверку хранилища: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:873
+#: src/sysmanage_agent/operations/backup_operations.py:910
 msgid "Could not queue the backup report"
 msgstr "Не удалось поставить отчет о резервном копировании в очередь"
 

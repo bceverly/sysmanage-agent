@@ -335,6 +335,7 @@ class BackupOperations:
             # The quiesce hooks this host's restate finds present (2.1+): the
             # server offers them in the policy dialog.
             reply["hooks"] = contract.present_hooks(features)
+            reply["abilities"] = contract.host_abilities(features)
         if policy["role"] == "storage":
             # Can this filesystem seal at all?  The server warns when not.
             reply["storage_fs"] = storage_fs.describe(
@@ -386,6 +387,8 @@ class BackupOperations:
         allowed = list(policy.get("actions", [])) if policy else []
         if policy and policy.get("role") == "storage":
             allowed.append(storage_prepare.ACTION)
+        if policy and policy.get("role") == "host":
+            allowed += [job_builder.LIST_ACTION, job_builder.STATUS_ACTION]
         if action not in allowed:
             return self._refusal(
                 "not_configured",
@@ -393,6 +396,8 @@ class BackupOperations:
             )
         if action == "seal":
             return self._start_seal(run_id, policy_id, policy.get("seal") or {})
+        if action in (job_builder.LIST_ACTION, job_builder.STATUS_ACTION):
+            return await self._start_browse(run_id, policy_id, policy, parameters)
         if action == storage_prepare.ACTION and policy.get("role") == "storage":
             self._spawn(self._prepare(run_id, policy_id, policy))
             return {"success": True, "run_id": run_id, "status": "started"}
@@ -401,6 +406,38 @@ class BackupOperations:
                 "not_configured",
                 _("That backup action is not configured on this host."),
             )
+        return await self._start_job(run_id, policy_id, action)
+
+    async def _start_browse(
+        self,
+        run_id: str,
+        policy_id: str,
+        policy: Dict[str, Any],
+        params: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """A snapshot listing or a what-changed check: read-only host jobs,
+        each written fresh from the request (like a restore)."""
+        action = params.get("action")
+        if not contract.supports_job_command(self._features(), action):
+            return self._refusal(
+                "tool_outdated",
+                _("This restate cannot run %s as a job; upgrade restate.") % action,
+            )
+        build = (
+            job_builder.build_list_job
+            if action == job_builder.LIST_ACTION
+            else job_builder.build_status_job
+        )
+        try:
+            job = build(params, repository=policy["repository"],
+                        state_dir=self.state_dir, group=_agent_group())  # fmt: skip
+            await self._install_root_file(
+                contract.render_job(job), contract.job_path(policy_id, action)
+            )
+        except validation.PolicyError as error:
+            return self._refusal("invalid_request", str(error))
+        except (OSError, PermissionError) as error:
+            return self._refusal("install_failed", str(error))
         return await self._start_job(run_id, policy_id, action)
 
     async def backup_restore(self, parameters: Dict[str, Any]) -> Dict[str, Any]:

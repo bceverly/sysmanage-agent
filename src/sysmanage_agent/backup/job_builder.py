@@ -208,3 +208,58 @@ def build_restore_job(
         job["allow_unverified"] = True
     job.update(_reports(state_dir, policy_id, RESTORE_ACTION, group))
     return job
+
+
+LIST_ACTION = "list"
+STATUS_ACTION = "status"
+MAX_PATH = 4096
+
+
+def _browse_path(value: Any) -> str:
+    """An absolute, normalized path inside a snapshot (default ``/``)."""
+    if value in (None, ""):
+        return "/"
+    if (
+        not isinstance(value, str)
+        or len(value) > MAX_PATH
+        or not value.startswith("/")
+        or posixpath.normpath(value) not in (value, value.rstrip("/"))
+        or any(ord(ch) < 32 or ord(ch) == 127 for ch in value)
+    ):
+        raise v.PolicyError("path must be an absolute, normalized path")
+    return posixpath.normpath(value)
+
+
+def build_list_job(
+    params: Any, *, repository: str, state_dir: str, group: str
+) -> Dict[str, Any]:
+    """Browse one directory of a snapshot from its index alone (restate
+    ``list``, 2.1.0.4+): no pack is read, so it takes seconds."""
+    if not isinstance(params, dict):
+        raise v.PolicyError("parameters must be an object")
+    policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
+    name = v.check_snapshot(params.get("snapshot"))
+    job = {
+        "command": LIST_ACTION,
+        "snapshot": f"{repository}::{name}",
+        "path": _browse_path(params.get("path")),
+    }
+    job.update(_reports(state_dir, policy_id, LIST_ACTION, group))
+    return job
+
+
+def build_status_job(
+    params: Any, *, repository: str, state_dir: str, group: str
+) -> Dict[str, Any]:
+    """What changed on this host since a snapshot (restate ``status`` as a
+    job, 2.1.0.4+), the newest unless one is named."""
+    if not isinstance(params, dict):
+        raise v.PolicyError("parameters must be an object")
+    policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
+    job: Dict[str, Any] = {"command": STATUS_ACTION, "root": "/"}
+    if params.get("snapshot"):
+        job["snapshot"] = f"{repository}::{v.check_snapshot(params['snapshot'])}"
+    else:
+        job["repository"] = repository
+    job.update(_reports(state_dir, policy_id, STATUS_ACTION, group))
+    return job
