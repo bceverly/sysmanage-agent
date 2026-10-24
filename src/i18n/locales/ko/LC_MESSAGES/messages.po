@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 20:50-0400\n"
+"POT-Creation-Date: 2026-10-24 11:00-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -135,12 +135,12 @@ msgstr ""
 "서버가 아직 백업 대상 호스트의 IP 주소를 모르므로 해당 내보내기를 그 주소로 제한할 수 없습니다. 그 호스트가 네트워크 정보를 보고할"
 " 때까지 기다린 다음 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:192
+#: src/sysmanage_agent/backup/storage_prepare.py:185
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s에서는 스토리지 준비가 지원되지 않습니다."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:200
+#: src/sysmanage_agent/backup/storage_prepare.py:193
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -148,7 +148,7 @@ msgstr ""
 "FreeBSD는 파일 시스템 전체를 내보내므로 각 호스트의 저장소에는 자체 ZFS 데이터셋이 필요합니다. 스토리지 경로를 ZFS에 둔 "
 "다음 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:244
+#: src/sysmanage_agent/backup/storage_prepare.py:255
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -158,7 +158,7 @@ msgstr ""
 "스토리지 경로 %(path)s에 ZFS 데이터셋이 마운트되어 있지 않아 하위 데이터셋이 저장소 위치에 만들어지지 않습니다. 그곳에 "
 "마운트되는 데이터셋을 만든 다음(zfs create -o mountpoint=%(path)s POOL/NAME) 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:271
+#: src/sysmanage_agent/backup/storage_prepare.py:282
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -430,13 +430,13 @@ msgstr "ipconfig를 사용하여 Windows 네트워크 정보를 가져오는 데
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Windows 네트워크 구성 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_events.py:540
+#: src/sysmanage_agent/collection/hardware_events.py:577
 #: src/sysmanage_agent/communication/hardware_event_loop.py:102
 #, python-format
 msgid "Hardware event source %s stopped: %s"
 msgstr "하드웨어 이벤트 소스 %s 중지됨: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:476
+#: src/sysmanage_agent/collection/hardware_health.py:487
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "하드웨어 상태 수집 실패: %s"
@@ -1688,15 +1688,15 @@ msgstr "시계 상태 전송 실패"
 msgid "Cannot send hardware health: no host approval"
 msgstr "호스트 승인 없음으로 하드웨어 상태 전송 불가"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:454
+#: src/sysmanage_agent/communication/data_collector_senders.py:457
 msgid "Failed to send hardware health"
 msgstr "하드웨어 상태 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:466
+#: src/sysmanage_agent/communication/data_collector_senders.py:469
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "규정 준수 증거를 전송할 수 없음: 호스트 승인 없음"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:475
+#: src/sysmanage_agent/communication/data_collector_senders.py:478
 msgid "Failed to send compliance evidence"
 msgstr "규정 준수 증거 전송 실패"
 
@@ -2230,96 +2230,103 @@ msgstr "Agent 로그 수집 중 오류: %s"
 msgid "Error collecting error logs: %s"
 msgstr "에러 로그 수집 중 오류: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:257
+#: src/sysmanage_agent/operations/backup_operations.py:268
+msgid "That backup action is not configured on this host."
+msgstr "이 호스트에는 해당 백업 동작이 구성되어 있지 않습니다."
+
+#: src/sysmanage_agent/operations/backup_operations.py:276
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate는 이 호스트에서 사용할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:276
+#: src/sysmanage_agent/operations/backup_operations.py:295
 msgid "This platform can only be a backup storage host."
 msgstr "이 플랫폼은 백업 스토리지 호스트로만 사용할 수 있습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:282
+#: src/sysmanage_agent/operations/backup_operations.py:301
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "백업 작업을 설치할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:309
+#: src/sysmanage_agent/operations/backup_operations.py:328
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:395
-#: src/sysmanage_agent/operations/backup_operations.py:407
-#: src/sysmanage_agent/operations/backup_operations.py:455
-msgid "That backup action is not configured on this host."
-msgstr "이 호스트에는 해당 백업 동작이 구성되어 있지 않습니다."
-
-#: src/sysmanage_agent/operations/backup_operations.py:424
+#: src/sysmanage_agent/operations/backup_operations.py:446
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "이 restate는 %s을(를) 작업으로 실행할 수 없습니다. restate를 업그레이드하세요."
 
-#: src/sysmanage_agent/operations/backup_operations.py:514
+#: src/sysmanage_agent/operations/backup_operations.py:539
 msgid "restate is not installed on this host."
 msgstr "이 호스트에는 restate가 설치되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:532
+#: src/sysmanage_agent/operations/backup_operations.py:557
 msgid "That backup job is already running."
 msgstr "해당 백업 작업은 이미 실행 중입니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:554
+#: src/sysmanage_agent/operations/backup_operations.py:579
 msgid "The backup job could not be started."
 msgstr "백업 작업을 시작할 수 없습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:586
+#: src/sysmanage_agent/operations/backup_operations.py:632
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
 "where to mount it from yet."
 msgstr "백업 스토리지가 %(where)s에 마운트되어 있지 않으며, 서버가 아직 마운트할 위치를 보내지 않았습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:600
+#: src/sysmanage_agent/operations/backup_operations.py:641
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr "백업 스토리지 %(source)s을(를) %(where)s에 마운트하지 못했습니다: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:604
+#: src/sysmanage_agent/operations/backup_operations.py:645
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "마운트한 후에도 백업 스토리지가 %(where)s에 마운트되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:627
+#: src/sysmanage_agent/operations/backup_operations.py:664
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "%s의 백업 스토리지가 응답하지 않았습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:644
+#: src/sysmanage_agent/operations/backup_operations.py:681
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "%s의 백업 스토리지를 마운트 해제하지 못했습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:694
+#: src/sysmanage_agent/operations/backup_operations.py:731
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "봉인된 스냅샷 목록을 가져오지 못했습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:709
+#: src/sysmanage_agent/operations/backup_operations.py:746
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "오래된 봉인 스냅샷 %(name)s을(를) 제거하지 못했습니다: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:787
+#: src/sysmanage_agent/operations/backup_operations.py:824
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "정책 %s의 백업 스토리지를 준비하지 못했습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:892
+#: src/sysmanage_agent/operations/backup_operations.py:912
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
+"%(unit)s on this host"
+msgstr ""
+"restate가 결과를 쓰기 전에 중지되었습니다(종료 코드 %(code)s). 이 호스트에서 journalctl -u %(unit)s 를"
+" 확인하세요"
+
+#: src/sysmanage_agent/operations/backup_operations.py:937
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "스토리지 감사를 실행할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:910
+#: src/sysmanage_agent/operations/backup_operations.py:955
 msgid "Could not queue the backup report"
 msgstr "백업 보고서를 대기열에 추가할 수 없습니다"
 

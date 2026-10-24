@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 20:50-0400\n"
+"POT-Creation-Date: 2026-10-24 11:00-0400\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -145,12 +145,12 @@ msgstr ""
 "exportação dele não pode ser limitada a esse endereço. Aguarde esse host "
 "informar seus dados de rede e prepare novamente."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:192
+#: src/sysmanage_agent/backup/storage_prepare.py:185
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "A preparação do armazenamento não é compatível com %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:200
+#: src/sysmanage_agent/backup/storage_prepare.py:193
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -159,7 +159,7 @@ msgstr ""
 " host precisa de um dataset ZFS próprio. Coloque o caminho de armazenamento "
 "em ZFS e prepare novamente."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:244
+#: src/sysmanage_agent/backup/storage_prepare.py:255
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -170,7 +170,7 @@ msgstr ""
 "um dataset filho não ficaria no repositório. Crie ali um dataset montado "
 "(zfs create -o mountpoint=%(path)s POOL/NAME) e prepare novamente."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:271
+#: src/sysmanage_agent/backup/storage_prepare.py:282
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -445,13 +445,13 @@ msgstr "Falha ao obter informações de rede do Windows via ipconfig: %s"
 msgid "Failed to get Windows network configuration: %s"
 msgstr "Falha ao obter configuração da rede Windows: %s"
 
-#: src/sysmanage_agent/collection/hardware_events.py:540
+#: src/sysmanage_agent/collection/hardware_events.py:577
 #: src/sysmanage_agent/communication/hardware_event_loop.py:102
 #, python-format
 msgid "Hardware event source %s stopped: %s"
 msgstr "A fonte de eventos de hardware %s parou: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:476
+#: src/sysmanage_agent/collection/hardware_health.py:487
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "Falha ao coletar o estado do hardware: %s"
@@ -1711,15 +1711,15 @@ msgstr "Falha ao enviar o status do relógio"
 msgid "Cannot send hardware health: no host approval"
 msgstr "Não é possível enviar o estado do hardware: sem aprovação do host"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:454
+#: src/sysmanage_agent/communication/data_collector_senders.py:457
 msgid "Failed to send hardware health"
 msgstr "Falha ao enviar o estado do hardware"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:466
+#: src/sysmanage_agent/communication/data_collector_senders.py:469
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "Não é possível enviar evidências de conformidade: host não aprovado"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:475
+#: src/sysmanage_agent/communication/data_collector_senders.py:478
 msgid "Failed to send compliance evidence"
 msgstr "Falha ao enviar evidências de conformidade"
 
@@ -2275,50 +2275,48 @@ msgstr "Erro ao coletar logs do agente: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Erro ao coletar logs de erro: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:257
+#: src/sysmanage_agent/operations/backup_operations.py:268
+msgid "That backup action is not configured on this host."
+msgstr "Essa ação de backup não está configurada neste host."
+
+#: src/sysmanage_agent/operations/backup_operations.py:276
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate não é utilizável neste host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:276
+#: src/sysmanage_agent/operations/backup_operations.py:295
 msgid "This platform can only be a backup storage host."
 msgstr "Esta plataforma só pode ser um host de armazenamento de backups."
 
-#: src/sysmanage_agent/operations/backup_operations.py:282
+#: src/sysmanage_agent/operations/backup_operations.py:301
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Não foi possível instalar as tarefas de backup: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:309
+#: src/sysmanage_agent/operations/backup_operations.py:328
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Esta versão do restate não suporta: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:395
-#: src/sysmanage_agent/operations/backup_operations.py:407
-#: src/sysmanage_agent/operations/backup_operations.py:455
-msgid "That backup action is not configured on this host."
-msgstr "Essa ação de backup não está configurada neste host."
-
-#: src/sysmanage_agent/operations/backup_operations.py:424
+#: src/sysmanage_agent/operations/backup_operations.py:446
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr ""
 "Este restate não consegue executar %s como tarefa; atualize o restate."
 
-#: src/sysmanage_agent/operations/backup_operations.py:514
+#: src/sysmanage_agent/operations/backup_operations.py:539
 msgid "restate is not installed on this host."
 msgstr "restate não está instalado neste host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:532
+#: src/sysmanage_agent/operations/backup_operations.py:557
 msgid "That backup job is already running."
 msgstr "Essa tarefa de backup já está em execução."
 
-#: src/sysmanage_agent/operations/backup_operations.py:554
+#: src/sysmanage_agent/operations/backup_operations.py:579
 msgid "The backup job could not be started."
 msgstr "A tarefa de backup não pôde ser iniciada."
 
-#: src/sysmanage_agent/operations/backup_operations.py:586
+#: src/sysmanage_agent/operations/backup_operations.py:632
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2327,51 +2325,60 @@ msgstr ""
 "O armazenamento de backup não está montado em %(where)s, e o servidor ainda "
 "não informou de onde montá-lo."
 
-#: src/sysmanage_agent/operations/backup_operations.py:600
+#: src/sysmanage_agent/operations/backup_operations.py:641
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "Não foi possível montar o armazenamento de backup %(source)s em %(where)s: "
 "%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:604
+#: src/sysmanage_agent/operations/backup_operations.py:645
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 "O armazenamento de backup não está montado em %(where)s após a montagem."
 
-#: src/sysmanage_agent/operations/backup_operations.py:627
+#: src/sysmanage_agent/operations/backup_operations.py:664
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "O armazenamento de backup em %s não respondeu."
 
-#: src/sysmanage_agent/operations/backup_operations.py:644
+#: src/sysmanage_agent/operations/backup_operations.py:681
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Não foi possível desmontar o armazenamento de backup em %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:694
+#: src/sysmanage_agent/operations/backup_operations.py:731
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Não foi possível listar os snapshots selados: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:709
+#: src/sysmanage_agent/operations/backup_operations.py:746
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Não foi possível remover o snapshot selado antigo %(name)s: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:787
+#: src/sysmanage_agent/operations/backup_operations.py:824
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 "Não foi possível preparar o armazenamento de backup para a política %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:892
+#: src/sysmanage_agent/operations/backup_operations.py:912
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
+"%(unit)s on this host"
+msgstr ""
+"o restate parou (saída %(code)s) antes de gravar um resultado; consulte "
+"journalctl -u %(unit)s neste host"
+
+#: src/sysmanage_agent/operations/backup_operations.py:937
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "Não foi possível executar a auditoria do armazenamento: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:910
+#: src/sysmanage_agent/operations/backup_operations.py:955
 msgid "Could not queue the backup report"
 msgstr "Não foi possível colocar o relatório de backup na fila"
 

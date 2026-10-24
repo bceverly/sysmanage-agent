@@ -339,7 +339,9 @@ async def test_a_run_without_a_result_file_is_failed(
     await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "capture"})
     await _drain(ops)  # never seen active; the grace has passed
     report = _sent(agent, "backup_result")[0]
-    assert report["status"] == "failed" and report["result"] is None
+    assert report["status"] == "failed"
+    # No result and no log: the reason says where restate's output went.
+    assert "journalctl -u restate-job@" in report["result"]["message"]
 
 
 @pytest.mark.asyncio

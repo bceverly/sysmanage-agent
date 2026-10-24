@@ -182,6 +182,15 @@ def supports_job_command(features: Optional[Dict[str, Any]], command: str) -> bo
     return command in set((features or {}).get("job_commands") or [])
 
 
+def job_command_keys(features: Optional[Dict[str, Any]], command: str) -> set:
+    """The optional keys this restate accepts in a ``command`` job beyond its
+    own (``job_command_keys``: ``{"status": ["rules", ...]}``).  restate
+    2.2.0.0 refuses ``rules`` in a status job outright ("rules means nothing
+    to a status job", exit 2), so a key is sent only when restate lists it."""
+    listed = (features or {}).get("job_command_keys") or {}
+    return set(listed.get(command) or []) if isinstance(listed, dict) else set()
+
+
 def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     """What a backed-up host's restate can do beyond the 2.0 contract that
     the server offers in the UI: browse a snapshot, show what changed, and

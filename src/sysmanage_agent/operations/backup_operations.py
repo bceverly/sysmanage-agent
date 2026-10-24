@@ -422,6 +422,14 @@ class BackupOperations:
             return self._not_configured()
         return await self._start_job(run_id, policy_id, action)
 
+    def _status_walk(self, policy: Dict[str, Any]) -> Dict[str, Any]:
+        """The capture's walk keys this restate takes in a status job.  Without
+        them a status also reports what the backup leaves out on purpose."""
+        accepted = contract.job_command_keys(
+            self._features(), job_builder.STATUS_ACTION
+        )
+        return {k: v for k, v in (policy.get("walk") or {}).items() if k in accepted}
+
     async def _start_browse(
         self,
         run_id: str,
@@ -444,7 +452,7 @@ class BackupOperations:
                 job = job_builder.build_list_job(params, **common)
             else:
                 job = job_builder.build_status_job(
-                    params, walk=policy.get("walk"), **common
+                    params, walk=self._status_walk(policy), **common
                 )
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
@@ -896,6 +904,14 @@ class BackupOperations:
             # No result file: what restate said is the only clue to why.
             tail = job_runner.log_tail(record["log"])
             result = {"message": tail} if tail else None
+        if result is None:
+            # systemd keeps restate's output in the journal, which the
+            # agent does not read; say where the reason is.
+            unit = contract.unit_name(record["policy_id"], record["action"])
+            result = {"message": _(
+                "restate stopped (exit %(code)s) before writing a result; "
+                "see journalctl -u %(unit)s on this host"
+            ) % {"code": code, "unit": unit}}  # fmt: skip
         features = self._features() or {}
         await self._report(
             {"run_id": run_id, "policy_id": record["policy_id"], "action": record["action"],
