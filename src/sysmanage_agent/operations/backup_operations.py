@@ -342,7 +342,6 @@ class BackupOperations:
             "client_address": policy.get("client_address"),
             "service_account": policy.get("service_account", "restate"),
             "nfs": policy.get("nfs"),
-            "walk": job_builder.walk_keys(jobs.get("capture", {})),
         }
         self._save(POLICIES_FILE, policies)
         reply = {
@@ -422,14 +421,6 @@ class BackupOperations:
             return self._not_configured()
         return await self._start_job(run_id, policy_id, action)
 
-    def _status_walk(self, policy: Dict[str, Any]) -> Dict[str, Any]:
-        """The capture's walk keys this restate takes in a status job.  Without
-        them a status also reports what the backup leaves out on purpose."""
-        accepted = contract.job_command_keys(
-            self._features(), job_builder.STATUS_ACTION
-        )
-        return {k: v for k, v in (policy.get("walk") or {}).items() if k in accepted}
-
     async def _start_browse(
         self,
         run_id: str,
@@ -451,9 +442,7 @@ class BackupOperations:
             if action == job_builder.LIST_ACTION:
                 job = job_builder.build_list_job(params, **common)
             else:
-                job = job_builder.build_status_job(
-                    params, walk=self._status_walk(policy), **common
-                )
+                job = job_builder.build_status_job(params, **common)
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
             )

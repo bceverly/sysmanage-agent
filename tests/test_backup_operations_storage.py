@@ -388,30 +388,9 @@ async def test_a_listing_installs_its_job_and_starts_it(ops, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_what_changed_uses_the_captures_rules(ops, monkeypatch):
-    """Lab 2026-10-24: without the capture's rules file, a status reported
-    every left-out path (~/Nextcloud) as added and read 38 GB."""
-    features = dict(FEATURES, job_commands=["capture", "list", "status"],
-                    job_command_keys={"status": ["rules", "all", "one_file_system"]})  # fmt: skip
-    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
-    rendered = []
-    real = contract.render_job
-    monkeypatch.setattr(
-        contract, "render_job", lambda job: rendered.append(job) or real(job)
-    )
-    policy = _host_policy()
-    policy["jobs"]["capture"]["skip_paths"] = ["/home/*/Nextcloud"]
-    await ops.backup_configure(policy)
-    answer = await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "status"})
-    assert answer["status"] == "started", answer
-    capture = [j for j in rendered if j["command"] == "capture"][0]
-    status = [j for j in rendered if j["command"] == "status"][0]
-    assert status["rules"] == capture["rules"] == [job_builder.rules_path(PID)]
-
-
-@pytest.mark.asyncio
-async def test_no_rules_in_a_status_job_unless_restate_takes_them(ops, monkeypatch):
-    """Lab 2026-10-24: restate 2.2.0.0 exits 2 on `rules` in a status job."""
+async def test_a_status_job_leaves_classification_to_restate(ops, monkeypatch):
+    """Lab 2026-10-24: restate 2.2.0.1 exits 2 on `rules` in a status job;
+    2.2.0.2 uses the capture's recorded rules, which `rules` would replace."""
     features = dict(FEATURES, job_commands=["capture", "list", "status"])
     monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: features))
     rendered = []

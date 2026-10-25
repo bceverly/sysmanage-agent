@@ -55,13 +55,11 @@ def test_status_defaults_to_the_newest_snapshot():
     assert named["snapshot"] == f"{REPO}::s1" and "repository" not in named
 
 
-def test_status_walks_what_the_capture_walks():
-    capture = {"command": "capture", "rules": ["/etc/restate/rules.d/p.rules"],
-               "all": False, "one_file_system": True, "quiesce": True}  # fmt: skip
-    job = b.build_status_job({"policy_id": PID}, walk=capture, **KW)
-    assert job["rules"] == ["/etc/restate/rules.d/p.rules"]
-    assert job["all"] is False and job["one_file_system"] is True
-    assert "quiesce" not in job and job["command"] == "status"
+def test_status_never_carries_classification_keys():
+    """restate 2.2.0.2 classifies by the capture's recorded rules; a `rules`
+    key would replace them (and 2.2.0.1 refused it with exit 2)."""
+    job = b.build_status_job({"policy_id": PID}, **KW)
+    assert not {"rules", "all", "one_file_system"} & set(job)
 
 
 def test_abilities_come_only_from_what_restate_lists():
