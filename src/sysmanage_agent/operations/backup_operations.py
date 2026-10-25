@@ -43,6 +43,7 @@ from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import storage_prepare
+from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.backup import seal_retention
 
@@ -342,6 +343,7 @@ class BackupOperations:
             "client_address": policy.get("client_address"),
             "service_account": policy.get("service_account", "restate"),
             "nfs": policy.get("nfs"),
+            "previous": policy.get("previous"),
         }
         self._save(POLICIES_FILE, policies)
         reply = {
@@ -436,9 +438,10 @@ class BackupOperations:
                 "tool_outdated",
                 _("This restate cannot run %s as a job; upgrade restate.") % action,
             )
-        common = {"repository": policy["repository"],
-                  "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
         try:
+            repository, _source, previous = repository_choice.choose(policy, params)
+            common = {"repository": repository,
+                      "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
             if action == job_builder.LIST_ACTION:
                 job = job_builder.build_list_job(params, **common)
             else:
@@ -450,7 +453,7 @@ class BackupOperations:
             return self._refusal("invalid_request", str(error))
         except OSError as error:
             return self._refusal("install_failed", str(error))
-        return await self._start_job(run_id, policy_id, action)
+        return await self._start_job(run_id, policy_id, action, previous)
 
     async def backup_restore(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Restore from a snapshot into a staging directory, or into place
@@ -464,9 +467,10 @@ class BackupOperations:
             policy = self._policy(policy_id)
             if not policy or policy.get("role") != "host":
                 return self._not_configured()
+            repository, _source, previous = repository_choice.choose(policy, params)
             job = job_builder.build_restore_job(
                 params,
-                repository=policy["repository"],
+                repository=repository,
                 state_dir=self.state_dir,
                 group=_agent_group(),
                 can_plan=contract.supports(self._features(), "plan"),
@@ -482,7 +486,9 @@ class BackupOperations:
             return self._refusal("invalid_request", str(error))
         except OSError as error:
             return self._refusal("install_failed", str(error))
-        return await self._start_job(run_id, policy_id, job_builder.RESTORE_ACTION)
+        return await self._start_job(
+            run_id, policy_id, job_builder.RESTORE_ACTION, previous
+        )
 
     async def _unit_state(self, unit: str) -> Dict[str, str]:
         code, out, _err = await self._run(
@@ -540,9 +546,11 @@ class BackupOperations:
         return code, err
 
     async def _start_job(
-        self, run_id: str, policy_id: str, action: str
+        self, run_id: str, policy_id: str, action: str, previous: bool = False
     ) -> Dict[str, Any]:
         record = self._new_record(policy_id, action)
+        if previous:
+            record["previous"] = True  # the repository before an encrypted one
         if (await self._job_state(record))[0]:
             return {"success": False, "run_id": run_id, "reason": "busy",
                     "error": _("That backup job is already running.")}  # fmt: skip
@@ -553,19 +561,19 @@ class BackupOperations:
         ):
             if path and os.path.exists(path):
                 os.unlink(path)
-        error = await self._ensure_mount(run_id, policy_id)
+        error = await self._ensure_mount(run_id, policy_id, record)
         if error:
             return {"success": False, "run_id": run_id, "reason": "mount_failed",
                     "error": error}  # fmt: skip
         if action == "capture":
             error = await self._preflight(run_id, policy_id)
             if error:
-                await self._release_mount(run_id, policy_id)
+                await self._release_mount(run_id, policy_id, record)
                 return {"success": False, "run_id": run_id,
                         "reason": "preflight_failed", "error": error}  # fmt: skip
         code, err = await self._launch(record)
         if code != 0:
-            await self._release_mount(run_id, policy_id)
+            await self._release_mount(run_id, policy_id, record)
             return {"success": False, "run_id": run_id, "reason": "start_failed",
                     "error": err or _("The backup job could not be started.")}  # fmt: skip
         inflight = self._load(INFLIGHT_FILE)
@@ -582,13 +590,15 @@ class BackupOperations:
     def _mounts() -> Dict[str, str]:
         return validation.mount_types(_read_text("/proc/self/mountinfo") or "")
 
-    async def _ensure_mount(self, run_id: str, policy_id: str) -> Optional[str]:
-        """Mount the policy's export for this run; None, or why it failed."""
+    async def _ensure_mount(
+        self, run_id: str, policy_id: str, record: Optional[Dict[str, Any]] = None
+    ) -> Optional[str]:
+        """Mount the run's export (the current repository's, or the one
+        before it -- ``record``); None, or why it failed."""
         policy = self._policy(policy_id) or {}
         if policy.get("role") != "host":
             return None
-        source = policy.get("nfs")
-        where = policy["repository"]
+        where, source, _previous = repository_choice.for_record(policy, record or {})
         state = self._load(MOUNTS_FILE)
         entry = state.get(where)
         mounts = self._mounts()
@@ -654,10 +664,15 @@ class BackupOperations:
         except asyncio.TimeoutError:
             return _("The backup storage at %s did not answer.") % policy["repository"]
 
-    async def _release_mount(self, run_id: str, policy_id: str) -> None:
+    async def _release_mount(
+        self, run_id: str, policy_id: str, record: Optional[Dict[str, Any]] = None
+    ) -> None:
         """This run is done with the export; unmount after the last one."""
         policy = self._policy(policy_id) or {}
-        where = policy.get("repository")
+        try:
+            where = repository_choice.for_record(policy, record or {})[0]
+        except (KeyError, validation.PolicyError):
+            where = policy.get("repository")
         state = self._load(MOUNTS_FILE)
         entry = state.get(where) if where else None
         if entry is None:
@@ -913,7 +928,7 @@ class BackupOperations:
         inflight = self._load(INFLIGHT_FILE)
         inflight.pop(run_id, None)
         self._save(INFLIGHT_FILE, inflight)
-        await self._release_mount(run_id, record["policy_id"])
+        await self._release_mount(run_id, record["policy_id"], record)
 
     def _audit(self, policy: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
         """The storage audit for one repository; None if it cannot run."""

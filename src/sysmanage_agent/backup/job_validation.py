@@ -392,6 +392,27 @@ def check_nfs_source(value: Any) -> Optional[Dict[str, str]]:
     return {"server": server, "path": path}
 
 
+def check_previous(
+    target: Any, mount_point: str, repository: str
+) -> Optional[Dict[str, Any]]:
+    """The repository before an encrypted one (Pro+ backup_engine: restate
+    cannot convert a repository, so encryption starts a new one and the old
+    stays restorable): ``{"repository", "nfs"}`` beside the current one
+    under the same mount point, or None."""
+    previous = target.get("previous") if isinstance(target, dict) else None
+    if previous in (None, {}):
+        return None
+    if not isinstance(previous, dict) or not set(previous) <= {"repo_dir", "nfs"}:
+        raise PolicyError("previous must have repo_dir and optionally nfs")
+    repo_dir = previous.get("repo_dir")
+    if not isinstance(repo_dir, str) or not _REPO_DIR.match(repo_dir):
+        raise PolicyError("previous repo_dir must be a single directory name")
+    where = posixpath.join(mount_point, repo_dir)
+    if where == repository:
+        raise PolicyError("previous repo_dir must differ from repo_dir")
+    return {"repository": where, "nfs": check_nfs_source(previous.get("nfs"))}
+
+
 def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str, Any]:
     """The whole ``backup_configure`` request, validated and normalized."""
     if not isinstance(params, dict):
@@ -423,6 +444,9 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         "client_address": check_address(target.get("client_address")),
         "service_account": check_account(target.get("service_account")),
         "nfs": nfs,
+        "previous": (
+            check_previous(target, mount_point, repository) if role == "host" else None
+        ),
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
         "encrypt_key": check_key(params.get("encrypt_key")),
     }
