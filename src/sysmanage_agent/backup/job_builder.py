@@ -199,6 +199,7 @@ def build_restore_job(
     group: str,
     trusted_key: Optional[str] = None,
     can_plan: bool = False,
+    decrypt_with: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """A restore job, into a staging directory the AGENT chooses or, with
     ``in_place``, over the host's own files.
@@ -254,6 +255,8 @@ def build_restore_job(
         job["trusted_key"] = [trusted_key]
     elif allow_unverified:
         job["allow_unverified"] = True
+    if decrypt_with:
+        job["decrypt_with"] = list(decrypt_with)  # this run's key files
     job.update(_reports(state_dir, policy_id, RESTORE_ACTION, group))
     return job
 
@@ -279,7 +282,12 @@ def _browse_path(value: Any) -> str:
 
 
 def build_list_job(
-    params: Any, *, repository: str, state_dir: str, group: str
+    params: Any,
+    *,
+    repository: str,
+    state_dir: str,
+    group: str,
+    decrypt_with: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Browse one directory of a snapshot from its index alone (restate
     ``list``, 2.1.0.4+): no pack is read, so it takes seconds."""
@@ -292,6 +300,8 @@ def build_list_job(
         "snapshot": f"{repository}::{name}",
         "path": _browse_path(params.get("path")),
     }
+    if decrypt_with:
+        job["decrypt_with"] = list(decrypt_with)
     job.update(_reports(state_dir, policy_id, LIST_ACTION, group))
     return job
 
@@ -302,6 +312,7 @@ def build_status_job(
     repository: str,
     state_dir: str,
     group: str,
+    decrypt_with: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """What changed on this host since a snapshot (restate ``status`` as a
     job, 2.1.0.4+), the newest unless one is named.
@@ -320,5 +331,7 @@ def build_status_job(
         job["snapshot"] = f"{repository}::{v.check_snapshot(params['snapshot'])}"
     else:
         job["repository"] = repository
+    if decrypt_with:
+        job["decrypt_with"] = list(decrypt_with)
     job.update(_reports(state_dir, policy_id, STATUS_ACTION, group))
     return job

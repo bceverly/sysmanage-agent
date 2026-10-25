@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 11:00-0400\n"
+"POT-Creation-Date: 2026-10-25 14:49-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -87,6 +87,44 @@ msgstr "Vergrendeling werkt niet op de back-upopslag op %(where)s: %(error)s"
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr "De back-upopslag op %(where)s is bijna vol (%(free)d MB vrij)."
+
+#: src/sysmanage_agent/backup/key_files.py:52
+msgid "The server sent no usable keys"
+msgstr "De server heeft geen bruikbare sleutels gestuurd"
+
+#: src/sysmanage_agent/backup/key_files.py:54
+msgid "The server sent something that is not a secret key"
+msgstr "De server heeft iets gestuurd dat geen geheime sleutel is"
+
+#: src/sysmanage_agent/backup/key_files.py:62
+msgid "No tmpfs to stage the key on"
+msgstr "Geen tmpfs om de sleutel klaar te zetten"
+
+#: src/sysmanage_agent/backup/key_files.py:103
+msgid "This host is not approved yet"
+msgstr "Deze host is nog niet goedgekeurd"
+
+#: src/sysmanage_agent/backup/key_files.py:123
+#, python-format
+msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
+msgstr ""
+"De server heeft de back-upsleutel niet vrijgegeven: HTTP %(status)s, "
+"%(detail)s"
+
+#: src/sysmanage_agent/backup/key_files.py:134
+msgid "no reason given"
+msgstr "geen reden opgegeven"
+
+#: src/sysmanage_agent/backup/key_files.py:154
+#, python-format
+msgid "Could not install the backup key: %s"
+msgstr "De back-upsleutel kon niet worden geïnstalleerd: %s"
+
+#: src/sysmanage_agent/backup/key_files.py:197
+msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
+msgstr ""
+"Deze restate kan een versleutelde repository niet ontsleutelen; werk restate"
+" bij."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:94
 #, python-format
@@ -2278,47 +2316,47 @@ msgstr "Fout bij verzamelen van agent-logboeken: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Fout bij verzamelen van foutlogboeken: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:268
+#: src/sysmanage_agent/operations/backup_operations.py:270
 msgid "That backup action is not configured on this host."
 msgstr "Die back-upactie is op deze host niet geconfigureerd."
 
-#: src/sysmanage_agent/operations/backup_operations.py:276
+#: src/sysmanage_agent/operations/backup_operations.py:278
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate is op deze host niet bruikbaar: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:295
+#: src/sysmanage_agent/operations/backup_operations.py:297
 msgid "This platform can only be a backup storage host."
 msgstr "Dit platform kan alleen een opslaghost voor back-ups zijn."
 
-#: src/sysmanage_agent/operations/backup_operations.py:301
+#: src/sysmanage_agent/operations/backup_operations.py:303
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Kan de back-uptaken niet installeren: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:328
+#: src/sysmanage_agent/operations/backup_operations.py:330
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Deze versie van restate ondersteunt niet: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:446
+#: src/sysmanage_agent/operations/backup_operations.py:440
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Deze restate kan %s niet als taak uitvoeren; werk restate bij."
 
-#: src/sysmanage_agent/operations/backup_operations.py:539
+#: src/sysmanage_agent/operations/backup_operations.py:546
 msgid "restate is not installed on this host."
 msgstr "restate is niet geïnstalleerd op deze host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:557
+#: src/sysmanage_agent/operations/backup_operations.py:579
 msgid "That backup job is already running."
 msgstr "Die back-uptaak wordt al uitgevoerd."
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:601
 msgid "The backup job could not be started."
 msgstr "De back-uptaak kon niet worden gestart."
 
-#: src/sysmanage_agent/operations/backup_operations.py:632
+#: src/sysmanage_agent/operations/backup_operations.py:656
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2327,42 +2365,42 @@ msgstr ""
 "De back-upopslag is niet gekoppeld op %(where)s, en de server heeft nog niet"
 " doorgegeven waarvandaan die moet worden gekoppeld."
 
-#: src/sysmanage_agent/operations/backup_operations.py:641
+#: src/sysmanage_agent/operations/backup_operations.py:665
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr "Kan de back-upopslag %(source)s niet koppelen op %(where)s: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:645
+#: src/sysmanage_agent/operations/backup_operations.py:669
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "De back-upopslag is na het koppelen niet gekoppeld op %(where)s."
 
-#: src/sysmanage_agent/operations/backup_operations.py:664
+#: src/sysmanage_agent/operations/backup_operations.py:688
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "De back-upopslag op %s reageerde niet."
 
-#: src/sysmanage_agent/operations/backup_operations.py:681
+#: src/sysmanage_agent/operations/backup_operations.py:710
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Kan de back-upopslag op %s niet ontkoppelen: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:731
+#: src/sysmanage_agent/operations/backup_operations.py:760
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Kan de verzegelde snapshots niet weergeven: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:746
+#: src/sysmanage_agent/operations/backup_operations.py:775
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Kan de oude verzegelde snapshot %(name)s niet verwijderen: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:824
+#: src/sysmanage_agent/operations/backup_operations.py:853
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "Kan de back-upopslag voor beleid %s niet voorbereiden: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:912
+#: src/sysmanage_agent/operations/backup_operations.py:945
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2371,12 +2409,12 @@ msgstr ""
 "restate is gestopt (exit %(code)s) voordat er een resultaat is geschreven; "
 "zie journalctl -u %(unit)s op deze host"
 
-#: src/sysmanage_agent/operations/backup_operations.py:937
+#: src/sysmanage_agent/operations/backup_operations.py:973
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "De opslagcontrole kon niet worden uitgevoerd: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:955
+#: src/sysmanage_agent/operations/backup_operations.py:991
 msgid "Could not queue the backup report"
 msgstr "Kan het back-uprapport niet in de wachtrij plaatsen"
 

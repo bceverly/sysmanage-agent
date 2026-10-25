@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 11:00-0400\n"
+"POT-Creation-Date: 2026-10-25 14:49-0400\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -94,6 +94,42 @@ msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr ""
 "Le stockage de sauvegarde sur %(where)s est presque plein (%(free)d Mo "
 "libres)."
+
+#: src/sysmanage_agent/backup/key_files.py:52
+msgid "The server sent no usable keys"
+msgstr "Le serveur n'a envoyé aucune clé utilisable"
+
+#: src/sysmanage_agent/backup/key_files.py:54
+msgid "The server sent something that is not a secret key"
+msgstr "Le serveur a envoyé quelque chose qui n'est pas une clé secrète"
+
+#: src/sysmanage_agent/backup/key_files.py:62
+msgid "No tmpfs to stage the key on"
+msgstr "Aucun tmpfs pour préparer la clé"
+
+#: src/sysmanage_agent/backup/key_files.py:103
+msgid "This host is not approved yet"
+msgstr "Cet hôte n'est pas encore approuvé"
+
+#: src/sysmanage_agent/backup/key_files.py:123
+#, python-format
+msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
+msgstr ""
+"Le serveur n'a pas libéré la clé de sauvegarde : HTTP %(status)s, %(detail)s"
+
+#: src/sysmanage_agent/backup/key_files.py:134
+msgid "no reason given"
+msgstr "aucune raison indiquée"
+
+#: src/sysmanage_agent/backup/key_files.py:154
+#, python-format
+msgid "Could not install the backup key: %s"
+msgstr "Impossible d'installer la clé de sauvegarde : %s"
+
+#: src/sysmanage_agent/backup/key_files.py:197
+msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
+msgstr ""
+"Ce restate ne peut pas déchiffrer un dépôt chiffré ; mettez restate à jour."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:94
 #, python-format
@@ -2320,48 +2356,48 @@ msgstr "Erreur de collecte des journaux d'agent : %s"
 msgid "Error collecting error logs: %s"
 msgstr "Erreur de collecte des journaux d'erreur : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:268
+#: src/sysmanage_agent/operations/backup_operations.py:270
 msgid "That backup action is not configured on this host."
 msgstr "Cette action de sauvegarde n'est pas configurée sur cet hôte."
 
-#: src/sysmanage_agent/operations/backup_operations.py:276
+#: src/sysmanage_agent/operations/backup_operations.py:278
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate n'est pas utilisable sur cet hôte : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:295
+#: src/sysmanage_agent/operations/backup_operations.py:297
 msgid "This platform can only be a backup storage host."
 msgstr "Cette plateforme ne peut être qu'un hôte de stockage des sauvegardes."
 
-#: src/sysmanage_agent/operations/backup_operations.py:301
+#: src/sysmanage_agent/operations/backup_operations.py:303
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Impossible d'installer les tâches de sauvegarde : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:328
+#: src/sysmanage_agent/operations/backup_operations.py:330
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Cette version de restate ne prend pas en charge : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:446
+#: src/sysmanage_agent/operations/backup_operations.py:440
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr ""
 "Ce restate ne peut pas exécuter %s comme tâche ; mettez restate à jour."
 
-#: src/sysmanage_agent/operations/backup_operations.py:539
+#: src/sysmanage_agent/operations/backup_operations.py:546
 msgid "restate is not installed on this host."
 msgstr "restate n'est pas installé sur cet hôte."
 
-#: src/sysmanage_agent/operations/backup_operations.py:557
+#: src/sysmanage_agent/operations/backup_operations.py:579
 msgid "That backup job is already running."
 msgstr "Cette tâche de sauvegarde est déjà en cours d'exécution."
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:601
 msgid "The backup job could not be started."
 msgstr "La tâche de sauvegarde n'a pas pu être lancée."
 
-#: src/sysmanage_agent/operations/backup_operations.py:632
+#: src/sysmanage_agent/operations/backup_operations.py:656
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2370,47 +2406,47 @@ msgstr ""
 "Le stockage de sauvegarde n'est pas monté sur %(where)s, et le serveur n'a "
 "pas encore indiqué d'où le monter."
 
-#: src/sysmanage_agent/operations/backup_operations.py:641
+#: src/sysmanage_agent/operations/backup_operations.py:665
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "Impossible de monter le stockage de sauvegarde %(source)s sur %(where)s : "
 "%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:645
+#: src/sysmanage_agent/operations/backup_operations.py:669
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 "Le stockage de sauvegarde n'est pas monté sur %(where)s après le montage."
 
-#: src/sysmanage_agent/operations/backup_operations.py:664
+#: src/sysmanage_agent/operations/backup_operations.py:688
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "Le stockage de sauvegarde sur %s n'a pas répondu."
 
-#: src/sysmanage_agent/operations/backup_operations.py:681
+#: src/sysmanage_agent/operations/backup_operations.py:710
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Impossible de démonter le stockage de sauvegarde sur %s : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:731
+#: src/sysmanage_agent/operations/backup_operations.py:760
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Impossible de lister les instantanés scellés : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:746
+#: src/sysmanage_agent/operations/backup_operations.py:775
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr ""
 "Impossible de supprimer l'ancien instantané scellé %(name)s : %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:824
+#: src/sysmanage_agent/operations/backup_operations.py:853
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 "Impossible de préparer le stockage de sauvegarde pour la stratégie %s : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:912
+#: src/sysmanage_agent/operations/backup_operations.py:945
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2419,12 +2455,12 @@ msgstr ""
 "restate s'est arrêté (sortie %(code)s) avant d'écrire un résultat ; voir "
 "journalctl -u %(unit)s sur cet hôte"
 
-#: src/sysmanage_agent/operations/backup_operations.py:937
+#: src/sysmanage_agent/operations/backup_operations.py:973
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "L'audit du stockage n'a pas pu être exécuté : %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:955
+#: src/sysmanage_agent/operations/backup_operations.py:991
 msgid "Could not queue the backup report"
 msgstr "Impossible de mettre le rapport de sauvegarde en file d'attente"
 

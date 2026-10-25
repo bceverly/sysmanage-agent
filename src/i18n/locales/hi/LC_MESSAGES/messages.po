@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 11:00-0400\n"
+"POT-Creation-Date: 2026-10-25 14:49-0400\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -85,6 +85,42 @@ msgstr "%(where)s पर बैकअप स्टोरेज में लॉ�
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr "%(where)s पर बैकअप स्टोरेज लगभग भर गया है (%(free)d MB खाली)।"
+
+#: src/sysmanage_agent/backup/key_files.py:52
+msgid "The server sent no usable keys"
+msgstr "सर्वर ने कोई उपयोगी कुंजी नहीं भेजी"
+
+#: src/sysmanage_agent/backup/key_files.py:54
+msgid "The server sent something that is not a secret key"
+msgstr "सर्वर ने कुछ ऐसा भेजा जो गुप्त कुंजी नहीं है"
+
+#: src/sysmanage_agent/backup/key_files.py:62
+msgid "No tmpfs to stage the key on"
+msgstr "कुंजी तैयार करने के लिए कोई tmpfs नहीं है"
+
+#: src/sysmanage_agent/backup/key_files.py:103
+msgid "This host is not approved yet"
+msgstr "यह होस्ट अभी स्वीकृत नहीं है"
+
+#: src/sysmanage_agent/backup/key_files.py:123
+#, python-format
+msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
+msgstr "सर्वर ने बैकअप कुंजी जारी नहीं की: HTTP %(status)s, %(detail)s"
+
+#: src/sysmanage_agent/backup/key_files.py:134
+msgid "no reason given"
+msgstr "कोई कारण नहीं बताया गया"
+
+#: src/sysmanage_agent/backup/key_files.py:154
+#, python-format
+msgid "Could not install the backup key: %s"
+msgstr "बैकअप कुंजी इंस्टॉल नहीं की जा सकी: %s"
+
+#: src/sysmanage_agent/backup/key_files.py:197
+msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
+msgstr ""
+"यह restate किसी एन्क्रिप्टेड रिपॉज़िटरी को डिक्रिप्ट नहीं कर सकता; restate "
+"अपग्रेड करें।"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:94
 #, python-format
@@ -2270,47 +2306,47 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:268
+#: src/sysmanage_agent/operations/backup_operations.py:270
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:276
+#: src/sysmanage_agent/operations/backup_operations.py:278
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:295
+#: src/sysmanage_agent/operations/backup_operations.py:297
 msgid "This platform can only be a backup storage host."
 msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:301
+#: src/sysmanage_agent/operations/backup_operations.py:303
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:328
+#: src/sysmanage_agent/operations/backup_operations.py:330
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:446
+#: src/sysmanage_agent/operations/backup_operations.py:440
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "यह restate %s को जॉब के रूप में नहीं चला सकता; restate अपग्रेड करें।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:539
+#: src/sysmanage_agent/operations/backup_operations.py:546
 msgid "restate is not installed on this host."
 msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:557
+#: src/sysmanage_agent/operations/backup_operations.py:579
 msgid "That backup job is already running."
 msgstr "यह बैकअप जॉब पहले से चल रहा है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:601
 msgid "The backup job could not be started."
 msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:632
+#: src/sysmanage_agent/operations/backup_operations.py:656
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -2319,43 +2355,43 @@ msgstr ""
 "बैकअप स्टोरेज %(where)s पर माउंट नहीं है, और सर्वर ने अभी तक यह नहीं भेजा है"
 " कि इसे कहाँ से माउंट करना है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:641
+#: src/sysmanage_agent/operations/backup_operations.py:665
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "बैकअप स्टोरेज %(source)s को %(where)s पर माउंट नहीं किया जा सका: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:645
+#: src/sysmanage_agent/operations/backup_operations.py:669
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "माउंट करने के बाद भी बैकअप स्टोरेज %(where)s पर माउंट नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:664
+#: src/sysmanage_agent/operations/backup_operations.py:688
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "%s पर बैकअप स्टोरेज ने जवाब नहीं दिया।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:681
+#: src/sysmanage_agent/operations/backup_operations.py:710
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "%s पर बैकअप स्टोरेज को अनमाउंट नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:731
+#: src/sysmanage_agent/operations/backup_operations.py:760
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "सील किए गए स्नैपशॉट की सूची नहीं बन सकी: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:746
+#: src/sysmanage_agent/operations/backup_operations.py:775
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "पुराना सील किया गया स्नैपशॉट %(name)s हटाया नहीं जा सका: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:824
+#: src/sysmanage_agent/operations/backup_operations.py:853
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:912
+#: src/sysmanage_agent/operations/backup_operations.py:945
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2364,12 +2400,12 @@ msgstr ""
 "restate परिणाम लिखने से पहले रुक गया (निकास कोड %(code)s); इस होस्ट पर "
 "journalctl -u %(unit)s देखें"
 
-#: src/sysmanage_agent/operations/backup_operations.py:937
+#: src/sysmanage_agent/operations/backup_operations.py:973
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:955
+#: src/sysmanage_agent/operations/backup_operations.py:991
 msgid "Could not queue the backup report"
 msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 

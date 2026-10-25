@@ -189,6 +189,10 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     found = [c for c in ("list", "status") if supports_job_command(features, c)]
     if "capture.cache" in set((features or {}).get("result_members") or []):
         found.append("cache")
+    if "decrypt_with" in set((features or {}).get("job_keys") or []):
+        # restate takes a secret key for one job: an encrypted repository
+        # can be restored, browsed and compared (Pro+ backup_engine, S4).
+        found.append("decrypt")
     return found
 
 

@@ -39,6 +39,7 @@ from src.sysmanage_agent.backup import host_mount
 from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
+from src.sysmanage_agent.backup import key_files
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
@@ -438,9 +439,11 @@ class BackupOperations:
                 "tool_outdated",
                 _("This restate cannot run %s as a job; upgrade restate.") % action,
             )
+        keys: List[str] = []
         try:
             repository, _source, previous = repository_choice.choose(policy, params)
-            common = {"repository": repository,
+            keys = await self._decrypt_keys(run_id, params)
+            common = {"repository": repository, "decrypt_with": keys,
                       "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
             if action == job_builder.LIST_ACTION:
                 job = job_builder.build_list_job(params, **common)
@@ -449,11 +452,10 @@ class BackupOperations:
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
-        except validation.PolicyError as error:
-            return self._refusal("invalid_request", str(error))
-        except OSError as error:
-            return self._refusal("install_failed", str(error))
-        return await self._start_job(run_id, policy_id, action, previous)
+        except (validation.PolicyError, key_files.KeyFetchError, OSError) as error:
+            await key_files.remove(keys, self._run, self._privileged)
+            return self._refusal(key_files.refusal_code(error), str(error))
+        return await self._start_job(run_id, policy_id, action, previous, keys)
 
     async def backup_restore(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Restore from a snapshot into a staging directory, or into place
@@ -462,32 +464,40 @@ class BackupOperations:
         if refusal:
             return refusal
         params = parameters or {}
+        keys: List[str] = []
         try:
             policy_id = validation.check_uuid(params.get("policy_id"), "policy_id")
             policy = self._policy(policy_id)
             if not policy or policy.get("role") != "host":
                 return self._not_configured()
             repository, _source, previous = repository_choice.choose(policy, params)
+            run_id = validation.check_uuid(params.get("run_id"), "run_id")
+            keys = await self._decrypt_keys(run_id, params)
             job = job_builder.build_restore_job(
                 params,
                 repository=repository,
                 state_dir=self.state_dir,
                 group=_agent_group(),
                 can_plan=contract.supports(self._features(), "plan"),
+                decrypt_with=keys,
             )
-            run_id = validation.check_uuid(params.get("run_id"), "run_id")
             if job["restore_root"] != "/":
                 os.makedirs(job["restore_root"], mode=0o700, exist_ok=True)
             await self._install_root_file(
                 contract.render_job(job),
                 contract.job_path(policy_id, job_builder.RESTORE_ACTION),
             )
-        except validation.PolicyError as error:
-            return self._refusal("invalid_request", str(error))
-        except OSError as error:
-            return self._refusal("install_failed", str(error))
+        except (validation.PolicyError, key_files.KeyFetchError, OSError) as error:
+            await key_files.remove(keys, self._run, self._privileged)
+            return self._refusal(key_files.refusal_code(error), str(error))
         return await self._start_job(
-            run_id, policy_id, job_builder.RESTORE_ACTION, previous
+            run_id, policy_id, job_builder.RESTORE_ACTION, previous, keys
+        )
+
+    async def _decrypt_keys(self, run_id: str, params: Dict[str, Any]) -> List[str]:
+        """This run's key files when it reads an encrypted repository."""
+        return await key_files.for_run(
+            self.agent, self._features(), run_id, params, self._run, self._privileged
         )
 
     async def _unit_state(self, unit: str) -> Dict[str, str]:
@@ -545,12 +555,25 @@ class BackupOperations:
         code, _out, err = await self._run(argv)
         return code, err
 
-    async def _start_job(
-        self, run_id: str, policy_id: str, action: str, previous: bool = False
-    ) -> Dict[str, Any]:
+    async def _start_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self, run_id: str, policy_id: str, action: str, previous: bool = False,
+        keys: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:  # fmt: skip
+        """Start the job; a job that does not start leaves no key behind."""
+        answer = await self._launch_job(run_id, policy_id, action, previous, keys)
+        if not answer.get("success"):
+            await key_files.remove(keys or [], self._run, self._privileged)
+        return answer
+
+    async def _launch_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self, run_id: str, policy_id: str, action: str, previous: bool,
+        keys: Optional[List[str]],
+    ) -> Dict[str, Any]:  # fmt: skip
         record = self._new_record(policy_id, action)
         if previous:
             record["previous"] = True  # the repository before an encrypted one
+        if keys:
+            record["key_files"] = list(keys)  # removed when the run ends
         if (await self._job_state(record))[0]:
             return {"success": False, "run_id": run_id, "reason": "busy",
                     "error": _("That backup job is already running.")}  # fmt: skip
@@ -852,6 +875,10 @@ class BackupOperations:
         if self._resumed:
             return
         self._resumed = True
+        # Key files a crash left behind (no running job owns them) go first.
+        self._spawn(
+            key_files.sweep(self._load(INFLIGHT_FILE), self._run, self._privileged)
+        )
         for run_id, record in self._load(INFLIGHT_FILE).items():
             if isinstance(record, dict) and (
                 record.get("unit") or record.get("pidfile")
@@ -928,6 +955,9 @@ class BackupOperations:
         inflight = self._load(INFLIGHT_FILE)
         inflight.pop(run_id, None)
         self._save(INFLIGHT_FILE, inflight)
+        await key_files.remove(
+            record.get("key_files") or [], self._run, self._privileged
+        )
         await self._release_mount(run_id, record["policy_id"], record)
 
     def _audit(self, policy: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
