@@ -453,7 +453,8 @@ class BackupOperations:
         return await self._start_job(run_id, policy_id, action)
 
     async def backup_restore(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Restore from a snapshot into a staging directory (never in place)."""
+        """Restore from a snapshot into a staging directory, or into place
+        (``in_place``: over the host's own files; see build_restore_job)."""
         refusal = self._unusable()
         if refusal:
             return refusal
@@ -471,7 +472,8 @@ class BackupOperations:
                 can_plan=contract.supports(self._features(), "plan"),
             )
             run_id = validation.check_uuid(params.get("run_id"), "run_id")
-            os.makedirs(job["restore_root"], mode=0o700, exist_ok=True)
+            if job["restore_root"] != "/":
+                os.makedirs(job["restore_root"], mode=0o700, exist_ok=True)
             await self._install_root_file(
                 contract.render_job(job),
                 contract.job_path(policy_id, job_builder.RESTORE_ACTION),

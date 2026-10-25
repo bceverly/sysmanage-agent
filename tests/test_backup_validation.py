@@ -362,6 +362,46 @@ def test_hostile_restore_requests_are_refused(bad):
         builder.build_restore_job(params, repository="/r", state_dir="/s", group="g")
 
 
+def test_a_restore_into_place_targets_the_live_tree_and_spares_the_agent():
+    job = builder.build_restore_job(
+        {"run_id": RID, "policy_id": PID, "include": ["/etc/nginx", "/home/*/.config"],
+         "in_place": True, "dry_run": False, "restore_root": "/elsewhere"},
+        repository="/r", state_dir="/var/lib/a", group="g",
+    )  # fmt: skip
+    assert job["restore_root"] == "/"
+    assert job["check_first"] is True and job["dry_run"] is False
+    assert job["include"] == ["/etc/nginx", "/home/*/.config"]
+    # The agent's own database and host token are never put back.
+    assert "/var/lib/a" in job["exclude"]
+
+
+def test_a_preview_into_place_compares_with_the_live_tree():
+    job = builder.build_restore_job(
+        {"run_id": RID, "policy_id": PID, "include": ["/etc/hosts"], "in_place": True},
+        repository="/r", state_dir="/s", group="g", can_plan=True,
+    )  # fmt: skip
+    assert job["restore_root"] == "/" and job["plan"] is True
+
+
+@pytest.mark.parametrize(
+    "include", [[], ["/"], ["/*"], ["/**"], ["**/x"], ["etc/hosts"], ["/[ae]tc"]]
+)
+def test_a_restore_into_place_needs_specific_paths(include):
+    with pytest.raises(v.PolicyError):
+        builder.build_restore_job(
+            {"run_id": RID, "policy_id": PID, "include": include, "in_place": True},
+            repository="/r", state_dir="/s", group="g",
+        )  # fmt: skip
+
+
+def test_in_place_must_be_a_boolean():
+    with pytest.raises(v.PolicyError):
+        builder.build_restore_job(
+            {"run_id": RID, "policy_id": PID, "include": ["/etc"], "in_place": "yes"},
+            repository="/r", state_dir="/s", group="g",
+        )  # fmt: skip
+
+
 def test_storage_prune_and_check_are_keyless_and_share_one_record():
     """The NAS holds no private key: restate 2.0 can only prune whole packs and
     check metadata there, and check and prune must share one --record or the

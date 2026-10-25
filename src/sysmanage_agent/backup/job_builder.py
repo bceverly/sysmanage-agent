@@ -171,6 +171,26 @@ def _patterns(value: Any, what: str) -> List[str]:
     return value
 
 
+_WILDCARDS = set("*?[")
+
+
+def _in_place_includes(include: List[str]) -> List[str]:
+    """An in-place restore names what it replaces: at least one pattern, each
+    an absolute path whose first component is literal -- ``/etc/nginx`` or
+    ``/home/*/.config``, never ``/``, ``/*`` or ``**/x``.  Putting a whole
+    host back over itself is a rebuild (24.9, Enterprise), not a file
+    restore."""
+    if not include:
+        raise v.PolicyError("a restore into place needs at least one path")
+    for pattern in include:
+        first = pattern.lstrip("/").split("/", 1)[0]
+        if not pattern.startswith("/") or not first or _WILDCARDS & set(first):
+            raise v.PolicyError(
+                f"a restore into place needs specific paths, not {pattern!r}"
+            )
+    return include
+
+
 def build_restore_job(
     params: Any,
     *,
@@ -180,16 +200,23 @@ def build_restore_job(
     trusted_key: Optional[str] = None,
     can_plan: bool = False,
 ) -> Dict[str, Any]:
-    """A restore job into a staging directory the AGENT chooses.
+    """A restore job, into a staging directory the AGENT chooses or, with
+    ``in_place``, over the host's own files.
 
     A preview (``dry_run``) becomes restate's ``plan`` when this restate
     takes it: the plan comes from the snapshot's index and the host's files,
     reading no pack, so it takes seconds; ``dry_run`` reads (and checks)
     every byte of the snapshot first.
 
-    Never in place in this slice: ``restore_root`` is always
-    ``<state>/restore/<run_id>``, whatever the server sends.  Unsigned
-    snapshots are restored only when the server explicitly allows it.
+    The server never chooses the root: it is ``<state>/restore/<run_id>``,
+    or ``/`` for ``in_place`` (24.9).  In place, restate writes each file
+    beside its destination, checks it against the snapshot's digest and
+    renames it over the old one, never following a symbolic link, and
+    ``check_first`` refuses a damaged snapshot before anything is written;
+    the paths must be specific (``_in_place_includes``) and the agent's own
+    state directory is always left out, so a restore cannot put back an old
+    copy of the agent's database and host token.  Unsigned snapshots are
+    restored only when the server explicitly allows it.
     """
     if not isinstance(params, dict):
         raise v.PolicyError(NOT_AN_OBJECT)
@@ -197,12 +224,15 @@ def build_restore_job(
     policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
     dry_run = params.get("dry_run", True)
     allow_unverified = params.get("allow_unverified", False)
-    if not isinstance(dry_run, bool) or not isinstance(allow_unverified, bool):
-        raise v.PolicyError("dry_run and allow_unverified must be true or false")
+    in_place = params.get("in_place", False)
+    if not all(isinstance(x, bool) for x in (dry_run, allow_unverified, in_place)):
+        raise v.PolicyError(
+            "dry_run, allow_unverified and in_place must be true or false"
+        )
     job: Dict[str, Any] = {
         "command": RESTORE_ACTION,
         "repository": repository,
-        "restore_root": restore_root(state_dir, run_id),
+        "restore_root": "/" if in_place else restore_root(state_dir, run_id),
         "dry_run": dry_run,
         "check_first": True,
     }
@@ -213,6 +243,9 @@ def build_restore_job(
         job["snapshot"] = v.check_snapshot(params["snapshot"])
     include = _patterns(params.get("include"), "include")
     exclude = _patterns(params.get("exclude"), "exclude")
+    if in_place:
+        include = _in_place_includes(include)
+        exclude = exclude + [state_dir.rstrip("/") or "/"]
     if include:
         job["include"] = include
     if exclude:

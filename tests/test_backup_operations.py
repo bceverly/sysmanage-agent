@@ -497,6 +497,23 @@ async def test_restore_stages_into_the_agents_directory(ops, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_a_restore_into_place_makes_no_staging_dir(ops, monkeypatch):
+    rendered = []
+    real = contract.render_job
+    monkeypatch.setattr(
+        contract, "render_job", lambda job: rendered.append(job) or real(job)
+    )
+    await ops.backup_configure(_host_policy())
+    answer = await ops.backup_restore({"run_id": RID, "policy_id": PID,
+                                       "include": ["/etc/nginx"], "in_place": True})  # fmt: skip
+    assert answer["status"] == "started", answer
+    assert rendered[-1]["restore_root"] == "/"
+    assert not os.path.exists(os.path.join(ops.state_dir, "restore", RID))
+    for task in list(ops._tasks):
+        task.cancel()
+
+
+@pytest.mark.asyncio
 async def test_restore_needs_a_host_policy(ops):
     await ops.backup_configure(_storage_policy({"mode": "none"}))
     answer = await ops.backup_restore({"run_id": RID, "policy_id": PID})
