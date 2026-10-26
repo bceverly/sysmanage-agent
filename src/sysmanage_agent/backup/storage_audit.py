@@ -98,12 +98,33 @@ def _linux_baseline(run: Callable, read: Callable) -> List[Dict[str, Any]]:
         for unit in ("nfs-server", "nfs-kernel-server")
     )
     found = [_finding("nfs_server", OK if running else ERROR, running=running)]
-    versions = read("/proc/fs/nfsd/versions").split()
-    v4 = any(v.startswith("+4") for v in versions)
-    found.append(_finding("nfs_v4", OK if v4 else ERROR))
-    v3 = "+3" in versions
-    found.append(_finding("nfs_v4_only", WARNING if v3 else OK))
+    versions = _linux_nfs_versions(run, read)
+    if versions is None:
+        # Neither source answered: say so, never claim NFSv4 is missing.
+        found.append(_finding("nfs_v4", WARNING, checked=False))
+        return found
+    found.append(_finding("nfs_v4", OK if "4" in versions else ERROR))
+    found.append(_finding("nfs_v4_only", WARNING if "3" in versions else OK))
     return found
+
+
+def _linux_nfs_versions(run: Callable, read: Callable) -> Optional[set]:
+    """The NFS versions the server offers ("3", "4"), or None if unknown.
+
+    /proc/fs/nfsd/versions is root's alone (0600) and the agent usually is
+    not root, so an unreadable file is not "no NFSv4" (lab 2026-10-25: every
+    Linux storage host was reported as not serving NFSv4).  rpcinfo needs no
+    privilege and lists what nfsd registered (program 100003)."""
+    tokens = (read("/proc/fs/nfsd/versions") or "").split()
+    if tokens:
+        return {t[1] for t in tokens if t.startswith("+") and len(t) > 1}
+    listing = run(["rpcinfo", "-p", "localhost"]) or ""
+    found = set()
+    for line in listing.splitlines():
+        fields = line.split()
+        if len(fields) >= 5 and fields[0] == "100003" and fields[1].isdigit():
+            found.add(fields[1])
+    return found or None
 
 
 def baseline(system: str, account: str, run=_run, read=_read) -> List[Dict[str, Any]]:

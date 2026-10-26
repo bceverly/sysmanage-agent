@@ -34,6 +34,16 @@ ROLES = {"host": HOST_ACTIONS, "storage": STORAGE_ACTIONS}
 
 # Where repositories and their mounts may live.
 BACKUP_ROOTS = ("/srv", "/mnt", "/media", "/var/backups")
+# A storage host may also keep its repositories at the mount point of a ZFS
+# dataset of its own (ZFS mounts a pool at /<pool> by default, so a ZFS NAS
+# has /tank/backups, not /srv/backups) -- but never a system tree: a
+# root-on-ZFS system mounts datasets at /, /usr, /var and the rest, and the
+# storage host runs restate as root over the path.
+SYSTEM_TREES = (
+    "/bin", "/boot", "/dev", "/etc", "/home", "/lib", "/lib32", "/lib64",
+    "/libexec", "/opt", "/proc", "/root", "/run", "/sbin", "/sys", "/tmp",
+    "/usr", "/var",
+)  # fmt: skip
 RULES_ROOTS = ("/etc/restate", "/usr/share/restate")
 # A tmpdir for restate (run as root) only under the backup roots: never a
 # world-writable directory such as /tmp or /var/tmp, where another local user
@@ -110,6 +120,25 @@ def check_uuid(value: Any, what: str) -> str:
 
 def _under(path: str, roots) -> bool:
     return any(path == root or path.startswith(root + "/") for root in roots)
+
+
+def storage_mount_point(value: Any, zfs_mounts: Callable[[], Any]) -> str:
+    """The storage host's path: under BACKUP_ROOTS, or exactly a ZFS
+    dataset's mount point outside the system trees."""
+    if not isinstance(value, str) or not value.startswith("/"):
+        raise PolicyError("mount_point must be an absolute path")
+    if "\x00" in value or "\n" in value or ".." in value.split("/"):
+        raise PolicyError("mount_point is not a plain path")
+    normal = posixpath.normpath(value)
+    if _under(normal, BACKUP_ROOTS):
+        return normal
+    if normal != "/" and not _under(normal, SYSTEM_TREES):
+        if normal in set(zfs_mounts() or ()):
+            return normal
+    raise PolicyError(
+        "mount_point is outside the allowed roots (/srv, /mnt, /media, "
+        "/var/backups) and is not a ZFS dataset's own mount point"
+    )
 
 
 def confined_path(value: Any, roots, what: str) -> str:
@@ -316,11 +345,17 @@ def check_target(
     realpath: Callable[[str], str] = posixpath.realpath,
     isdir: Callable[[str], bool] = posixpath.isdir,
     managed: bool = False,
+    zfs_mounts: Callable[[], Any] = lambda: (),
 ) -> Tuple[str, str]:
     """``(mount_point, repository)`` for the target, both real paths."""
     if not isinstance(target, dict):
         raise PolicyError("target must be an object")
-    mount_point = confined_path(target.get("mount_point"), BACKUP_ROOTS, "mount_point")
+    if role == "storage":
+        mount_point = storage_mount_point(target.get("mount_point"), zfs_mounts)
+    else:
+        mount_point = confined_path(
+            target.get("mount_point"), BACKUP_ROOTS, "mount_point"
+        )
     repo_dir = target.get("repo_dir")
     if not isinstance(repo_dir, str) or not _REPO_DIR.match(repo_dir):
         raise PolicyError("repo_dir must be a single directory name")

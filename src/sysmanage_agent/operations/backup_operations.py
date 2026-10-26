@@ -289,7 +289,9 @@ class BackupOperations:
             return refusal
         try:
             policy = validation.check_policy(
-                parameters, mountinfo=lambda: _read_text("/proc/self/mountinfo") or ""
+                parameters,
+                mountinfo=lambda: _read_text("/proc/self/mountinfo") or "",
+                zfs_mounts=lambda: storage_fs.zfs_mount_points(_read_text),
             )
             if policy["role"] not in job_runner.ROLES.get(self.runner, ()):
                 return self._refusal(

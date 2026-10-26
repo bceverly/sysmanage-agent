@@ -62,6 +62,11 @@ def _mount_table(read_text: Callable[[str], Optional[str]]) -> Dict[str, str]:
     return {}
 
 
+def zfs_mount_points(read_text: Callable[[str], Optional[str]]) -> set:
+    """Where this host's ZFS datasets are mounted (the mount table only)."""
+    return {point for point, kind in _mount_table(read_text).items() if kind == "zfs"}
+
+
 def describe(
     path: str,
     *,
