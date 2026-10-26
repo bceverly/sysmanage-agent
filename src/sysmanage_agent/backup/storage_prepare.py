@@ -23,9 +23,14 @@ What it does, by the storage path's filesystem:
 * **FreeBSD without ZFS**: refused -- FreeBSD exports whole filesystems, so a
   repository without its own dataset cannot have its own export.
 
-Then the repository directory is made ``root:<account>`` mode 1770: the host
-can add files but not remove or rename ones it does not own (restate
-``protect`` later takes finished packs and snapshots from it).
+Then the repository directory is made ``root:<account>`` and append-only for
+the hosts: the host can add files but not remove or rename what it does not
+own (restate ``protect`` later takes finished packs and snapshots from it).
+On Linux that is mode 0770 plus the append-only flag (``chattr +a``), never
+the sticky bit: a Linux NFS client with ``fs.protected_regular=2`` (the
+Ubuntu and systemd default) refuses to open a file it just made in a sticky,
+group-writable directory, because the squashed owner is neither the caller
+nor the directory's owner.  On FreeBSD it is 0770 plus an NFSv4 ACL.
 
 It never moves data: a repository that already holds backups on the parent
 filesystem is refused with the steps to move it.  The baseline (NFS server,
@@ -52,12 +57,19 @@ ZFS = "zfs"
 BTRFS = "btrfs"
 PLAIN = "directory"
 EXPORTS_D = "/etc/exports.d"
-PROTECTED_MODE = "1770"
-# FreeBSD (ZFS, NFSv4 ACLs): its NFS server refuses a file made in a sticky
-# directory -- after making it -- so a capture could never write a pack.  The
-# same rule as an ACL instead (as restate 2.1.0.2's protect does): the group
-# may not delete what it does not own; a file's owner may delete its own.
-ACL_DIR_MODE = "0770"
+# Never the sticky bit: Linux NFS clients refuse files made in a sticky,
+# group-writable directory (fs.protected_regular=2), after the server has
+# made them, so a capture could never write a pack.
+DIR_MODE = "0770"
+# Linux: the repository's own entries (packs/, snapshots/, the marker) can
+# be added to but never removed or renamed; restate protect makes finished
+# packs and snapshots immutable.  chattr -a first: a flagged directory
+# refuses the chown/chmod of a second prepare.
+APPEND_ONLY_ON = ("chattr", "+a")
+APPEND_ONLY_OFF = ("chattr", "-a")
+# FreeBSD (ZFS, NFSv4 ACLs): the same rule as an ACL (as restate 2.1.0.2's
+# protect does): the group may not delete what it does not own; a file's
+# owner may delete its own.
 APPEND_ONLY_ACL = ("group@:D::deny", "owner@:d:f:allow", "owner@:d:d:allow")
 
 
@@ -216,17 +228,21 @@ def plan(  # pylint: disable=too-many-arguments
 
 
 def _protect_steps(system: str, account: str, repository: str) -> List[List[str]]:
-    """Ownership, then the append-only rule: FreeBSD 0770 plus the NFSv4 ACL,
-    Linux sticky 1770."""
-    protect = [["chown", f"root:{account}", repository]]
+    """Ownership and mode 0770, then the append-only rule: FreeBSD the NFSv4
+    ACL, Linux the append-only flag."""
     if system == "FreeBSD":
         # chmod first: with aclmode=discard it resets the ACL, so a re-run
         # never stacks duplicate entries.
-        protect.append(["chmod", ACL_DIR_MODE, repository])
-        protect += [["setfacl", "-a", "0", ace, repository] for ace in APPEND_ONLY_ACL]
-    else:
-        protect.append(["chmod", PROTECTED_MODE, repository])
-    return protect
+        return [["chown", f"root:{account}", repository],
+                ["chmod", DIR_MODE, repository]] + [
+            ["setfacl", "-a", "0", ace, repository] for ace in APPEND_ONLY_ACL
+        ]  # fmt: skip
+    return [
+        [*APPEND_ONLY_OFF, repository],
+        ["chown", f"root:{account}", repository],
+        ["chmod", DIR_MODE, repository],
+        [*APPEND_ONLY_ON, repository],
+    ]
 
 
 def _freebsd_export(steps: Dict[str, Any], address: str, account: str) -> None:

@@ -16,7 +16,8 @@ Baseline (once per storage host): the NFS server runs, serves NFSv4, and
 account exists.  Per repository: it is its own filesystem and its own
 export, restricted to the backed-up host's address and mapped to the
 service account, and its directories enforce append-only (finished packs
-and snapshots owned by root, the directories sticky and group-writable).
+and snapshots owned by root, the directories group-writable and append-only:
+the append-only flag on Linux, an NFSv4 ACL on FreeBSD, or the sticky bit).
 """
 
 import os
@@ -313,8 +314,8 @@ ACL_DIR_MODE = 0o770
 def acl_denies_delete(path: str, run=_run) -> bool:
     """Does ``path``'s NFSv4 ACL deny the group delete_child?  restate
     2.1.0.2 protects with that instead of the sticky bit where the
-    filesystem has NFSv4 ACLs (ZFS on FreeBSD): FreeBSD's NFS server refuses
-    a file made in a sticky directory, after making it."""
+    filesystem has NFSv4 ACLs (ZFS on FreeBSD): a Linux NFS client refuses a
+    file it made in a sticky, group-writable directory."""
     text = run(["getfacl", path]) or ""
     for line in text.splitlines():
         fields = line.strip().split(":")
@@ -328,66 +329,88 @@ def acl_denies_delete(path: str, run=_run) -> bool:
     return False
 
 
-def _protected_dir(st: os.stat_result, gid: int, path: str, acl: Callable) -> bool:
-    """root's and the hosts' group, and either sticky 1770 or 0770 with an
-    NFSv4 ACL that denies the group deleting what it does not own."""
+def _append_flag(path: str, attrs: Callable) -> bool:
+    return bool((attrs(path) or 0) & storage_fs.ATTR_APPEND)
+
+
+def _protected_dir(  # pylint: disable=too-many-arguments
+    st: os.stat_result, gid: int, path: str, acl: Callable, flagged_top: bool
+) -> bool:
+    """root's and the hosts' group, and append-only: sticky 1770; or 0770
+    with an NFSv4 ACL that denies the group deleting what it does not own;
+    or (Linux) 0770 under a repository directory with the append-only flag,
+    where restate protect makes each finished file immutable."""
     if st.st_uid != 0 or st.st_gid != gid:
         return False
     mode = stat.S_IMODE(st.st_mode)
-    return mode == PROTECTED_DIR_MODE or (mode == ACL_DIR_MODE and acl(path))
+    return mode == PROTECTED_DIR_MODE or (
+        mode == ACL_DIR_MODE and (flagged_top or acl(path))
+    )
 
 
-def layout_findings(
-    repository: str, account: str, lstat=os.lstat, acl=acl_denies_delete
+def layout_findings(  # pylint: disable=too-many-arguments
+    repository: str,
+    account: str,
+    lstat=os.lstat,
+    acl=acl_denies_delete,
+    attrs=storage_fs.file_attributes,
 ) -> List[Dict[str, Any]]:
-    """Directories root-owned, group-writable and append-only (sticky, or an
-    NFSv4 ACL saying the same); finished packs and snapshots root-owned and
-    read-only."""
+    """Directories root-owned, group-writable and append-only (sticky, an
+    NFSv4 ACL, or the append-only flag); finished packs and snapshots
+    root-owned and read-only (and immutable, under the flag)."""
     try:
         gid = grp.getgrnam(account).gr_gid
     except KeyError:
         return [_finding("append_only_layout", ERROR, reason="no_account")]
-    loose = _loose_directories(repository, gid, lstat, acl)
-    unprotected = _unprotected_packs(repository, lstat)
+    flagged = _append_flag(repository, attrs)
+    loose = _loose_directories(repository, gid, lstat, acl, flagged)
+    unprotected = _unprotected_packs(repository, lstat, attrs if flagged else None)
     if loose or unprotected:
         return [_finding("append_only_layout", WARNING, directories=loose,
                          unprotected_files=unprotected)]  # fmt: skip
     return [_finding("append_only_layout", OK)]
 
 
-def _loose_directories(
-    repository: str, gid: int, lstat: Callable, acl: Callable
+def _loose_directories(  # pylint: disable=too-many-arguments
+    repository: str, gid: int, lstat: Callable, acl: Callable, flagged: bool
 ) -> List[str]:
     """The repository's directories that are not append-only."""
     loose = []
     for sub in ("", "packs", "snapshots"):
         try:
             path = posixpath.join(repository, sub)
-            if not _protected_dir(lstat(path), gid, path, acl):
+            if not _protected_dir(lstat(path), gid, path, acl, flagged):
                 loose.append(sub or ".")
         except OSError:
             continue  # not created yet (no capture so far)
     return loose
 
 
-def _unprotected_packs(repository: str, lstat: Callable) -> int:
-    """How many finished packs are not root's and read-only."""
+def _unprotected_packs(
+    repository: str, lstat: Callable, attrs: Optional[Callable] = None
+) -> int:
+    """How many finished packs are not root's and read-only -- and, given
+    ``attrs`` (the append-only flag scheme), immutable."""
     packs = posixpath.join(repository, "packs")
     try:
         names = os.listdir(packs)
     except OSError:
         return 0
-    unprotected = 0
-    for name in names:
-        if not name.endswith(FINISHED_SUFFIXES) or name.startswith("."):
-            continue
-        try:
-            st = lstat(posixpath.join(packs, name))
-        except OSError:
-            continue
-        if st.st_uid != 0 or stat.S_IMODE(st.st_mode) & 0o222:
-            unprotected += 1
-    return unprotected
+    finished = [posixpath.join(packs, name) for name in names
+                if name.endswith(FINISHED_SUFFIXES) and not name.startswith(".")]  # fmt: skip
+    return sum(1 for path in finished if not _protected_file(path, lstat, attrs))
+
+
+def _protected_file(path: str, lstat: Callable, attrs: Optional[Callable]) -> bool:
+    """root's and read-only (and immutable, given ``attrs``); one that is
+    gone meanwhile (a prune) counts as protected."""
+    try:
+        st = lstat(path)
+    except OSError:
+        return True
+    if st.st_uid != 0 or stat.S_IMODE(st.st_mode) & 0o222:
+        return False
+    return not attrs or bool((attrs(path) or 0) & storage_fs.ATTR_IMMUTABLE)
 
 
 def filesystem_findings(repository: str, read_text: Callable) -> List[Dict[str, Any]]:

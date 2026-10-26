@@ -90,3 +90,35 @@ def describe(
         "path": path,
         "btrfs_subvolume": subvolume,
     }
+
+
+# statx(2) ``stx_attributes`` bits for the inode flags ``chattr`` sets.
+ATTR_IMMUTABLE = 0x10
+ATTR_APPEND = 0x20
+_AT_FDCWD = -100
+_AT_SYMLINK_NOFOLLOW = 0x100
+_STATX_SIZE = 256
+_STX_ATTRIBUTES, _STX_ATTRIBUTES_MASK = 8, 56
+
+
+def file_attributes(path: str) -> Optional[int]:
+    """The inode flags (``ATTR_*``) of ``path`` itself, from statx(2): read
+    without opening it, so the agent needs no access to a 0770 directory.
+    None off Linux, or when the filesystem does not report them."""
+    if platform.system() != "Linux":
+        return None
+    import ctypes  # pylint: disable=import-outside-toplevel
+    import struct  # pylint: disable=import-outside-toplevel
+
+    try:
+        libc = ctypes.CDLL(None, use_errno=True)
+        buf = ctypes.create_string_buffer(_STATX_SIZE)
+        if libc.statx(_AT_FDCWD, os.fsencode(path), _AT_SYMLINK_NOFOLLOW, 0, buf):
+            return None
+    except (OSError, AttributeError):  # no statx (glibc < 2.28)
+        return None
+    (attributes,) = struct.unpack_from("=Q", buf, _STX_ATTRIBUTES)
+    (supported,) = struct.unpack_from("=Q", buf, _STX_ATTRIBUTES_MASK)
+    if not supported & (ATTR_APPEND | ATTR_IMMUTABLE):
+        return None
+    return attributes & supported

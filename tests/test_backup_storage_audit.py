@@ -15,6 +15,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.sysmanage_agent.backup import storage_audit as a
+from src.sysmanage_agent.backup import storage_fs
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Unix-only feature")
 REPO = "/srv/backups/restate/t14-1"
@@ -207,3 +208,46 @@ def test_the_client_path_is_relative_to_the_nfsv4_root():
 
     assert a.client_path("Linux", REPO, linux) == "/backups/restate/t14-1"
     assert a.client_path("Linux", REPO, lambda p: "") == REPO
+
+
+def _flags(top=0, files=0):
+    """``attrs`` for layout_findings: the repository directory's inode
+    flags, and every other path's."""
+    return lambda path: top if os.path.basename(path) == "r" else files
+
+
+def test_linux_append_only_flag_counts_as_append_only(account, tmp_path):
+    # Linux: 0770 everywhere, chattr +a on the repository, finished packs
+    # chattr +i -- never sticky (fs.protected_regular=2 clients refuse it)
+    repo = tmp_path / "r"
+    (repo / "packs").mkdir(parents=True)
+    (repo / "snapshots").mkdir()
+    (repo / "packs" / "p1.tar.gz").write_text("x")
+
+    def protected(path):
+        if os.path.isdir(path):
+            return SimpleNamespace(st_uid=0, st_gid=1003, st_mode=stat.S_IFDIR | 0o770)
+        return SimpleNamespace(st_uid=0, st_gid=1003, st_mode=stat.S_IFREG | 0o440)
+
+    def no_acl(_path):
+        return False
+
+    append, immutable = storage_fs.ATTR_APPEND, storage_fs.ATTR_IMMUTABLE
+    ok = a.layout_findings(str(repo), "restate", lstat=protected, acl=no_acl,
+                           attrs=_flags(append, immutable))  # fmt: skip
+    assert _codes(ok) == {"append_only_layout": "ok"}
+    # without the flag on the repository, 0770 lets a host remove anything
+    bare = a.layout_findings(str(repo), "restate", lstat=protected, acl=no_acl,
+                             attrs=_flags(0, immutable))  # fmt: skip
+    assert bare[0]["params"]["directories"] == [".", "packs", "snapshots"]
+    # under the flag, a finished pack that is not immutable can be removed
+    loose = a.layout_findings(str(repo), "restate", lstat=protected, acl=no_acl,
+                              attrs=_flags(append, 0))  # fmt: skip
+    assert loose[0]["params"] == {"directories": [], "unprotected_files": 1}
+
+
+def test_inode_flags_are_read_without_opening_the_path(tmp_path):
+    # statx(2): None off Linux, else an int (whatever this filesystem reports)
+    found = storage_fs.file_attributes(str(tmp_path))
+    assert found is None or isinstance(found, int)
+    assert storage_fs.file_attributes(str(tmp_path / "missing")) is None

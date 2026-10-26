@@ -82,7 +82,10 @@ async def test_prepare_creates_exports_and_protects_in_order(prepare_env, agent)
                    if c[0] == "install" and c[-1].startswith("/etc/exports.d/"))  # fmt: skip
     reload_ = bare.index(["exportfs", "-ra"])
     chown = bare.index(["chown", "root:restate", repo])
-    assert create < install < reload_ < chown < bare.index(["chmod", "1770", repo])
+    chmod = bare.index(["chmod", "0770", repo])
+    assert (
+        create < install < reload_ < chown < chmod < bare.index(["chattr", "+a", repo])
+    )
     report = _sent(agent, "backup_result")[0]
     assert (report["action"], report["status"]) == ("prepare", "ok")
     assert report["storage_audit"][0]["code"] == "export_own"  # re-audited
@@ -338,7 +341,7 @@ async def test_a_failed_preflight_refuses_the_capture_and_unmounts(
     ops, job_files, mounts, monkeypatch
 ):
     monkeypatch.setattr(ops_module.host_mount, "preflight",
-                        lambda where, run_id: "The backup storage is nearly full")  # fmt: skip
+                        lambda where: "The backup storage is nearly full")  # fmt: skip
     target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
     await ops.backup_configure(_host_policy(target=target))
     _touch_jobs(job_files, "capture")

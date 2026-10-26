@@ -591,7 +591,7 @@ class BackupOperations:
             return {"success": False, "run_id": run_id, "reason": "mount_failed",
                     "error": error}  # fmt: skip
         if action == "capture":
-            error = await self._preflight(run_id, policy_id)
+            error = await self._preflight(policy_id)
             if error:
                 await self._release_mount(run_id, policy_id, record)
                 return {"success": False, "run_id": run_id,
@@ -672,7 +672,7 @@ class BackupOperations:
                 "where": where}  # fmt: skip
         return None
 
-    async def _preflight(self, run_id: str, policy_id: str) -> Optional[str]:
+    async def _preflight(self, policy_id: str) -> Optional[str]:
         """Can the repository take this capture?  Off the event loop: a hard
         NFS mount to a storage host that is down would block it."""
         policy = self._policy(policy_id) or {}
@@ -681,9 +681,7 @@ class BackupOperations:
         loop = asyncio.get_event_loop()
         try:
             return await asyncio.wait_for(
-                loop.run_in_executor(
-                    None, host_mount.preflight, policy["repository"], run_id
-                ),
+                loop.run_in_executor(None, host_mount.preflight, policy["repository"]),
                 host_mount.PREFLIGHT_SECONDS,
             )
         except asyncio.TimeoutError:

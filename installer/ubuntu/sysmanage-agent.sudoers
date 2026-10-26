@@ -342,6 +342,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume snapshot -r *, /usr
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume create *, /usr/sbin/btrfs subvolume create *, /sbin/btrfs subvolume create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/exportfs -ra
+# Then the repository directory is made append-only for the hosts with the
+# append-only flag (chattr +a), never the sticky bit: a Linux NFS client
+# with fs.protected_regular=2 refuses files it made in a sticky directory.
+# chattr -a first, as a flagged directory refuses chown/chmod.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chattr +a *, /bin/chattr +a *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chattr -a *, /bin/chattr -a *
 # Seal retention: after each seal the storage host removes its own seals
 # older than the target's "keep seals for" days, never the newest -- only
 # ``<dataset>@sysmanage-<run id>`` snapshots it listed itself (ZFS, recursive:

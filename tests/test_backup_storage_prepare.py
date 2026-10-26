@@ -26,9 +26,18 @@ POLICY = {"policy_id": PID, "repository": REPO, "mount_point": MOUNT,
 SUDOERS = os.path.join(
     os.path.dirname(__file__), "..", "installer", "freebsd", "sysmanage-agent.sudoers"
 )
-PROTECT = [["chown", "root:restate", REPO], ["chmod", "1770", REPO]]
-# FreeBSD: no sticky bit (its NFS server refuses creates in a sticky
-# directory); the same rule as an NFSv4 ACL, as restate 2.1.0.2 protects.
+# Linux: 0770 and the append-only flag, never the sticky bit (a Linux NFS
+# client with fs.protected_regular=2 refuses files it made in a sticky,
+# group-writable directory); chattr -a first, as a flagged directory
+# refuses chown/chmod on a second prepare.
+PROTECT = [
+    ["chattr", "-a", REPO],
+    ["chown", "root:restate", REPO],
+    ["chmod", "0770", REPO],
+    ["chattr", "+a", REPO],
+]
+# FreeBSD: no sticky bit either; the same rule as an NFSv4 ACL, as restate
+# 2.1.0.2 protects.
 PROTECT_FREEBSD = [
     ["chown", "root:restate", REPO],
     ["chmod", "0770", REPO],
@@ -151,3 +160,14 @@ def test_a_missing_account_is_refused(monkeypatch):
     with pytest.raises(p.PrepareRefused) as refused:
         _plan("Linux", "ext4")
     assert refused.value.code == "no_account"
+
+
+@pytest.mark.parametrize("flavor", ["ubuntu", "centos", "opensuse"])
+def test_linux_sudoers_let_prepare_set_the_append_only_flag(flavor):
+    path = os.path.join(os.path.dirname(__file__), "..", "installer", flavor,
+                        "sysmanage-agent.sudoers")  # fmt: skip
+    with open(path, encoding="utf-8") as handle:
+        rules = handle.read()
+    for flag in ("+a", "-a"):
+        assert f"/usr/bin/chattr {flag} *" in rules
+    assert not any(argv[1:2] == ["1770"] for argv in PROTECT)

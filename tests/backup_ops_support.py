@@ -93,7 +93,7 @@ def ops(agent, tmp_path, monkeypatch):
     monkeypatch.setattr(ops_module, "PROGRESS_EVERY_SECONDS", 0)
     monkeypatch.setattr(ops_module.validation, "check_target", _fake_target)
     # The storage takes the capture unless a test says otherwise.
-    monkeypatch.setattr(ops_module.host_mount, "preflight", lambda where, run_id: None)
+    monkeypatch.setattr(ops_module.host_mount, "preflight", lambda where: None)
     # The host's repository is on NFS unless a test says otherwise.
     monkeypatch.setattr(BackupOperations, "_mounts",
                         staticmethod(lambda: {"/mnt/sysmanage-backup": "nfs4"}))  # fmt: skip
