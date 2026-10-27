@@ -44,6 +44,7 @@ from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import storage_prepare
+from src.sysmanage_agent.backup import storage_reaudit
 from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.backup import seal_retention
@@ -884,6 +885,12 @@ class BackupOperations:
                 record.get("unit") or record.get("pidfile")
             ):
                 self._spawn(self._watch(run_id, record, resumed=True))
+        storage_reaudit.schedule(self.reaudit_storage)
+
+    async def reaudit_storage(self) -> int:
+        """Send every storage policy's audit now (start, daily, Request Host Data)."""
+        policies = self._load(POLICIES_FILE)
+        return await storage_reaudit.send_all(policies, self._audit, self._send)
 
     def _new_progress(
         self, record: Dict[str, Any], offset: int

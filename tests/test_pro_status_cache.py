@@ -33,11 +33,31 @@ def test_it_asks_again_once_the_ttl_passes():
     assert run.call_count == 2
 
 
-def test_a_failed_answer_is_not_kept():
+def test_a_failed_answer_is_kept_for_the_failure_ttl():
+    # nas, 2026-10-27: an uncached failure was asked again on every message
     run = Mock(side_effect=[_answer(code=1, out=""), _answer()])
-    cache.cached_run(ARGV, run)
-    cache.cached_run(ARGV, run)
+    with patch.object(
+        cache.time, "monotonic", side_effect=[0.0, 0.0, 10.0, 301.0, 301.0]
+    ):
+        assert cache.cached_run(ARGV, run).returncode == 1
+        assert cache.cached_run(ARGV, run).returncode == 1  # kept, not asked
+        assert cache.cached_run(ARGV, run).returncode == 0  # the period ended
     assert run.call_count == 2
+
+
+def test_a_timeout_comes_back_as_a_kept_failure_not_an_exception():
+    run = Mock(side_effect=subprocess.TimeoutExpired(ARGV, 60))
+    first = cache.cached_run(ARGV, run)
+    second = cache.cached_run(ARGV, run)
+    assert first.returncode == cache.TIMED_OUT and second is first
+    assert run.call_count == 1
+
+
+def test_a_missing_pro_command_is_a_kept_failure():
+    run = Mock(side_effect=FileNotFoundError("pro"))
+    assert cache.cached_run(ARGV, run).returncode == cache.NOT_FOUND
+    cache.cached_run(ARGV, run)
+    assert run.call_count == 1
 
 
 def test_invalidate_forgets_after_a_pro_change():

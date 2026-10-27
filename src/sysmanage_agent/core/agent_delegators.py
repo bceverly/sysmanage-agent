@@ -423,8 +423,15 @@ class MiscDelegator:
         return await self.network_discovery_ops.run_network_sweep(parameters)
 
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Collect system diagnostics and send to server."""
-        return await self.diagnostic_collector.collect_diagnostics(parameters)
+        """Collect system diagnostics and send to server.  A backup storage
+        host also re-sends its storage audit (Request Host Data is how an
+        operator asks for fresh data; storage_reaudit says why)."""
+        result = await self.diagnostic_collector.collect_diagnostics(parameters)
+        try:
+            await self.backup_ops.reaudit_storage()
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.warning("Storage re-audit after diagnostics failed: %s", error)
+        return result
 
     # Phase 10.2 step 7 close-out: see the block-comment above the
     # apply_deployment_plan delegator for the rationale on why this

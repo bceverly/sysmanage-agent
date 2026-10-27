@@ -21,6 +21,10 @@ from src.sysmanage_agent.collection import pro_status_cache
 
 # Constant for zoneinfo path used in timezone extraction
 ZONEINFO_PATH_SEGMENT = "/zoneinfo/"
+# ``pro status --all`` can take 20-30 seconds (nas, 2026-10-27).  Its answer
+# is cached (pro_status_cache), so waiting longer costs one slow call per
+# cache period, where a short timeout cost a failed call on every message.
+STATUS_TIMEOUT_SECONDS = 60
 
 
 class OSInfoCollector:
@@ -110,7 +114,7 @@ class OSInfoCollector:
                 ["sudo", "-n"] + argv,
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=STATUS_TIMEOUT_SECONDS,
                 check=False,
             )
             if result.returncode == 0 and result.stdout:
@@ -119,7 +123,7 @@ class OSInfoCollector:
             argv,
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=STATUS_TIMEOUT_SECONDS,
             check=False,
         )
 
