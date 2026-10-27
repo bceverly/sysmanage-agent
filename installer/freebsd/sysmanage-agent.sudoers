@@ -119,6 +119,10 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs snapshot *
 # refuses a job file that is not root's and in a directory only root can
 # change.  Needs sudo 1.9.10 or later (FreeBSD 14 ships 1.9.17).
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate ^run /etc/restate/jobs\.d/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(prune|check|copy|du|repack|protect)\.conf$
+# "Equip for backup" (backup/equip.py): pkg add a restate release package the
+# agent downloaded into its own state dir and checked against the release's
+# SHA256SUMS -- only a restate package, only from exactly there.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg ^add -f /var/db/sysmanage-agent/equip/restate-[0-9]+(\.[0-9]+){3}-freebsd-[0-9]+\.[0-9]+-amd64\.pkg$
 # "Prepare storage for this host" (Phase 24, started by an administrator from
 # the Backups page): the repository becomes its own ZFS dataset, exported to
 # that one host's address only with every client mapped to the backup service

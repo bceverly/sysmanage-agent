@@ -176,6 +176,10 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     # Phase 24: backups with restate.  Its own group: a host is fully
     # manageable without it, so a missing restate is an optional tool.
     "backup": ("backup_configure", "backup_run", "backup_restore"),
+    # Installing restate ("Equip for backup").  Its own group because it is
+    # needed exactly when "backup" is unavailable (restate missing or old);
+    # not applicable where restate has no package the agent can install.
+    "backup_equip": ("equip_backup",),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",

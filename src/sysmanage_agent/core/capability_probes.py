@@ -42,6 +42,7 @@ import platform
 import shutil
 from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
 
+from src.sysmanage_agent.backup import equip as backup_equip
 from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.collection import malware_scan
 from src.sysmanage_agent.operations import config_mgmt_locator
@@ -161,8 +162,13 @@ _REQUIRED_LOCATORS: Dict[str, Tuple[Callable[..., bool], str]] = {
 # can be inapplicable (not Linux), missing (no restate) or outdated (restate
 # older than the driver needs), and the operator must be told which.
 _REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
-    command: restate_probe.unavailable_reason
-    for command in ("backup_configure", "backup_run", "backup_restore")
+    **{
+        command: restate_probe.unavailable_reason
+        for command in ("backup_configure", "backup_run", "backup_restore")
+    },
+    # Where restate has a package this agent can install (Ubuntu's PPA,
+    # FreeBSD's release package); not applicable elsewhere.
+    "equip_backup": backup_equip.unavailable_reason,
 }
 
 

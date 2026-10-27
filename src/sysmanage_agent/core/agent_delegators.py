@@ -422,6 +422,16 @@ class MiscDelegator:
         """Sweep one on-link network on the server's request (Phase 21.6 S4)."""
         return await self.network_discovery_ops.run_network_sweep(parameters)
 
+    async def equip_backup(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Install restate so this host can back up ("Equip for backup").  The
+        server sends nothing but the request; backup/equip.py decides what
+        runs on this OS."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.backup import equip  # noqa: PLC0415
+        from src.sysmanage_agent.operations import backup_operations  # noqa: PLC0415
+
+        return await equip.equip(backup_operations.default_state_dir())
+
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Collect system diagnostics and send to server.  A backup storage
         host also re-sends its storage audit (Request Host Data is how an
