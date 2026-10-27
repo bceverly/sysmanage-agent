@@ -4004,13 +4004,22 @@ jobs:
       - name: Upload snap to edge channel
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          SNAP_FILE: ${{ steps.snap_file.outputs.snap_file }}
         run: |
-          # Retry logic for transient network errors with Snapcraft store
+          # Retry logic for transient network errors with Snapcraft store --
+          # but an expired login fails the same way every time, so stop at once
+          # and say how to renew it.
           for i in 1 2 3 4 5; do
             echo "Attempt $i of 5..."
-            if snapcraft upload --release=edge ${{ steps.snap_file.outputs.snap_file }}; then
+            if out=$(snapcraft upload --release=edge "$SNAP_FILE" 2>&1); then
+              echo "$out"
               echo "Upload successful!"
               exit 0
+            fi
+            echo "$out"
+            if echo "$out" | grep -qiE "credentials are no longer valid|export-login|not logged in"; then
+              echo "::error::The Snap Store login in the SNAPCRAFT_STORE_CREDENTIALS secret (sysmanage-agent repo) has expired, so no retry can succeed. To fix: 1) on a machine with snapcraft installed, run: snapcraft export-login --snaps=sysmanage-agent,sysmanage-agent-strict --acls package_access,package_push,package_update,package_release creds.txt  2) on GitHub: sysmanage-agent -> Settings -> Secrets and variables -> Actions -> SNAPCRAFT_STORE_CREDENTIALS -> Update secret, and paste the contents of creds.txt  3) delete creds.txt, then re-run this job."
+              exit 1
             fi
             echo "Upload failed, waiting 30 seconds before retry..."
             sleep 30

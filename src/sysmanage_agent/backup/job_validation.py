@@ -41,7 +41,8 @@ BACKUP_ROOTS = ("/srv", "/mnt", "/media", "/var/backups")
 # storage host runs restate as root over the path.
 SYSTEM_TREES = (
     "/bin", "/boot", "/dev", "/etc", "/home", "/lib", "/lib32", "/lib64",
-    "/libexec", "/opt", "/proc", "/root", "/run", "/sbin", "/sys", "/tmp",
+    "/libexec", "/opt", "/proc", "/root", "/run", "/sbin", "/sys",
+    "/tmp",  # nosec B108 - a deny-list: paths that are never a backup root
     "/usr", "/var",
 )  # fmt: skip
 RULES_ROOTS = ("/etc/restate", "/usr/share/restate")

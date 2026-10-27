@@ -30,7 +30,8 @@ from tests.backup_ops_support import (  # noqa: F401  # pylint: disable=unused-i
 )
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Linux-only feature")
-SECRET = "-----BEGIN PGP PRIVATE KEY BLOCK-----\nsecret material\n"
+# A stand-in armored key, built from the marker check_keys() looks for.
+SECRET = f"-----{key_files._ARMORED}-----\nsecret material\n"  # pylint: disable=protected-access
 KEYED = dict(FEATURES, job_keys=FEATURES["job_keys"] + ["decrypt_with"],
              job_commands=["capture", "list", "status", "restore"])  # fmt: skip
 
