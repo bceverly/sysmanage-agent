@@ -56,20 +56,41 @@ VERSION_RE = re.compile(r"^\d+(\.\d+){3}$")
 TAG_RE = re.compile(r"^refs/tags/v?(\d+(?:\.\d+){3})(?:\^\{\})?$")
 
 
+def show_git_output(args, result) -> None:
+    """Print what git said about a failed command.  Its output is captured,
+    so without this a failure was only a Python traceback, with git's own
+    reason -- a hook refusing the commit, a lock, a missing identity --
+    thrown away (v3.12.0.8, 2026-10-27)."""
+    print(
+        f"git {' '.join(args)} failed (exit {result.returncode}); git said:",
+        file=sys.stderr,
+    )
+    for text in (result.stderr, result.stdout):
+        if text and text.strip():
+            print(text.rstrip(), file=sys.stderr)
+
+
 def git(
     *args: str, check: bool = True, timeout: int = 120
 ) -> subprocess.CompletedProcess:
-    """Run a git command in the repo root.  Never uses a shell."""
-    return (
+    """Run a git command in the repo root.  Never uses a shell.  With
+    ``check``, a failure prints git's own output, then raises."""
+    result = (
         subprocess.run(  # nosec B603 B607 - fixed argv, no shell, no user interpolation
             ["git", *args],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
-            check=check,
+            check=False,
             timeout=timeout,
         )
     )
+    if check and result.returncode != 0:
+        show_git_output(args, result)
+        raise subprocess.CalledProcessError(
+            result.returncode, result.args, output=result.stdout, stderr=result.stderr
+        )
+    return result
 
 
 def fail(*lines: str) -> int:
@@ -414,13 +435,28 @@ def main() -> int:
 
     dirty = git("diff", "--quiet", "HEAD", check=False).returncode != 0
     if dirty:
-        git("commit", "-a", "-m", message)
+        committed = git("commit", "-a", "-m", message, check=False)
+        if committed.returncode != 0:
+            show_git_output(("commit", "-a", "-m", message), committed)
+            restore_markers(bumped)
+            return fail(
+                "`git commit` failed -- NOTHING was committed or tagged.",
+                "The version markers were restored, so the tree is as you left it.",
+                "git's reason is above; fix it and re-run.",
+            )
         print(f'Committed: "{message}"')
     else:
         print("Nothing to commit - tagging the current HEAD.")
 
     head = git("rev-parse", "--short", "HEAD").stdout.strip()
-    git("tag", "-a", tag, "-m", message)
+    tagged = git("tag", "-a", tag, "-m", message, check=False)
+    if tagged.returncode != 0:
+        show_git_output(("tag", "-a", tag, "-m", message), tagged)
+        return fail(
+            f"`git tag {tag}` failed; the release commit {head} exists LOCALLY.",
+            "git's reason is above; fix it, then tag and push by hand:",
+            f'  git tag -a {tag} -m "{message}" && git push && git push origin {tag}',
+        )
     print(f"=== {tag} tagged at {head} - pushing ===")
 
     for push in (["push"], ["push", "origin", tag]):
