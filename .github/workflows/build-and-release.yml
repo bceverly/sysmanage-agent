@@ -4017,6 +4017,13 @@ jobs:
               exit 0
             fi
             echo "$out"
+            # A secret that is not the base64 export-login writes (a paste that
+            # wrapped, lost a piece or picked up the prompt) fails identically
+            # every time too (v3.12.0.8, 2026-10-27).
+            if echo "$out" | grep -qiE "could not be parsed|expected base64"; then
+              echo "::error::The SNAPCRAFT_STORE_CREDENTIALS secret (sysmanage-agent repo) is not a valid snapcraft login -- usually a copy-and-paste that wrapped or lost part of the line -- so no retry can succeed. To fix without copy and paste: 1) snapcraft export-login --snaps=sysmanage,sysmanage-agent,sysmanage-agent-strict --acls package_access,package_push,package_update,package_release --expires <date> /tmp/creds.txt  2) base64 -d /tmp/creds.txt > /dev/null && echo valid  3) gh secret set SNAPCRAFT_STORE_CREDENTIALS -R <owner>/sysmanage-agent < /tmp/creds.txt  4) shred -u /tmp/creds.txt, then re-run this job."
+              exit 1
+            fi
             if echo "$out" | grep -qiE "credentials are no longer valid|export-login|not logged in"; then
               echo "::error::The Snap Store login in the SNAPCRAFT_STORE_CREDENTIALS secret (sysmanage-agent repo) has expired, so no retry can succeed. To fix: 1) on a machine with snapcraft installed, run: snapcraft export-login --snaps=sysmanage-agent,sysmanage-agent-strict --acls package_access,package_push,package_update,package_release creds.txt  2) on GitHub: sysmanage-agent -> Settings -> Secrets and variables -> Actions -> SNAPCRAFT_STORE_CREDENTIALS -> Update secret, and paste the contents of creds.txt  3) delete creds.txt, then re-run this job."
               exit 1
