@@ -353,7 +353,11 @@ class ClientRegistration:
                     host_id = response_data.get("id")
                     host_token = response_data.get("host_token")
                     if host_id:
-                        self._store_auth_data(host_id, host_token)
+                        self._store_auth_data(
+                            host_id,
+                            host_token,
+                            response_data.get("approval_status") or "pending",
+                        )
 
                     self.logger.info(
                         "Successfully registered with server. Host ID: %s",
@@ -467,9 +471,11 @@ class ClientRegistration:
         """Load stored authentication data from database on startup."""
         try:
             with get_db_session() as session:
+                # Identity, whatever the approval (registration_manager
+                # get_stored_host_id says why).
                 approval = (
                     session.query(HostApproval)
-                    .filter(HostApproval.approval_status == "approved")
+                    .filter(HostApproval.host_id.isnot(None))
                     .first()
                 )
 
@@ -488,8 +494,15 @@ class ClientRegistration:
         except Exception as error:
             self.logger.error(_("Error loading stored auth data: %s"), error)
 
-    def _store_auth_data(self, host_id: str, host_token: Optional[str]) -> None:
-        """Store authentication data in database."""
+    def _store_auth_data(
+        self,
+        host_id: str,
+        host_token: Optional[str],
+        approval_status: str = "pending",
+    ) -> None:
+        """Store authentication data in database, with the approval status
+        the server reported (it used to be stored as "approved" whatever the
+        server said, so a pending host's agent believed it was approved)."""
         try:
             with get_db_session() as session:
                 # Keep the token we already hold for this host when the reply
@@ -503,7 +516,7 @@ class ClientRegistration:
                 approval = HostApproval(
                     host_id=host_id,
                     host_token=host_token,
-                    approval_status="approved",
+                    approval_status=approval_status,
                 )
                 session.add(approval)
                 session.commit()
@@ -515,9 +528,11 @@ class ClientRegistration:
         """Get host_id from database."""
         try:
             with get_db_session() as session:
+                # Identity, whatever the approval (registration_manager
+                # get_stored_host_id says why).
                 approval = (
                     session.query(HostApproval)
-                    .filter(HostApproval.approval_status == "approved")
+                    .filter(HostApproval.host_id.isnot(None))
                     .first()
                 )
                 return str(approval.host_id) if approval and approval.host_id else None
@@ -529,9 +544,11 @@ class ClientRegistration:
         """Get host_token from database."""
         try:
             with get_db_session() as session:
+                # Identity, whatever the approval (registration_manager
+                # get_stored_host_id says why).
                 approval = (
                     session.query(HostApproval)
-                    .filter(HostApproval.approval_status == "approved")
+                    .filter(HostApproval.host_id.isnot(None))
                     .first()
                 )
                 return approval.host_token if approval else None

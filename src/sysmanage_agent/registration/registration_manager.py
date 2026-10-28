@@ -399,7 +399,14 @@ class RegistrationManager:
     async def get_stored_host_id(
         self,
     ) -> Optional[str]:  # NOSONAR - async required by interface
-        """Get the stored host_id from local database."""
+        """Get the stored host_id from local database.
+
+        Identity, not approval: the id and token are the host's credential
+        whether or not it is approved yet.  Filtering on "approved" (as these
+        readers did until 2026-10-28) made an agent restarted while its host
+        was pending forget who it was; the server then refused it forever
+        (host_credential_required) -- macbookair lost its identity that way.
+        ``get_host_approval_from_db`` is the approval gate."""
         await asyncio.sleep(
             0
         )  # Yield to event loop - async required for interface consistency
@@ -410,7 +417,6 @@ class RegistrationManager:
                 approval = (
                     session.query(HostApproval)
                     .filter(
-                        HostApproval.approval_status == "approved",
                         HostApproval.host_id.isnot(None),
                     )
                     .first()
@@ -442,7 +448,6 @@ class RegistrationManager:
                 approval = (
                     session.query(HostApproval)
                     .filter(
-                        HostApproval.approval_status == "approved",
                         HostApproval.host_token.isnot(None),
                     )
                     .first()
@@ -469,7 +474,6 @@ class RegistrationManager:
                 approval = (
                     session.query(HostApproval)
                     .filter(
-                        HostApproval.approval_status == "approved",
                         HostApproval.host_id.isnot(None),
                     )
                     .order_by(HostApproval.created_at.desc())
@@ -499,7 +503,6 @@ class RegistrationManager:
                 approval = (
                     session.query(HostApproval)
                     .filter(
-                        HostApproval.approval_status == "approved",
                         HostApproval.host_token.isnot(None),
                     )
                     .first()

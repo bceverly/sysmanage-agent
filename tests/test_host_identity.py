@@ -126,5 +126,84 @@ def test_a_registration_reply_without_a_token_keeps_ours(dbm):
     assert _stored(dbm) == (HOST, TOKEN)
 
 
+# --- a pending host is still this host (macbookair, 2026-10-28) -----------------
+# The id and token were read back only from rows marked "approved", so an
+# agent restarted while its host was pending forgot who it was and the server
+# refused it for good (host_credential_required).  And the HTTP registration
+# stored "approved" whatever the server said.
+
+
+def _seed_pending(dbm):
+    session = dbm.get_session()
+    session.add(
+        HostApproval(
+            host_id=uuid.UUID(HOST), host_token=TOKEN, approval_status="pending"
+        )
+    )
+    session.commit()
+    session.close()
+
+
+def _registration(dbm):
+    @contextmanager
+    def session_scope():
+        session = dbm.get_session()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    registration = ClientRegistration.__new__(ClientRegistration)
+    registration.logger = MagicMock()
+    registration.registration_data = None
+    registration.registered = False
+    return registration, patch(
+        "src.sysmanage_agent.registration.client_registration.get_db_session",
+        session_scope,
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_pending_host_keeps_its_identity_across_a_restart(dbm):
+    _seed_pending(dbm)
+    manager = RegistrationManager(MagicMock())
+    with patch(
+        "src.sysmanage_agent.registration.registration_manager.get_database_manager",
+        return_value=dbm,
+    ):
+        assert await manager.get_stored_host_id() == HOST
+        assert await manager.get_stored_host_token() == TOKEN
+        assert manager.get_stored_host_id_sync() == HOST
+        assert manager.get_stored_host_token_sync() == TOKEN
+        # ...but it is not approved: nothing gated on approval may send
+        assert manager.get_host_approval_from_db() is None
+
+    registration, scope = _registration(dbm)
+    with scope:
+        registration._load_stored_auth_data()
+        assert registration.registration_data == {"id": HOST, "host_token": TOKEN}
+        assert registration._get_stored_host_id() == HOST
+        assert registration._get_stored_host_token() == TOKEN
+
+
+def test_the_registration_reply_status_is_stored_as_the_server_said(dbm):
+    registration, scope = _registration(dbm)
+    with scope:
+        registration._store_auth_data(HOST, TOKEN, "pending")
+    session = dbm.get_session()
+    try:
+        assert session.query(HostApproval).one().approval_status == "pending"
+    finally:
+        session.close()
+    with scope:
+        registration._store_auth_data(HOST, None, "approved")
+    session = dbm.get_session()
+    try:
+        row = session.query(HostApproval).one()
+        assert (row.approval_status, row.host_token) == ("approved", TOKEN)
+    finally:
+        session.close()
+
+
 def test_the_agent_advertises_that_it_keeps_its_token():
     assert PERSISTENT_TOKEN_CAPABILITY in build_capability_report({})["capabilities"]
