@@ -14,8 +14,10 @@ from urllib.parse import urlparse
 
 import pytest
 
+from src.sysmanage_agent.operations import bsd_macos_repository_operations as brew_ops
 from src.sysmanage_agent.operations.bsd_macos_repository_operations import (
     BSDMacOSRepositoryOperations,
+    brew_command,
 )
 
 # Path to patch aiofiles.open in the module under test
@@ -62,14 +64,14 @@ class TestInit:
 class TestHomebrewOperations:
     """Test Homebrew tap operations."""
 
+    @pytest.fixture(autouse=True)
+    def brew_installed(self, monkeypatch):
+        monkeypatch.setattr(brew_ops, "brew_command", lambda: "/opt/homebrew/bin/brew")
+
     @pytest.mark.asyncio
     async def test_list_homebrew_taps(self, bsd_macos_ops, mock_agent):
         """Test listing Homebrew taps."""
         mock_agent.system_ops.execute_shell_command.side_effect = [
-            {
-                "success": True,
-                "result": {"stdout": "/usr/local/bin/brew", "stderr": ""},
-            },
             {
                 "success": True,
                 "result": {
@@ -85,8 +87,11 @@ class TestHomebrewOperations:
         assert repos[1]["name"] == "user/tap2"
 
     @pytest.mark.asyncio
-    async def test_list_homebrew_taps_not_installed(self, bsd_macos_ops, mock_agent):
+    async def test_list_homebrew_taps_not_installed(
+        self, bsd_macos_ops, mock_agent, monkeypatch
+    ):
         """Test listing Homebrew taps when brew is not installed."""
+        monkeypatch.setattr(brew_ops, "brew_command", lambda: None)
         mock_agent.system_ops.execute_shell_command.return_value = {
             "success": False,
             "result": {"stdout": "", "stderr": "brew not found"},
@@ -141,6 +146,78 @@ class TestHomebrewOperations:
         result = await bsd_macos_ops.add_homebrew_tap("user/tap")
         assert result["success"] is False
         assert "Test error" in result["error"]
+
+    @pytest.mark.asyncio
+    async def test_taps_run_the_resolved_brew_not_path_brew(
+        self, bsd_macos_ops, mock_agent, monkeypatch
+    ):
+        """macbookair 2026-10-28: a privileged agent's PATH had no
+        /opt/homebrew/bin, so "which brew" said Homebrew was not installed."""
+        monkeypatch.setattr(
+            brew_ops, "brew_command", lambda: "sudo -u alice /opt/homebrew/bin/brew"
+        )
+        mock_agent.system_ops.execute_shell_command.return_value = {
+            "success": True,
+            "result": {"stdout": "user/tap1\n", "stderr": ""},
+        }
+        assert len(await bsd_macos_ops.list_homebrew_taps()) == 1
+        await bsd_macos_ops.add_homebrew_tap("user/tap;rm -rf x")
+        commands = [
+            c.args[0]["command"]
+            for c in mock_agent.system_ops.execute_shell_command.call_args_list
+        ]
+        assert commands == [
+            "sudo -u alice /opt/homebrew/bin/brew tap",
+            "sudo -u alice /opt/homebrew/bin/brew tap 'user/tap;rm -rf x'",
+        ]
+
+
+class TestBrewCommand:
+    """Where Homebrew is, and who runs it."""
+
+    def test_known_paths_win_over_path(self):
+        found = brew_command(
+            exists=lambda p: p == "/opt/homebrew/bin/brew",
+            which=lambda name: "/somewhere/else/brew",
+            euid=lambda: 501,
+        )
+        assert found == "/opt/homebrew/bin/brew"
+
+    def test_path_is_the_fallback_and_none_when_absent(self):
+        assert (
+            brew_command(
+                exists=lambda p: False, which=lambda n: "/x/brew", euid=lambda: 501
+            )
+            == "/x/brew"
+        )
+        assert brew_command(exists=lambda p: False, which=lambda n: None) is None
+
+    def test_root_runs_brew_as_its_owner(self, monkeypatch):
+        if brew_ops.pwd is None:
+            pytest.skip("no pwd module")
+        owner = MagicMock(pw_name="alice")
+        monkeypatch.setattr(brew_ops.pwd, "getpwuid", lambda uid: owner)
+        found = brew_command(
+            exists=lambda p: p == "/opt/homebrew/bin/brew",
+            which=lambda n: None,
+            euid=lambda: 0,
+            stat=lambda p: MagicMock(st_uid=501),
+        )
+        assert found == "sudo -u alice /opt/homebrew/bin/brew"
+
+    def test_root_owned_brew_runs_directly(self, monkeypatch):
+        if brew_ops.pwd is None:
+            pytest.skip("no pwd module")
+        monkeypatch.setattr(
+            brew_ops.pwd, "getpwuid", lambda uid: MagicMock(pw_name="root")
+        )
+        found = brew_command(
+            exists=lambda p: p == "/usr/local/bin/brew",
+            which=lambda n: None,
+            euid=lambda: 0,
+            stat=lambda p: MagicMock(st_uid=0),
+        )
+        assert found == "/usr/local/bin/brew"
 
 
 class TestFreeBSDOperations:

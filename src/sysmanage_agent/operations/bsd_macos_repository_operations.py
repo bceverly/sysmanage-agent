@@ -13,10 +13,42 @@ import asyncio
 import logging
 import os
 import re
-from typing import Any, Dict
+import shlex
+import shutil
+from typing import Any, Dict, Optional
+
+try:
+    import pwd
+except ImportError:  # Windows
+    pwd = None  # type: ignore[assignment]
 
 from src.sysmanage_agent.core import aiofiles_compat as aiofiles
 from src.i18n import _
+
+HOMEBREW_PATHS = ("/opt/homebrew/bin/brew", "/usr/local/bin/brew")
+
+
+def brew_command(
+    exists=os.path.exists, which=shutil.which, euid=os.geteuid, stat=os.stat
+) -> Optional[str]:
+    """The command that runs Homebrew, or None when it is not installed.
+
+    Not ``which brew``: a privileged agent (launchd, or sudo with a short
+    PATH) has no /opt/homebrew/bin on its PATH, so taps were "not installed"
+    on a Mac that has Homebrew (macbookair, 2026-10-28).  The known install
+    paths come first, as for every other Homebrew call in the agent, and
+    brew refuses to run as root, so a root agent runs it as its owner."""
+    path = next((p for p in HOMEBREW_PATHS if exists(p)), None) or which("brew")
+    if not path:
+        return None
+    if euid() == 0 and pwd is not None:
+        try:
+            owner = pwd.getpwuid(stat(path).st_uid).pw_name
+        except (KeyError, OSError):
+            owner = None
+        if owner and owner != "root":
+            return f"sudo -u {shlex.quote(owner)} {shlex.quote(path)}"
+    return shlex.quote(path)
 
 
 class BSDMacOSRepositoryOperations:
@@ -34,16 +66,13 @@ class BSDMacOSRepositoryOperations:
         repositories = []
 
         try:
-            # Check if Homebrew is installed
-            which_result = await self.agent_instance.system_ops.execute_shell_command(
-                {"command": "which brew"}
-            )
-            if not which_result.get("success"):
+            brew = brew_command()
+            if brew is None:
                 self.logger.warning(_("Homebrew is not installed"))
                 return repositories
 
             # Get list of taps
-            command = "brew tap"
+            command = f"{brew} tap"
             result = await self.agent_instance.system_ops.execute_shell_command(
                 {"command": command}
             )
@@ -81,7 +110,10 @@ class BSDMacOSRepositoryOperations:
                     "error": _("Invalid tap format. Use 'user/repo' format"),
                 }
 
-            command = f"brew tap {tap_name}"
+            brew = brew_command()
+            if brew is None:
+                return {"success": False, "error": _("Homebrew is not installed")}
+            command = f"{brew} tap {shlex.quote(tap_name)}"
             result = await self.agent_instance.system_ops.execute_shell_command(
                 {"command": command}
             )

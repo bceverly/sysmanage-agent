@@ -194,14 +194,18 @@ class TestAPTRepositoryURLValidation:
 class TestHomebrewTapParsing:
     """Test Homebrew tap parsing functionality."""
 
+    @pytest.fixture(autouse=True)
+    def brew_installed(self, monkeypatch):
+        from src.sysmanage_agent.operations import (  # pylint: disable=import-outside-toplevel
+            bsd_macos_repository_operations as brew_ops,
+        )
+
+        monkeypatch.setattr(brew_ops, "brew_command", lambda: "/usr/local/bin/brew")
+
     @pytest.mark.asyncio
     async def test_list_homebrew_taps_filters_official(self, bsd_macos_ops, mock_agent):
         """Test that official Homebrew taps are filtered out."""
         mock_agent.system_ops.execute_shell_command.side_effect = [
-            {
-                "success": True,
-                "result": {"stdout": "/usr/local/bin/brew", "stderr": ""},
-            },
             {
                 "success": True,
                 "result": {
@@ -220,10 +224,6 @@ class TestHomebrewTapParsing:
         mock_agent.system_ops.execute_shell_command.side_effect = [
             {
                 "success": True,
-                "result": {"stdout": "/usr/local/bin/brew", "stderr": ""},
-            },
-            {
-                "success": True,
                 "result": {
                     "stdout": "\nuser/tap1\n\nuser/tap2\n\n",
                     "stderr": "",
@@ -237,10 +237,6 @@ class TestHomebrewTapParsing:
     async def test_list_homebrew_taps_with_comments(self, bsd_macos_ops, mock_agent):
         """Test that comment lines are filtered out."""
         mock_agent.system_ops.execute_shell_command.side_effect = [
-            {
-                "success": True,
-                "result": {"stdout": "/usr/local/bin/brew", "stderr": ""},
-            },
             {
                 "success": True,
                 "result": {
