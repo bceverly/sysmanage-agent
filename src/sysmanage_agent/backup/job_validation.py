@@ -70,7 +70,14 @@ SERVER_KEYS = {
     },
     "snapshots": set(),
     "estimate": {"rules", "all", "baseline_content", "keep_paths", "skip_paths"},
-    "prune": {"keep_last", "keep_daily", "keep_weekly", "keep_monthly", "whole_packs"},
+    "prune": {
+        "keep_last",
+        "keep_daily",
+        "keep_weekly",
+        "keep_monthly",
+        "keep_yearly",
+        "whole_packs",
+    },
     "check": {"read_all", "metadata_only"},
     "copy": {"copy_to", "snapshot"},
     # What the repository holds and what each snapshot alone would free --
@@ -95,7 +102,7 @@ BOOLS = {
     "read_all",
     "metadata_only",
 }
-COUNTS = {"keep_last", "keep_daily", "keep_weekly", "keep_monthly"}
+COUNTS = {"keep_last", "keep_daily", "keep_weekly", "keep_monthly", "keep_yearly"}
 MAX_COUNT = 10000
 MAX_LIST = 64
 

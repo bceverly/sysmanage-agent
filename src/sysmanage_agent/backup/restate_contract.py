@@ -81,7 +81,9 @@ BOOL_KEYS = frozenset(
         "syslog",
     }
 )
-INT_KEYS = frozenset({"keep_last", "keep_daily", "keep_weekly", "keep_monthly"})
+INT_KEYS = frozenset(
+    {"keep_last", "keep_daily", "keep_weekly", "keep_monthly", "keep_yearly"}
+)
 LIST_KEYS = frozenset({"rules", "quiesce_with", "include", "exclude", "trusted_key"})
 SCALAR_KEYS = frozenset(
     {
@@ -156,7 +158,9 @@ def features_usable(features: Optional[Dict[str, Any]]) -> bool:
 # missing or empty (and refuses a non-empty one that is not a repository).
 # ``plan``: a restore preview worked out from the snapshot's index alone,
 # reading no pack -- seconds, where ``dry_run`` reads the whole snapshot.
-GATED_KEYS = frozenset({"create", "plan"})
+# ``keep_yearly`` (2.2.0.12): a storage host whose restate lacks it is refused
+# the policy (``tool_outdated``), never given a prune without the yearly rule.
+GATED_KEYS = frozenset({"create", "plan", "keep_yearly"})
 
 
 def supports(features: Optional[Dict[str, Any]], key: str) -> bool:
@@ -194,6 +198,13 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
         # can be restored, browsed and compared (Pro+ backup_engine, S4).
         found.append("decrypt")
     return found
+
+
+def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
+    """What the storage host's restate can do that the server must know
+    before offering it: ``keep_yearly`` (restate 2.2.0.12), since a policy
+    may keep yearly snapshots only where the prune that honors it runs."""
+    return ["keep_yearly"] if supports(features, "keep_yearly") else []
 
 
 _HOOK = re.compile(r"^[a-z0-9_-]{1,32}$")

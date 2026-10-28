@@ -364,6 +364,7 @@ class BackupOperations(BackupMountMixin):
             reply["hooks"] = contract.present_hooks(features)
             reply["abilities"] = contract.host_abilities(features)
         if policy["role"] == "storage":
+            reply["abilities"] = contract.storage_abilities(features)
             # Can this filesystem seal at all?  The server warns when not.
             reply["storage_fs"] = storage_fs.describe(
                 policy["mount_point"], read_text=_read_text
