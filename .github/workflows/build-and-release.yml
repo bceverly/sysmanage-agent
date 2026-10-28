@@ -2552,6 +2552,22 @@ jobs:
             echo "::warning::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ZONE_ID not set - not purging the CDN. A cached 404 from before first publish will keep being served over the real object (up to the zone edge TTL), breaking the documented install."
             exit 0
           fi
+          # Clean the secret before use.  A pasted token often carries a
+          # trailing newline, surrounding spaces or a "Bearer " prefix, and
+          # Cloudflare answers each with 6111 "Invalid format for
+          # Authorization header" -- which the verify call below then
+          # reported as "not a valid API token" (2026-10-28).
+          TOKEN=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n' \
+            | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/^[Bb]earer[[:space:]]+//')
+          echo "::add-mask::${TOKEN}"
+          if ! printf '%s' "$TOKEN" | grep -Eq '^[A-Za-z0-9_-]+$'; then
+            echo "::error::CLOUDFLARE_API_TOKEN holds characters a Cloudflare API token never has (a space, quote or other punctuation inside it; ${#TOKEN} characters after trimming). Fix: Cloudflare dashboard -> My Profile -> API Tokens -> roll or copy the token, then paste ONLY the token into this repository's CLOUDFLARE_API_TOKEN secret."
+            exit 1
+          fi
+          if printf '%s' "$TOKEN" | grep -Eq '^[0-9a-f]{37}$'; then
+            echo "::error::CLOUDFLARE_API_TOKEN looks like a Global API Key (37 hex characters), not an API Token. Fix: create an API Token with Zone -> Cache Purge -> Purge, scoped to sysmanage.org, and store that in the secret instead."
+            exit 1
+          fi
           BASE="https://repo.sysmanage.org"
           # Everything a client fetches by a STABLE url, i.e. the paths a
           # request can hit before the object exists.  Versioned artifact URLs
@@ -2592,17 +2608,21 @@ jobs:
           # problem precisely.
           VERIFY=$(curl -sS \
             "https://api.cloudflare.com/client/v4/user/tokens/verify" \
-            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Authorization: Bearer ${TOKEN}" \
             -H "Content-Type: application/json")
           if ! echo "$VERIFY" | grep -q '"success":true'; then
             echo "$VERIFY"
+            if echo "$VERIFY" | grep -Eq '"code":(6003|6111)'; then
+              echo "::error::Cloudflare rejected the Authorization header's FORMAT (6003/6111), before checking the token. The token passed the character check above, so it is probably empty after trimming or not a whole token. Fix: Cloudflare dashboard -> My Profile -> API Tokens -> roll or copy the token, then paste ONLY the token into this repository's CLOUDFLARE_API_TOKEN secret."
+              exit 1
+            fi
             echo "::error::CLOUDFLARE_API_TOKEN is not a valid API token. Check, in order: (1) it is an API TOKEN, not a Global API Key - the Global key needs X-Auth-Email/X-Auth-Key headers and will always fail here; (2) it has permission Zone -> Cache Purge -> Purge; (3) its Zone Resources include sysmanage.org; (4) the secret has no stray whitespace or newline."
             exit 1
           fi
 
           RESP=$(curl -sS -X POST \
             "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
-            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Authorization: Bearer ${TOKEN}" \
             -H "Content-Type: application/json" \
             --data "{\"files\":[${FILES}]}")
           echo "$RESP"
