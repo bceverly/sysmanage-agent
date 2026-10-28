@@ -1,0 +1,30 @@
+# Test toolchain pins (2026-10-28).  Every CI `pip install` that brings in
+# pytest or a requirements file passes `-c constraints-test.txt`; the
+# test-constraints lint gate (scripts/check_test_constraints.py) fails a
+# workflow that does not.
+#
+# Why: CI installed whatever pytest / pytest-asyncio was newest, and our
+# pytest.ini turns warnings into errors.  pytest 9.2.0 and pytest-asyncio
+# 1.4.1 shipped on 2026-10-28 and every repo went red at once with no change
+# of ours.  New releases now reach CI only when a pin here is bumped -- the
+# weekly latest-deps canary workflow says when, and what breaks.
+#
+# The same file lives in sysmanage, sysmanage-agent and
+# sysmanage-professional-plus; bump all three together.  Python 3.9 lines
+# are for the agent's 3.9 leg (pytest 9 and friends need 3.10).
+pytest==9.2.0; python_version >= "3.10"
+pytest==8.4.2; python_version < "3.10"
+pluggy==1.7.0; python_version >= "3.10"
+pluggy==1.6.0; python_version < "3.10"
+iniconfig==2.3.1; python_version >= "3.10"
+iniconfig==2.1.0; python_version < "3.10"
+pytest-asyncio==1.4.1; python_version >= "3.10"
+pytest-asyncio==1.2.0; python_version < "3.10"
+pytest-xdist==3.8.0
+execnet==2.1.2
+pytest-cov==7.1.0
+pytest-timeout==2.4.0
+# coverage 7.17 needs Python 3.11.
+coverage==7.17.0; python_version >= "3.11"
+coverage==7.16.2; python_version == "3.10"
+coverage==7.10.7; python_version < "3.10"

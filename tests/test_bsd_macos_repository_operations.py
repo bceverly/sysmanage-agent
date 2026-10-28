@@ -220,6 +220,23 @@ class TestBrewCommand:
         assert found == "/usr/local/bin/brew"
 
 
+def test_the_module_imports_without_geteuid(monkeypatch):
+    """Windows has no os.geteuid; a default argument of os.geteuid broke the
+    import of every agent module on Windows CI (2026-10-28)."""
+    import importlib  # pylint: disable=import-outside-toplevel
+
+    monkeypatch.delattr(brew_ops.os, "geteuid", raising=False)
+    reloaded = importlib.reload(brew_ops)
+    try:
+        assert (
+            reloaded.brew_command(exists=lambda p: p == "/usr/local/bin/brew")
+            == "/usr/local/bin/brew"
+        )
+    finally:
+        monkeypatch.undo()
+        importlib.reload(brew_ops)
+
+
 class TestFreeBSDOperations:
     """Test FreeBSD pkg repository operations."""
 

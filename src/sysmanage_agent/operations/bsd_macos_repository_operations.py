@@ -29,7 +29,7 @@ HOMEBREW_PATHS = ("/opt/homebrew/bin/brew", "/usr/local/bin/brew")
 
 
 def brew_command(
-    exists=os.path.exists, which=shutil.which, euid=os.geteuid, stat=os.stat
+    exists=os.path.exists, which=shutil.which, euid=None, stat=os.stat
 ) -> Optional[str]:
     """The command that runs Homebrew, or None when it is not installed.
 
@@ -41,6 +41,9 @@ def brew_command(
     path = next((p for p in HOMEBREW_PATHS if exists(p)), None) or which("brew")
     if not path:
         return None
+    # os.geteuid is POSIX-only: never touch it at import time (Windows CI
+    # imports every module).
+    euid = euid or getattr(os, "geteuid", lambda: -1)
     if euid() == 0 and pwd is not None:
         try:
             owner = pwd.getpwuid(stat(path).st_uid).pw_name

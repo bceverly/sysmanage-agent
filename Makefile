@@ -1,7 +1,7 @@
 # SysManage Agent Makefile
 # Provides testing and linting for Python agent
 
-.PHONY: lint-license-headers lint-license-headers-fix test-lucky13 release test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local translate translate-dry translate-check
+.PHONY: lint-license-headers lint-license-headers-fix lint-test-constraints test-lucky13 release test lint clean setup install-dev install-dev-rpm help format-python start start-privileged start-unprivileged stop security security-full security-python security-secrets security-upgrades sonarqube-scan install-sonar-scanner installer installer-deb installer-alpine installer-rpm installer-msi installer-msi-x64 installer-msi-arm64 installer-msi-all installer-openbsd installer-freebsd installer-netbsd snap snap-clean snap-install snap-uninstall snap-strict snap-strict-clean snap-strict-install snap-strict-uninstall sbom deploy-check-deps checksums release-notes deploy-launchpad deploy-obs deploy-copr deploy-snap deploy-docs-repo release-local translate translate-dry translate-check
 
 # Default target
 help:
@@ -206,7 +206,7 @@ else
 	@$(RM) $(VENV) $(NULL_REDIRECT) || true
 	@$(PYTHON_CMD) -m venv $(VENV)
 	@$(PYTHON) -m pip install --upgrade pip
-	@if [ -f requirements.txt ]; then $(PYTHON) -m pip install -r requirements.txt; fi
+	@if [ -f requirements.txt ]; then $(PYTHON) -m pip install -c constraints-test.txt -r requirements.txt; fi
 endif
 
 setup-venv: $(VENV_ACTIVATE)
@@ -689,6 +689,10 @@ release:
 # THIS repository's license (AGPL here; proprietary in Pro+, never crossed).
 # The fix target adds missing headers and bumps a stale end year; a header
 # naming the wrong license is reported for a person to correct.
+# The test toolchain stays pinned (constraints-test.txt); see the script's docstring.
+lint-test-constraints:
+	@$(PYTHON) scripts/check_test_constraints.py
+
 lint-license-headers:
 	@$(PYTHON) scripts/check_license_headers.py
 
@@ -725,7 +729,7 @@ endif
 lint-freebsd-port:
 	@$(PYTHON) scripts/check_freebsd_port.py
 
-lint: lint-file-length lint-license-headers format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-check-english i18n-strict i18n-verify i18n-markup translate-check lint-version lint-freebsd-port
+lint: lint-file-length lint-license-headers lint-test-constraints format-python i18n-validate i18n-check-msgid-style i18n-check-coverage i18n-check-english i18n-strict i18n-verify i18n-markup translate-check lint-version lint-freebsd-port
 	@echo "=== Python Linting ==="
 	@echo "Running pylint..."
 ifeq ($(OS),Windows_NT)
