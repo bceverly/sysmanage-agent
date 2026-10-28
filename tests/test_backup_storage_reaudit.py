@@ -43,6 +43,30 @@ def test_only_storage_policies_with_an_audit_are_sent():
     ]
 
 
+def test_the_restate_version_travels_for_every_policy():
+    """A host whose runs never reached restate (production 2026-10-28) kept
+    an old version on the server; the daily message now carries it, alone
+    for a host policy and beside the audit for a storage policy."""
+    sent = []
+
+    async def send(message_type, data):
+        sent.append(data)
+
+    count = asyncio.run(
+        storage_reaudit.send_all(POLICIES, _audit, send, version="2.2.0.12")
+    )
+    assert count == 3
+    by_policy = {d["policy_id"]: d for d in sent}
+    assert by_policy["p-host"] == {"policy_id": "p-host", "restate_version": "2.2.0.12"}
+    assert by_policy["p-storage"]["restate_version"] == "2.2.0.12"
+    assert "storage_audit" in by_policy["p-storage"]
+    # an audit that could not run still reports the version
+    assert by_policy["p-broken"] == {
+        "policy_id": "p-broken",
+        "restate_version": "2.2.0.12",
+    }
+
+
 def test_a_failing_reaudit_is_logged_and_scheduled_again(monkeypatch):
     calls, scheduled = [], []
 

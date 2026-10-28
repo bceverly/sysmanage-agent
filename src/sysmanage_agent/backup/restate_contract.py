@@ -197,6 +197,9 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
         # restate takes a secret key for one job: an encrypted repository
         # can be restored, browsed and compared (Pro+ backup_engine, S4).
         found.append("decrypt")
+    if supports_job_command(features, "check"):
+        # A full-read check can run here (Pro+ scheduled verification).
+        found.append("verify")
     return found
 
 

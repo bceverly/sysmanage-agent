@@ -2564,6 +2564,10 @@ jobs:
             echo "::error::CLOUDFLARE_API_TOKEN holds characters a Cloudflare API token never has (a space, quote or other punctuation inside it; ${#TOKEN} characters after trimming). Fix: Cloudflare dashboard -> My Profile -> API Tokens -> roll or copy the token, then paste ONLY the token into this repository's CLOUDFLARE_API_TOKEN secret."
             exit 1
           fi
+          if printf '%s' "$TOKEN" | grep -Eq '^[0-9a-f]{32}$'; then
+            echo "::error::CLOUDFLARE_API_TOKEN holds 32 hex characters -- the shape of a Zone ID (or a token's ID), not an API token (40 characters). Are CLOUDFLARE_API_TOKEN and CLOUDFLARE_ZONE_ID swapped? Fix: put the API token (Cloudflare dashboard -> My Profile -> API Tokens) in CLOUDFLARE_API_TOKEN and the zone's ID (sysmanage.org -> Overview -> Zone ID) in CLOUDFLARE_ZONE_ID."
+            exit 1
+          fi
           if printf '%s' "$TOKEN" | grep -Eq '^[0-9a-f]{37}$'; then
             echo "::error::CLOUDFLARE_API_TOKEN looks like a Global API Key (37 hex characters), not an API Token. Fix: create an API Token with Zone -> Cache Purge -> Purge, scoped to sysmanage.org, and store that in the secret instead."
             exit 1
@@ -2613,7 +2617,7 @@ jobs:
           if ! echo "$VERIFY" | grep -q '"success":true'; then
             echo "$VERIFY"
             if echo "$VERIFY" | grep -Eq '"code":(6003|6111)'; then
-              echo "::error::Cloudflare rejected the Authorization header's FORMAT (6003/6111), before checking the token. The token passed the character check above, so it is probably empty after trimming or not a whole token. Fix: Cloudflare dashboard -> My Profile -> API Tokens -> roll or copy the token, then paste ONLY the token into this repository's CLOUDFLARE_API_TOKEN secret."
+              echo "::error::Cloudflare rejected the Authorization header's FORMAT (6003/6111), before checking the token: the secret is not a whole API token (${#TOKEN} characters after trimming; Cloudflare API tokens are 40). Fix: Cloudflare dashboard -> My Profile -> API Tokens -> roll or copy the token, then paste ONLY the token into this repository's CLOUDFLARE_API_TOKEN secret."
               exit 1
             fi
             echo "::error::CLOUDFLARE_API_TOKEN is not a valid API token. Check, in order: (1) it is an API TOKEN, not a Global API Key - the Global key needs X-Auth-Email/X-Auth-Key headers and will always fail here; (2) it has permission Zone -> Cache Purge -> Purge; (3) its Zone Resources include sysmanage.org; (4) the secret has no stray whitespace or newline."

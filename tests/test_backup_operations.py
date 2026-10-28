@@ -74,7 +74,8 @@ async def test_configure_installs_root_owned_job_files(ops):
     answer = await ops.backup_configure(_host_policy())
     assert answer == {"success": True, "policy_id": PID,
                       "installed": ["capture", "snapshots"], "removed": [],
-                      "hooks": [], "abilities": []}  # fmt: skip
+                      "hooks": [], "abilities": [],
+                      "restate_version": "2.0.0.0"}  # fmt: skip
     installs = ops.fake.ran("install")
     assert [c[-1] for c in installs] == [
         contract.job_path(PID, "capture"), contract.job_path(PID, "snapshots")

@@ -13,6 +13,13 @@ stale while every capture failed before reaching the storage host.
 
 So a storage host also sends a fresh audit when the agent starts, once a day,
 and when an operator clicks Request Host Data.
+
+The same message carries the restate version, for host policies too (version
+only): the server records which restate a host runs only from finished jobs,
+so a host whose runs were all refused before restate started (an old agent's
+``mount_failed``, production 2026-10-28) kept showing -- and writing job files
+for -- the restate it had days before.  A changed version makes the server
+re-send the job files.
 """
 
 import asyncio
@@ -30,18 +37,30 @@ Audit = Callable[[Dict[str, Any]], Optional[List[Dict[str, Any]]]]
 Send = Callable[[str, Dict[str, Any]], Awaitable[None]]
 
 
-async def send_all(policies: Dict[str, Any], audit: Audit, send: Send) -> int:
-    """Audit every storage policy's repository and send each result; how many
-    were sent.  The audit runs commands, so it runs off the event loop."""
+async def send_all(
+    policies: Dict[str, Any], audit: Audit, send: Send, version: Optional[str] = None
+) -> int:
+    """Audit every storage policy's repository and send each result, with the
+    restate ``version`` when known; a host policy sends the version alone.
+    How many were sent.  The audit runs commands, so it runs off the event
+    loop."""
     loop = asyncio.get_running_loop()
     sent = 0
     for policy_id, policy in sorted(policies.items()):
-        if not isinstance(policy, dict) or policy.get("role") != "storage":
+        if not isinstance(policy, dict):
             continue
-        found = await loop.run_in_executor(None, audit, policy)
-        if found is None:
-            continue  # the audit could not run; _audit logged why
-        await send(MESSAGE_TYPE, {"policy_id": policy_id, "storage_audit": found})
+        payload: Dict[str, Any] = {"policy_id": policy_id}
+        if version:
+            payload["restate_version"] = version
+        if policy.get("role") == "storage":
+            found = await loop.run_in_executor(None, audit, policy)
+            if found is None and not version:
+                continue  # the audit could not run; _audit logged why
+            if found is not None:
+                payload["storage_audit"] = found
+        elif policy.get("role") != "host" or not version:
+            continue
+        await send(MESSAGE_TYPE, payload)
         sent += 1
     return sent
 

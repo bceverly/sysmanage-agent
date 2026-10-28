@@ -336,3 +336,35 @@ def build_status_job(
         job["decrypt_with"] = list(decrypt_with)
     job.update(_reports(state_dir, policy_id, STATUS_ACTION, group))
     return job
+
+
+# Scheduled verification (Pro+ 24.6): restate ``check --read-all`` run on the
+# backed-up HOST -- an encrypted repository can only be read with its secret
+# keys, which the storage host never holds and the host receives for one job
+# at a time.  Read-only (restate takes the shared readers lock), so it runs
+# beside captures; it reads every pack through the host's mount.
+VERIFY_ACTION = "verify"
+
+
+def build_verify_job(
+    params: Any,
+    *,
+    repository: str,
+    state_dir: str,
+    group: str,
+    decrypt_with: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """A full-read check of the host's current repository: a test restore
+    that writes nothing."""
+    if not isinstance(params, dict):
+        raise v.PolicyError(NOT_AN_OBJECT)
+    policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
+    job: Dict[str, Any] = {
+        "command": "check",
+        "repository": repository,
+        "read_all": True,
+    }
+    if decrypt_with:
+        job["decrypt_with"] = list(decrypt_with)
+    job.update(_reports(state_dir, policy_id, VERIFY_ACTION, group))
+    return job

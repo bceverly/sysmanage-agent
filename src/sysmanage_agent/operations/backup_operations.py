@@ -357,6 +357,9 @@ class BackupOperations(BackupMountMixin):
             "policy_id": policy_id,
             "installed": sorted(jobs),
             "removed": removed,
+            # The restate these job files were written for (the server shows
+            # it, and re-sends the files when a later job reports another).
+            "restate_version": features.get("version"),
         }
         if policy["role"] == "host":
             # The quiesce hooks this host's restate finds present (2.1+): the
@@ -416,12 +419,14 @@ class BackupOperations(BackupMountMixin):
         if policy and policy.get("role") == "storage":
             allowed.append(storage_prepare.ACTION)
         if policy and policy.get("role") == "host":
-            allowed += [job_builder.LIST_ACTION, job_builder.STATUS_ACTION]
+            allowed += [job_builder.LIST_ACTION, job_builder.STATUS_ACTION,
+                        job_builder.VERIFY_ACTION]  # fmt: skip
         if action not in allowed:
             return self._not_configured()
         if action == "seal":
             return self._start_seal(run_id, policy_id, policy.get("seal") or {})
-        if action in (job_builder.LIST_ACTION, job_builder.STATUS_ACTION):
+        if action in (job_builder.LIST_ACTION, job_builder.STATUS_ACTION,
+                      job_builder.VERIFY_ACTION):  # fmt: skip
             return await self._start_browse(run_id, policy_id, policy, parameters)
         if action == storage_prepare.ACTION and policy.get("role") == "storage":
             self._spawn(self._prepare(run_id, policy_id, policy))
@@ -437,10 +442,12 @@ class BackupOperations(BackupMountMixin):
         policy: Dict[str, Any],
         params: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """A snapshot listing or a what-changed check: read-only host jobs,
-        each written fresh from the request (like a restore)."""
+        """A snapshot listing, a what-changed check or a full-read
+        verification: read-only host jobs, each written fresh from the
+        request (like a restore)."""
         action = params.get("action")
-        if not contract.supports_job_command(self._features(), action):
+        command = "check" if action == job_builder.VERIFY_ACTION else action
+        if not contract.supports_job_command(self._features(), command):
             return self._refusal(
                 "tool_outdated",
                 _("This restate cannot run %s as a job; upgrade restate.") % action,
@@ -451,10 +458,12 @@ class BackupOperations(BackupMountMixin):
             keys = await self._decrypt_keys(run_id, params)
             common = {"repository": repository, "decrypt_with": keys,
                       "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
-            if action == job_builder.LIST_ACTION:
-                job = job_builder.build_list_job(params, **common)
-            else:
-                job = job_builder.build_status_job(params, **common)
+            builders = {
+                job_builder.LIST_ACTION: job_builder.build_list_job,
+                job_builder.STATUS_ACTION: job_builder.build_status_job,
+                job_builder.VERIFY_ACTION: job_builder.build_verify_job,
+            }
+            job = builders[action](params, **common)
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
@@ -789,9 +798,14 @@ class BackupOperations(BackupMountMixin):
         storage_reaudit.schedule(self.reaudit_storage)
 
     async def reaudit_storage(self) -> int:
-        """Send every storage policy's audit now (start, daily, Request Host Data)."""
+        """Send every storage policy's audit, and every policy's restate
+        version, now (start, daily, Request Host Data)."""
         policies = self._load(POLICIES_FILE)
-        return await storage_reaudit.send_all(policies, self._audit, self._send)
+        loop = asyncio.get_running_loop()
+        features = await loop.run_in_executor(None, self._features) or {}
+        return await storage_reaudit.send_all(
+            policies, self._audit, self._send, features.get("version")
+        )
 
     def _new_progress(
         self, record: Dict[str, Any], offset: int
