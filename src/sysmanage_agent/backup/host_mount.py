@@ -13,6 +13,15 @@ starts, and unmounts it when the last one ends.  A mount the operator made
 
 Between jobs nothing is mounted, so ransomware on the host finds no
 repository to reach at all; while one is, the export itself is append-only.
+
+Where systemd runs, the mount is made by systemd (``systemd-mount``) and
+every check reads the HOST's mount table (``/proc/1/mountinfo``), never the
+agent's own: the agent's unit has PrivateTmp/ProtectHome, which give it a
+private mount namespace, so a plain ``mount`` from the agent was visible to
+the agent alone.  Its checks passed, restate's own unit (``restate-job@``,
+in the host's namespace) saw no mount, and the capture wrote the repository
+to the host's local disk -- reported as a good backup (production, ubiquiti,
+2026-10-27).
 """
 
 import errno
@@ -37,9 +46,30 @@ def device(source: Dict[str, str]) -> str:
     return f"{server}:{source['path']}"
 
 
-def mount_argv(source: Dict[str, str], where: str) -> List[str]:
-    """The exact mount command (run with sudo)."""
+# The host's mount table: what restate's unit sees.  PID 1's, readable
+# without privileges; the agent's own (/proc/self) is only the fallback when
+# it is not (a container or a hardened /proc).
+HOST_MOUNTINFO = "/proc/1/mountinfo"
+SELF_MOUNTINFO = "/proc/self/mountinfo"
+
+
+def systemd_running(isdir=os.path.isdir) -> bool:
+    """systemd is PID 1 (sd_booted's test)."""
+    return isdir("/run/systemd/system")
+
+
+def mount_argv(source: Dict[str, str], where: str, systemd: bool = False) -> List[str]:
+    """The exact mount command (run with sudo).  With systemd, systemd mounts
+    it (a transient mount unit), so it exists in the host's namespace -- not
+    in the agent's private one -- and the command waits until it is mounted."""
+    if systemd:
+        return ["systemd-mount", "--no-ask-password", "--collect", "--type=nfs4",
+                f"--options={MOUNT_OPTIONS}", device(source), where]  # fmt: skip
     return ["mount", "-t", "nfs4", "-o", MOUNT_OPTIONS, device(source), where]
+
+
+def umount_argv(where: str, systemd: bool = False) -> List[str]:
+    return ["systemd-umount", where] if systemd else ["umount", where]
 
 
 def mounted_nfs(where: str, mounts: Dict[str, str]) -> bool:

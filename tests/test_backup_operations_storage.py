@@ -140,9 +140,13 @@ def mounts(ops, monkeypatch):
 
     async def run(argv):
         bare = argv[2:] if argv[:2] == ["sudo", "-n"] else argv
-        if bare[:1] == ["mount"] and ("mount",) not in ops.fake.fail:
+        if (
+            bare[:1] in (["mount"], ["systemd-mount"])
+            and ("mount",) not in ops.fake.fail
+            and not getattr(ops, "private_namespace", False)
+        ):
             table[bare[-1]] = "nfs4"
-        if bare[:1] == ["umount"]:
+        if bare[:1] in (["umount"], ["systemd-umount"]):
             table.pop(bare[-1], None)
         return await real(argv)
 
@@ -426,3 +430,70 @@ async def test_a_storage_policy_cannot_list(ops, monkeypatch):
     answer = await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "list",
                                    "snapshot": "s1"})  # fmt: skip
     assert answer["reason"] == "not_configured"
+
+
+# --- systemd hosts: the mount must exist for restate's unit, not just the agent
+
+
+@pytest.mark.asyncio
+async def test_on_systemd_the_export_is_mounted_by_systemd(
+    ops, job_files, mounts, monkeypatch
+):
+    monkeypatch.setattr(ops_module.host_mount, "systemd_running", lambda: True)
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    answer = await _capture_to_the_end(ops)
+    assert answer["status"] == "started"
+    mount = ops.fake.ran("systemd-mount")
+    assert mount and mount[0][-2:] == ["192.168.4.10:/restate/nas-1", WHERE]
+    assert "--type=nfs4" in mount[0] and any("hard" in a for a in mount[0])
+    assert not ops.fake.ran("mount", "-t", "nfs4")
+    await _drain(ops)
+    assert ops.fake.ran("systemd-umount", WHERE) and WHERE not in mounts
+
+
+@pytest.mark.asyncio
+async def test_a_mount_only_the_agent_can_see_is_refused_and_taken_down(
+    ops, job_files, mounts
+):
+    """production, ubiquiti, 2026-10-27: the agent's private mount namespace
+    hid its mount from restate's unit, and the capture wrote to local disk.
+    The host's table is what counts: a mount missing there refuses the run
+    and starts nothing."""
+    ops.private_namespace = True  # mount(8) "succeeds", but not for the host
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "capture"}
+    )
+    assert answer["reason"] == "mount_failed" and "not mounted" in answer["error"]
+    assert not ops.fake.ran("--no-block", "start")  # restate never ran
+    assert ops.fake.ran("umount", WHERE)  # the private mount is taken down
+
+
+def test_the_mount_table_is_the_hosts_not_the_agents(monkeypatch):
+    read = []
+
+    def fake_read(path):
+        read.append(path)
+        return (
+            "36 25 0:44 / /mnt/b rw - nfs4 nas:/x rw\n"
+            if path == "/proc/1/mountinfo"
+            else ""
+        )
+
+    monkeypatch.setattr("src.sysmanage_agent.backup.mount_mixin._read_text", fake_read)
+    assert ops_module.BackupMountMixin._mounts() == {"/mnt/b": "nfs4"}
+    assert read == ["/proc/1/mountinfo"]
+
+
+def test_mount_and_umount_commands():
+    from src.sysmanage_agent.backup import host_mount  # noqa: PLC0415
+
+    source = {"server": "192.168.4.10", "path": "/restate/nas-1"}
+    assert host_mount.mount_argv(source, WHERE)[:3] == ["mount", "-t", "nfs4"]
+    assert host_mount.mount_argv(source, WHERE, systemd=True)[0] == "systemd-mount"
+    assert host_mount.umount_argv(WHERE, systemd=True) == ["systemd-umount", WHERE]
+    assert host_mount.systemd_running(isdir=lambda p: p == "/run/systemd/system")

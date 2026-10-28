@@ -94,6 +94,9 @@ def ops(agent, tmp_path, monkeypatch):
     monkeypatch.setattr(ops_module.validation, "check_target", _fake_target)
     # The storage takes the capture unless a test says otherwise.
     monkeypatch.setattr(ops_module.host_mount, "preflight", lambda where: None)
+    # Plain mount(8) unless a test says otherwise (the systemd path has its
+    # own tests in test_backup_operations_storage.py).
+    monkeypatch.setattr(ops_module.host_mount, "systemd_running", lambda: False)
     # The host's repository is on NFS unless a test says otherwise.
     monkeypatch.setattr(BackupOperations, "_mounts",
                         staticmethod(lambda: {"/mnt/sysmanage-backup": "nfs4"}))  # fmt: skip

@@ -85,6 +85,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chown, /bin/chown
 # then unmounts.  Bare-binary grants, same philosophy as rsync above.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/mount, /bin/mount
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/umount, /bin/umount
+# Backup storage mounts on systemd hosts: the agent's unit has a private
+# mount namespace (PrivateTmp/ProtectHome), so a plain mount(8) is invisible
+# to restate's job unit and the capture lands on the local disk.  systemd-mount
+# asks PID 1 to mount in the host's namespace instead.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemd-mount, /bin/systemd-mount
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemd-umount, /bin/systemd-umount
 
 # Systemd Service Management
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/systemctl start *, /bin/systemctl start *
