@@ -111,6 +111,40 @@ def test_linux_zfs_exports_through_its_own_exports_d_file():
     assert steps["reload"] is True
 
 
+def test_linux_zfs_names_its_dataset_for_the_mount_check():
+    steps = _plan("Linux", "zfs", {MOUNT: "tank/backups"})
+    assert (steps["zfs_dataset"], steps["repository"]) == ("tank/backups/t14-1", REPO)
+    assert "zfs_dataset" not in _plan("Linux", "btrfs")
+
+
+def test_zfs_runs_in_the_hosts_mount_namespace_under_systemd_on_linux():
+    argv = ["/usr/sbin/zfs", "create", "tank/backups/t14-1"]
+    assert p.in_host_namespace(argv, "Linux", True) == [
+        "nsenter", "--mount=/proc/1/ns/mnt", "--", *argv]  # fmt: skip
+    assert p.in_host_namespace(argv, "Linux", False) == argv
+    assert p.in_host_namespace(argv, "FreeBSD", True) == argv
+
+
+def test_zfs_mounted_reads_the_mount_table():
+    line = ("228 2517 0:55 / {} rw,noatime shared:1 - zfs tank/backups/t14-1 rw\n"
+            "229 2517 0:56 / /srv/other rw - nfs4 nas:/x rw\n")  # fmt: skip
+    assert p.zfs_mounted(REPO, line.format(REPO))
+    assert not p.zfs_mounted(REPO, line.format("/srv/backups/elsewhere"))
+    assert not p.zfs_mounted("/srv/other", line.format(REPO))
+    assert not p.zfs_mounted(REPO, None)
+
+
+def test_linux_sudoers_allow_the_host_namespace_zfs_commands():
+    for system in ("ubuntu", "centos", "opensuse"):
+        with open(
+            f"installer/{system}/sysmanage-agent.sudoers", encoding="utf-8"
+        ) as handle:
+            rules = handle.read()
+        for verb in ("create", "mount"):
+            assert ("NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- "
+                    f"/usr/sbin/zfs {verb} *") in rules, (system, verb)  # fmt: skip
+
+
 def test_btrfs_creates_a_subvolume_and_plain_creates_a_directory():
     assert _plan("Linux", "btrfs")["commands"][0] == [
         "btrfs",

@@ -52,6 +52,8 @@ except ImportError:  # pragma: no cover - Windows
 
 from src.i18n import _
 
+from src.sysmanage_agent.backup.job_validation import mount_types
+
 ACTION = "prepare"
 ZFS = "zfs"
 BTRFS = "btrfs"
@@ -71,6 +73,27 @@ APPEND_ONLY_OFF = ("chattr", "-a")
 # protect does): the group may not delete what it does not own; a file's
 # owner may delete its own.
 APPEND_ONLY_ACL = ("group@:D::deny", "owner@:d:f:allow", "owner@:d:d:allow")
+
+
+# Linux with systemd: the agent's unit (PrivateTmp/ProtectHome) gives it a
+# private mount namespace, so a dataset ``zfs create`` mounted from the agent
+# was mounted for the agent alone -- its chown/chmod landed on it, while NFS
+# exported the empty directory beneath (production, nas: ubiquiti 2026-10-27,
+# mail.archive 2026-10-29).  ZFS's create and mount run in the host's (PID
+# 1's) namespace instead; the mount propagates back into the agent's.
+HOST_NAMESPACE = ("nsenter", "--mount=/proc/1/ns/mnt", "--")
+
+
+def in_host_namespace(argv: List[str], system: str, systemd: bool) -> List[str]:
+    """``argv`` run in the host's mount namespace where the agent has its own
+    (Linux under systemd); unchanged elsewhere."""
+    return [*HOST_NAMESPACE, *argv] if system == "Linux" and systemd else argv
+
+
+def zfs_mounted(repository: str, mountinfo_text: Optional[str]) -> bool:
+    """Is the repository a ZFS mount in the host's mount table?"""
+    mounts = mount_types(mountinfo_text or "")
+    return mounts.get(posixpath.normpath(repository)) == "zfs"
 
 
 class PrepareRefused(Exception):
@@ -216,7 +239,9 @@ def plan(  # pylint: disable=too-many-arguments
     else:
         # Linux: one /etc/exports.d file per policy, whatever the filesystem
         # (rewritten when the host's address changes), then exportfs -ra.
-        steps.pop("dataset", None)
+        dataset = steps.pop("dataset", None)
+        if dataset:  # checked mounted host-wide before it is exported
+            steps["zfs_dataset"], steps["repository"] = dataset, repository
         steps["export_file"] = (
             exports_file(policy["policy_id"]),
             export_line(repository, address, uid, gid),

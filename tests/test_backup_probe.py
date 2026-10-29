@@ -21,13 +21,15 @@ def _fresh():
     probe.forget()
 
 
-def _reason(found="/usr/sbin/restate", unit=True, system="Linux", fallback=None):
+def _reason(found="/usr/sbin/restate", unit=True, system="Linux", fallback=None,
+            nfs=True):  # fmt: skip
     return probe.unavailable_reason(
         lambda name: found if name == "restate" else None,
         system,
         ask=lambda executable: GOOD,
         unit_exists=lambda path: unit,
         exists=lambda path: path == fallback,
+        nfs_exists=lambda path: nfs and path == "/sbin/mount.nfs4",
     )
 
 
@@ -74,6 +76,15 @@ def test_a_restate_too_old_to_drive_is_outdated(monkeypatch, features):
 def test_a_current_restate_with_its_unit_is_usable(monkeypatch):
     monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
     assert _reason() is None
+
+
+def test_linux_without_an_nfs_client_cannot_back_up(monkeypatch):
+    """It could never mount its storage (nextcloud, 2026-10-29); Equip
+    installs the client.  Missing restate is said first: Equip fixes both."""
+    monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
+    assert _reason(nfs=False) == probe.REASON_MISSING_NFS_CLIENT
+    assert _reason(found=None, nfs=False) == probe.REASON_MISSING_TOOL
+    assert _reason(system="FreeBSD", nfs=False) is None  # in the base system
 
 
 def test_restate_is_asked_once_per_installed_binary(tmp_path):

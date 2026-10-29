@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 18:15-0400\n"
+"POT-Creation-Date: 2026-10-29 10:02-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -82,17 +82,17 @@ msgstr ""
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr ""
 
-#: src/sysmanage_agent/backup/host_mount.py:109
+#: src/sysmanage_agent/backup/host_mount.py:130
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr ""
 
-#: src/sysmanage_agent/backup/host_mount.py:115
+#: src/sysmanage_agent/backup/host_mount.py:136
 #, python-format
 msgid "The backup storage at %(where)s cannot take new files: %(error)s"
 msgstr ""
 
-#: src/sysmanage_agent/backup/host_mount.py:135
+#: src/sysmanage_agent/backup/host_mount.py:156
 #, python-format
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr ""
@@ -131,41 +131,48 @@ msgstr ""
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr ""
 
-#: src/sysmanage_agent/backup/mount_mixin.py:86
+#: src/sysmanage_agent/backup/mount_mixin.py:28
+msgid ""
+"This host has no NFS client, so it cannot mount its backup storage. Click"
+" Equip for backup, or install it (nfs-common on Debian and Ubuntu, nfs-"
+"utils on RHEL and Fedora)."
+msgstr ""
+
+#: src/sysmanage_agent/backup/mount_mixin.py:95
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not "
 "sent where to mount it from yet."
 msgstr ""
 
-#: src/sysmanage_agent/backup/mount_mixin.py:99
+#: src/sysmanage_agent/backup/mount_mixin.py:110
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 
-#: src/sysmanage_agent/backup/mount_mixin.py:107
+#: src/sysmanage_agent/backup/mount_mixin.py:118
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 
-#: src/sysmanage_agent/backup/mount_mixin.py:124
+#: src/sysmanage_agent/backup/mount_mixin.py:135
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr ""
 
-#: src/sysmanage_agent/backup/mount_mixin.py:149
+#: src/sysmanage_agent/backup/mount_mixin.py:160
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:106
+#: src/sysmanage_agent/backup/storage_prepare.py:129
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on"
 " this storage host. Create it, then prepare again."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:136
+#: src/sysmanage_agent/backup/storage_prepare.py:159
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds "
@@ -173,7 +180,7 @@ msgid ""
 " again."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:147
+#: src/sysmanage_agent/backup/storage_prepare.py:170
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and "
@@ -182,7 +189,7 @@ msgid ""
 "as root; or 2) remove it if those backups are no longer needed."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:155
+#: src/sysmanage_agent/backup/storage_prepare.py:178
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -191,25 +198,25 @@ msgid ""
 "subvolume as root; or 2) remove it if those backups are no longer needed."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:186
+#: src/sysmanage_agent/backup/storage_prepare.py:209
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its "
 "export cannot be limited to it. Wait for that host to report its network "
 "details, then prepare again."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:197
+#: src/sysmanage_agent/backup/storage_prepare.py:220
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:205
+#: src/sysmanage_agent/backup/storage_prepare.py:228
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its "
 "own ZFS dataset. Put the storage path on ZFS, then prepare again."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:271
+#: src/sysmanage_agent/backup/storage_prepare.py:296
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a "
@@ -217,7 +224,7 @@ msgid ""
 "there (zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
 msgstr ""
 
-#: src/sysmanage_agent/backup/storage_prepare.py:298
+#: src/sysmanage_agent/backup/storage_prepare.py:323
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir "
@@ -2293,51 +2300,56 @@ msgstr ""
 msgid "This restate does not support: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:453
+#: src/sysmanage_agent/operations/backup_operations.py:454
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:561
+#: src/sysmanage_agent/operations/backup_operations.py:562
 msgid "restate is not installed on this host."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:594
+#: src/sysmanage_agent/operations/backup_operations.py:595
 msgid "That backup job is already running."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:616
+#: src/sysmanage_agent/operations/backup_operations.py:617
 msgid "The backup job could not be started."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:671
+#: src/sysmanage_agent/operations/backup_operations.py:672
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:686
+#: src/sysmanage_agent/operations/backup_operations.py:687
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:764
+#: src/sysmanage_agent/operations/backup_operations.py:762
+#, python-format
+msgid "%(dataset)s is not mounted at %(path)s on this host"
+msgstr ""
+
+#: src/sysmanage_agent/operations/backup_operations.py:797
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:867
+#: src/sysmanage_agent/operations/backup_operations.py:915
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl "
 "-u %(unit)s on this host"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:895
+#: src/sysmanage_agent/operations/backup_operations.py:943
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:913
+#: src/sysmanage_agent/operations/backup_operations.py:961
 msgid "Could not queue the backup report"
 msgstr ""
 

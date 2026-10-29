@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 18:15-0400\n"
+"POT-Creation-Date: 2026-10-29 10:02-0400\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -75,20 +75,20 @@ msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr ""
 "⚠️  Zugriff auf {config_dir} nicht möglich, Rückgriff auf {fallback_dir}"
 
-#: src/sysmanage_agent/backup/host_mount.py:109
+#: src/sysmanage_agent/backup/host_mount.py:130
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr ""
 "Der Sicherungsspeicher unter %(where)s ist fast voll (%(free)d MB frei)."
 
-#: src/sysmanage_agent/backup/host_mount.py:115
+#: src/sysmanage_agent/backup/host_mount.py:136
 #, python-format
 msgid "The backup storage at %(where)s cannot take new files: %(error)s"
 msgstr ""
 "Der Sicherungsspeicher unter %(where)s kann keine neuen Dateien aufnehmen: "
 "%(error)s"
 
-#: src/sysmanage_agent/backup/host_mount.py:135
+#: src/sysmanage_agent/backup/host_mount.py:156
 #, python-format
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr ""
@@ -133,7 +133,18 @@ msgstr ""
 "Dieses restate kann ein verschlüsseltes Repository nicht entschlüsseln; "
 "aktualisieren Sie restate."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:86
+#: src/sysmanage_agent/backup/mount_mixin.py:28
+msgid ""
+"This host has no NFS client, so it cannot mount its backup storage. Click "
+"Equip for backup, or install it (nfs-common on Debian and Ubuntu, nfs-utils "
+"on RHEL and Fedora)."
+msgstr ""
+"Dieser Host hat keinen NFS-Client und kann daher seinen Sicherungsspeicher "
+"nicht einhängen. Klicken Sie auf \"Für Backup ausstatten\" oder installieren"
+" Sie ihn (nfs-common unter Debian und Ubuntu, nfs-utils unter RHEL und "
+"Fedora)."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:95
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -142,50 +153,51 @@ msgstr ""
 "Der Sicherungsspeicher ist nicht unter %(where)s eingehängt, und der Server "
 "hat noch nicht mitgeteilt, woher er eingehängt werden soll."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:99
+#: src/sysmanage_agent/backup/mount_mixin.py:110
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "Der Sicherungsspeicher %(source)s konnte nicht unter %(where)s eingehängt "
 "werden: %(error)s"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:107
+#: src/sysmanage_agent/backup/mount_mixin.py:118
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 "Der Sicherungsspeicher ist nach dem Einhängen nicht unter %(where)s "
 "eingehängt."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:124
+#: src/sysmanage_agent/backup/mount_mixin.py:135
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "Der Sicherungsspeicher unter %s hat nicht geantwortet."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:149
+#: src/sysmanage_agent/backup/mount_mixin.py:160
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Der Sicherungsspeicher unter %s konnte nicht ausgehängt werden: %s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:106
+#: src/sysmanage_agent/backup/storage_prepare.py:129
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
 "this storage host. Create it, then prepare again."
 msgstr ""
 "Das Sicherungs-Dienstkonto %(account)s (Benutzer und Gruppe) existiert auf "
-"diesem Speicher-Host nicht. Legen Sie es an und bereiten Sie dann erneut vor."
+"diesem Speicher-Host nicht. Legen Sie es an und bereiten Sie dann erneut "
+"vor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:136
+#: src/sysmanage_agent/backup/storage_prepare.py:159
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr ""
 "Der Agent kann %(path)s nicht lesen und daher nicht feststellen, ob dort "
-"Sicherungen liegen. Führen Sie den Agenten als root aus oder verschieben Sie "
-"das Verzeichnis, und bereiten Sie dann erneut vor."
+"Sicherungen liegen. Führen Sie den Agenten als root aus oder verschieben Sie"
+" das Verzeichnis, und bereiten Sie dann erneut vor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:147
+#: src/sysmanage_agent/backup/storage_prepare.py:170
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -194,12 +206,12 @@ msgid ""
 "remove it if those backups are no longer needed."
 msgstr ""
 "%(path)s enthält bereits Dateien, ist aber kein eigenes ZFS-Dataset, und "
-"beim Vorbereiten werden nie Sicherungen verschoben. Entweder 1) benennen Sie "
-"es um (zum Beispiel in %(path)s.old), bereiten erneut vor und kopieren "
+"beim Vorbereiten werden nie Sicherungen verschoben. Entweder 1) benennen Sie"
+" es um (zum Beispiel in %(path)s.old), bereiten erneut vor und kopieren "
 "seinen Inhalt als root in das neue Dataset; oder 2) entfernen Sie es, wenn "
 "diese Sicherungen nicht mehr benötigt werden."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:155
+#: src/sysmanage_agent/backup/storage_prepare.py:178
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -207,28 +219,29 @@ msgid ""
 "%(path)s.old), prepare again, and copy its contents into the new subvolume "
 "as root; or 2) remove it if those backups are no longer needed."
 msgstr ""
-"%(path)s enthält bereits Dateien, ist aber kein eigenes btrfs-Subvolume, und "
-"beim Vorbereiten werden nie Sicherungen verschoben. Entweder 1) benennen Sie "
-"es um (zum Beispiel in %(path)s.old), bereiten erneut vor und kopieren "
-"seinen Inhalt als root in das neue Subvolume; oder 2) entfernen Sie es, wenn "
-"diese Sicherungen nicht mehr benötigt werden."
+"%(path)s enthält bereits Dateien, ist aber kein eigenes btrfs-Subvolume, und"
+" beim Vorbereiten werden nie Sicherungen verschoben. Entweder 1) benennen "
+"Sie es um (zum Beispiel in %(path)s.old), bereiten erneut vor und kopieren "
+"seinen Inhalt als root in das neue Subvolume; oder 2) entfernen Sie es, wenn"
+" diese Sicherungen nicht mehr benötigt werden."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:186
+#: src/sysmanage_agent/backup/storage_prepare.py:209
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
 msgstr ""
-"Der Server kennt die IP-Adresse des gesicherten Hosts noch nicht, daher kann "
-"seine Freigabe nicht darauf beschränkt werden. Warten Sie, bis dieser Host "
+"Der Server kennt die IP-Adresse des gesicherten Hosts noch nicht, daher kann"
+" seine Freigabe nicht darauf beschränkt werden. Warten Sie, bis dieser Host "
 "seine Netzwerkdaten meldet, und bereiten Sie dann erneut vor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:197
+#: src/sysmanage_agent/backup/storage_prepare.py:220
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
-msgstr "Das Vorbereiten des Speichers wird unter %(system)s nicht unterstützt."
+msgstr ""
+"Das Vorbereiten des Speichers wird unter %(system)s nicht unterstützt."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:205
+#: src/sysmanage_agent/backup/storage_prepare.py:228
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -237,7 +250,7 @@ msgstr ""
 "Hosts ein eigenes ZFS-Dataset. Legen Sie den Speicherpfad auf ZFS an und "
 "bereiten Sie dann erneut vor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:271
+#: src/sysmanage_agent/backup/storage_prepare.py:296
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -249,7 +262,7 @@ msgstr ""
 "eingehängtes Dataset an (zfs create -o mountpoint=%(path)s POOL/NAME) und "
 "bereiten Sie dann erneut vor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:298
+#: src/sysmanage_agent/backup/storage_prepare.py:323
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -302,7 +315,8 @@ msgstr "Fehler beim Abfragen des Windows-Zertifikatspeichers %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
 "Zertifikatsbundle %s enthält mehr als %d Zertifikate; Bericht über die "
 "ersten %d"
@@ -359,7 +373,8 @@ msgstr "Fehler beim Abrufen des Microsoft Defender-Gesundheitsstatus: %s"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:333
 msgid "Timeout while querying Microsoft Defender status on macOS"
-msgstr "Zeitüberschreitung bei Abfrage des Microsoft Defender-Status auf macOS"
+msgstr ""
+"Zeitüberschreitung bei Abfrage des Microsoft Defender-Status auf macOS"
 
 #: src/sysmanage_agent/collection/commercial_antivirus_collection.py:338
 #, python-format
@@ -1478,7 +1493,8 @@ msgstr "Fehler bei der Herzenbeatsüberprüfung des Kindhosts: %s"
 #: src/sysmanage_agent/wsl/keepalive.py:241
 #, python-format
 msgid "Failed to start keep-alive for WSL instance %s: %s"
-msgstr "Fehler beim Starten der Keep-Alive-Funktion für die WSL-Instanz %s: %s"
+msgstr ""
+"Fehler beim Starten der Keep-Alive-Funktion für die WSL-Instanz %s: %s"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:364
 #: src/sysmanage_agent/wsl/keepalive.py:256
@@ -1760,7 +1776,8 @@ msgstr "Senden von Graylog-Statusdaten fehlgeschlagen"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:331
 msgid "Cannot send Graylog status data: no host approval"
-msgstr "Kann Graylog-Statusdaten nicht senden: keine Hostgenehmigung vorhanden"
+msgstr ""
+"Kann Graylog-Statusdaten nicht senden: keine Hostgenehmigung vorhanden"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:339
 msgid "Cannot send process data: no host approval"
@@ -1796,7 +1813,8 @@ msgstr "Hardwarezustand konnte nicht gesendet werden"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:469
 msgid "Cannot send compliance evidence: no host approval"
-msgstr "Compliance-Nachweise können nicht gesendet werden: keine Host-Freigabe"
+msgstr ""
+"Compliance-Nachweise können nicht gesendet werden: keine Host-Freigabe"
 
 #: src/sysmanage_agent/communication/data_collector_senders.py:478
 msgid "Failed to send compliance evidence"
@@ -1828,8 +1846,8 @@ msgstr "Konnte die Ausgangs-Warteschlange für das Polling nicht lesen"
 #, python-format
 msgid "Queued message %s is not readable JSON; not polling it"
 msgstr ""
-"Die Nachricht %s in der Warteschlange ist kein lesbares JSON; sie wird nicht "
-"per Polling gesendet"
+"Die Nachricht %s in der Warteschlange ist kein lesbares JSON; sie wird nicht"
+" per Polling gesendet"
 
 #: src/sysmanage_agent/communication/http_polling.py:158
 #, python-format
@@ -1843,8 +1861,8 @@ msgstr "Fehler beim Verarbeiten der übermittelten Nachricht %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Kann die HTTP-Fallbackfunktion nicht verwenden: Dieser Agent hat keine "
 "gespeicherte host_id. Die Registrierung muss zuerst abgeschlossen werden."
@@ -1858,8 +1876,8 @@ msgid ""
 msgstr ""
 "HTTP-Polling wird anstelle von WebSocket verwendet: Dieses Netzwerk hat die "
 "WebSocket-Aktualisierung abgelehnt. Befehle werden mit bis zu einigen "
-"Sekunden Verzögerung eintreffen. Erlauben Sie WebSocket-Aktualisierungen auf "
-"%s, um den sofortigen Versand wiederherzustellen."
+"Sekunden Verzögerung eintreffen. Erlauben Sie WebSocket-Aktualisierungen auf"
+" %s, um den sofortigen Versand wiederherzustellen."
 
 #: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
@@ -1900,7 +1918,8 @@ msgstr ""
 
 #: src/sysmanage_agent/communication/message_handler.py:396
 #: src/sysmanage_agent/communication/message_handler.py:732
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Die Host-Registrierung wartet auf Genehmigung. Periodische Versuche werden "
 "fortgesetzt."
@@ -1927,13 +1946,13 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:465
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "Der Server hat host_not_registered gemeldet (Strike %(n)d/%(limit)d) - "
-"Verbindung neu herstellen OHNE Ablaufen des host_id, damit der Server dieses "
-"Host aus seinem Tenant-Index erneut auflösen kann; Registrierung wird nur "
+"Verbindung neu herstellen OHNE Ablaufen des host_id, damit der Server dieses"
+" Host aus seinem Tenant-Index erneut auflösen kann; Registrierung wird nur "
 "erfolgen, wenn es anhält."
 
 #: src/sysmanage_agent/communication/message_handler.py:478
@@ -2393,59 +2412,64 @@ msgstr "Die Backup-Aufträge konnten nicht installiert werden: %s"
 msgid "This restate does not support: %s"
 msgstr "Diese restate-Version unterstützt nicht: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:453
+#: src/sysmanage_agent/operations/backup_operations.py:454
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr ""
 "Dieses restate kann %s nicht als Auftrag ausführen; aktualisieren Sie "
 "restate."
 
-#: src/sysmanage_agent/operations/backup_operations.py:561
+#: src/sysmanage_agent/operations/backup_operations.py:562
 msgid "restate is not installed on this host."
 msgstr "restate ist auf diesem Host nicht installiert."
 
-#: src/sysmanage_agent/operations/backup_operations.py:594
+#: src/sysmanage_agent/operations/backup_operations.py:595
 msgid "That backup job is already running."
 msgstr "Dieser Backup-Auftrag wird bereits ausgeführt."
 
-#: src/sysmanage_agent/operations/backup_operations.py:616
+#: src/sysmanage_agent/operations/backup_operations.py:617
 msgid "The backup job could not be started."
 msgstr "Der Backup-Auftrag konnte nicht gestartet werden."
 
-#: src/sysmanage_agent/operations/backup_operations.py:671
+#: src/sysmanage_agent/operations/backup_operations.py:672
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Die versiegelten Snapshots konnten nicht aufgelistet werden: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:686
+#: src/sysmanage_agent/operations/backup_operations.py:687
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr ""
 "Der alte versiegelte Snapshot %(name)s konnte nicht entfernt werden: "
 "%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:764
+#: src/sysmanage_agent/operations/backup_operations.py:762
+#, python-format
+msgid "%(dataset)s is not mounted at %(path)s on this host"
+msgstr "%(dataset)s ist auf diesem Host nicht unter %(path)s eingehängt"
+
+#: src/sysmanage_agent/operations/backup_operations.py:797
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 "Der Sicherungsspeicher für die Richtlinie %s konnte nicht vorbereitet "
 "werden: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:867
+#: src/sysmanage_agent/operations/backup_operations.py:915
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
 "%(unit)s on this host"
 msgstr ""
-"restate wurde beendet (Exit %(code)s), bevor ein Ergebnis geschrieben wurde; "
-"siehe journalctl -u %(unit)s auf diesem Host"
+"restate wurde beendet (Exit %(code)s), bevor ein Ergebnis geschrieben wurde;"
+" siehe journalctl -u %(unit)s auf diesem Host"
 
-#: src/sysmanage_agent/operations/backup_operations.py:895
+#: src/sysmanage_agent/operations/backup_operations.py:943
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "Die Speicherprüfung konnte nicht ausgeführt werden: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:913
+#: src/sysmanage_agent/operations/backup_operations.py:961
 msgid "Could not queue the backup report"
 msgstr "Der Backup-Bericht konnte nicht in die Warteschlange gestellt werden."
 
@@ -3091,13 +3115,13 @@ msgstr "Homebrew ist bereits installiert"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
 "Die Homebrew-Installation erfordert manuelle Eingriffe. Bitte installieren "
-"Sie mit: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/"
-"Homebrew/install/HEAD/install.sh)\""
+"Sie mit: /bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:335
 msgid "The installer script is unexpectedly large"
@@ -3154,7 +3178,8 @@ msgstr "Keine Pakete für Installation angegeben"
 #: src/sysmanage_agent/operations/package_operations.py:359
 #, python-format
 msgid "Failed to send installation completion to server: %s"
-msgstr "Fehler beim Senden der Installationserfolgsnachricht an den Server: %s"
+msgstr ""
+"Fehler beim Senden der Installationserfolgsnachricht an den Server: %s"
 
 #: src/sysmanage_agent/operations/package_operations.py:388
 msgid "No packages specified for uninstallation"
@@ -3597,7 +3622,8 @@ msgstr "Benutzer %s und Standardgruppe erfolgreich gelöscht"
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
 msgstr ""
-"Benutzer %s gelöschtedoch die Standardgruppe konnte nicht gelöscht werden: %s"
+"Benutzer %s gelöschtedoch die Standardgruppe konnte nicht gelöscht werden: "
+"%s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:38
 #: src/sysmanage_agent/operations/user_account_operations.py:124
@@ -3818,7 +3844,8 @@ msgstr "Bitte genehmigen Sie diesen Host im SysManage-Webinterface"
 #: src/sysmanage_agent/registration/registration_manager.py:263
 #, python-format
 msgid "Error processing registration success notification: %s"
-msgstr "Fehler beim Verarbeiten der Registrierungs-Erfolgsbenachrichtigung: %s"
+msgstr ""
+"Fehler beim Verarbeiten der Registrierungs-Erfolgsbenachrichtigung: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:301
 #, python-format
@@ -3890,8 +3917,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Cannot send time status: no host approval"
 #~ msgstr ""
-#~ "Kann die Zeitstatus-Information nicht senden: keine Genehmigung für den "
-#~ "Host"
+#~ "Kann die Zeitstatus-Information nicht senden: keine Genehmigung für den Host"
 
 #~ msgid "Failed to send time status"
 #~ msgstr "Nicht möglich, Zeitstatus zu senden"
@@ -3910,8 +3936,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "Broadcast %s: Inventuraktualisierung angefordert, aber data_collector "
-#~ "fehlt send_software_inventory_update"
+#~ "Broadcast %s: Inventuraktualisierung angefordert, aber data_collector fehlt "
+#~ "send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -4066,11 +4092,9 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgstr "Gefundenes Paket: %s v%s von Typ %s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr ""
-#~ "Doppelnachlauf-Rolle überspringen: %s mit Dienst %s (haben bereits Paket "
-#~ "%s)"
+#~ "Doppelnachlauf-Rolle überspringen: %s mit Dienst %s (haben bereits Paket %s)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -4222,8 +4246,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ ".wslconfig nicht gefunden, erstellt um automatisches WSL-Beenden bei %s "
-#~ "zu verhindern"
+#~ ".wslconfig nicht gefunden, erstellt um automatisches WSL-Beenden bei %s zu "
+#~ "verhindern"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -4334,11 +4358,11 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgstr "Paketbatch %s abgeschlossen"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Zertifikatssammlung im nicht privilegierten Modus - einige Zertifikate "
-#~ "sind möglicherweise nicht zugänglich"
+#~ "Zertifikatssammlung im nicht privilegierten Modus - einige Zertifikate sind "
+#~ "möglicherweise nicht zugänglich"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "SSL-Zertifikate vom System sammeln"
@@ -4408,8 +4432,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "Processing queued inbound command: %s (queue_id: %s)"
-#~ msgstr ""
-#~ "Verarbeitung der eingehenden Warteschlangebefehle: %s (queue_id: %s)"
+#~ msgstr "Verarbeitung der eingehenden Warteschlangebefehle: %s (queue_id: %s)"
 
 #, python-format
 #~ msgid "Successfully processed inbound message: %s"
@@ -4417,8 +4440,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "Process outbound queue called, current running status: %s"
-#~ msgstr ""
-#~ "Aufruf des Ausgehenden Warteschlangenprozessors, aktueller Status: %s"
+#~ msgstr "Aufruf des Ausgehenden Warteschlangenprozessors, aktueller Status: %s"
 
 #~ msgid "Queue processor already running, exiting"
 #~ msgstr "Warteschlangenprozessor ist bereits aktiv, verlasse Programm"
@@ -4441,8 +4463,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d hängende Nachrichten wiederhergestellt"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Aufgabe für die Ausgangswarteschlange erstellen aus "
 #~ "on_connection_established"
@@ -4456,8 +4477,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "Ausgehender Warteschlangenprozessor ist bereits aktiv, starte keinen "
 #~ "weiteren"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Aufgabe für die Eingangswarteschlange erstellen aus "
 #~ "on_connection_established"
@@ -4626,8 +4646,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 #~ msgstr ""
-#~ "Windows-Systemereignisprotokoll (dies kann 10-30 Sekunden dauern) "
-#~ "sammeln..."
+#~ "Windows-Systemereignisprotokoll (dies kann 10-30 Sekunden dauern) sammeln..."
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
@@ -4661,8 +4680,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 #~ msgstr ""
-#~ "Synchronisierte benutzerdefinierte Metriken: %d aktiv, %d ignoriert "
-#~ "(nicht gültig)"
+#~ "Synchronisierte benutzerdefinierte Metriken: %d aktiv, %d ignoriert (nicht "
+#~ "gültig)"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
@@ -4797,8 +4816,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
-#~ msgstr ""
-#~ "Update-Anfrage empfangen: package='%s', manager='%s', bundle_id='%s'"
+#~ msgstr "Update-Anfrage empfangen: package='%s', manager='%s', bundle_id='%s'"
 
 #, python-format
 #~ msgid "Using detected package manager '%s' for %s"
@@ -4810,8 +4828,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid "Waiting for reconnection to send update results (attempt %d/%d)"
 #~ msgstr ""
-#~ "Warten auf Wiederverbindung zum Senden der Update-Ergebnisse (Versuch %d/"
-#~ "%d)"
+#~ "Warten auf Wiederverbindung zum Senden der Update-Ergebnisse (Versuch %d/%d)"
 
 #~ msgid "Rescanning for available updates after batch completion"
 #~ msgstr "Erneutes Scannen nach verfügbaren Updates nach Batch-Abschluss"
@@ -4971,11 +4988,10 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ msgstr "Registrierung erhalten, aber Bestätigung noch ausstehend"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Registrierung erfolgreich, jedoch keine Host-ID bereitgestellt - "
-#~ "Genehmigung kann separat erfolgen"
+#~ "Registrierung erfolgreich, jedoch keine Host-ID bereitgestellt - Genehmigung"
+#~ " kann separat erfolgen"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4987,8 +5003,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
-#~ "System-Info nach Genehmigung zum Aktualisieren des "
-#~ "Backendverbindungsstatus in die Warteschlange gelegt"
+#~ "System-Info nach Genehmigung zum Aktualisieren des Backendverbindungsstatus "
+#~ "in die Warteschlange gelegt"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
@@ -5022,8 +5038,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "Der Server meldet, dass der Host nicht registriert ist. Speicherter "
-#~ "host_id wird gelöscht und Wiederregistrierung ausgelôst..."
+#~ "Der Server meldet, dass der Host nicht registriert ist. Speicherter host_id "
+#~ "wird gelöscht und Wiederregistrierung ausgelôst..."
 
 #, python-format
 #~ msgid "Using database path from SYSMANAGE_DB_PATH: %s"
@@ -5043,8 +5059,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid "System directory exists, using system database path: %s"
-#~ msgstr ""
-#~ "Systemverzeichnis vorhanden, System-Datenbankpfad wird verwendet: %s"
+#~ msgstr "Systemverzeichnis vorhanden, System-Datenbankpfad wird verwendet: %s"
 
 #, python-format
 #~ msgid "Falling back to local database path: %s"
@@ -5131,11 +5146,11 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Microsoft Defender for Endpoint auf macOS erkannt (Version: %s, "
-#~ "aktiviert: %s, lizenziert: %s)"
+#~ "Microsoft Defender for Endpoint auf macOS erkannt (Version: %s, aktiviert: "
+#~ "%s, lizenziert: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5187,8 +5202,7 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #, python-format
 #~ msgid "Found %d OpenBSD system patches (combined into single update)"
 #~ msgstr ""
-#~ "%d OpenBSD-Systempatches gefunden (zu einem einzigen Update "
-#~ "zusammengefasst)"
+#~ "%d OpenBSD-Systempatches gefunden (zu einem einzigen Update zusammengefasst)"
 
 #, python-format
 #~ msgid "Current OpenBSD version: %s"
@@ -5264,8 +5278,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
 #~ msgstr ""
-#~ "OpenTelemetry-Bereitstellung auf %s wird derzeit nicht unterstützt. "
-#~ "Manuelle Installation erforderlich."
+#~ "OpenTelemetry-Bereitstellung auf %s wird derzeit nicht unterstützt. Manuelle"
+#~ " Installation erforderlich."
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -5485,8 +5499,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "HTTP port %d already in use, autoinstall may still work"
 #~ msgstr ""
-#~ "HTTP-Port %d bereits in Verwendung, Autoinstall funktioniert "
-#~ "möglicherweise trotzdem"
+#~ "HTTP-Port %d bereits in Verwendung, Autoinstall funktioniert möglicherweise "
+#~ "trotzdem"
 
 #~ msgid "Stopped autoinstall HTTP server"
 #~ msgstr "Autoinstall HTTP-Server gestoppt"
@@ -5511,13 +5525,12 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Timeout waiting for autoinstall to fetch install.conf"
 #~ msgstr ""
-#~ "Zeitüberschreitung beim Warten auf Abruf von install.conf durch "
-#~ "Autoinstall"
+#~ "Zeitüberschreitung beim Warten auf Abruf von install.conf durch Autoinstall"
 
 #~ msgid "Could not encrypt password, using plain text (NOT RECOMMENDED)"
 #~ msgstr ""
-#~ "Passwort konnte nicht verschlüsselt werden, Klartext wird verwendet "
-#~ "(NICHT EMPFOHLEN)"
+#~ "Passwort konnte nicht verschlüsselt werden, Klartext wird verwendet (NICHT "
+#~ "EMPFOHLEN)"
 
 #~ msgid "Port already in use"
 #~ msgstr "Port bereits in Verwendung"
@@ -5605,8 +5618,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM ist auf diesem System nicht verfügbar. Stellen Sie sicher, dass /dev/"
-#~ "kvm existiert und CPU-Virtualisierung im BIOS aktiviert ist."
+#~ "KVM ist auf diesem System nicht verfügbar. Stellen Sie sicher, dass /dev/kvm"
+#~ " existiert und CPU-Virtualisierung im BIOS aktiviert ist."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM ist bereits initialisiert und einsatzbereit"
@@ -5786,8 +5799,8 @@ msgstr "Fehler beim Prüfen der WSL-Unterstützung: %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Virtualisierungsstatus-Update für den Versand an den Server in "
-#~ "Warteschlange gestellt"
+#~ "Virtualisierungsstatus-Update für den Versand an den Server in Warteschlange"
+#~ " gestellt"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img nicht gefunden, versuche zu installieren: %s"

@@ -2,21 +2,36 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Equip this host for backups: install restate (ROADMAP Phase 24).
+"""Equip this host for backups: install restate and the NFS client (Phase 24).
 
-Where restate is packaged for a host the agent can back up:
+Where restate is packaged, by how this agent installs it:
 
-* **Ubuntu 22.04, 24.04 and 26.04** -- restate's PPA, then ``apt-get install``.
-* **FreeBSD (amd64)** -- the binary package attached to restate's newest
-  GitHub release for this FreeBSD release, checked against the release's
-  ``SHA256SUMS`` before ``pkg add``.  A FreeBSD host is a storage host only.
+* **Ubuntu 22.04, 24.04 and 26.04** -- restate's PPA, then ``apt-get install``
+  of restate and the NFS client (``nfs-common``): a backed-up host mounts its
+  storage over NFS, and without the client it never can (production,
+  nextcloud, 2026-10-29).  Installing both again is harmless, so Equip also
+  fixes a host whose restate is current but whose NFS client is missing.
+* **Fedora** -- restate's COPR (``dnf copr enable bceverly/restate``, after
+  the copr command itself), then ``dnf install`` of restate and ``nfs-utils``.
+* **RHEL 9 and 10 and their rebuilds** (AlmaLinux, Rocky, CentOS Stream,
+  Oracle Linux), **openSUSE Leap 16 / SLE 16 and Tumbleweed**, **Alpine 3.21
+  to 3.24**, **FreeBSD, OpenBSD and NetBSD (amd64)** -- the package attached
+  to restate's newest GitHub release for this system, release and processor,
+  checked against the release's ``SHA256SUMS`` before it is installed with
+  the NFS client (``backup/equip_release.py``).  The BSDs have the NFS client
+  in the base system.
+* **macOS** -- restate's Homebrew formula (``bceverly/tap/restate``), run as
+  the user who owns Homebrew (it refuses root); where Homebrew is not
+  installed, Equip is not offered.  The NFS client is in the base system.
+
+Not offered: Debian and every other Linux (restate is built from source
+there, by hand), and Windows (restate does not run there) -- reason
+``wrong_platform``.
 
 Everything that decides what runs is HERE: the server sends no URL, package
-name or command, only "equip".  The download address is restate's own
-release page, the file name is built from this host's release, and nothing is
-installed unless its checksum matches the release's list.  Elsewhere (other
-Linux distributions, and the BSDs the agent does not yet run backups on)
-restate is built from source, which an operator does by hand.
+name or command, only "equip".  Downloads come only from restate's own
+release page, file names are built from this host's release, and nothing is
+installed unless its checksum matches the release's list.
 
 Failures come back as reason codes the server translates: ``unsupported``,
 ``no_release`` (no package for this OS release), ``download_failed``,
@@ -24,31 +39,51 @@ Failures come back as reason codes the server translates: ``unsupported``,
 """
 
 import asyncio
-import hashlib
 import os
 import platform
-import posixpath
-import re
-import urllib.request
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
 
+# Unix-only: the agent also runs on Windows, where pwd does not exist.
+try:
+    import pwd
+except ImportError:  # pragma: no cover - Windows
+    pwd = None  # type: ignore[assignment]
+
+from src.sysmanage_agent.backup import equip_release as release
 from src.sysmanage_agent.backup import restate_probe
 
+# Kept here for callers and tests that name them on this module.
+RELEASES_URL = release.RELEASES_URL
+EQUIP_DIR = release.EQUIP_DIR
+parse_sums = release.parse_sums
+version_from_url = release.version_from_url
+freebsd_release = release.release_of
+_fetch = release.fetch
+
 PPA = "ppa:bceverly/restate"
+COPR = "bceverly/restate"
+FORMULA = "bceverly/tap/restate"
+NFS_CLIENT_PACKAGE = "nfs-common"
 UBUNTU_RELEASES = ("22.04", "24.04", "26.04")
-RELEASES_URL = "https://github.com/bceverly/restate/releases"
-FREEBSD_MACHINES = ("amd64", "x86_64")
-# The equip directory under the agent's state dir; sudoers lets pkg add only
-# a restate package from exactly here (installer/freebsd/sysmanage-agent.sudoers).
-EQUIP_DIR = "equip"
-MAX_PACKAGE_BYTES = 64 * 1024 * 1024
-MAX_SUMS_BYTES = 64 * 1024
-DOWNLOAD_SECONDS = 120
+EL_IDS = ("rhel", "almalinux", "rocky", "centos", "ol")
+EL_RELEASES = ("9", "10")
+SUSE_LEAP_IDS = ("opensuse-leap", "sles", "sled", "sle")
+ALPINE_RELEASES = ("3.21", "3.22", "3.23", "3.24")
+LINUX_ARCHES = {"x86_64": "x86_64", "amd64": "x86_64",
+                "aarch64": "aarch64", "arm64": "aarch64"}  # fmt: skip
+BSD_MACHINES = ("amd64", "x86_64")
+HOMEBREW = ("/opt/homebrew/bin/brew", "/usr/local/bin/brew")
 INSTALL_SECONDS = 600
 
-_VERSION = r"[0-9]+(?:\.[0-9]+){3}"
-_TAG = re.compile(r"/releases/tag/v(" + _VERSION + r")$")
-_RELEASE = re.compile(r"^([0-9]+\.[0-9]+)")
+UBUNTU, FEDORA, MACOS = "ubuntu", "fedora", "macos"
+
+
+class Target(NamedTuple):
+    """How this host is equipped: the kind, its release, its processor."""
+
+    kind: str
+    release: str
+    arch: str
 
 
 def _os_release(path: str = "/etc/os-release") -> Dict[str, str]:
@@ -63,70 +98,89 @@ def _os_release(path: str = "/etc/os-release") -> Dict[str, str]:
     return found
 
 
+def _linux_target(info: Dict[str, str], machine: str) -> Optional[Target]:
+    ident, version = info.get("ID", ""), info.get("VERSION_ID", "")
+    arch = LINUX_ARCHES.get(machine, "")
+    major = version.split(".")[0]
+    if ident == "ubuntu" and version in UBUNTU_RELEASES:
+        return Target(UBUNTU, version, arch)
+    if not arch:
+        return None
+    if ident == "fedora":
+        return Target(FEDORA, version, arch)
+    if ident in EL_IDS and major in EL_RELEASES:
+        return Target(release.EL, major, arch)
+    if ident == "opensuse-tumbleweed":
+        return Target(release.TUMBLEWEED, "", arch)
+    if ident in SUSE_LEAP_IDS and major == "16":
+        return Target(release.LEAP, "16.0", arch)
+    if ident == "alpine" and release.release_of(version) in ALPINE_RELEASES:
+        return Target(release.ALPINE, release.release_of(version) or "", arch)
+    return None
+
+
+def target(
+    system: str,
+    os_release: Optional[Dict[str, str]] = None,
+    machine: Optional[str] = None,
+    release_text: Optional[str] = None,
+    exists: Callable = os.path.exists,
+) -> Optional[Target]:
+    """How this host is equipped, or None where it cannot be."""
+    machine = machine or platform.machine()
+    if system == "Linux":
+        info = os_release if os_release is not None else _os_release()
+        return _linux_target(info, machine)
+    if system in ("FreeBSD", "OpenBSD", "NetBSD") and machine in BSD_MACHINES:
+        found = release.release_of(release_text or platform.release()) or ""
+        return Target(system.lower(), found, "amd64")
+    if system == "Darwin" and any(exists(path) for path in HOMEBREW):
+        return Target(MACOS, "", machine)
+    return None
+
+
 def unavailable_reason(
     _lookup: Optional[Callable] = None,
     system: Optional[str] = None,
     os_release: Optional[Dict[str, str]] = None,
     machine: Optional[str] = None,
+    exists: Callable = os.path.exists,
 ) -> Optional[str]:
     """None where this agent can equip the host, else ``wrong_platform``
     (a capability reason: not applicable here, so not a "limited" agent)."""
-    system = system or platform.system()
-    if system == "Linux":
-        info = os_release if os_release is not None else _os_release()
-        if info.get("ID") == "ubuntu" and info.get("VERSION_ID") in UBUNTU_RELEASES:
-            return None
-    elif system == "FreeBSD" and (machine or platform.machine()) in FREEBSD_MACHINES:
-        return None
-    return restate_probe.REASON_WRONG_PLATFORM
+    found = target(system or platform.system(), os_release, machine, exists=exists)
+    return None if found else restate_probe.REASON_WRONG_PLATFORM
 
 
 def ubuntu_steps() -> List[List[str]]:
-    """The PPA (add-apt-repository refreshes the package lists), then restate."""
-    return [["add-apt-repository", "-y", PPA], ["apt-get", "install", "-y", "restate"]]
+    """The PPA (add-apt-repository refreshes the package lists), then restate
+    and the NFS client."""
+    return [
+        ["add-apt-repository", "-y", PPA],
+        ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE],
+    ]
 
 
-def freebsd_release(release_text: str) -> Optional[str]:
-    """``14.4`` from ``14.4-RELEASE-p8``."""
-    match = _RELEASE.match(release_text or "")
-    return match.group(1) if match else None
+def fedora_steps() -> List[List[str]]:
+    """The copr command (dnf-plugins-core, or dnf5's plugins), restate's
+    COPR, then restate and the NFS client."""
+    return [
+        ["dnf", "install", "-y", "dnf-command(copr)"],
+        ["dnf", "-y", "copr", "enable", COPR],
+        ["dnf", "install", "-y", "restate", "nfs-utils"],
+    ]
 
 
-def asset_name(version: str, release: str) -> str:
-    return f"restate-{version}-freebsd-{release}-amd64.pkg"
+def asset_name(version: str, release_name: str) -> str:
+    """FreeBSD's package for this release (amd64)."""
+    return f"restate-{version}-freebsd-{release_name}-amd64.pkg"
 
 
-def parse_sums(text: str) -> Dict[str, str]:
-    """``{file name: sha256}`` from a release's ``SHA256SUMS``."""
-    found = {}
-    for line in text.splitlines():
-        fields = line.split()
-        if len(fields) == 2 and re.fullmatch(r"[0-9a-f]{64}", fields[0]):
-            found[posixpath.basename(fields[1])] = fields[0]
-    return found
-
-
-def version_from_url(url: str) -> Optional[str]:
-    """The release version from the URL ``/releases/latest`` redirected to."""
-    match = _TAG.search(url or "")
-    return match.group(1) if match else None
-
-
-def _fetch(url: str, limit: int) -> Tuple[str, bytes]:
-    """``(final URL, body)``; raises OSError past ``limit`` bytes."""
-    # Only ever restate's own https release URLs, built in this module.
-    request = urllib.request.Request(url, headers={"User-Agent": "sysmanage-agent"})
-    opened = urllib.request.urlopen(request, timeout=DOWNLOAD_SECONDS)  # nosec B310
-    with opened as answer:
-        body = answer.read(limit + 1)
-        if len(body) > limit:
-            raise OSError(f"{url} is larger than {limit} bytes")
-        return answer.geturl(), body
-
-
-def _privileged(argv: List[str]) -> List[str]:
+def _privileged(argv: List[str], system: Optional[str] = None) -> List[str]:
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         return list(argv)
+    if (system or platform.system()) == "OpenBSD":
+        return ["doas", "-n"] + list(argv)
     return ["sudo", "-n"] + list(argv)
 
 
@@ -143,74 +197,67 @@ async def _run(argv: List[str]) -> Tuple[int, str]:
     return proc.returncode or 0, out.decode("utf-8", "replace")
 
 
-def _failed(reason: str, detail: str = "") -> Dict[str, object]:
-    return {"success": False, "reason": reason, "detail": detail[-800:]}
+_failed = release.failed
 
 
-async def equip(
-    state_dir: str,
-    run: Callable = _run,
-    fetch: Callable = _fetch,
-    system: Optional[str] = None,
-    release_text: Optional[str] = None,
-) -> Dict[str, object]:
-    """Install restate on this host; ``{"success": True, "installed"}`` or a
-    failure with its reason code and the tool's last output."""
-    system = system or platform.system()
-    if unavailable_reason(system=system):
-        return _failed("unsupported")
-    if system == "Linux":
-        for argv in ubuntu_steps():
-            code, out = await run(_privileged(argv))
-            if code:
-                return _failed("install_failed", out)
-        return {"success": True, "installed": "ppa"}
-    return await _equip_freebsd(
-        state_dir, run, fetch, release_text or platform.release()
-    )
+async def _steps(run: Callable, steps: List[List[str]], installed: str):
+    for argv in steps:
+        code, out = await run(_privileged(argv))
+        if code:
+            return _failed("install_failed", out)
+    return {"success": True, "installed": installed}
 
 
-async def _equip_freebsd(
-    state_dir: str, run: Callable, fetch: Callable, release_text: str
-) -> Dict[str, object]:
-    release = freebsd_release(release_text)
-    loop = asyncio.get_running_loop()
-    try:
-        final, _ = await loop.run_in_executor(
-            None, fetch, RELEASES_URL + "/latest", 1 << 20
-        )
-        version = version_from_url(final)
-        if not version:
-            return _failed("download_failed", f"no release version in {final}")
-        base = f"{RELEASES_URL}/download/v{version}/"
-        _, sums = await loop.run_in_executor(
-            None, fetch, base + "SHA256SUMS", MAX_SUMS_BYTES
-        )
-        listed = parse_sums(sums.decode("utf-8", "replace"))
-        name = asset_name(version, release or "")
-        if not release or name not in listed:
-            offered = sorted(n for n in listed if "-freebsd-" in n)
-            return _failed("no_release", ", ".join(offered))
-        _, package = await loop.run_in_executor(
-            None, fetch, base + name, MAX_PACKAGE_BYTES
-        )
-    except OSError as error:
-        return _failed("download_failed", str(error))
-    if hashlib.sha256(package).hexdigest() != listed[name]:
-        return _failed("checksum_mismatch", name)
-    folder = posixpath.join(state_dir, EQUIP_DIR)
-    path = posixpath.join(folder, name)
-    os.makedirs(folder, mode=0o755, exist_ok=True)
-    try:
-        with open(path, "wb") as handle:
-            handle.write(package)
-        os.chmod(path, 0o644)
-        code, out = await run(_privileged(["pkg", "add", "-f", path]))
-    finally:
-        try:
-            os.unlink(path)
-        except OSError:
-            pass
+def homebrew_argv(
+    exists: Callable = os.path.exists, stat: Callable = os.stat
+) -> Optional[List[str]]:
+    """``brew install`` of restate's formula as Homebrew's owner (brew
+    refuses root), or None when that cannot be done."""
+    brew = next((path for path in HOMEBREW if exists(path)), None)
+    if brew is None:
+        return None
+    argv = [brew, "install", FORMULA]
+    if not (hasattr(os, "geteuid") and os.geteuid() == 0):
+        return argv  # the agent's own user, which must own Homebrew
+    owner = pwd.getpwuid(stat(brew).st_uid).pw_name if pwd else ""
+    if not owner or owner == "root":
+        return None
+    return ["sudo", "-u", owner, "-H"] + argv
+
+
+async def _equip_macos(run: Callable, exists: Callable, stat: Callable):
+    argv = homebrew_argv(exists, stat)
+    if argv is None:
+        return _failed("unsupported", "Homebrew is not installed, or is root's")
+    code, out = await run(argv)
     if code:
         return _failed("install_failed", out)
-    return {"success": True, "installed": version}
+    return {"success": True, "installed": "homebrew"}
+
+
+async def equip(  # pylint: disable=too-many-arguments
+    state_dir: str,
+    run: Callable = _run,
+    fetch: Callable = release.fetch,
+    system: Optional[str] = None,
+    release_text: Optional[str] = None,
+    exists: Callable = os.path.exists,
+    stat: Callable = os.stat,
+) -> Dict[str, object]:
+    """Install restate (and the NFS client) on this host; ``{"success": True,
+    "installed"}`` or a failure with its reason code and the tool's last
+    output."""
+    system = system or platform.system()
+    found = target(system, release_text=release_text, exists=exists)
+    if found is None:
+        return _failed("unsupported")
+    if found.kind == UBUNTU:
+        return await _steps(run, ubuntu_steps(), "ppa")
+    if found.kind == FEDORA:
+        return await _steps(run, fedora_steps(), "copr")
+    if found.kind == MACOS:
+        return await _equip_macos(run, exists, stat)
+    return await release.install(
+        found.kind, found.release, found.arch, state_dir, run, fetch,
+        lambda argv: _privileged(argv, system),
+    )  # fmt: skip

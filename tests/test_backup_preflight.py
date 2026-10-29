@@ -36,15 +36,27 @@ def test_a_repository_before_its_first_capture_passes_and_stays_empty(tmp_path):
     assert os.listdir(tmp_path) == []
 
 
-def test_a_repository_that_takes_no_files_is_refused(tmp_path):
-    tmp_path.chmod(0o500)
+def test_a_repository_it_cannot_enter_is_refused(tmp_path):
+    tmp_path.chmod(0o000)
     try:
-        if os.access(tmp_path, os.W_OK):
+        if os.access(tmp_path, os.R_OK):
             pytest.skip("running as root: permissions do not apply")
         reason = host_mount.preflight(str(tmp_path))
     finally:
         tmp_path.chmod(0o700)
     assert reason and "cannot take new files" in reason
+
+
+def test_an_append_only_repository_over_nfs_passes(tmp_path, monkeypatch):
+    """NFS answers access(W_OK) false for an append-only directory (no
+    DELETE right) although files can be made there: never asked."""
+    real = os.access
+
+    def nfs_access(path, mode):
+        return False if mode & os.W_OK else real(path, mode)
+
+    monkeypatch.setattr(host_mount.os, "access", nfs_access)
+    assert host_mount.preflight(str(tmp_path)) is None
 
 
 def test_a_lock_file_it_cannot_open_is_refused(tmp_path):

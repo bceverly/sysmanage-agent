@@ -77,12 +77,33 @@ def mounted_nfs(where: str, mounts: Dict[str, str]) -> bool:
     return mounts.get(posixpath.normpath(where)) in NFS_TYPES
 
 
+# Linux mounts NFS through a mount helper from the NFS client package
+# (nfs-common, nfs-utils); without one, mount(8) and systemd-mount fail with
+# nothing better than "Job failed" (production, nextcloud, 2026-10-29).  The
+# BSDs and macOS have it in the base system.
+NFS_HELPERS = ("/sbin/mount.nfs4", "/usr/sbin/mount.nfs4",
+               "/sbin/mount.nfs", "/usr/sbin/mount.nfs")  # fmt: skip
+
+
+def nfs_client_missing(system: str, exists=os.path.exists) -> bool:
+    """A Linux host with no NFS mount helper cannot mount its storage."""
+    return system == "Linux" and not any(exists(path) for path in NFS_HELPERS)
+
+
 # Pre-flight before a capture writes anything (24.1): the repository must
-# take new files, its lock must work -- NFS locking is what keeps a capture
+# be reachable, its lock must work -- NFS locking is what keeps a capture
 # and a storage-side prune apart -- and it must have room.  Read-only jobs
 # skip it.  It makes no file: the repository's top is append-only on the
 # storage host (chattr +a), so anything made there could never be removed,
 # and ``capture --create`` refuses a directory with anything in it.
+#
+# It does NOT ask access(W_OK) of the directory.  Over NFS, access(2) is the
+# server's ACCESS answer, and a directory write needs its DELETE bit too; on
+# an append-only directory Linux nfsd withholds DELETE (removing needs the
+# truncate right, which the append-only flag refuses), so W_OK is false for
+# every correctly prepared repository although creating files works
+# (proven on nas, 2026-10-29).  Writing is proven by the lock test where
+# there is a lock, and by restate itself on the first capture.
 MIN_FREE_BYTES = 1 << 30
 MIN_FREE_FRACTION = 0.01
 PREFLIGHT_SECONDS = 30
@@ -98,7 +119,7 @@ def preflight(where: str) -> Optional[str]:
     file I/O on an NFS mount: call it off the event loop, with a timeout."""
     # Over NFS, access(2) asks the server, so it answers for the export's
     # squashed account, not for this host's user.
-    if not os.access(where, os.W_OK | os.X_OK):
+    if not os.access(where, os.R_OK | os.X_OK):
         return _cannot_write(where, os.strerror(errno.EACCES))
     reason = _lock_works(posixpath.join(where, LOCK_FILE), where)
     if reason:

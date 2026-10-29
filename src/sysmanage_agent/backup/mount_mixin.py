@@ -11,6 +11,7 @@ namespace once let a capture write to the host's own disk).
 """
 
 import asyncio
+import platform
 import posixpath
 from typing import Any, Dict, Optional
 
@@ -20,6 +21,14 @@ from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import repository_choice
 
 MOUNTS_FILE = "mounts.json"
+
+
+def no_nfs_client() -> str:
+    return _(
+        "This host has no NFS client, so it cannot mount its backup storage. "
+        "Click Equip for backup, or install it (nfs-common on Debian and "
+        "Ubuntu, nfs-utils on RHEL and Fedora)."
+    )
 
 
 def _read_text(path: str) -> Optional[str]:
@@ -89,6 +98,8 @@ class BackupMountMixin:
 
     async def _mount_export(self, source: Dict[str, Any], where: str) -> Optional[str]:
         """Mount ``source`` at ``where``; None, or why it failed."""
+        if host_mount.nfs_client_missing(platform.system()):
+            return no_nfs_client()
         systemd = host_mount.systemd_running()
         for argv in (
             ["mkdir", "-p", where],

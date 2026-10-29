@@ -91,6 +91,66 @@ async def test_prepare_creates_exports_and_protects_in_order(prepare_env, agent)
     assert report["storage_audit"][0]["code"] == "export_own"  # re-audited
 
 
+def _zfs_prepare(prepare_env, monkeypatch, mounted_after):
+    """Linux ZFS under systemd; the host's mount table shows the dataset
+    once ``zfs mount`` has run (or never, with mounted_after=None)."""
+    repo = "/srv/backups/restate/h-1"
+    monkeypatch.setattr(ops_module.storage_fs, "describe",
+                        lambda *a, **k: {"type": "zfs"})  # fmt: skip
+    monkeypatch.setattr(prepare_env, "_zfs_datasets",
+                        AsyncMock(return_value={"/srv/backups/restate": "tank/b"}))  # fmt: skip
+    monkeypatch.setattr(ops_module.host_mount, "systemd_running", lambda: True)
+    table = f"1 2 0:5 / {repo} rw - zfs tank/b/h-1 rw\n"
+
+    real = ops_module._read_text
+
+    def read_text(path):
+        if path != ops_module.host_mount.HOST_MOUNTINFO:
+            return real(path)
+        ran = prepare_env.fake.ran(mounted_after) if mounted_after else False
+        return table if ran else ""
+
+    monkeypatch.setattr(ops_module, "_read_text", read_text)
+    return repo
+
+
+@pytest.mark.asyncio
+async def test_linux_zfs_is_created_and_mounted_in_the_hosts_namespace(
+    prepare_env, agent, monkeypatch
+):
+    repo = _zfs_prepare(prepare_env, monkeypatch, mounted_after="nsenter")
+    await prepare_env.backup_configure(_prepare_policy())
+    await prepare_env.backup_run({"run_id": RID, "policy_id": PID, "action": "prepare"})
+    await _drain(prepare_env)
+    bare = [c[2:] if c[:2] == ["sudo", "-n"] else c for c in prepare_env.fake.calls]
+    host_ns = ["nsenter", "--mount=/proc/1/ns/mnt", "--"]
+    create = bare.index([*host_ns, "/usr/sbin/zfs", "create", "tank/b/h-1"])
+    assert create < bare.index(["exportfs", "-ra"]) < bare.index(
+        ["chown", "root:restate", repo])  # fmt: skip
+    assert [*host_ns, "/usr/sbin/zfs", "mount", "tank/b/h-1"] not in bare
+    assert _sent(agent, "backup_result")[0]["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_a_dataset_not_mounted_host_wide_is_never_prepared_beneath(
+    prepare_env, agent, monkeypatch
+):
+    """The production failure: mounted for the agent alone, NFS exported the
+    directory beneath.  Now it is mounted host-wide, or the prepare fails."""
+    _zfs_prepare(prepare_env, monkeypatch, mounted_after=None)
+    await prepare_env.backup_configure(_prepare_policy())
+    await prepare_env.backup_run({"run_id": RID, "policy_id": PID, "action": "prepare"})
+    await _drain(prepare_env)
+    bare = [c[2:] if c[:2] == ["sudo", "-n"] else c for c in prepare_env.fake.calls]
+    assert ["nsenter", "--mount=/proc/1/ns/mnt", "--", "/usr/sbin/zfs", "mount",
+            "tank/b/h-1"] in bare  # fmt: skip
+    report = _sent(agent, "backup_result")[0]
+    assert (
+        report["status"] == "failed" and "not mounted" in report["result"]["errors"][0]
+    )
+    assert not prepare_env.fake.ran("exportfs") and not prepare_env.fake.ran("chown")
+
+
 @pytest.mark.asyncio
 async def test_a_refused_prepare_reports_why(prepare_env, agent, monkeypatch):
     monkeypatch.setattr(ops_module.platform, "system", lambda: "FreeBSD")
@@ -137,6 +197,7 @@ def mounts(ops, monkeypatch):
     """Fake mount table: mount/umount through FakeRun change it."""
     table = {}
     real = ops.fake.__call__
+    monkeypatch.setattr(ops_module.host_mount, "nfs_client_missing", lambda *a: False)
 
     async def run(argv):
         bare = argv[2:] if argv[:2] == ["sudo", "-n"] else argv
@@ -184,6 +245,34 @@ async def test_the_export_is_mounted_for_the_job_and_unmounted_after(
     assert ops.fake.ran("umount", WHERE) and WHERE not in mounts
     assert ops._load("mounts.json") == {}
     assert _sent(agent, "backup_result")[0]["status"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_a_host_without_an_nfs_client_is_told_so_plainly(
+    ops, job_files, mounts, monkeypatch
+):
+    """Not systemd's "Job failed" (nextcloud, 2026-10-29): nothing is tried."""
+    monkeypatch.setattr(ops_module.host_mount, "nfs_client_missing", lambda *a: True)
+    target = {"mount_point": "/mnt/sysmanage-backup", "repo_dir": "nas-1", "nfs": NFS}
+    await ops.backup_configure(_host_policy(target=target))
+    _touch_jobs(job_files, "capture")
+    answer = await ops.backup_run(
+        {"run_id": RID, "policy_id": PID, "action": "capture"}
+    )
+    assert answer["success"] is False and "no NFS client" in answer["error"]
+    assert "nfs-common" in answer["error"] and not ops.fake.ran("mount", "-t", "nfs4")
+
+
+def test_the_nfs_client_is_found_by_its_mount_helper():
+    from src.sysmanage_agent.backup import (
+        host_mount,
+    )  # pylint: disable=import-outside-toplevel
+
+    assert host_mount.nfs_client_missing("Linux", lambda path: False)
+    assert not host_mount.nfs_client_missing(
+        "Linux", lambda p: p == "/usr/sbin/mount.nfs"
+    )
+    assert not host_mount.nfs_client_missing("FreeBSD", lambda path: False)
 
 
 @pytest.mark.asyncio

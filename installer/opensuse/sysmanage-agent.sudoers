@@ -311,6 +311,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume snapshot -r *, /usr
 # (installed with ``install``, then ``exportfs -ra``).  The agent builds every
 # argument from the policy it validated; ownership uses chown/chmod above.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs create *
+# ZFS's create and mount run in the host's mount namespace (PID 1's): the
+# agent's unit (PrivateTmp/ProtectHome) has its own, and a dataset mounted
+# there alone left NFS exporting the empty directory beneath it.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- /usr/sbin/zfs create *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- /usr/sbin/zfs mount *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume create *, /usr/sbin/btrfs subvolume create *, /sbin/btrfs subvolume create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/exportfs -ra
 # Then the repository directory is made append-only for the hosts with the

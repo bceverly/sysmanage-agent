@@ -67,6 +67,7 @@ def test_ubuntu_adds_the_ppa_then_installs(monkeypatch):
     assert result == {"success": True, "installed": "ppa"}
     bare = [a[2:] if a[:2] == ["sudo", "-n"] else a for a in ran]
     assert bare == equip.ubuntu_steps()
+    assert bare[-1] == ["apt-get", "install", "-y", "restate", "nfs-common"]
 
 
 def test_a_failing_apt_step_reports_install_failed(monkeypatch):

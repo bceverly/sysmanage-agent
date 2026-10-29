@@ -719,8 +719,17 @@ class BackupOperations(BackupMountMixin):
                  storage_prepare.BTRFS: _first(BTRFS_PATHS)}  # fmt: skip
         # The dataset / subvolume / directory first, then its export, then
         # its ownership (chown needs the new mount, not the directory under it).
+        systemd = host_mount.systemd_running()
         for argv in steps["commands"]:
-            await self._checked([tools.get(argv[0], argv[0])] + argv[1:])
+            argv = [tools.get(argv[0], argv[0])] + argv[1:]
+            if argv[1:2] == ["create"] and steps["kind"] == storage_prepare.ZFS:
+                argv = storage_prepare.in_host_namespace(
+                    argv, platform.system(), systemd
+                )
+            await self._checked(argv)
+        if steps.get("zfs_dataset"):
+            await self._mount_host_wide(steps["zfs_dataset"], tools[storage_prepare.ZFS],
+                                        steps["repository"], systemd)  # fmt: skip
         if steps["export_file"]:
             path, text = steps["export_file"]
             await self._install_root_file(text, path)
@@ -730,6 +739,29 @@ class BackupOperations(BackupMountMixin):
         self.logger.info(
             "Prepared backup storage for policy %s (%s)", policy_id, steps["kind"]
         )
+
+    async def _mount_host_wide(
+        self, dataset: str, zfs: str, repository: str, systemd: bool
+    ) -> None:
+        """The dataset must be mounted where NFS exports it -- the host's
+        mount table -- before anything is set on it: mount it there if it is
+        not (one an older agent made in its own namespace), and stop if it
+        still is not, rather than prepare the directory beneath it."""
+
+        def mounted() -> bool:
+            text = _read_text(host_mount.HOST_MOUNTINFO) or _read_text(
+                host_mount.SELF_MOUNTINFO
+            )
+            return storage_prepare.zfs_mounted(repository, text)
+
+        if not mounted():
+            await self._checked(storage_prepare.in_host_namespace(
+                [zfs, "mount", dataset], platform.system(), systemd))  # fmt: skip
+        if not mounted():
+            raise PermissionError(
+                _("%(dataset)s is not mounted at %(path)s on this host") % {
+                    "dataset": dataset, "path": repository}  # fmt: skip
+            )
 
     async def _checked(self, argv: List[str]) -> None:
         code, _out, err = await self._run(self._privileged(argv))

@@ -13,6 +13,8 @@ The answer has three outcomes, each a reason code the server understands:
 * restate present but too old   -> ``tool_outdated`` (upgrade it): on Linux
   the ``restate-job@.service`` unit is missing; or ``restate features
   --json`` fails, or it reports a major version below 2 or no job keys
+* Linux with no NFS client      -> ``missing_nfs_client`` (Equip installs
+  it): the host could never mount its backup storage
 
 ONE DELIBERATE EXCEPTION to the capability probes' "no subprocess" rule: the
 version can only be learned by asking restate.  The answer is cached per
@@ -26,12 +28,14 @@ import subprocess  # nosec B404 -- fixed argv, no shell
 import threading
 from typing import Any, Callable, Dict, Optional, Tuple
 
+from src.sysmanage_agent.backup import host_mount
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import restate_contract as contract
 
 REASON_MISSING_TOOL = "missing_tool"
 REASON_WRONG_PLATFORM = "wrong_platform"
 REASON_TOOL_OUTDATED = "tool_outdated"
+REASON_MISSING_NFS_CLIENT = "missing_nfs_client"
 
 PROBE_TIMEOUT_SECONDS = 10
 
@@ -101,6 +105,7 @@ def unavailable_reason(
     ask: Callable = _ask,
     unit_exists: Callable = os.path.exists,
     exists: Callable = os.path.exists,
+    nfs_exists: Callable = os.path.exists,
 ) -> Optional[str]:
     """Why this host cannot run backups, or None when it can."""
     runner = job_runner.runner_for(system)
@@ -113,4 +118,8 @@ def unavailable_reason(
         return REASON_TOOL_OUTDATED
     if not contract.features_usable(features(executable, ask)):
         return REASON_TOOL_OUTDATED
+    if runner == job_runner.SYSTEMD and host_mount.nfs_client_missing(
+        "Linux", nfs_exists
+    ):
+        return REASON_MISSING_NFS_CLIENT
     return None
