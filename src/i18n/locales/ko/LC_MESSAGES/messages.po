@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 14:49-0400\n"
+"POT-Creation-Date: 2026-10-28 18:15-0400\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -70,73 +70,106 @@ msgstr "메시지 %s (유형: %s)가 최대 재시도 횟수를 초과하여 실
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  {config_dir}에 접근 불가, {fallback_dir}로 대체"
 
-#: src/sysmanage_agent/backup/host_mount.py:67
-#, python-format
-msgid "The backup storage at %(where)s cannot take new files: %(error)s"
-msgstr "%(where)s의 백업 스토리지에 새 파일을 만들 수 없습니다: %(error)s"
-
-#: src/sysmanage_agent/backup/host_mount.py:73
-#, python-format
-msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
-msgstr "%(where)s의 백업 스토리지에서 잠금이 작동하지 않습니다: %(error)s"
-
-#: src/sysmanage_agent/backup/host_mount.py:84
+#: src/sysmanage_agent/backup/host_mount.py:109
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr "%(where)s의 백업 스토리지가 거의 가득 찼습니다(여유 공간 %(free)d MB)."
 
-#: src/sysmanage_agent/backup/key_files.py:52
+#: src/sysmanage_agent/backup/host_mount.py:115
+#, python-format
+msgid "The backup storage at %(where)s cannot take new files: %(error)s"
+msgstr "%(where)s의 백업 스토리지에 새 파일을 만들 수 없습니다: %(error)s"
+
+#: src/sysmanage_agent/backup/host_mount.py:135
+#, python-format
+msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
+msgstr "%(where)s의 백업 스토리지에서 잠금이 작동하지 않습니다: %(error)s"
+
+#: src/sysmanage_agent/backup/key_files.py:56
 msgid "The server sent no usable keys"
 msgstr "서버가 사용할 수 있는 키를 보내지 않았습니다"
 
-#: src/sysmanage_agent/backup/key_files.py:54
+#: src/sysmanage_agent/backup/key_files.py:58
 msgid "The server sent something that is not a secret key"
 msgstr "서버가 비밀 키가 아닌 것을 보냈습니다"
 
-#: src/sysmanage_agent/backup/key_files.py:62
+#: src/sysmanage_agent/backup/key_files.py:66
 msgid "No tmpfs to stage the key on"
 msgstr "키를 준비할 tmpfs가 없습니다"
 
-#: src/sysmanage_agent/backup/key_files.py:103
+#: src/sysmanage_agent/backup/key_files.py:107
 msgid "This host is not approved yet"
 msgstr "이 호스트는 아직 승인되지 않았습니다"
 
-#: src/sysmanage_agent/backup/key_files.py:123
+#: src/sysmanage_agent/backup/key_files.py:127
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr "서버가 백업 키를 내주지 않았습니다: HTTP %(status)s, %(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:134
+#: src/sysmanage_agent/backup/key_files.py:138
 msgid "no reason given"
 msgstr "이유가 제시되지 않았습니다"
 
-#: src/sysmanage_agent/backup/key_files.py:154
+#: src/sysmanage_agent/backup/key_files.py:158
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "백업 키를 설치할 수 없습니다: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:197
+#: src/sysmanage_agent/backup/key_files.py:201
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
-msgstr "이 restate는 암호화된 저장소를 복호화할 수 없습니다. restate를 업그레이드하세요."
+msgstr ""
+"이 restate는 암호화된 저장소를 복호화할 수 없습니다. restate를 업그레이드하세"
+"요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:94
+#: src/sysmanage_agent/backup/mount_mixin.py:86
+#, python-format
+msgid ""
+"The backup storage is not mounted at %(where)s, and the server has not sent "
+"where to mount it from yet."
+msgstr ""
+"백업 스토리지가 %(where)s에 마운트되어 있지 않으며, 서버가 아직 마운트할 위치"
+"를 보내지 않았습니다."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:99
+#, python-format
+msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
+msgstr ""
+"백업 스토리지 %(source)s을(를) %(where)s에 마운트하지 못했습니다: %(error)s"
+
+#: src/sysmanage_agent/backup/mount_mixin.py:107
+#, python-format
+msgid "The backup storage is not mounted at %(where)s after mounting it."
+msgstr "마운트한 후에도 백업 스토리지가 %(where)s에 마운트되어 있지 않습니다."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:124
+#, python-format
+msgid "The backup storage at %s did not answer."
+msgstr "%s의 백업 스토리지가 응답하지 않았습니다."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:149
+#, python-format
+msgid "Could not unmount the backup storage at %s: %s"
+msgstr "%s의 백업 스토리지를 마운트 해제하지 못했습니다: %s"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:106
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
 "this storage host. Create it, then prepare again."
 msgstr ""
-"백업 서비스 계정 %(account)s(사용자 및 그룹)이(가) 이 스토리지 호스트에 없습니다. 계정을 만든 다음 다시 준비하세요."
+"백업 서비스 계정 %(account)s(사용자 및 그룹)이(가) 이 스토리지 호스트에 없습"
+"니다. 계정을 만든 다음 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:124
+#: src/sysmanage_agent/backup/storage_prepare.py:136
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr ""
-"에이전트가 %(path)s을(를) 읽을 수 없어 백업이 들어 있는지 알 수 없습니다. 에이전트를 root로 실행하거나 디렉터리를 다른 "
-"곳으로 옮긴 다음 다시 준비하세요."
+"에이전트가 %(path)s을(를) 읽을 수 없어 백업이 들어 있는지 알 수 없습니다. 에"
+"이전트를 root로 실행하거나 디렉터리를 다른 곳으로 옮긴 다음 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:135
+#: src/sysmanage_agent/backup/storage_prepare.py:147
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -144,11 +177,12 @@ msgid ""
 "prepare again, and copy its contents into the new dataset as root; or 2) "
 "remove it if those backups are no longer needed."
 msgstr ""
-"%(path)s에 이미 파일이 있지만 자체 ZFS 데이터셋이 아니며, 준비 작업은 백업을 절대 옮기지 않습니다. 1) 이름을 바꾸고(예:"
-" %(path)s.old) 다시 준비한 뒤 root로 그 내용을 새 데이터셋에 복사하거나, 2) 해당 백업이 더 이상 필요 없으면 "
-"삭제하세요."
+"%(path)s에 이미 파일이 있지만 자체 ZFS 데이터셋이 아니며, 준비 작업은 백업을 "
+"절대 옮기지 않습니다. 1) 이름을 바꾸고(예: %(path)s.old) 다시 준비한 뒤 root"
+"로 그 내용을 새 데이터셋에 복사하거나, 2) 해당 백업이 더 이상 필요 없으면 삭"
+"제하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:143
+#: src/sysmanage_agent/backup/storage_prepare.py:155
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -156,49 +190,53 @@ msgid ""
 "%(path)s.old), prepare again, and copy its contents into the new subvolume "
 "as root; or 2) remove it if those backups are no longer needed."
 msgstr ""
-"%(path)s에 이미 파일이 있지만 자체 btrfs 하위 볼륨이 아니며, 준비 작업은 백업을 절대 옮기지 않습니다. 1) 이름을 "
-"바꾸고(예: %(path)s.old) 다시 준비한 뒤 root로 그 내용을 새 하위 볼륨에 복사하거나, 2) 해당 백업이 더 이상 필요 "
-"없으면 삭제하세요."
+"%(path)s에 이미 파일이 있지만 자체 btrfs 하위 볼륨이 아니며, 준비 작업은 백업"
+"을 절대 옮기지 않습니다. 1) 이름을 바꾸고(예: %(path)s.old) 다시 준비한 뒤 "
+"root로 그 내용을 새 하위 볼륨에 복사하거나, 2) 해당 백업이 더 이상 필요 없으"
+"면 삭제하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:174
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
 msgstr ""
-"서버가 아직 백업 대상 호스트의 IP 주소를 모르므로 해당 내보내기를 그 주소로 제한할 수 없습니다. 그 호스트가 네트워크 정보를 보고할"
-" 때까지 기다린 다음 다시 준비하세요."
+"서버가 아직 백업 대상 호스트의 IP 주소를 모르므로 해당 내보내기를 그 주소로 "
+"제한할 수 없습니다. 그 호스트가 네트워크 정보를 보고할 때까지 기다린 다음 다"
+"시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:185
+#: src/sysmanage_agent/backup/storage_prepare.py:197
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s에서는 스토리지 준비가 지원되지 않습니다."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:193
+#: src/sysmanage_agent/backup/storage_prepare.py:205
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
 msgstr ""
-"FreeBSD는 파일 시스템 전체를 내보내므로 각 호스트의 저장소에는 자체 ZFS 데이터셋이 필요합니다. 스토리지 경로를 ZFS에 둔 "
-"다음 다시 준비하세요."
+"FreeBSD는 파일 시스템 전체를 내보내므로 각 호스트의 저장소에는 자체 ZFS 데이"
+"터셋이 필요합니다. 스토리지 경로를 ZFS에 둔 다음 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:255
+#: src/sysmanage_agent/backup/storage_prepare.py:271
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
 "dataset would not land at the repository. Create a dataset mounted there "
 "(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
 msgstr ""
-"스토리지 경로 %(path)s에 ZFS 데이터셋이 마운트되어 있지 않아 하위 데이터셋이 저장소 위치에 만들어지지 않습니다. 그곳에 "
-"마운트되는 데이터셋을 만든 다음(zfs create -o mountpoint=%(path)s POOL/NAME) 다시 준비하세요."
+"스토리지 경로 %(path)s에 ZFS 데이터셋이 마운트되어 있지 않아 하위 데이터셋이 "
+"저장소 위치에 만들어지지 않습니다. 그곳에 마운트되는 데이터셋을 만든 다음"
+"(zfs create -o mountpoint=%(path)s POOL/NAME) 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:282
+#: src/sysmanage_agent/backup/storage_prepare.py:298
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
 "root), then prepare again."
 msgstr ""
-"%(path)s은(는) 빈 디렉터리이며 btrfs 하위 볼륨이 아닙니다. 삭제한 다음(root로 rmdir) 다시 준비하세요."
+"%(path)s은(는) 빈 디렉터리이며 btrfs 하위 볼륨이 아닙니다. 삭제한 다음(root"
+"로 rmdir) 다시 준비하세요."
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -244,9 +282,9 @@ msgstr "Windows 인증서 저장소 %s를 쿼리하는 데 실패했습니다: %
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
-msgstr "인증서 번들 %s은 %d개 이상의 인증서를 포함합니다; 첫 번째 %d개를 보고합니다"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+msgstr ""
+"인증서 번들 %s은 %d개 이상의 인증서를 포함합니다; 첫 번째 %d개를 보고합니다"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
@@ -457,7 +495,8 @@ msgstr "ipconfig /all이 실패했습니다. 반환 코드: %d"
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:317
 #, python-format
 msgid "Failed to get Windows network info via ipconfig: %s"
-msgstr "ipconfig를 사용하여 Windows 네트워크 정보를 가져오는 데 실패했습니다: %s"
+msgstr ""
+"ipconfig를 사용하여 Windows 네트워크 정보를 가져오는 데 실패했습니다: %s"
 
 #: src/sysmanage_agent/collection/hardware_collector_windows.py:321
 #, python-format
@@ -627,42 +666,44 @@ msgstr "네트워크 검색: 직접 캡처를 사용할 수 없습니다: %s"
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
 "recorded"
-msgstr "네트워크 검색이 한 구간에서 %d개가 넘는 장치를 발견했습니다. 나머지는 기록되지 않았습니다"
+msgstr ""
+"네트워크 검색이 한 구간에서 %d개가 넘는 장치를 발견했습니다. 나머지는 기록되"
+"지 않았습니다"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:149
+#: src/sysmanage_agent/collection/os_info_collection.py:153
 msgid "Ubuntu Pro status check timed out"
 msgstr "Ubuntu Pro 상태 확인 시간 초과"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:154
+#: src/sysmanage_agent/collection/os_info_collection.py:158
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Ubuntu Pro 상태를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:314
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Ubuntu Pro JSON 출력을 파싱하는데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:313
+#: src/sysmanage_agent/collection/os_info_collection.py:317
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Ubuntu Pro 데이터 처리 오류: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:401
+#: src/sysmanage_agent/collection/os_info_collection.py:405
 msgid "Livepatch status check timed out"
 msgstr "Livepatch 상태 확인 시간이 초과되었습니다"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:407
+#: src/sysmanage_agent/collection/os_info_collection.py:411
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "Livepatch 상태를 가져오지 못했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:424
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "Livepatch JSON 구문 분석에 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:572
+#: src/sysmanage_agent/collection/os_info_collection.py:576
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "타임존 정보를 가져오는 데 실패했습니다: %s"
@@ -762,7 +803,9 @@ msgstr "pkgin 패키지 수집 중 오류: %s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr "dnf을 사용할 수 있는 호스트에서 yum 수집 건너뜀 (RHEL/Fedora 8+에서 yum은 dnf 래퍼)"
+msgstr ""
+"dnf을 사용할 수 있는 호스트에서 yum 수집 건너뜀 (RHEL/Fedora 8+에서 yum은 "
+"dnf 래퍼)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:142
@@ -877,8 +920,8 @@ msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
 msgstr ""
-"PID %(pid)d은(는) 이제 '%(expected)s'이(가) 아니라 '%(actual)s'입니다(프로세스가 재사용되었을 수 "
-"있음). 종료가 거부되었습니다"
+"PID %(pid)d은(는) 이제 '%(expected)s'이(가) 아니라 '%(actual)s'입니다(프로세"
+"스가 재사용되었을 수 있음). 종료가 거부되었습니다"
 
 #: src/sysmanage_agent/collection/process_collection.py:202
 #, python-format
@@ -1739,7 +1782,9 @@ msgstr "규정 준수 증거 전송 실패"
 msgid ""
 "Hardware events from %s need a privileged agent; the periodic report "
 "continues"
-msgstr "%s의 하드웨어 이벤트에는 권한 있는 에이전트가 필요합니다. 정기 보고는 계속됩니다"
+msgstr ""
+"%s의 하드웨어 이벤트에는 권한 있는 에이전트가 필요합니다. 정기 보고는 계속됩"
+"니다"
 
 #: src/sysmanage_agent/communication/hardware_event_loop.py:96
 #, python-format
@@ -1757,7 +1802,9 @@ msgstr "아웃바운드 큐를 읽을 수 없습니다. 폴링 중"
 #: src/sysmanage_agent/communication/http_polling.py:142
 #, python-format
 msgid "Queued message %s is not readable JSON; not polling it"
-msgstr "대기열의 메시지 %s은(는) 읽을 수 있는 JSON이 아닙니다. 폴링으로 보내지 않습니다"
+msgstr ""
+"대기열의 메시지 %s은(는) 읽을 수 있는 JSON이 아닙니다. 폴링으로 보내지 않습니"
+"다"
 
 #: src/sysmanage_agent/communication/http_polling.py:158
 #, python-format
@@ -1771,9 +1818,11 @@ msgstr "폴링된 메시지 %s 처리 중 오류가 발생했습니다"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
-msgstr "HTTPFallback을 사용할 수 없습니다: 이 에이전트에는 저장된 host_id가 없습니다. 등록부터 완료해야 합니다."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
+msgstr ""
+"HTTPFallback을 사용할 수 없습니다: 이 에이전트에는 저장된 host_id가 없습니"
+"다. 등록부터 완료해야 합니다."
 
 #: src/sysmanage_agent/communication/http_polling.py:232
 #, python-format
@@ -1782,8 +1831,9 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"WebSocket 대신 HTTP 폴링을 사용합니다: 이 네트워크는 WebSocket 업그레이드를 거부했습니다. 명령은 최대 몇 초 지연이"
-" 발생할 수 있습니다. %s에서 WebSocket 업그레이드를 허용하여 즉시 전송을 복구하세요"
+"WebSocket 대신 HTTP 폴링을 사용합니다: 이 네트워크는 WebSocket 업그레이드를 "
+"거부했습니다. 명령은 최대 몇 초 지연이 발생할 수 있습니다. %s에서 WebSocket "
+"업그레이드를 허용하여 즉시 전송을 복구하세요"
 
 #: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
@@ -1821,8 +1871,7 @@ msgstr "메시지 타임스탬프 확인을 위한 메시지 타임스탬프 파
 
 #: src/sysmanage_agent/communication/message_handler.py:396
 #: src/sysmanage_agent/communication/message_handler.py:732
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr "호스트 등록이 승인 대기 중입니다. 주기적으로 다시 시도합니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:403
@@ -1843,12 +1892,13 @@ msgstr "이 호스트의 등록이 거부되었습니다. %d초 후에 서버에
 #: src/sysmanage_agent/communication/message_handler.py:465
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"서버에서 host_not_registered (strike %(n)d/%(limit)d)을 보고했습니다 -- 호스트 ID를 제거하지 않고"
-" 재접속합니다. 서버가 해당 호스트를 테넌트 인덱스에서 다시 해결할 수 있도록 합니다; 문제가 지속되면 다시 등록됩니다."
+"서버에서 host_not_registered (strike %(n)d/%(limit)d)을 보고했습니다 -- 호스"
+"트 ID를 제거하지 않고 재접속합니다. 서버가 해당 호스트를 테넌트 인덱스에서 다"
+"시 해결할 수 있도록 합니다; 문제가 지속되면 다시 등록됩니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:478
 #, python-format
@@ -1856,8 +1906,8 @@ msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr ""
-"host_not_registered이 계속 발생 (%(n)d 번째 스트라이크) -- 이 호스트를 실제로 사라진 것으로 처리합니다. 저장된"
-" host_id를 제거하고 재등록합니다."
+"host_not_registered이 계속 발생 (%(n)d 번째 스트라이크) -- 이 호스트를 실제"
+"로 사라진 것으로 처리합니다. 저장된 host_id를 제거하고 재등록합니다."
 
 #: src/sysmanage_agent/communication/message_handler.py:489
 #, python-format
@@ -1893,7 +1943,9 @@ msgstr "WEBSOCKET_UNKNOWN_ERROR: 메시지 수신 오류: %s"
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
-msgstr "메시지 수신자: 웹소켓이 동시 연결 해제로 인해 비워졌습니다; 다시 연결을 허용하기 위해 수신 루프를 종료합니다"
+msgstr ""
+"메시지 수신자: 웹소켓이 동시 연결 해제로 인해 비워졌습니다; 다시 연결을 허용"
+"하기 위해 수신 루프를 종료합니다"
 
 #: src/sysmanage_agent/communication/message_handler.py:742
 #, python-format
@@ -1989,7 +2041,8 @@ msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
 msgstr ""
-">>> [CREATE_CHILD_HOST_DUPLICATE] 중복 vm_name=%s queue_message_id=%s 건 무시됨"
+">>> [CREATE_CHILD_HOST_DUPLICATE] 중복 vm_name=%s queue_message_id=%s 건 무시"
+"됨"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:160
@@ -2035,85 +2088,85 @@ msgstr "패키지 수집 스케줄러 오류: %s"
 msgid "Failed to build capability report: %s"
 msgstr "능력 보고서 생성 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:448
+#: src/sysmanage_agent/core/agent_utils.py:449
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:491
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:502
+#: src/sysmanage_agent/core/agent_utils.py:503
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:561
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "스크립트 실행 결과 큐에 오류 발생: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:580
+#: src/sysmanage_agent/core/agent_utils.py:581
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "실행 UUID 확인 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:594
+#: src/sysmanage_agent/core/agent_utils.py:595
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:609
+#: src/sysmanage_agent/core/agent_utils.py:610
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:634
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "실행 UUID 저장 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:699
+#: src/sysmanage_agent/core/agent_utils.py:700
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:746
+#: src/sysmanage_agent/core/agent_utils.py:747
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:752
+#: src/sysmanage_agent/core/agent_utils.py:753
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:837
+#: src/sysmanage_agent/core/agent_utils.py:838
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:847
+#: src/sysmanage_agent/core/agent_utils.py:848
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:886
+#: src/sysmanage_agent/core/agent_utils.py:887
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:929
+#: src/sysmanage_agent/core/agent_utils.py:930
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:939
+#: src/sysmanage_agent/core/agent_utils.py:940
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:987
+#: src/sysmanage_agent/core/agent_utils.py:988
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "진행 중 저널에 대한 합성 command_result를 큐에 넣지 못했습니다: %s"
@@ -2154,7 +2207,9 @@ msgstr "구성 파일을 불러오는데 실패했습니다: %s"
 msgid ""
 "enrollment_token found at '%s' is ignored; it must be under the top-level "
 "'security' section"
-msgstr "'%s'에 있는 enrollment_token은 무시됩니다. 최상위 'security' 섹션 아래에 있어야 합니다"
+msgstr ""
+"'%s'에 있는 enrollment_token은 무시됩니다. 최상위 'security' 섹션 아래에 있어"
+"야 합니다"
 
 #: src/sysmanage_agent/core/unconfigured.py:45
 msgid "no server is configured (server.url is not set)"
@@ -2171,8 +2226,9 @@ msgid ""
 "Edit %s: set server.url to your SysManage server and, for a multi-tenant "
 "server, security.enrollment_token; then restart the sysmanage-agent service."
 msgstr ""
-"%s 파일을 편집하세요: server.url을 SysManage 서버로 설정하고, 다중 테넌트 서버의 경우 "
-"security.enrollment_token도 설정한 후 sysmanage-agent 서비스를 다시 시작하세요."
+"%s 파일을 편집하세요: server.url을 SysManage 서버로 설정하고, 다중 테넌트 서"
+"버의 경우 security.enrollment_token도 설정한 후 sysmanage-agent 서비스를 다"
+"시 시작하세요."
 
 #: src/sysmanage_agent/core/unconfigured.py:91
 #, python-format
@@ -2264,194 +2320,170 @@ msgstr "Agent 로그 수집 중 오류: %s"
 msgid "Error collecting error logs: %s"
 msgstr "에러 로그 수집 중 오류: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:270
+#: src/sysmanage_agent/operations/backup_operations.py:271
 msgid "That backup action is not configured on this host."
 msgstr "이 호스트에는 해당 백업 동작이 구성되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:278
+#: src/sysmanage_agent/operations/backup_operations.py:279
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate는 이 호스트에서 사용할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:297
+#: src/sysmanage_agent/operations/backup_operations.py:302
 msgid "This platform can only be a backup storage host."
 msgstr "이 플랫폼은 백업 스토리지 호스트로만 사용할 수 있습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:303
+#: src/sysmanage_agent/operations/backup_operations.py:308
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "백업 작업을 설치할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:330
+#: src/sysmanage_agent/operations/backup_operations.py:335
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:440
+#: src/sysmanage_agent/operations/backup_operations.py:453
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
-msgstr "이 restate는 %s을(를) 작업으로 실행할 수 없습니다. restate를 업그레이드하세요."
+msgstr ""
+"이 restate는 %s을(를) 작업으로 실행할 수 없습니다. restate를 업그레이드하세"
+"요."
 
-#: src/sysmanage_agent/operations/backup_operations.py:546
+#: src/sysmanage_agent/operations/backup_operations.py:561
 msgid "restate is not installed on this host."
 msgstr "이 호스트에는 restate가 설치되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:594
 msgid "That backup job is already running."
 msgstr "해당 백업 작업은 이미 실행 중입니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:601
+#: src/sysmanage_agent/operations/backup_operations.py:616
 msgid "The backup job could not be started."
 msgstr "백업 작업을 시작할 수 없습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:656
-#, python-format
-msgid ""
-"The backup storage is not mounted at %(where)s, and the server has not sent "
-"where to mount it from yet."
-msgstr "백업 스토리지가 %(where)s에 마운트되어 있지 않으며, 서버가 아직 마운트할 위치를 보내지 않았습니다."
-
-#: src/sysmanage_agent/operations/backup_operations.py:665
-#, python-format
-msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
-msgstr "백업 스토리지 %(source)s을(를) %(where)s에 마운트하지 못했습니다: %(error)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:669
-#, python-format
-msgid "The backup storage is not mounted at %(where)s after mounting it."
-msgstr "마운트한 후에도 백업 스토리지가 %(where)s에 마운트되어 있지 않습니다."
-
-#: src/sysmanage_agent/operations/backup_operations.py:688
-#, python-format
-msgid "The backup storage at %s did not answer."
-msgstr "%s의 백업 스토리지가 응답하지 않았습니다."
-
-#: src/sysmanage_agent/operations/backup_operations.py:710
-#, python-format
-msgid "Could not unmount the backup storage at %s: %s"
-msgstr "%s의 백업 스토리지를 마운트 해제하지 못했습니다: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:760
+#: src/sysmanage_agent/operations/backup_operations.py:671
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "봉인된 스냅샷 목록을 가져오지 못했습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:775
+#: src/sysmanage_agent/operations/backup_operations.py:686
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "오래된 봉인 스냅샷 %(name)s을(를) 제거하지 못했습니다: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:853
+#: src/sysmanage_agent/operations/backup_operations.py:764
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "정책 %s의 백업 스토리지를 준비하지 못했습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:945
+#: src/sysmanage_agent/operations/backup_operations.py:867
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
 "%(unit)s on this host"
 msgstr ""
-"restate가 결과를 쓰기 전에 중지되었습니다(종료 코드 %(code)s). 이 호스트에서 journalctl -u %(unit)s 를"
-" 확인하세요"
+"restate가 결과를 쓰기 전에 중지되었습니다(종료 코드 %(code)s). 이 호스트에서 "
+"journalctl -u %(unit)s 를 확인하세요"
 
-#: src/sysmanage_agent/operations/backup_operations.py:973
+#: src/sysmanage_agent/operations/backup_operations.py:895
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "스토리지 감사를 실행할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:991
+#: src/sysmanage_agent/operations/backup_operations.py:913
 msgid "Could not queue the backup report"
 msgstr "백업 보고서를 대기열에 추가할 수 없습니다"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:74
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:118
 msgid "Homebrew is not installed"
 msgstr "Homebrew이 설치되지 않음"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:70
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:102
 #, python-format
 msgid "Error listing Homebrew taps: %s"
 msgstr "Homebrew 탭 목록 가져오기 오류: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:81
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:113
 msgid "Invalid tap format. Use 'user/repo' format"
 msgstr "잘못된 tap 형식. 'user/repo' 형식을 사용하세요"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:101
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:136
 msgid "Tap added successfully"
 msgstr "탭 추가 성공"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:106
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:141
 #, python-format
 msgid "Failed to add tap %s: %s"
 msgstr "tap %s 추가에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:112
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:147
 #, python-format
 msgid "Failed to add tap: %s"
 msgstr "탭 추가 실패: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:116
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:151
 #, python-format
 msgid "Error adding Homebrew tap: %s"
 msgstr "Homebrew 탭 추가 오류: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:137
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
 #, python-format
 msgid "Error listing FreeBSD repositories: %s"
 msgstr " FreeBSD 레포지토리 목록 가져오기 중 오류: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:207
 #: src/sysmanage_agent/operations/linux_repository_operations.py:250
 #: src/sysmanage_agent/operations/linux_repository_operations.py:441
 #, python-format
 msgid "Error reading %s: %s"
 msgstr "%s 읽기 오류: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:180
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:215
 msgid "Repository URL is required for FreeBSD pkg"
 msgstr "FreeBSD pkg에는 저장소 URL이 필요함"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:210
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:245
 #: src/sysmanage_agent/operations/linux_repository_operations.py:24
 #: src/sysmanage_agent/operations/windows_repository_operations.py:165
 msgid "Repository added successfully"
 msgstr "레포지토리가 성공적으로 추가되었습니다"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:214
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:249
 #, python-format
 msgid "Error adding FreeBSD repository: %s"
 msgstr "FreeBSD 저장소 추가 오류: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:262
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:297
 #, python-format
 msgid "Error listing NetBSD repositories: %s"
 msgstr "NetBSD 저장소 목록 가져오기 오류: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:272
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
 msgid "Repository URL is required for NetBSD pkgsrc"
 msgstr "NetBSD pkgsrc에는 저장소 URL이 필요함"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:281
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:316
 #, python-format
 msgid "Repository directory already exists: %s"
 msgstr "레포지토리 디렉토리가 이미 존재합니다: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:302
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:337
 msgid "Repository cloned successfully"
 msgstr "레포지토리가 성공적으로 클론되었습니다"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:342
 #, python-format
 msgid "Failed to clone repository %s: %s"
 msgstr "저장소 %s 복제에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:313
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:348
 #, python-format
 msgid "Failed to clone repository: %s"
 msgstr "레포지토리 클론 실패: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:318
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:353
 #, python-format
 msgid "Error adding NetBSD repository: %s"
 msgstr "NetBSD 저장소 추가 오류: %s"
@@ -2633,7 +2665,9 @@ msgstr "gpg 삭제 실패 (rc=%s): %s"
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
-msgstr "Windows 사용자를 특정하여 gpg를 실행하는 것은 에이전트에서 지원하지 않습니다; 현재 키링에 가져옵니다."
+msgstr ""
+"Windows 사용자를 특정하여 gpg를 실행하는 것은 에이전트에서 지원하지 않습니"
+"다; 현재 키링에 가져옵니다."
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2703,7 +2737,8 @@ msgstr "컴퓨터 이름 변경 실패: %s"
 #, python-format
 msgid ""
 "Hostname changed to %s. A reboot is required for the change to take effect."
-msgstr "호스트 이름이 %s(으)로 변경됨. 변경 사항을 적용하려면 재부팅이 필요합니다."
+msgstr ""
+"호스트 이름이 %s(으)로 변경됨. 변경 사항을 적용하려면 재부팅이 필요합니다."
 
 #: src/sysmanage_agent/operations/hostname_operations.py:276
 #, python-format
@@ -2927,102 +2962,107 @@ msgstr "이름이 없는 패키지 건너뜀"
 msgid "No package name"
 msgstr "패키지 이름 없음"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:20
+#: src/sysmanage_agent/operations/package_manager_operations.py:23
 msgid "Installation failed"
 msgstr "설치가 실패했습니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:21
+#: src/sysmanage_agent/operations/package_manager_operations.py:24
 msgid "Installation timed out after 5 minutes"
 msgstr "5분 동안 설치가 완료되지 않았습니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:103
+#: src/sysmanage_agent/operations/package_manager_operations.py:115
 msgid "Package manager name is required"
 msgstr "패키지 매니저 이름은 필수입니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:114
+#: src/sysmanage_agent/operations/package_manager_operations.py:126
 msgid "Enabling package managers requires privileged mode"
 msgstr "패키지 매니저 활성화는 특권 모드가 필요합니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:130
+#: src/sysmanage_agent/operations/package_manager_operations.py:142
 #, python-format
 msgid "Unknown package manager: %s"
 msgstr "알 수 없는 패키지 매니저: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:137
+#: src/sysmanage_agent/operations/package_manager_operations.py:149
 #, python-format
 msgid "Error enabling package manager '%s': %s"
 msgstr "패키지 관리자 '%s' 활성화 오류: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:149
+#: src/sysmanage_agent/operations/package_manager_operations.py:161
 msgid "Flatpak is only supported on Linux systems"
 msgstr "Flatpak은 Linux 시스템에서만 지원됩니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:159
+#: src/sysmanage_agent/operations/package_manager_operations.py:171
 msgid "Flatpak is already installed"
 msgstr "Flatpak은 이미 설치되어 있습니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:188
+#: src/sysmanage_agent/operations/package_manager_operations.py:200
 #, python-format
 msgid "No supported package manager found to install %s"
 msgstr "%s을 설치하기 위한 지원되는 패키지 매니저를 찾을 수 없습니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:211
+#: src/sysmanage_agent/operations/package_manager_operations.py:223
 #, python-format
 msgid "%s installed successfully"
 msgstr "%s 성공적으로 설치됨"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:245
+#: src/sysmanage_agent/operations/package_manager_operations.py:257
 #, python-format
 msgid "Could not add Flathub repository: %s"
 msgstr "Flathub 저장소 추가 실패: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:252
+#: src/sysmanage_agent/operations/package_manager_operations.py:264
 msgid "Snap is only supported on Linux systems"
 msgstr "Snap는 Linux 시스템에서만 지원됩니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:261
+#: src/sysmanage_agent/operations/package_manager_operations.py:273
 msgid "Snap is already installed"
 msgstr "Snap은 이미 설치되어 있습니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:287
+#: src/sysmanage_agent/operations/package_manager_operations.py:299
 #, python-format
 msgid "Could not enable snapd service: %s"
 msgstr "snapd 서비스 활성화 실패: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:297
+#: src/sysmanage_agent/operations/package_manager_operations.py:309
 msgid "Homebrew is already installed"
 msgstr "Homebrew는 이미 설치되어 있습니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:306
-msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-msgstr ""
-"Homebrew 설치에는 수동 개입이 필요합니다. 다음을 사용하여 설치하세요: /bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
+msgid ""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
+msgstr ""
+"Homebrew 설치에는 수동 개입이 필요합니다. 다음을 사용하여 설치하세요: /bin/"
+"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
+"HEAD/install.sh)\""
+
+#: src/sysmanage_agent/operations/package_manager_operations.py:335
+msgid "The installer script is unexpectedly large"
+msgstr "설치 스크립트가 예상보다 너무 큽니다"
+
+#: src/sysmanage_agent/operations/package_manager_operations.py:371
 msgid "Chocolatey is only supported on Windows systems"
 msgstr "Chocolatey는 Windows 시스템에서만 지원됩니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:327
+#: src/sysmanage_agent/operations/package_manager_operations.py:380
 msgid "Chocolatey is already installed"
 msgstr "Chocolatey 이미 설치됨"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:361
+#: src/sysmanage_agent/operations/package_manager_operations.py:400
 msgid "Chocolatey installed successfully"
 msgstr "Chocolatey 설치 성공"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:380
+#: src/sysmanage_agent/operations/package_manager_operations.py:419
 msgid "Scoop is only supported on Windows systems"
 msgstr "Scoop는 Windows 시스템에서만 지원됩니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:389
+#: src/sysmanage_agent/operations/package_manager_operations.py:428
 msgid "Scoop is already installed"
 msgstr "Scoop는 이미 설치되어 있습니다"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:420
+#: src/sysmanage_agent/operations/package_manager_operations.py:449
 msgid "Scoop installed successfully"
 msgstr "Scoop 설치 성공"
 
@@ -3622,42 +3662,42 @@ msgstr "⚠️  경고: aiohttp 사용 불가, 등록이 건너뜀"
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp가 사용 가능하지 않아 등록을 건너뜁니다"
 
-#: src/sysmanage_agent/registration/client_registration.py:382
+#: src/sysmanage_agent/registration/client_registration.py:386
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "등록이 상태 코드 %s: %s로 실패했습니다"
 
-#: src/sysmanage_agent/registration/client_registration.py:391
+#: src/sysmanage_agent/registration/client_registration.py:395
 #, python-format
 msgid "Error during registration: %s"
 msgstr " 등록 중 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:432
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "%s 시도 후 등록 실패"
 
-#: src/sysmanage_agent/registration/client_registration.py:434
+#: src/sysmanage_agent/registration/client_registration.py:438
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "등록에 실패했습니다. %s초 후 다시 시도합니다..."
 
-#: src/sysmanage_agent/registration/client_registration.py:489
+#: src/sysmanage_agent/registration/client_registration.py:495
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "저장된 인증 데이터 로드 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:512
+#: src/sysmanage_agent/registration/client_registration.py:525
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "인증 데이터 저장 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:525
+#: src/sysmanage_agent/registration/client_registration.py:540
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr " 저장된 host_id 가져오기 중 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:540
+#: src/sysmanage_agent/registration/client_registration.py:557
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "저장된 승인 데이터 가져오기 오류: %s"
@@ -3722,7 +3762,7 @@ msgid "Error processing host approval notification: %s"
 msgstr "호스트 승인 알림 처리 오류: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:322
-#: src/sysmanage_agent/registration/registration_manager.py:594
+#: src/sysmanage_agent/registration/registration_manager.py:597
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "호스트 승인 기록 삭제 오류: %s"
@@ -3736,31 +3776,32 @@ msgstr "저장된 자격 증명 검색 오류"
 msgid "Error storing host approval in database: %s"
 msgstr "데이터베이스에 호스트 승인 저장 오류: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:428
+#: src/sysmanage_agent/registration/registration_manager.py:434
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "저장된 host_id 가져오기 오류: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:489
+#: src/sysmanage_agent/registration/registration_manager.py:493
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "저장된 host_id를 동기적으로 검색하는 중 오류: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:542
+#: src/sysmanage_agent/registration/registration_manager.py:545
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "호스트 승인 가져오기 오류: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:596
+#: src/sysmanage_agent/registration/registration_manager.py:599
 msgid "Continuing despite cleanup error..."
 msgstr "정리 오류에도 불구하고 계속 진행..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:617
+#: src/sysmanage_agent/registration/registration_manager.py:620
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
-msgstr "%d개의 손상된 항목이 host_approval 테이블에서 발견되었습니다. 정리 중..."
+msgstr ""
+"%d개의 손상된 항목이 host_approval 테이블에서 발견되었습니다. 정리 중..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:631
+#: src/sysmanage_agent/registration/registration_manager.py:634
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr " 데이터베이스 정리 중 오류: %s"
@@ -3801,7 +3842,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "%s: 인벤토리 갱신 요청되었으나 data_collector 는 send_software_inventory_update 를 지원하지 않음"
+#~ "%s: 인벤토리 갱신 요청되었으나 data_collector 는 "
+#~ "send_software_inventory_update 를 지원하지 않음"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3953,8 +3995,10 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "%s 패키지: %s v%s를 찾았습니다."
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
-#~ msgstr "중복 역할 건너뛰기: %s (서비스 %s와 함께 이미 패키지 %s가 있습니다.)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgstr ""
+#~ "중복 역할 건너뛰기: %s (서비스 %s와 함께 이미 패키지 %s가 있습니다.)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -4011,7 +4055,9 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
-#~ msgstr "업데이트 감지 완료: %d개의 업데이트 발견 (%d 보안, %d 시스템, %d 응용 프로그램)"
+#~ msgstr ""
+#~ "업데이트 감지 완료: %d개의 업데이트 발견 (%d 보안, %d 시스템, %d 응용 프로"
+#~ "그램)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -4096,14 +4142,17 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "Windows Update 감지됨: '%s', UpdateID='%s'"
 
 #~ msgid "Removing lowercase vmidletimeout, will add vmIdleTimeout"
-#~ msgstr "lowercase vmidletimeout 제거할 예정입니다, vmIdleTimeout을 추가합니다"
+#~ msgstr ""
+#~ "lowercase vmidletimeout 제거할 예정입니다, vmIdleTimeout을 추가합니다"
 
 #~ msgid "Removing lowercase autostop, will add autoStop"
 #~ msgstr "lowercase autostop 제거함, autoStop 추가 예정"
 
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
-#~ msgstr ".wslconfig 파일이 발견되지 않음, WSL 자동 종료를 방지하기 위해 %s 에서 생성 중..."
+#~ msgstr ""
+#~ ".wslconfig 파일이 발견되지 않음, WSL 자동 종료를 방지하기 위해 %s 에서 생"
+#~ "성 중..."
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
@@ -4210,9 +4259,11 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "패키지 배치(%s) 완료"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
-#~ msgstr "권한 없는 모드에서 인증서 수집 실행 중 - 일부 인증서에 접근하지 못할 수 있음"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
+#~ msgstr ""
+#~ "권한 없는 모드에서 인증서 수집 실행 중 - 일부 인증서에 접근하지 못할 수 있"
+#~ "음"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "시스템에서 SSL 인증서 수집 중"
@@ -4310,7 +4361,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d개의 멈춘 메시지 복구됨"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established에서 아웃바운드 대기열 처리 작업 생성"
 
 #, python-format
@@ -4318,9 +4370,11 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "Bridged network '%s' created successfully"
 
 #~ msgid "Outbound queue processor already running, not starting another"
-#~ msgstr "아웃바운드 대기열 프로세서가 이미 실행 중이므로 다시 시작하지 않습니다"
+#~ msgstr ""
+#~ "아웃바운드 대기열 프로세서가 이미 실행 중이므로 다시 시작하지 않습니다"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "on_connection_established에서 인바운드 대기열 처리 작업 생성"
 
 #, python-format
@@ -4352,7 +4406,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "에이전트가 성공적으로 업데이트되었습니다"
 
 #~ msgid "Package collection is disabled - scheduler will not run"
-#~ msgstr "패키지 컬렉션은 비활성화되어 있습니다 - 스케ジュлер가 실행되지 않습니다"
+#~ msgstr ""
+#~ "패키지 컬렉션은 비활성화되어 있습니다 - 스케ジュлер가 실행되지 않습니다"
 
 #~ msgid "Running initial package collection at startup"
 #~ msgstr "시작 시 초기 패키지 수집을 실행 중"
@@ -4817,8 +4872,11 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "등록은 완료되었지만 승인이 대기 중입니다"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
-#~ msgstr "등록 성공이지만 host_id가 제공되지 않았습니다 - 승인이 별도로 이루어질 수 있습니다"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
+#~ msgstr ""
+#~ "등록 성공이지만 host_id가 제공되지 않았습니다 - 승인이 별도로 이루어질 수 "
+#~ "있습니다"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4829,7 +4887,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "호스트 승인 정보 성공적으로 저장됨. Host ID: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
-#~ msgstr "승인 후 백엔드 연결을 업데이트하기 위해 system_info를 대기열에 추가함"
+#~ msgstr ""
+#~ "승인 후 백엔드 연결을 업데이트하기 위해 system_info를 대기열에 추가함"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
@@ -4858,7 +4917,9 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
-#~ msgstr "서버가 호스트 등록이 되지 않았음을 보고합니다. 저장된 host_id를 지우고 재등록을 트리거합니다..."
+#~ msgstr ""
+#~ "서버가 호스트 등록이 되지 않았음을 보고합니다. 저장된 host_id를 지우고 재"
+#~ "등록을 트리거합니다..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -4968,10 +5029,11 @@ msgstr "WSL 지원 확인 오류: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
-#~ "macOS에서 Microsoft Defender for Endpoint 감지됨 (버전: %s, 활성: %s, 라이선스: %s)"
+#~ "macOS에서 Microsoft Defender for Endpoint 감지됨 (버전: %s, 활성: %s, 라이"
+#~ "선스: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -4994,7 +5056,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "소프트웨어 인벤토리 수집 완료: %d개 패키지 발견"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
-#~ msgstr "PowerShell을 찾을 수 없음 (Windows가 아니거나 PowerShell이 설치되지 않음)"
+#~ msgstr ""
+#~ "PowerShell을 찾을 수 없음 (Windows가 아니거나 PowerShell이 설치되지 않음)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -5093,7 +5156,9 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "OpenTelemetry deployment on %s is not currently supported. Manual "
 #~ "installation required."
-#~ msgstr "%s에서 OpenTelemetry 배포는 현재 지원되지 않습니다. 수동 설치가 필요합니다."
+#~ msgstr ""
+#~ "%s에서 OpenTelemetry 배포는 현재 지원되지 않습니다. 수동 설치가 필요합니"
+#~ "다."
 
 #, python-format
 #~ msgid "Unsupported operating system for OpenTelemetry deployment: %s"
@@ -5240,7 +5305,9 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정도 소요될 수 있습니다."
+#~ msgstr ""
+#~ "OpenBSD 자동 설치 진행 중. VM이 자동으로 설치되고 재부팅됩니다. 10-15분 정"
+#~ "도 소요될 수 있습니다."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "자동 설치 HTTP 요청: %s에서 %s"
@@ -5367,7 +5434,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU 가상화가 활성화되어 있는지 확인하세요."
+#~ "이 시스템에서 KVM을 사용할 수 없습니다. /dev/kvm이 존재하고 BIOS에서 CPU "
+#~ "가상화가 활성화되어 있는지 확인하세요."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM이 이미 초기화되어 사용할 준비가 되었습니다"
@@ -5465,7 +5533,8 @@ msgstr "WSL 지원 확인 오류: %s"
 #~ msgstr "중첩 가상화가 활성화된 상태로 KVM 커널 모듈이 로드되었습니다"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
-#~ msgstr " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
+#~ msgstr ""
+#~ " - 영구 저장을 위해 /etc/modprobe.d/kvm.conf에 구성이 저장되었습니다"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -5516,10 +5585,12 @@ msgstr "WSL 지원 확인 오류: %s"
 
 # libguestfs-tools (guestmount) support
 #~ msgid "guestmount not found. Install libguestfs-tools package."
-#~ msgstr "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr ""
+#~ "guestmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "guestunmount not found. Install libguestfs-tools package."
-#~ msgstr "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
+#~ msgstr ""
+#~ "guestunmount를 찾을 수 없습니다. libguestfs-tools 패키지를 설치하세요."
 
 #~ msgid "Found FreeBSD root: %s"
 #~ msgstr "FreeBSD 루트 발견: %s"

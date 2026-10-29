@@ -24,7 +24,6 @@ sentinels, dropped.  A trip point of 0 means the zone declares none.
 
 from __future__ import annotations
 
-import base64
 import json
 from typing import Dict, List, Optional
 
@@ -200,10 +199,14 @@ def _whea(report: Report, whea) -> None:
 
 
 def collect(report: Report, _system, run, _read=None) -> None:
-    encoded = base64.b64encode(SCRIPT.encode("utf-16-le")).decode()
-    rc, out = run(
-        ["powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded]
-    )
+    # The script is passed as plain text (one ``-Command`` argument), never
+    # base64-encoded: hiding a PowerShell payload that way is a malware tell,
+    # and Microsoft Defender flagged the agent's installer in winget
+    # validation from 3.11 on (2026-10-28) -- the release this collector
+    # arrived in.  One argument is parsed as a whole, so multi-line blocks
+    # work; it must hold no double quote, which Windows PowerShell 5.1
+    # mangles in arguments (a test guards that).
+    rc, out = run(["powershell", "-NoProfile", "-NonInteractive", "-Command", SCRIPT])
     if rc != 0:
         report.source(_SOURCE, SOURCE_FAILED, out)
         return

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 14:49-0400\n"
+"POT-Creation-Date: 2026-10-28 18:15-0400\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -70,70 +70,101 @@ msgstr "訊息 %s (類型: %s) 超過最大重試次數，標記為失敗"
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  無法存取 {config_dir}，回退到 {fallback_dir}"
 
-#: src/sysmanage_agent/backup/host_mount.py:67
-#, python-format
-msgid "The backup storage at %(where)s cannot take new files: %(error)s"
-msgstr "%(where)s 處的備份儲存無法寫入新檔案：%(error)s"
-
-#: src/sysmanage_agent/backup/host_mount.py:73
-#, python-format
-msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
-msgstr "%(where)s 處的備份儲存上鎖定無法運作：%(error)s"
-
-#: src/sysmanage_agent/backup/host_mount.py:84
+#: src/sysmanage_agent/backup/host_mount.py:109
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr "%(where)s 處的備份儲存幾乎已滿（剩餘 %(free)d MB）。"
 
-#: src/sysmanage_agent/backup/key_files.py:52
+#: src/sysmanage_agent/backup/host_mount.py:115
+#, python-format
+msgid "The backup storage at %(where)s cannot take new files: %(error)s"
+msgstr "%(where)s 處的備份儲存無法寫入新檔案：%(error)s"
+
+#: src/sysmanage_agent/backup/host_mount.py:135
+#, python-format
+msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
+msgstr "%(where)s 處的備份儲存上鎖定無法運作：%(error)s"
+
+#: src/sysmanage_agent/backup/key_files.py:56
 msgid "The server sent no usable keys"
 msgstr "伺服器未傳送可用的金鑰"
 
-#: src/sysmanage_agent/backup/key_files.py:54
+#: src/sysmanage_agent/backup/key_files.py:58
 msgid "The server sent something that is not a secret key"
 msgstr "伺服器傳送的內容不是私密金鑰"
 
-#: src/sysmanage_agent/backup/key_files.py:62
+#: src/sysmanage_agent/backup/key_files.py:66
 msgid "No tmpfs to stage the key on"
 msgstr "沒有可用於暫存金鑰的 tmpfs"
 
-#: src/sysmanage_agent/backup/key_files.py:103
+#: src/sysmanage_agent/backup/key_files.py:107
 msgid "This host is not approved yet"
 msgstr "此主機尚未獲得核准"
 
-#: src/sysmanage_agent/backup/key_files.py:123
+#: src/sysmanage_agent/backup/key_files.py:127
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr "伺服器未發放備份金鑰：HTTP %(status)s，%(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:134
+#: src/sysmanage_agent/backup/key_files.py:138
 msgid "no reason given"
 msgstr "未說明原因"
 
-#: src/sysmanage_agent/backup/key_files.py:154
+#: src/sysmanage_agent/backup/key_files.py:158
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "無法安裝備份金鑰：%s"
 
-#: src/sysmanage_agent/backup/key_files.py:197
+#: src/sysmanage_agent/backup/key_files.py:201
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr "此 restate 無法解密加密的存放庫；請升級 restate。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:94
+#: src/sysmanage_agent/backup/mount_mixin.py:86
+#, python-format
+msgid ""
+"The backup storage is not mounted at %(where)s, and the server has not sent "
+"where to mount it from yet."
+msgstr "備份儲存未掛載在 %(where)s，而且伺服器尚未傳送掛載來源。"
+
+#: src/sysmanage_agent/backup/mount_mixin.py:99
+#, python-format
+msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
+msgstr "無法將備份儲存 %(source)s 掛載到 %(where)s：%(error)s"
+
+#: src/sysmanage_agent/backup/mount_mixin.py:107
+#, python-format
+msgid "The backup storage is not mounted at %(where)s after mounting it."
+msgstr "掛載後，備份儲存仍未掛載在 %(where)s。"
+
+#: src/sysmanage_agent/backup/mount_mixin.py:124
+#, python-format
+msgid "The backup storage at %s did not answer."
+msgstr "%s 處的備份儲存沒有回應。"
+
+#: src/sysmanage_agent/backup/mount_mixin.py:149
+#, python-format
+msgid "Could not unmount the backup storage at %s: %s"
+msgstr "無法卸載 %s 處的備份儲存：%s"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:106
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
 "this storage host. Create it, then prepare again."
-msgstr "此儲存主機上不存在備份服務帳戶 %(account)s（使用者與群組）。請建立它，然後重新準備。"
+msgstr ""
+"此儲存主機上不存在備份服務帳戶 %(account)s（使用者與群組）。請建立它，然後重"
+"新準備。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:124
+#: src/sysmanage_agent/backup/storage_prepare.py:136
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
-msgstr "代理程式無法讀取 %(path)s，因此無法判斷其中是否有備份。請以 root 身分執行代理程式，或將該目錄移到別處，然後重新準備。"
+msgstr ""
+"代理程式無法讀取 %(path)s，因此無法判斷其中是否有備份。請以 root 身分執行代理"
+"程式，或將該目錄移到別處，然後重新準備。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:135
+#: src/sysmanage_agent/backup/storage_prepare.py:147
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -141,10 +172,11 @@ msgid ""
 "prepare again, and copy its contents into the new dataset as root; or 2) "
 "remove it if those backups are no longer needed."
 msgstr ""
-"%(path)s 中已有檔案，但它不是獨立的 ZFS 資料集，而準備作業從不移動備份。請 1) 將其重新命名（例如改為 "
-"%(path)s.old），重新準備，再以 root 身分將其內容複製到新資料集中；或 2) 若不再需要這些備份，則將其刪除。"
+"%(path)s 中已有檔案，但它不是獨立的 ZFS 資料集，而準備作業從不移動備份。請 "
+"1) 將其重新命名（例如改為 %(path)s.old），重新準備，再以 root 身分將其內容複"
+"製到新資料集中；或 2) 若不再需要這些備份，則將其刪除。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:143
+#: src/sysmanage_agent/backup/storage_prepare.py:155
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -152,43 +184,51 @@ msgid ""
 "%(path)s.old), prepare again, and copy its contents into the new subvolume "
 "as root; or 2) remove it if those backups are no longer needed."
 msgstr ""
-"%(path)s 中已有檔案，但它不是獨立的 btrfs 子磁碟區，而準備作業從不移動備份。請 1) 將其重新命名（例如改為 "
-"%(path)s.old），重新準備，再以 root 身分將其內容複製到新子磁碟區中；或 2) 若不再需要這些備份，則將其刪除。"
+"%(path)s 中已有檔案，但它不是獨立的 btrfs 子磁碟區，而準備作業從不移動備份。"
+"請 1) 將其重新命名（例如改為 %(path)s.old），重新準備，再以 root 身分將其內容"
+"複製到新子磁碟區中；或 2) 若不再需要這些備份，則將其刪除。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:174
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
-msgstr "伺服器尚不知道受備份主機的 IP 位址，因此無法將其匯出限制為該位址。請等待該主機回報其網路資訊，然後重新準備。"
+msgstr ""
+"伺服器尚不知道受備份主機的 IP 位址，因此無法將其匯出限制為該位址。請等待該主"
+"機回報其網路資訊，然後重新準備。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:185
+#: src/sysmanage_agent/backup/storage_prepare.py:197
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s 不支援準備儲存。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:193
+#: src/sysmanage_agent/backup/storage_prepare.py:205
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
-msgstr "FreeBSD 匯出的是整個檔案系統，因此每台主機的存放庫都需要獨立的 ZFS 資料集。請將儲存路徑放在 ZFS 上，然後重新準備。"
+msgstr ""
+"FreeBSD 匯出的是整個檔案系統，因此每台主機的存放庫都需要獨立的 ZFS 資料集。請"
+"將儲存路徑放在 ZFS 上，然後重新準備。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:255
+#: src/sysmanage_agent/backup/storage_prepare.py:271
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
 "dataset would not land at the repository. Create a dataset mounted there "
 "(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
 msgstr ""
-"儲存路徑 %(path)s 處未掛載 ZFS 資料集，因此子資料集不會位於存放庫所在位置。請在該處建立一個掛載的資料集（zfs create -o "
-"mountpoint=%(path)s POOL/NAME），然後重新準備。"
+"儲存路徑 %(path)s 處未掛載 ZFS 資料集，因此子資料集不會位於存放庫所在位置。請"
+"在該處建立一個掛載的資料集（zfs create -o mountpoint=%(path)s POOL/NAME），然"
+"後重新準備。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:282
+#: src/sysmanage_agent/backup/storage_prepare.py:298
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
 "root), then prepare again."
-msgstr "%(path)s 是空目錄，不是 btrfs 子磁碟區。請將其刪除（以 root 身分執行 rmdir），然後重新準備。"
+msgstr ""
+"%(path)s 是空目錄，不是 btrfs 子磁碟區。請將其刪除（以 root 身分執行 "
+"rmdir），然後重新準備。"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -234,8 +274,7 @@ msgstr "查詢Windows憑證庫 %s 失敗：%s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 msgstr "證書捆綁 %s 包含超過 %d 個證書；報告前 %d 個"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
@@ -619,40 +658,40 @@ msgid ""
 "recorded"
 msgstr "網路探索在一個時間區間內看到超過 %d 台裝置；其餘裝置未被記錄"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:149
+#: src/sysmanage_agent/collection/os_info_collection.py:153
 msgid "Ubuntu Pro status check timed out"
 msgstr "Ubuntu Pro 狀態檢查逾時"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:154
+#: src/sysmanage_agent/collection/os_info_collection.py:158
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "無法取得Ubuntu Pro狀態：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:314
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "解析Ubuntu Pro JSON輸出失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:313
+#: src/sysmanage_agent/collection/os_info_collection.py:317
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "處理 Ubuntu Pro 數據時發生錯誤：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:401
+#: src/sysmanage_agent/collection/os_info_collection.py:405
 msgid "Livepatch status check timed out"
 msgstr "Livepatch 狀態檢查逾時"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:407
+#: src/sysmanage_agent/collection/os_info_collection.py:411
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "取得 Livepatch 狀態失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:424
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "解析 Livepatch JSON 失敗：%s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:572
+#: src/sysmanage_agent/collection/os_info_collection.py:576
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "無法取得時區：%s"
@@ -752,7 +791,9 @@ msgstr "收集 pkgin 套件時發生錯誤：%s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr "在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝器）"
+msgstr ""
+"在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝"
+"器）"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:142
@@ -866,7 +907,9 @@ msgstr "沒有 PID 為 %d 的程序"
 msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
-msgstr "PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已拒絕終止"
+msgstr ""
+"PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已"
+"拒絕終止"
 
 #: src/sysmanage_agent/collection/process_collection.py:202
 #, python-format
@@ -1757,8 +1800,8 @@ msgstr "處理輪詢消息 %s 時發生錯誤"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr "無法使用 HTTP 回退：此代理程式沒有存儲的 host_id。註冊必須先完成。"
 
 #: src/sysmanage_agent/communication/http_polling.py:232
@@ -1768,8 +1811,8 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾秒的延遲到達。允許 WebSocket 升級至 "
-"%s 以恢復即時交付。"
+"使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾"
+"秒的延遲到達。允許 WebSocket 升級至 %s 以恢復即時交付。"
 
 #: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
@@ -1807,8 +1850,7 @@ msgstr "無法解析消息時間戳以檢查過期：%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:396
 #: src/sysmanage_agent/communication/message_handler.py:732
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr "主機註冊正在等待批准。將繼續定期嘗試。"
 
 #: src/sysmanage_agent/communication/message_handler.py:403
@@ -1829,8 +1871,8 @@ msgstr "此主機的註冊遭到拒絕；將在 %d 秒後再次詢問伺服器�
 #: src/sysmanage_agent/communication/message_handler.py:465
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "伺服器報告主機未註冊 (第 %(n)d/%(limit)d 次警告) -- 重新連接而不丟棄 "
@@ -1841,7 +1883,9 @@ msgstr ""
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
-msgstr "主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 host_id 並重新註冊。"
+msgstr ""
+"主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 "
+"host_id 並重新註冊。"
 
 #: src/sysmanage_agent/communication/message_handler.py:489
 #, python-format
@@ -1972,7 +2016,8 @@ msgstr "錯誤修剪已完成的隊列消息：%s"
 msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
-msgstr ">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
+msgstr ""
+">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:160
@@ -2018,85 +2063,85 @@ msgstr "套件收集排程器錯誤：%s"
 msgid "Failed to build capability report: %s"
 msgstr "建立能力報告失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:448
+#: src/sysmanage_agent/core/agent_utils.py:449
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:491
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:502
+#: src/sysmanage_agent/core/agent_utils.py:503
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:561
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "無法將腳本執行結果排隊：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:580
+#: src/sysmanage_agent/core/agent_utils.py:581
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "檢查執行 UUID 時出錯：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:594
+#: src/sysmanage_agent/core/agent_utils.py:595
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:609
+#: src/sysmanage_agent/core/agent_utils.py:610
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:634
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存儲執行 UUID 時發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:699
+#: src/sysmanage_agent/core/agent_utils.py:700
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:746
+#: src/sysmanage_agent/core/agent_utils.py:747
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:752
+#: src/sysmanage_agent/core/agent_utils.py:753
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:837
+#: src/sysmanage_agent/core/agent_utils.py:838
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:847
+#: src/sysmanage_agent/core/agent_utils.py:848
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:886
+#: src/sysmanage_agent/core/agent_utils.py:887
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:929
+#: src/sysmanage_agent/core/agent_utils.py:930
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:939
+#: src/sysmanage_agent/core/agent_utils.py:940
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:987
+#: src/sysmanage_agent/core/agent_utils.py:988
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr "無法將合成的 command_result 加入執行中日誌佇列：%s"
@@ -2137,7 +2182,8 @@ msgstr "載入配置文件失敗：%s"
 msgid ""
 "enrollment_token found at '%s' is ignored; it must be under the top-level "
 "'security' section"
-msgstr "位於 '%s' 的 enrollment_token 已被忽略；它必須位於最上層 'security' 區段下"
+msgstr ""
+"位於 '%s' 的 enrollment_token 已被忽略；它必須位於最上層 'security' 區段下"
 
 #: src/sysmanage_agent/core/unconfigured.py:45
 msgid "no server is configured (server.url is not set)"
@@ -2154,8 +2200,8 @@ msgid ""
 "Edit %s: set server.url to your SysManage server and, for a multi-tenant "
 "server, security.enrollment_token; then restart the sysmanage-agent service."
 msgstr ""
-"請編輯 %s：將 server.url 設定為您的 SysManage 伺服器；如果是多租戶伺服器，還要設定 "
-"security.enrollment_token；然後重新啟動 sysmanage-agent 服務。"
+"請編輯 %s：將 server.url 設定為您的 SysManage 伺服器；如果是多租戶伺服器，還"
+"要設定 security.enrollment_token；然後重新啟動 sysmanage-agent 服務。"
 
 #: src/sysmanage_agent/core/unconfigured.py:91
 #, python-format
@@ -2247,192 +2293,168 @@ msgstr "收集代理日誌時發生錯誤：%s"
 msgid "Error collecting error logs: %s"
 msgstr "收集錯誤日誌時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:270
+#: src/sysmanage_agent/operations/backup_operations.py:271
 msgid "That backup action is not configured on this host."
 msgstr "此主機上未設定該備份操作。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:278
+#: src/sysmanage_agent/operations/backup_operations.py:279
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate在此主機上不可用：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:297
+#: src/sysmanage_agent/operations/backup_operations.py:302
 msgid "This platform can only be a backup storage host."
 msgstr "此平台只能作為備份儲存主機。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:303
+#: src/sysmanage_agent/operations/backup_operations.py:308
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "無法安裝備份作業：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:330
+#: src/sysmanage_agent/operations/backup_operations.py:335
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支援：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:440
+#: src/sysmanage_agent/operations/backup_operations.py:453
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 無法將 %s 作為工作執行；請升級 restate。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:546
+#: src/sysmanage_agent/operations/backup_operations.py:561
 msgid "restate is not installed on this host."
 msgstr "此主機上未安裝restate。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:594
 msgid "That backup job is already running."
 msgstr "該備份作業已在執行中。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:601
+#: src/sysmanage_agent/operations/backup_operations.py:616
 msgid "The backup job could not be started."
 msgstr "無法啟動備份作業。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:656
-#, python-format
-msgid ""
-"The backup storage is not mounted at %(where)s, and the server has not sent "
-"where to mount it from yet."
-msgstr "備份儲存未掛載在 %(where)s，而且伺服器尚未傳送掛載來源。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:665
-#, python-format
-msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
-msgstr "無法將備份儲存 %(source)s 掛載到 %(where)s：%(error)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:669
-#, python-format
-msgid "The backup storage is not mounted at %(where)s after mounting it."
-msgstr "掛載後，備份儲存仍未掛載在 %(where)s。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:688
-#, python-format
-msgid "The backup storage at %s did not answer."
-msgstr "%s 處的備份儲存沒有回應。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:710
-#, python-format
-msgid "Could not unmount the backup storage at %s: %s"
-msgstr "無法卸載 %s 處的備份儲存：%s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:760
+#: src/sysmanage_agent/operations/backup_operations.py:671
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "無法列出封存快照：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:775
+#: src/sysmanage_agent/operations/backup_operations.py:686
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "無法刪除舊的封存快照 %(name)s：%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:853
+#: src/sysmanage_agent/operations/backup_operations.py:764
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "無法為原則 %s 準備備份儲存：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:945
+#: src/sysmanage_agent/operations/backup_operations.py:867
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
 "%(unit)s on this host"
-msgstr "restate 在寫入結果之前已停止（結束代碼 %(code)s）；請在此主機上查看 journalctl -u %(unit)s"
+msgstr ""
+"restate 在寫入結果之前已停止（結束代碼 %(code)s）；請在此主機上查看 "
+"journalctl -u %(unit)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:973
+#: src/sysmanage_agent/operations/backup_operations.py:895
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "無法執行儲存稽核：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:991
+#: src/sysmanage_agent/operations/backup_operations.py:913
 msgid "Could not queue the backup report"
 msgstr "無法將備份報告加入佇列"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:74
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:118
 msgid "Homebrew is not installed"
 msgstr "未安裝 Homebrew"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:70
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:102
 #, python-format
 msgid "Error listing Homebrew taps: %s"
 msgstr "列出 Homebrew taps 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:81
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:113
 msgid "Invalid tap format. Use 'user/repo' format"
 msgstr "無效的 tap 格式。使用 'user/repo' 格式"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:101
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:136
 msgid "Tap added successfully"
 msgstr "Tap 添加成功"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:106
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:141
 #, python-format
 msgid "Failed to add tap %s: %s"
 msgstr "無法添加 tap %s： %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:112
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:147
 #, python-format
 msgid "Failed to add tap: %s"
 msgstr "無法添加 tap：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:116
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:151
 #, python-format
 msgid "Error adding Homebrew tap: %s"
 msgstr "添加 Homebrew 橋接時出錯：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:137
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
 #, python-format
 msgid "Error listing FreeBSD repositories: %s"
 msgstr "列出FreeBSD倉庫時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:207
 #: src/sysmanage_agent/operations/linux_repository_operations.py:250
 #: src/sysmanage_agent/operations/linux_repository_operations.py:441
 #, python-format
 msgid "Error reading %s: %s"
 msgstr "讀取 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:180
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:215
 msgid "Repository URL is required for FreeBSD pkg"
 msgstr "FreeBSD pkg 需要儲存庫 URL"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:210
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:245
 #: src/sysmanage_agent/operations/linux_repository_operations.py:24
 #: src/sysmanage_agent/operations/windows_repository_operations.py:165
 msgid "Repository added successfully"
 msgstr "存儲庫已成功添加"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:214
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:249
 #, python-format
 msgid "Error adding FreeBSD repository: %s"
 msgstr "添加 FreeBSD 存放庫時出錯：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:262
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:297
 #, python-format
 msgid "Error listing NetBSD repositories: %s"
 msgstr "列出 NetBSD 存儲庫時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:272
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
 msgid "Repository URL is required for NetBSD pkgsrc"
 msgstr "NetBSD pkgsrc 需要儲存庫 URL"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:281
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:316
 #, python-format
 msgid "Repository directory already exists: %s"
 msgstr "存儲庫目錄已經存在：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:302
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:337
 msgid "Repository cloned successfully"
 msgstr "存儲庫已成功克隆"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:342
 #, python-format
 msgid "Failed to clone repository %s: %s"
 msgstr "無法克隆存儲庫 %s： %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:313
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:348
 #, python-format
 msgid "Failed to clone repository: %s"
 msgstr "無法克隆存儲庫：%s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:318
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:353
 #, python-format
 msgid "Error adding NetBSD repository: %s"
 msgstr "添加 NetBSD 存放庫時出錯：%s"
@@ -2614,7 +2636,8 @@ msgstr "gpg 刪除失敗 (rc=%s)：%s"
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
-msgstr "代理不支援在 Windows 上以特定用戶身份運行 gpg；金鑰將被導入當前的金鑰環中"
+msgstr ""
+"代理不支援在 Windows 上以特定用戶身份運行 gpg；金鑰將被導入當前的金鑰環中"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -2908,102 +2931,106 @@ msgstr "跳過沒有名稱的套件"
 msgid "No package name"
 msgstr "無套件名稱"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:20
+#: src/sysmanage_agent/operations/package_manager_operations.py:23
 msgid "Installation failed"
 msgstr "安裝失敗"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:21
+#: src/sysmanage_agent/operations/package_manager_operations.py:24
 msgid "Installation timed out after 5 minutes"
 msgstr "安裝超時，超過 5 分鐘"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:103
+#: src/sysmanage_agent/operations/package_manager_operations.py:115
 msgid "Package manager name is required"
 msgstr "需要指定套件管理器名稱"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:114
+#: src/sysmanage_agent/operations/package_manager_operations.py:126
 msgid "Enabling package managers requires privileged mode"
 msgstr "啟用包管理器需要特權模式"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:130
+#: src/sysmanage_agent/operations/package_manager_operations.py:142
 #, python-format
 msgid "Unknown package manager: %s"
 msgstr "未知的包管理器：%s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:137
+#: src/sysmanage_agent/operations/package_manager_operations.py:149
 #, python-format
 msgid "Error enabling package manager '%s': %s"
 msgstr "啟用套件管理員 '%s' 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:149
+#: src/sysmanage_agent/operations/package_manager_operations.py:161
 msgid "Flatpak is only supported on Linux systems"
 msgstr "Flatpak 只支援 Linux 系統"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:159
+#: src/sysmanage_agent/operations/package_manager_operations.py:171
 msgid "Flatpak is already installed"
 msgstr "Flatpak 已安裝"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:188
+#: src/sysmanage_agent/operations/package_manager_operations.py:200
 #, python-format
 msgid "No supported package manager found to install %s"
 msgstr "找不到用於安裝 %s 的受支援套件管理器"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:211
+#: src/sysmanage_agent/operations/package_manager_operations.py:223
 #, python-format
 msgid "%s installed successfully"
 msgstr "%s 安裝成功"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:245
+#: src/sysmanage_agent/operations/package_manager_operations.py:257
 #, python-format
 msgid "Could not add Flathub repository: %s"
 msgstr "無法新增 Flathub 存放庫：%s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:252
+#: src/sysmanage_agent/operations/package_manager_operations.py:264
 msgid "Snap is only supported on Linux systems"
 msgstr "Snap 只支援 Linux 系統"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:261
+#: src/sysmanage_agent/operations/package_manager_operations.py:273
 msgid "Snap is already installed"
 msgstr "Snap 已安裝"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:287
+#: src/sysmanage_agent/operations/package_manager_operations.py:299
 #, python-format
 msgid "Could not enable snapd service: %s"
 msgstr "無法啟用 snapd 服務：%s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:297
+#: src/sysmanage_agent/operations/package_manager_operations.py:309
 msgid "Homebrew is already installed"
 msgstr "Homebrew 已安裝"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:306
+#: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
 "Homebrew 安裝需要手動介入。請使用以下命令安裝：/bin/bash -c \"$(curl -fsSL "
 "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:318
+#: src/sysmanage_agent/operations/package_manager_operations.py:335
+msgid "The installer script is unexpectedly large"
+msgstr "安裝指令碼大小超出預期"
+
+#: src/sysmanage_agent/operations/package_manager_operations.py:371
 msgid "Chocolatey is only supported on Windows systems"
 msgstr "Chocolatey 只支援 Windows 系統"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:327
+#: src/sysmanage_agent/operations/package_manager_operations.py:380
 msgid "Chocolatey is already installed"
 msgstr "Chocolatey 已安裝"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:361
+#: src/sysmanage_agent/operations/package_manager_operations.py:400
 msgid "Chocolatey installed successfully"
 msgstr "Chocolatey 安裝成功"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:380
+#: src/sysmanage_agent/operations/package_manager_operations.py:419
 msgid "Scoop is only supported on Windows systems"
 msgstr "Scoop 只支援 Windows 系統"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:389
+#: src/sysmanage_agent/operations/package_manager_operations.py:428
 msgid "Scoop is already installed"
 msgstr "Scoop 已安裝"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:420
+#: src/sysmanage_agent/operations/package_manager_operations.py:449
 msgid "Scoop installed successfully"
 msgstr "Scoop 安裝成功"
 
@@ -3603,42 +3630,42 @@ msgstr "⚠️  警告：aiohttp 不可用，將跳過註冊"
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp 不可用，跳過註冊"
 
-#: src/sysmanage_agent/registration/client_registration.py:382
+#: src/sysmanage_agent/registration/client_registration.py:386
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "註冊失敗，狀態為 %s：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:391
+#: src/sysmanage_agent/registration/client_registration.py:395
 #, python-format
 msgid "Error during registration: %s"
 msgstr "註冊期間發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:432
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "在 %s 次嘗試後註冊失敗"
 
-#: src/sysmanage_agent/registration/client_registration.py:434
+#: src/sysmanage_agent/registration/client_registration.py:438
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "註冊失敗，%s 秒後重試..."
 
-#: src/sysmanage_agent/registration/client_registration.py:489
+#: src/sysmanage_agent/registration/client_registration.py:495
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "加載已存儲的認證數據時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:512
+#: src/sysmanage_agent/registration/client_registration.py:525
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "存儲認證數據時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:525
+#: src/sysmanage_agent/registration/client_registration.py:540
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "取得存儲的host_id時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:540
+#: src/sysmanage_agent/registration/client_registration.py:557
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "獲取已存儲的批准數據時發生錯誤：%s"
@@ -3703,7 +3730,7 @@ msgid "Error processing host approval notification: %s"
 msgstr "處理主機批准通知時發生錯誤：%s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:322
-#: src/sysmanage_agent/registration/registration_manager.py:594
+#: src/sysmanage_agent/registration/registration_manager.py:597
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "清除主機批准記錄時出錯：%s"
@@ -3717,31 +3744,31 @@ msgstr "擷取已儲存憑證時發生錯誤"
 msgid "Error storing host approval in database: %s"
 msgstr "在資料庫中儲存主機批准時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:428
+#: src/sysmanage_agent/registration/registration_manager.py:434
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "獲取已存儲的 host_id 時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:489
+#: src/sysmanage_agent/registration/registration_manager.py:493
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "同步擷取已儲存 host_id 時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:542
+#: src/sysmanage_agent/registration/registration_manager.py:545
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "獲取主機批准時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:596
+#: src/sysmanage_agent/registration/registration_manager.py:599
 msgid "Continuing despite cleanup error..."
 msgstr "儘管出現清理錯誤，仍繼續進行……"
 
-#: src/sysmanage_agent/registration/registration_manager.py:617
+#: src/sysmanage_agent/registration/registration_manager.py:620
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "在 host_approval 表中找到%d個損壞條目，正在清理..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:631
+#: src/sysmanage_agent/registration/registration_manager.py:634
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "資料庫清理期間發生錯誤：%s"
@@ -3781,7 +3808,9 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
-#~ msgstr "廣播 %s：存貨刷新請求，但 data_collector 欠缺 send_software_inventory_update 功能"
+#~ msgstr ""
+#~ "廣播 %s：存貨刷新請求，但 data_collector 欠缺 "
+#~ "send_software_inventory_update 功能"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3933,7 +3962,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "找到%s包：%s v%s"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "跳過重複的角色：%s，服務為 %s（已安裝套件 %s）"
 
 #, python-format
@@ -4194,8 +4224,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "完成包批次 %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr "在非特權模式下執行憑證收集 - 某些憑證可能無法存取"
 
 #~ msgid "Collecting SSL certificates from system"
@@ -4294,7 +4324,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "已恢復 %d 條卡住的訊息"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "從 on_connection_established 建立出去消息處理任務"
 
 #, python-format
@@ -4304,7 +4335,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "進程中的出站隊列處理器正在運行，不再啟動新的"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "從 on_connection_established 建立進來消息處理任務"
 
 #, python-format
@@ -4801,7 +4833,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "收到的註冊數據但批准待定"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
 #~ msgstr "註冊成功但未提供 host_id - 批准可能會單獨來到"
 
 #, python-format
@@ -4952,9 +4985,11 @@ msgstr "檢查 WSL 支持時出錯：%s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
-#~ msgstr "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，已授權：%s）"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
+#~ msgstr ""
+#~ "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，"
+#~ "已授權：%s）"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5223,7 +5258,9 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分鐘。"
+#~ msgstr ""
+#~ "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分"
+#~ "鐘。"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "自動安裝 HTTP 請求: %s 來自 %s"
@@ -5349,7 +5386,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
-#~ msgstr "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
+#~ msgstr ""
+#~ "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM 已初始化並可使用"

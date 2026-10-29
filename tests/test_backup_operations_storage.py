@@ -497,3 +497,29 @@ def test_mount_and_umount_commands():
     assert host_mount.mount_argv(source, WHERE, systemd=True)[0] == "systemd-mount"
     assert host_mount.umount_argv(WHERE, systemd=True) == ["systemd-umount", WHERE]
     assert host_mount.systemd_running(isdir=lambda p: p == "/run/systemd/system")
+
+
+@pytest.mark.asyncio
+async def test_storage_configure_sweeps_stale_preflight_markers(ops):
+    """An older agent's pre-flight check left empty marker files in a host's
+    repository directory; the host cannot delete them (append-only) and
+    restate will not create a repository there (production, 2026-10-29)."""
+    from tests.backup_ops_support import (
+        _storage_policy,
+    )  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
+
+    await ops.backup_configure(_storage_policy({"mode": "none"}))
+    sweep = ops.fake.ran("find")
+    assert sweep, "no sweep ran"
+    argv = sweep[0]
+    assert argv[argv.index("find") + 2 :] == [
+        "-maxdepth",
+        "1",
+        "-type",
+        "f",
+        "-name",
+        ".sysmanage-preflight-*",
+        "-size",
+        "0",
+        "-delete",
+    ]

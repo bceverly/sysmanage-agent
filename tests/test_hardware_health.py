@@ -501,6 +501,33 @@ def test_windows_collect_bad_output():
     assert _sources(report)["powershell storage"]["status"] == hh.SOURCE_FAILED
 
 
+def test_windows_script_is_plain_text_never_encoded():
+    """A base64-encoded PowerShell command is a malware tell: Microsoft
+    Defender flagged the agent's installer in winget validation from 3.11
+    on.  The script goes as one plain -Command argument."""
+    seen = {}
+
+    def run(argv):
+        seen["argv"] = argv
+        return 0, "{}"
+
+    win.collect(hh.Report(), "Windows", run)
+    assert seen["argv"] == [
+        "powershell",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        win.SCRIPT,
+    ]
+    assert not any("Encoded" in arg for arg in seen["argv"])
+
+
+def test_windows_script_holds_no_double_quote():
+    """Windows PowerShell 5.1 mangles double quotes inside a -Command
+    argument; the script must keep to single quotes."""
+    assert '"' not in win.SCRIPT
+
+
 # --- macOS ------------------------------------------------------------------------------
 
 

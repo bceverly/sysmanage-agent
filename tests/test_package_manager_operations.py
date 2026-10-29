@@ -628,6 +628,10 @@ class TestEnableChocolatey:
         """Set up test fixtures."""
         self.mock_agent = Mock()
         self.ops = PackageManagerOperations(self.mock_agent)
+        # The installer script is downloaded first; never from the network here.
+        self.ops._download_installer = Mock(
+            return_value="/tmp/sysmanage-pm-x/install.ps1"
+        )
 
     @pytest.mark.asyncio
     async def test_enable_chocolatey_non_windows(self):
@@ -746,6 +750,10 @@ class TestEnableScoop:
         """Set up test fixtures."""
         self.mock_agent = Mock()
         self.ops = PackageManagerOperations(self.mock_agent)
+        # The installer script is downloaded first; never from the network here.
+        self.ops._download_installer = Mock(
+            return_value="/tmp/sysmanage-pm-x/install.ps1"
+        )
 
     @pytest.mark.asyncio
     async def test_enable_scoop_non_windows(self):
@@ -960,3 +968,52 @@ class TestInstallLinuxPackage:
 
                 assert result["success"] is False
                 assert "Subprocess error" in result["error"]
+
+
+class TestInstallerScriptsRunAsFiles:
+    """Chocolatey and Scoop install from their own scripts run with -File,
+    never a one-line download-and-Invoke-Expression: Microsoft Defender
+    flagged the agent's installer in winget validation (2026-10-28)."""
+
+    def setup_method(self):
+        self.ops = PackageManagerOperations(Mock())
+        self.ops.system = "Windows"
+        self.ops._download_installer = Mock(
+            return_value="/tmp/sysmanage-pm-x/install.ps1"
+        )
+
+    async def _argv_for(self, enable):
+        process = Mock(returncode=0)
+        process.communicate = AsyncMock(return_value=(b"ok", b""))
+        with patch("shutil.which", return_value=None), patch(
+            "asyncio.create_subprocess_exec",
+            new_callable=AsyncMock,
+            return_value=process,
+        ) as mock_exec:
+            result = await enable()
+        assert result["success"] is True
+        return list(mock_exec.call_args[0])
+
+    @pytest.mark.asyncio
+    async def test_chocolatey_runs_its_downloaded_script(self):
+        argv = await self._argv_for(self.ops._enable_chocolatey)
+        assert argv[-2:] == ["-File", "/tmp/sysmanage-pm-x/install.ps1"]
+        self.ops._download_installer.assert_called_once_with(
+            "https://community.chocolatey.org/install.ps1"
+        )
+
+    @pytest.mark.asyncio
+    async def test_scoop_runs_its_downloaded_script_as_admin(self):
+        argv = await self._argv_for(self.ops._enable_scoop)
+        assert argv[-3:] == ["-File", "/tmp/sysmanage-pm-x/install.ps1", "-RunAsAdmin"]
+
+    def test_no_download_and_invoke_one_liner_is_left(self):
+        import inspect  # pylint: disable=import-outside-toplevel
+
+        from src.sysmanage_agent.operations import (  # pylint: disable=import-outside-toplevel
+            package_manager_operations as pmo,
+        )
+
+        source = inspect.getsource(pmo)
+        for tell in ("DownloadString", "| iex", "iex (", "Invoke-Expression"):
+            assert tell not in source, tell

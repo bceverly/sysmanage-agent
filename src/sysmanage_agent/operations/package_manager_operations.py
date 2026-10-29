@@ -9,8 +9,11 @@ Manages enabling additional package managers on remote hosts.
 
 import asyncio
 import logging
+import os
 import platform
 import shutil
+import tempfile
+import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.sysmanage_agent.core.agent_utils import is_running_privileged
@@ -69,6 +72,15 @@ def _get_linux_package_manager() -> Optional[Tuple[str, List[str]]]:
         return zypper_path, ["install", "-y"]
 
     return None
+
+
+# Windows package managers' own installer scripts.  Downloaded by the agent
+# over HTTPS and run with -File -- never a one-line "fetch the script and
+# evaluate it in place": that pattern is what malware does, and Microsoft
+# Defender flagged the agent's installer in winget validation (2026-10-28).
+_CHOCOLATEY_INSTALLER = "https://community.chocolatey.org/install.ps1"
+_SCOOP_INSTALLER = "https://get.scoop.sh"
+_INSTALLER_MAX_BYTES = 4 * 1024 * 1024
 
 
 class PackageManagerOperations:
@@ -310,6 +322,47 @@ class PackageManagerOperations:
             "requires_manual_install": True,
         }
 
+    @staticmethod
+    def _download_installer(url: str) -> str:
+        """Fetch a package manager's installer script over HTTPS into a
+        private temporary directory; the script's path."""
+        request = urllib.request.Request(url, headers={"User-Agent": "sysmanage-agent"})
+        with urllib.request.urlopen(  # nosec B310 - fixed https:// URL
+            request, timeout=60
+        ) as response:
+            data = response.read(_INSTALLER_MAX_BYTES + 1)
+        if len(data) > _INSTALLER_MAX_BYTES:
+            raise ValueError(_("The installer script is unexpectedly large"))
+        folder = tempfile.mkdtemp(prefix="sysmanage-pm-")
+        path = os.path.join(folder, "install.ps1")
+        with open(path, "wb") as handle:
+            handle.write(data)
+        return path
+
+    async def _start_installer(self, url: str, *args: str):
+        """Download ``url`` and start it with PowerShell ``-File``; the
+        process.  The script's directory is removed once it has run."""
+        loop = asyncio.get_running_loop()
+        path = await loop.run_in_executor(None, self._download_installer, url)
+        try:
+            return await asyncio.create_subprocess_exec(  # nosec B603 B607
+                "powershell",
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                path,
+                *args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+        finally:
+            # -File has the script open once the process is running; Windows
+            # keeps the file until PowerShell closes it, so removing the
+            # directory late is fine and leaves nothing behind.
+            loop.call_later(600, shutil.rmtree, os.path.dirname(path), True)
+
     async def _enable_chocolatey(self) -> Dict[str, Any]:  # NOSONAR
         """Enable Chocolatey package manager on Windows."""
         if self.system != "Windows":
@@ -329,22 +382,8 @@ class PackageManagerOperations:
             }
 
         try:
-            # Install Chocolatey using PowerShell
-            install_cmd = (
-                "Set-ExecutionPolicy Bypass -Scope Process -Force; "
-                "[System.Net.ServicePointManager]::SecurityProtocol = "
-                "[System.Net.ServicePointManager]::SecurityProtocol -bor 3072; "
-                "iex ((New-Object System.Net.WebClient).DownloadString("
-                "'https://community.chocolatey.org/install.ps1'))"
-            )
-
-            process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                "powershell",
-                "-Command",
-                install_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            # Chocolatey's own install.ps1 (it sets TLS 1.2 itself).
+            process = await self._start_installer(_CHOCOLATEY_INSTALLER)
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
             stdout_text = stdout.decode() if stdout else ""
             stderr_text = stderr.decode() if stderr else ""
@@ -391,19 +430,9 @@ class PackageManagerOperations:
             }
 
         try:
-            # Install Scoop using PowerShell
-            install_cmd = (
-                "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force; "
-                "irm get.scoop.sh | iex"
-            )
-
-            process = await asyncio.create_subprocess_exec(  # nosec B603 B607
-                "powershell",
-                "-Command",
-                install_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            # Scoop's installer refuses to run elevated unless told to, and
+            # the agent runs as SYSTEM.
+            process = await self._start_installer(_SCOOP_INSTALLER, "-RunAsAdmin")
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
             stdout_text = stdout.decode() if stdout else ""
             stderr_text = stderr.decode() if stderr else ""

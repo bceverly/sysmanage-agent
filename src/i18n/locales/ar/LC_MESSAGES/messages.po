@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 14:49-0400\n"
+"POT-Creation-Date: 2026-10-28 18:15-0400\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -72,57 +72,86 @@ msgstr ""
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  لا يمكن الوصول إلى {config_dir}، العودة إلى {fallback_dir}"
 
-#: src/sysmanage_agent/backup/host_mount.py:67
-#, python-format
-msgid "The backup storage at %(where)s cannot take new files: %(error)s"
-msgstr "لا يقبل تخزين النسخ الاحتياطي في %(where)s ملفات جديدة: %(error)s"
-
-#: src/sysmanage_agent/backup/host_mount.py:73
-#, python-format
-msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
-msgstr "القفل لا يعمل على تخزين النسخ الاحتياطي في %(where)s: %(error)s"
-
-#: src/sysmanage_agent/backup/host_mount.py:84
+#: src/sysmanage_agent/backup/host_mount.py:109
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr ""
 "تخزين النسخ الاحتياطي في %(where)s ممتلئ تقريبًا (%(free)d ميغابايت متاحة)."
 
-#: src/sysmanage_agent/backup/key_files.py:52
+#: src/sysmanage_agent/backup/host_mount.py:115
+#, python-format
+msgid "The backup storage at %(where)s cannot take new files: %(error)s"
+msgstr "لا يقبل تخزين النسخ الاحتياطي في %(where)s ملفات جديدة: %(error)s"
+
+#: src/sysmanage_agent/backup/host_mount.py:135
+#, python-format
+msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
+msgstr "القفل لا يعمل على تخزين النسخ الاحتياطي في %(where)s: %(error)s"
+
+#: src/sysmanage_agent/backup/key_files.py:56
 msgid "The server sent no usable keys"
 msgstr "لم يرسل الخادم أي مفاتيح صالحة للاستخدام"
 
-#: src/sysmanage_agent/backup/key_files.py:54
+#: src/sysmanage_agent/backup/key_files.py:58
 msgid "The server sent something that is not a secret key"
 msgstr "أرسل الخادم شيئًا ليس مفتاحًا سريًا"
 
-#: src/sysmanage_agent/backup/key_files.py:62
+#: src/sysmanage_agent/backup/key_files.py:66
 msgid "No tmpfs to stage the key on"
 msgstr "لا يوجد tmpfs لتجهيز المفتاح"
 
-#: src/sysmanage_agent/backup/key_files.py:103
+#: src/sysmanage_agent/backup/key_files.py:107
 msgid "This host is not approved yet"
 msgstr "لم تتم الموافقة على هذا المضيف بعد"
 
-#: src/sysmanage_agent/backup/key_files.py:123
+#: src/sysmanage_agent/backup/key_files.py:127
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr "لم يُطلق الخادم مفتاح النسخ الاحتياطي: HTTP %(status)s، %(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:134
+#: src/sysmanage_agent/backup/key_files.py:138
 msgid "no reason given"
 msgstr "لم يُذكر سبب"
 
-#: src/sysmanage_agent/backup/key_files.py:154
+#: src/sysmanage_agent/backup/key_files.py:158
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "تعذّر تثبيت مفتاح النسخ الاحتياطي: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:197
+#: src/sysmanage_agent/backup/key_files.py:201
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr "لا يستطيع restate هذا فك تشفير مستودع مشفّر؛ حدّث restate."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:94
+#: src/sysmanage_agent/backup/mount_mixin.py:86
+#, python-format
+msgid ""
+"The backup storage is not mounted at %(where)s, and the server has not sent "
+"where to mount it from yet."
+msgstr ""
+"تخزين النسخ الاحتياطي غير مركّب على %(where)s، ولم يرسل الخادم بعد المصدر "
+"الذي يُركَّب منه."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:99
+#, python-format
+msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
+msgstr "تعذّر تركيب تخزين النسخ الاحتياطي %(source)s على %(where)s: %(error)s"
+
+#: src/sysmanage_agent/backup/mount_mixin.py:107
+#, python-format
+msgid "The backup storage is not mounted at %(where)s after mounting it."
+msgstr "تخزين النسخ الاحتياطي غير مركّب على %(where)s بعد تركيبه."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:124
+#, python-format
+msgid "The backup storage at %s did not answer."
+msgstr "لم يستجب تخزين النسخ الاحتياطي في %s."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:149
+#, python-format
+msgid "Could not unmount the backup storage at %s: %s"
+msgstr "تعذّر إلغاء تركيب تخزين النسخ الاحتياطي على %s: %s"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:106
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -131,17 +160,17 @@ msgstr ""
 "حساب خدمة النسخ الاحتياطي %(account)s (المستخدم والمجموعة) غير موجود على "
 "مضيف التخزين هذا. أنشئه، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:124
+#: src/sysmanage_agent/backup/storage_prepare.py:136
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr ""
-"لا يستطيع الوكيل قراءة %(path)s، لذا لا يمكنه معرفة ما إذا كان يحتوي على نسخ"
-" احتياطية. شغّل الوكيل بصلاحيات root أو انقل الدليل إلى مكان آخر، ثم أعد "
+"لا يستطيع الوكيل قراءة %(path)s، لذا لا يمكنه معرفة ما إذا كان يحتوي على نسخ "
+"احتياطية. شغّل الوكيل بصلاحيات root أو انقل الدليل إلى مكان آخر، ثم أعد "
 "التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:135
+#: src/sysmanage_agent/backup/storage_prepare.py:147
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -149,12 +178,12 @@ msgid ""
 "prepare again, and copy its contents into the new dataset as root; or 2) "
 "remove it if those backups are no longer needed."
 msgstr ""
-"يحتوي %(path)s على ملفات بالفعل لكنه ليس مجموعة بيانات ZFS خاصة به، والتحضير"
-" لا ينقل النسخ الاحتياطية أبدًا. إما 1) أعد تسميته (مثلًا إلى %(path)s.old)،"
-" وأعد التحضير، وانسخ محتواه إلى مجموعة البيانات الجديدة بصلاحيات root؛ أو 2)"
-" احذفه إذا لم تعد هذه النسخ الاحتياطية مطلوبة."
+"يحتوي %(path)s على ملفات بالفعل لكنه ليس مجموعة بيانات ZFS خاصة به، والتحضير "
+"لا ينقل النسخ الاحتياطية أبدًا. إما 1) أعد تسميته (مثلًا إلى %(path)s.old)، "
+"وأعد التحضير، وانسخ محتواه إلى مجموعة البيانات الجديدة بصلاحيات root؛ أو 2) "
+"احذفه إذا لم تعد هذه النسخ الاحتياطية مطلوبة."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:143
+#: src/sysmanage_agent/backup/storage_prepare.py:155
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -167,21 +196,21 @@ msgstr ""
 "وأعد التحضير، وانسخ محتواه إلى الوحدة الفرعية الجديدة بصلاحيات root؛ أو 2) "
 "احذفه إذا لم تعد هذه النسخ الاحتياطية مطلوبة."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:174
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
 msgstr ""
-"لا يعرف الخادم بعد عنوان IP للمضيف المنسوخ احتياطيًا، لذا لا يمكن قصر تصديره"
-" عليه. انتظر حتى يبلّغ ذلك المضيف عن بيانات شبكته، ثم أعد التحضير."
+"لا يعرف الخادم بعد عنوان IP للمضيف المنسوخ احتياطيًا، لذا لا يمكن قصر تصديره "
+"عليه. انتظر حتى يبلّغ ذلك المضيف عن بيانات شبكته، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:185
+#: src/sysmanage_agent/backup/storage_prepare.py:197
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "تحضير التخزين غير مدعوم على %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:193
+#: src/sysmanage_agent/backup/storage_prepare.py:205
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -189,18 +218,18 @@ msgstr ""
 "يصدّر FreeBSD أنظمة ملفات كاملة، لذا يحتاج مستودع كل مضيف إلى مجموعة بيانات "
 "ZFS خاصة به. ضع مسار التخزين على ZFS، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:255
+#: src/sysmanage_agent/backup/storage_prepare.py:271
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
 "dataset would not land at the repository. Create a dataset mounted there "
 "(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
 msgstr ""
-"لا توجد مجموعة بيانات ZFS مركّبة عند مسار التخزين %(path)s، لذا لن تقع "
-"مجموعة بيانات فرعية في موضع المستودع. أنشئ مجموعة بيانات مركّبة هناك (zfs "
-"create -o mountpoint=%(path)s POOL/NAME)، ثم أعد التحضير."
+"لا توجد مجموعة بيانات ZFS مركّبة عند مسار التخزين %(path)s، لذا لن تقع مجموعة "
+"بيانات فرعية في موضع المستودع. أنشئ مجموعة بيانات مركّبة هناك (zfs create -o "
+"mountpoint=%(path)s POOL/NAME)، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:282
+#: src/sysmanage_agent/backup/storage_prepare.py:298
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -253,8 +282,7 @@ msgstr "فشل في استعلام مخزن الشهادات Windows %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 msgstr "حزمة الشهادات %s تحتوي على أكثر من %d شهادة؛ إعداد تقرير عن الأولى %d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
@@ -638,40 +666,40 @@ msgid ""
 "recorded"
 msgstr "رصد اكتشاف الشبكة أكثر من %d جهاز في نافذة واحدة؛ ولم يُسجَّل الباقي"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:149
+#: src/sysmanage_agent/collection/os_info_collection.py:153
 msgid "Ubuntu Pro status check timed out"
 msgstr "انتهت مهلة التحقق من حالة Ubuntu Pro"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:154
+#: src/sysmanage_agent/collection/os_info_collection.py:158
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "فشل في الحصول على حالة Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:314
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "فشل في تحليل خرج JSON Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:313
+#: src/sysmanage_agent/collection/os_info_collection.py:317
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "خطأ في معالجة بيانات Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:401
+#: src/sysmanage_agent/collection/os_info_collection.py:405
 msgid "Livepatch status check timed out"
 msgstr "انتهت مهلة فحص حالة Livepatch"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:407
+#: src/sysmanage_agent/collection/os_info_collection.py:411
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "فشل في الحصول على حالة Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:424
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "فشل في تحليل JSON الخاص بـ Livepatch: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:572
+#: src/sysmanage_agent/collection/os_info_collection.py:576
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "فشل في الحصول على توقيت المنطقة الزمنية: %s"
@@ -1783,8 +1811,8 @@ msgstr "خطأ في معالجة الرسالة المرسلة %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr ""
 "لا يمكن استخدامallback HTTP: هذا الوكيل ليس لديه host_id مخزن. يجب إكمال "
 "التسجيل أولاً."
@@ -1796,8 +1824,8 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"استخدام التحقق عبر HTTP بدلاً من WebSocket: هذه الشبكة رفضت ترقية WebSocket."
-" ستصل الأوامر مع تأخير يصل إلى بضع ثوانٍ. السماح بالترقيات إلى WebSocket %s "
+"استخدام التحقق عبر HTTP بدلاً من WebSocket: هذه الشبكة رفضت ترقية WebSocket. "
+"ستصل الأوامر مع تأخير يصل إلى بضع ثوانٍ. السماح بالترقيات إلى WebSocket %s "
 "لاستعادة التوصيل الفوري."
 
 #: src/sysmanage_agent/communication/http_polling.py:254
@@ -1836,8 +1864,7 @@ msgstr "لا يمكن تحليل توقيع الرسالة لفحص التقاد
 
 #: src/sysmanage_agent/communication/message_handler.py:396
 #: src/sysmanage_agent/communication/message_handler.py:732
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr "تسجيل المضيف معلق انتظار الموافقة. سيتم مواصلة المحاولات الدورية."
 
 #: src/sysmanage_agent/communication/message_handler.py:403
@@ -1858,8 +1885,8 @@ msgstr "رُفض تسجيل هذا المضيف؛ سيُسأل الخادم مر
 #: src/sysmanage_agent/communication/message_handler.py:465
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "الخادم أبلغ عن حالة host_not_registered (الضربة %(n)d/%(limit)d) -- إعادة "
@@ -2053,85 +2080,85 @@ msgstr "خطأ في مجدول جمع الحزم: %s"
 msgid "Failed to build capability report: %s"
 msgstr "فشل في بناء تقرير القدرة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:448
+#: src/sysmanage_agent/core/agent_utils.py:449
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "تمت معالجة UUID تنفيذ النص البرمجي %s بالفعل، تخطي التكرار"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:491
 msgid "Generic command missing nested command_type"
 msgstr "الأمر العام مفقود نوع الأمر المتداخل"
 
-#: src/sysmanage_agent/core/agent_utils.py:502
+#: src/sysmanage_agent/core/agent_utils.py:503
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "نوع أمر غير معروف: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:561
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "فشل في وضع علامة على نتيجة تنفيذ النص البرمجي كقيد: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:580
+#: src/sysmanage_agent/core/agent_utils.py:581
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "خطأ في التحقق من UUID للتنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:594
+#: src/sysmanage_agent/core/agent_utils.py:595
 msgid "No execution UUID provided, cannot track"
 msgstr "لم يتم توفير UUID للتنفيذ، لا يمكن التتبع"
 
-#: src/sysmanage_agent/core/agent_utils.py:609
+#: src/sysmanage_agent/core/agent_utils.py:610
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID التنفيذ %s موجود بالفعل في قاعدة البيانات"
 
-#: src/sysmanage_agent/core/agent_utils.py:634
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "خطأ في تخزين UUID التنفيذ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:699
+#: src/sysmanage_agent/core/agent_utils.py:700
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "خطأ في معالج التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:746
+#: src/sysmanage_agent/core/agent_utils.py:747
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "انتهت مهلة التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:752
+#: src/sysmanage_agent/core/agent_utils.py:753
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "خطأ التحكم بالخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:837
+#: src/sysmanage_agent/core/agent_utils.py:838
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "تعذّر %s للخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:847
+#: src/sysmanage_agent/core/agent_utils.py:848
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "تعذّر تحديث الأدوار بعد التحكم بالخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:886
+#: src/sysmanage_agent/core/agent_utils.py:887
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "خطأ في معالج حالة الخدمة: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:929
+#: src/sysmanage_agent/core/agent_utils.py:930
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "انتهت مهلة فحص حالة الخدمة %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:939
+#: src/sysmanage_agent/core/agent_utils.py:940
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "خطأ في حالة الخدمة لـ %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:987
+#: src/sysmanage_agent/core/agent_utils.py:988
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2193,8 +2220,8 @@ msgid ""
 "server, security.enrollment_token; then restart the sysmanage-agent service."
 msgstr ""
 "حرّر %s: اضبط server.url على خادم SysManage الخاص بك، وفي حالة الخادم متعدد "
-"المستأجرين اضبط security.enrollment_token أيضًا؛ ثم أعد تشغيل خدمة "
-"sysmanage-agent."
+"المستأجرين اضبط security.enrollment_token أيضًا؛ ثم أعد تشغيل خدمة sysmanage-"
+"agent."
 
 #: src/sysmanage_agent/core/unconfigured.py:91
 #, python-format
@@ -2285,91 +2312,62 @@ msgstr "خطأ في جمع سجلات الوكيل: %s"
 msgid "Error collecting error logs: %s"
 msgstr "خطأ في جمع سجلات الأخطاء: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:270
+#: src/sysmanage_agent/operations/backup_operations.py:271
 msgid "That backup action is not configured on this host."
 msgstr "إجراء النسخ الاحتياطي هذا غير مُهيأ على هذا المضيف."
 
-#: src/sysmanage_agent/operations/backup_operations.py:278
+#: src/sysmanage_agent/operations/backup_operations.py:279
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "لا يمكن استخدام restate على هذا المضيف: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:297
+#: src/sysmanage_agent/operations/backup_operations.py:302
 msgid "This platform can only be a backup storage host."
 msgstr "لا يمكن لهذه المنصة أن تكون إلا مضيف تخزين للنسخ الاحتياطية."
 
-#: src/sysmanage_agent/operations/backup_operations.py:303
+#: src/sysmanage_agent/operations/backup_operations.py:308
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "تعذر تثبيت مهام النسخ الاحتياطي: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:330
+#: src/sysmanage_agent/operations/backup_operations.py:335
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "إصدار restate هذا لا يدعم: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:440
+#: src/sysmanage_agent/operations/backup_operations.py:453
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "لا يستطيع restate هذا تشغيل %s كمهمة؛ حدّث restate."
 
-#: src/sysmanage_agent/operations/backup_operations.py:546
+#: src/sysmanage_agent/operations/backup_operations.py:561
 msgid "restate is not installed on this host."
 msgstr "restate غير مثبت على هذا المضيف."
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:594
 msgid "That backup job is already running."
 msgstr "مهمة النسخ الاحتياطي هذه قيد التشغيل بالفعل."
 
-#: src/sysmanage_agent/operations/backup_operations.py:601
+#: src/sysmanage_agent/operations/backup_operations.py:616
 msgid "The backup job could not be started."
 msgstr "تعذر بدء مهمة النسخ الاحتياطي."
 
-#: src/sysmanage_agent/operations/backup_operations.py:656
-#, python-format
-msgid ""
-"The backup storage is not mounted at %(where)s, and the server has not sent "
-"where to mount it from yet."
-msgstr ""
-"تخزين النسخ الاحتياطي غير مركّب على %(where)s، ولم يرسل الخادم بعد المصدر "
-"الذي يُركَّب منه."
-
-#: src/sysmanage_agent/operations/backup_operations.py:665
-#, python-format
-msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
-msgstr "تعذّر تركيب تخزين النسخ الاحتياطي %(source)s على %(where)s: %(error)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:669
-#, python-format
-msgid "The backup storage is not mounted at %(where)s after mounting it."
-msgstr "تخزين النسخ الاحتياطي غير مركّب على %(where)s بعد تركيبه."
-
-#: src/sysmanage_agent/operations/backup_operations.py:688
-#, python-format
-msgid "The backup storage at %s did not answer."
-msgstr "لم يستجب تخزين النسخ الاحتياطي في %s."
-
-#: src/sysmanage_agent/operations/backup_operations.py:710
-#, python-format
-msgid "Could not unmount the backup storage at %s: %s"
-msgstr "تعذّر إلغاء تركيب تخزين النسخ الاحتياطي على %s: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:760
+#: src/sysmanage_agent/operations/backup_operations.py:671
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "تعذّر سرد اللقطات المختومة: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:775
+#: src/sysmanage_agent/operations/backup_operations.py:686
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "تعذّر إزالة اللقطة المختومة القديمة %(name)s: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:853
+#: src/sysmanage_agent/operations/backup_operations.py:764
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "تعذّر تحضير تخزين النسخ الاحتياطي للسياسة %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:945
+#: src/sysmanage_agent/operations/backup_operations.py:867
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2378,103 +2376,104 @@ msgstr ""
 "توقف restate (رمز الخروج %(code)s) قبل كتابة نتيجة؛ راجع journalctl -u "
 "%(unit)s على هذا المضيف"
 
-#: src/sysmanage_agent/operations/backup_operations.py:973
+#: src/sysmanage_agent/operations/backup_operations.py:895
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "تعذر تشغيل تدقيق التخزين: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:991
+#: src/sysmanage_agent/operations/backup_operations.py:913
 msgid "Could not queue the backup report"
 msgstr "تعذر إدراج تقرير النسخ الاحتياطي في قائمة الانتظار"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:74
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:118
 msgid "Homebrew is not installed"
 msgstr "Homebrew غير مثبت"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:70
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:102
 #, python-format
 msgid "Error listing Homebrew taps: %s"
 msgstr "خطأ في قوائم Homebrew taps: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:81
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:113
 msgid "Invalid tap format. Use 'user/repo' format"
 msgstr "تنسيق tap غير صالح. استخدم تنسيق 'user/repo'"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:101
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:136
 msgid "Tap added successfully"
 msgstr "تم إضافة التوصية بنجاح"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:106
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:141
 #, python-format
 msgid "Failed to add tap %s: %s"
 msgstr "فشل في إضافة tap %s: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:112
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:147
 #, python-format
 msgid "Failed to add tap: %s"
 msgstr "فشل في إضافة التاب: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:116
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:151
 #, python-format
 msgid "Error adding Homebrew tap: %s"
 msgstr "خطأ في إضافة تاب Homebrew: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:137
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
 #, python-format
 msgid "Error listing FreeBSD repositories: %s"
 msgstr "خطأ أثناء قائمة مستودعات FreeBSD: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:207
 #: src/sysmanage_agent/operations/linux_repository_operations.py:250
 #: src/sysmanage_agent/operations/linux_repository_operations.py:441
 #, python-format
 msgid "Error reading %s: %s"
 msgstr "خطأ في قراءة %s: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:180
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:215
 msgid "Repository URL is required for FreeBSD pkg"
 msgstr "عنوان URL للمستودع مطلوب لـ FreeBSD pkg"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:210
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:245
 #: src/sysmanage_agent/operations/linux_repository_operations.py:24
 #: src/sysmanage_agent/operations/windows_repository_operations.py:165
 msgid "Repository added successfully"
 msgstr "تم إضافة المستودع بنجاح"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:214
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:249
 #, python-format
 msgid "Error adding FreeBSD repository: %s"
 msgstr "خطأ في إضافة مستودع FreeBSD: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:262
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:297
 #, python-format
 msgid "Error listing NetBSD repositories: %s"
 msgstr "خطأ في قوائم NetBSD المخازن: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:272
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
 msgid "Repository URL is required for NetBSD pkgsrc"
 msgstr "عنوان URL للمستودع مطلوب لـ NetBSD pkgsrc"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:281
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:316
 #, python-format
 msgid "Repository directory already exists: %s"
 msgstr "exists already: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:302
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:337
 msgid "Repository cloned successfully"
 msgstr "تم نسخ المستودع بنجاح"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:342
 #, python-format
 msgid "Failed to clone repository %s: %s"
 msgstr "فشل في نسخ المستودع %s: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:313
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:348
 #, python-format
 msgid "Failed to clone repository: %s"
 msgstr "فشل في نسخ المخزن: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:318
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:353
 #, python-format
 msgid "Error adding NetBSD repository: %s"
 msgstr "خطأ في إضافة مستودع NetBSD: %s"
@@ -2952,103 +2951,107 @@ msgstr "تخطي حزمة بدون اسم"
 msgid "No package name"
 msgstr "لا يوجد اسم حزمة"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:20
+#: src/sysmanage_agent/operations/package_manager_operations.py:23
 msgid "Installation failed"
 msgstr "لفت التثبيت فشل"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:21
+#: src/sysmanage_agent/operations/package_manager_operations.py:24
 msgid "Installation timed out after 5 minutes"
 msgstr "انتهت مدة التثبيت بعد 5 دقائق"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:103
+#: src/sysmanage_agent/operations/package_manager_operations.py:115
 msgid "Package manager name is required"
 msgstr "اسم مدير الحزم مطلوب"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:114
+#: src/sysmanage_agent/operations/package_manager_operations.py:126
 msgid "Enabling package managers requires privileged mode"
 msgstr "يتطلب تمكين مديري الحزم وضع المستخدم المخول"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:130
+#: src/sysmanage_agent/operations/package_manager_operations.py:142
 #, python-format
 msgid "Unknown package manager: %s"
 msgstr "مدير الحزم غير معروف: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:137
+#: src/sysmanage_agent/operations/package_manager_operations.py:149
 #, python-format
 msgid "Error enabling package manager '%s': %s"
 msgstr "خطأ في تفعيل مدير الحزم '%s': %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:149
+#: src/sysmanage_agent/operations/package_manager_operations.py:161
 msgid "Flatpak is only supported on Linux systems"
 msgstr "يتم دعم Flatpak فقط على أنظمة Linux"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:159
+#: src/sysmanage_agent/operations/package_manager_operations.py:171
 msgid "Flatpak is already installed"
 msgstr "Flatpak مثبت بالفعل"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:188
+#: src/sysmanage_agent/operations/package_manager_operations.py:200
 #, python-format
 msgid "No supported package manager found to install %s"
 msgstr "لم يتم العثور على مدير حزم مدعوم لتثبيت %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:211
+#: src/sysmanage_agent/operations/package_manager_operations.py:223
 #, python-format
 msgid "%s installed successfully"
 msgstr "تم تثبيت %s بنجاح"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:245
+#: src/sysmanage_agent/operations/package_manager_operations.py:257
 #, python-format
 msgid "Could not add Flathub repository: %s"
 msgstr "لا يمكن إضافة مستودع Flathub: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:252
+#: src/sysmanage_agent/operations/package_manager_operations.py:264
 msgid "Snap is only supported on Linux systems"
 msgstr "Snap مدعوم فقط على أنظمة Linux"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:261
+#: src/sysmanage_agent/operations/package_manager_operations.py:273
 msgid "Snap is already installed"
 msgstr "تم تثبيت Snap بالفعل"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:287
+#: src/sysmanage_agent/operations/package_manager_operations.py:299
 #, python-format
 msgid "Could not enable snapd service: %s"
 msgstr "لا يمكن تمكين خدمة snapd: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:297
+#: src/sysmanage_agent/operations/package_manager_operations.py:309
 msgid "Homebrew is already installed"
 msgstr "Homebrew تم تثبيته بالفعل"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:306
-msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-msgstr ""
-"يتطلب تثبيت Homebrew تدخلاً يدوياً. يرجى التثبيت باستخدام: /bin/bash -c "
-"\"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
+msgid ""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
+msgstr ""
+"يتطلب تثبيت Homebrew تدخلاً يدوياً. يرجى التثبيت باستخدام: /bin/bash -c \"$"
+"(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/"
+"install.sh)\""
+
+#: src/sysmanage_agent/operations/package_manager_operations.py:335
+msgid "The installer script is unexpectedly large"
+msgstr "حجم سكربت التثبيت أكبر من المتوقع"
+
+#: src/sysmanage_agent/operations/package_manager_operations.py:371
 msgid "Chocolatey is only supported on Windows systems"
 msgstr "يقتصر دعم Chocolatey على أنظمة Windows"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:327
+#: src/sysmanage_agent/operations/package_manager_operations.py:380
 msgid "Chocolatey is already installed"
 msgstr "Chocolatey مثبت بالفعل"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:361
+#: src/sysmanage_agent/operations/package_manager_operations.py:400
 msgid "Chocolatey installed successfully"
 msgstr "تمت تثبيت Chocolatey بنجاح"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:380
+#: src/sysmanage_agent/operations/package_manager_operations.py:419
 msgid "Scoop is only supported on Windows systems"
 msgstr "Scoop مدعوم فقط على أنظمة Windows"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:389
+#: src/sysmanage_agent/operations/package_manager_operations.py:428
 msgid "Scoop is already installed"
 msgstr "سcoop مثبت بالفعل"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:420
+#: src/sysmanage_agent/operations/package_manager_operations.py:449
 msgid "Scoop installed successfully"
 msgstr "تم تثبيت Scoop بنجاح"
 
@@ -3648,42 +3651,42 @@ msgstr "⚠️  تحذير: aiohttp غير متاح، سيتم تخطي التس
 msgid "aiohttp not available, skipping registration"
 msgstr "غير متاح aiohttp، تم تخطي التسجيل"
 
-#: src/sysmanage_agent/registration/client_registration.py:382
+#: src/sysmanage_agent/registration/client_registration.py:386
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "لفشل التسجيل بناءً على الحالة %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:391
+#: src/sysmanage_agent/registration/client_registration.py:395
 #, python-format
 msgid "Error during registration: %s"
 msgstr "خطأ أثناء التسجيل: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:432
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "فشل في التسجيل بعد %s محاولات"
 
-#: src/sysmanage_agent/registration/client_registration.py:434
+#: src/sysmanage_agent/registration/client_registration.py:438
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "فشل التسجيل، إعادة المحاولة في %s ثانية..."
 
-#: src/sysmanage_agent/registration/client_registration.py:489
+#: src/sysmanage_agent/registration/client_registration.py:495
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "خطأ في تحميل بيانات التحقق المخزنة: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:512
+#: src/sysmanage_agent/registration/client_registration.py:525
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "خطأ في تخزين بيانات التحقق: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:525
+#: src/sysmanage_agent/registration/client_registration.py:540
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "خطأ أثناء الحصول على مخزن host_id: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:540
+#: src/sysmanage_agent/registration/client_registration.py:557
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "خطأ في استرداد بيانات الموافقة المخزنة: %s"
@@ -3748,7 +3751,7 @@ msgid "Error processing host approval notification: %s"
 msgstr "خطأ في معالجة إشعار الموافقة على المستضيفة: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:322
-#: src/sysmanage_agent/registration/registration_manager.py:594
+#: src/sysmanage_agent/registration/registration_manager.py:597
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "خطأ في إزالة سجلات الموافقة للمضيف: %s"
@@ -3762,31 +3765,31 @@ msgstr "خطأ في استرداد بيانات الاعتماد المخزنة"
 msgid "Error storing host approval in database: %s"
 msgstr "خطأ في تخزين موافقة المضيف في قاعدة البيانات: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:428
+#: src/sysmanage_agent/registration/registration_manager.py:434
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "خطأ في استرداد معرف المستضيفة المخزن: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:489
+#: src/sysmanage_agent/registration/registration_manager.py:493
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "خطأ في استرداد host_id المخزن بشكل متزامن: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:542
+#: src/sysmanage_agent/registration/registration_manager.py:545
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "خطأ في استرداد موافقة المستضيفة: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:596
+#: src/sysmanage_agent/registration/registration_manager.py:599
 msgid "Continuing despite cleanup error..."
 msgstr "المتابعة على الرغم من خطأ التنظيف..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:617
+#: src/sysmanage_agent/registration/registration_manager.py:620
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "تم العثور على %d إدخالات تالفة في جدول host_approval، جارٍ التنظيف..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:631
+#: src/sysmanage_agent/registration/registration_manager.py:634
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "خطأ أثناء تنظيف قاعدة البيانات: %s"
@@ -3981,7 +3984,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "وجدت حزمة %s: %s v%s"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "تجاوز الدور المتكرر: %s مع الخدمة %s (لدينا بالفعل حزمة %s)"
 
 #, python-format
@@ -4040,7 +4044,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "اكتمل اكتشاف التحديثات: تم العثور على %d تحديث (%d أمان، %d نظام، %d تطبيق)"
+#~ "اكتمل اكتشاف التحديثات: تم العثور على %d تحديث (%d أمان، %d نظام، %d "
+#~ "تطبيق)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -4236,10 +4241,11 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "انتهت دفعة الحزم %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr ""
-#~ "تشغيل جمع الشهادات في الوضع غير المتميز - قد لا يمكن الوصول إلى بعض الشهادات"
+#~ "تشغيل جمع الشهادات في الوضع غير المتميز - قد لا يمكن الوصول إلى بعض "
+#~ "الشهادات"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "جمع شهادات SSL من النظام"
@@ -4337,7 +4343,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "تم استرداد %d رسالة معلقة"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "إنشاء مهمة معالجة طابور الصادر من on_connection_established"
 
 #, python-format
@@ -4347,7 +4354,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "مُعالِج طابور الصادر قائم بالفعل، لن يتم بدء آخر"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "إنشاء مهمة معالجة طابور الوارد من on_connection_established"
 
 #, python-format
@@ -4663,7 +4671,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "جارٍ التحقق من حالة الخدمة: %s"
 
 #~ msgid "Updated OS information sent to server after Ubuntu Pro change"
-#~ msgstr "تم إرسال معلومات نظام التشغيل المحدثة إلى الخادم بعد تغيير Ubuntu Pro"
+#~ msgstr ""
+#~ "تم إرسال معلومات نظام التشغيل المحدثة إلى الخادم بعد تغيير Ubuntu Pro"
 
 #, python-format
 #~ msgid "Sending reboot status update: %s"
@@ -4845,8 +4854,10 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ msgstr "تم استلام التسجيل ولكن الموافقة معلقة"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
-#~ msgstr "نجاح التسجيل ولكن لم يتم تقديم host_id - قد تأتي الموافقة بشكل منفصل"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
+#~ msgstr ""
+#~ "نجاح التسجيل ولكن لم يتم تقديم host_id - قد تأتي الموافقة بشكل منفصل"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4887,7 +4898,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "يبلغ الخادم أن المضيف غير مسجل. سيتم إزالة host_id المخزن وإعادة التسجيل..."
+#~ "يبلغ الخادم أن المضيف غير مسجل. سيتم إزالة host_id المخزن وإعادة "
+#~ "التسجيل..."
 
 #, python-format
 #~ msgid "Using database path from SYSMANAGE_DB_PATH: %s"
@@ -4993,11 +5005,11 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
-#~ "تم اكتشاف Microsoft Defender for Endpoint على macOS (الإصدار: %s، مفعّل: %s،"
-#~ " مرخّص: %s)"
+#~ "تم اكتشاف Microsoft Defender for Endpoint على macOS (الإصدار: %s، مفعّل: "
+#~ "%s، مرخّص: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5307,8 +5319,8 @@ msgstr "خطأ في التحقق من دعم WSL: %s"
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
 #~ msgstr ""
-#~ "جارٍ التثبيت التلقائي لـ OpenBSD. سيتم تثبيت الجهاز الافتراضي وإعادة تشغيله "
-#~ "تلقائياً. قد يستغرق هذا 10-15 دقيقة."
+#~ "جارٍ التثبيت التلقائي لـ OpenBSD. سيتم تثبيت الجهاز الافتراضي وإعادة "
+#~ "تشغيله تلقائياً. قد يستغرق هذا 10-15 دقيقة."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "طلب HTTP للتثبيت التلقائي: %s من %s"

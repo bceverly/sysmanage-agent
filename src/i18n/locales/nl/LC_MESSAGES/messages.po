@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-25 14:49-0400\n"
+"POT-Creation-Date: 2026-10-28 18:15-0400\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -72,61 +72,90 @@ msgstr ""
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  Kan {config_dir} niet bereiken, terugvallen op {fallback_dir}"
 
-#: src/sysmanage_agent/backup/host_mount.py:67
+#: src/sysmanage_agent/backup/host_mount.py:109
+#, python-format
+msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
+msgstr "De back-upopslag op %(where)s is bijna vol (%(free)d MB vrij)."
+
+#: src/sysmanage_agent/backup/host_mount.py:115
 #, python-format
 msgid "The backup storage at %(where)s cannot take new files: %(error)s"
 msgstr ""
 "De back-upopslag op %(where)s neemt geen nieuwe bestanden aan: %(error)s"
 
-#: src/sysmanage_agent/backup/host_mount.py:73
+#: src/sysmanage_agent/backup/host_mount.py:135
 #, python-format
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "Vergrendeling werkt niet op de back-upopslag op %(where)s: %(error)s"
 
-#: src/sysmanage_agent/backup/host_mount.py:84
-#, python-format
-msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
-msgstr "De back-upopslag op %(where)s is bijna vol (%(free)d MB vrij)."
-
-#: src/sysmanage_agent/backup/key_files.py:52
+#: src/sysmanage_agent/backup/key_files.py:56
 msgid "The server sent no usable keys"
 msgstr "De server heeft geen bruikbare sleutels gestuurd"
 
-#: src/sysmanage_agent/backup/key_files.py:54
+#: src/sysmanage_agent/backup/key_files.py:58
 msgid "The server sent something that is not a secret key"
 msgstr "De server heeft iets gestuurd dat geen geheime sleutel is"
 
-#: src/sysmanage_agent/backup/key_files.py:62
+#: src/sysmanage_agent/backup/key_files.py:66
 msgid "No tmpfs to stage the key on"
 msgstr "Geen tmpfs om de sleutel klaar te zetten"
 
-#: src/sysmanage_agent/backup/key_files.py:103
+#: src/sysmanage_agent/backup/key_files.py:107
 msgid "This host is not approved yet"
 msgstr "Deze host is nog niet goedgekeurd"
 
-#: src/sysmanage_agent/backup/key_files.py:123
+#: src/sysmanage_agent/backup/key_files.py:127
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr ""
 "De server heeft de back-upsleutel niet vrijgegeven: HTTP %(status)s, "
 "%(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:134
+#: src/sysmanage_agent/backup/key_files.py:138
 msgid "no reason given"
 msgstr "geen reden opgegeven"
 
-#: src/sysmanage_agent/backup/key_files.py:154
+#: src/sysmanage_agent/backup/key_files.py:158
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "De back-upsleutel kon niet worden geïnstalleerd: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:197
+#: src/sysmanage_agent/backup/key_files.py:201
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr ""
-"Deze restate kan een versleutelde repository niet ontsleutelen; werk restate"
-" bij."
+"Deze restate kan een versleutelde repository niet ontsleutelen; werk restate "
+"bij."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:94
+#: src/sysmanage_agent/backup/mount_mixin.py:86
+#, python-format
+msgid ""
+"The backup storage is not mounted at %(where)s, and the server has not sent "
+"where to mount it from yet."
+msgstr ""
+"De back-upopslag is niet gekoppeld op %(where)s, en de server heeft nog niet "
+"doorgegeven waarvandaan die moet worden gekoppeld."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:99
+#, python-format
+msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
+msgstr "Kan de back-upopslag %(source)s niet koppelen op %(where)s: %(error)s"
+
+#: src/sysmanage_agent/backup/mount_mixin.py:107
+#, python-format
+msgid "The backup storage is not mounted at %(where)s after mounting it."
+msgstr "De back-upopslag is na het koppelen niet gekoppeld op %(where)s."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:124
+#, python-format
+msgid "The backup storage at %s did not answer."
+msgstr "De back-upopslag op %s reageerde niet."
+
+#: src/sysmanage_agent/backup/mount_mixin.py:149
+#, python-format
+msgid "Could not unmount the backup storage at %s: %s"
+msgstr "Kan de back-upopslag op %s niet ontkoppelen: %s"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:106
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -135,17 +164,17 @@ msgstr ""
 "Het back-upserviceaccount %(account)s (gebruiker en groep) bestaat niet op "
 "deze opslaghost. Maak het aan en bereid dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:124
+#: src/sysmanage_agent/backup/storage_prepare.py:136
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr ""
 "De agent kan %(path)s niet lezen en kan dus niet bepalen of er back-ups in "
-"staan. Voer de agent uit als root of verplaats de map, en bereid dan opnieuw"
-" voor."
+"staan. Voer de agent uit als root of verplaats de map, en bereid dan opnieuw "
+"voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:135
+#: src/sysmanage_agent/backup/storage_prepare.py:147
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -156,10 +185,9 @@ msgstr ""
 "%(path)s bevat al bestanden maar is geen eigen ZFS-dataset, en voorbereiden "
 "verplaatst nooit back-ups. Ofwel 1) hernoem het (bijvoorbeeld naar "
 "%(path)s.old), bereid opnieuw voor en kopieer de inhoud als root naar de "
-"nieuwe dataset; ofwel 2) verwijder het als die back-ups niet meer nodig "
-"zijn."
+"nieuwe dataset; ofwel 2) verwijder het als die back-ups niet meer nodig zijn."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:143
+#: src/sysmanage_agent/backup/storage_prepare.py:155
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -173,7 +201,7 @@ msgstr ""
 "het nieuwe subvolume; ofwel 2) verwijder het als die back-ups niet meer "
 "nodig zijn."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:174
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -183,12 +211,12 @@ msgstr ""
 "kan daar niet toe worden beperkt. Wacht tot die host zijn netwerkgegevens "
 "meldt en bereid dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:185
+#: src/sysmanage_agent/backup/storage_prepare.py:197
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "Opslag voorbereiden wordt niet ondersteund op %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:193
+#: src/sysmanage_agent/backup/storage_prepare.py:205
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -197,7 +225,7 @@ msgstr ""
 "host heeft een eigen ZFS-dataset nodig. Zet het opslagpad op ZFS en bereid "
 "dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:255
+#: src/sysmanage_agent/backup/storage_prepare.py:271
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -209,7 +237,7 @@ msgstr ""
 "gekoppelde dataset aan (zfs create -o mountpoint=%(path)s POOL/NAME) en "
 "bereid dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:282
+#: src/sysmanage_agent/backup/storage_prepare.py:298
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -262,8 +290,7 @@ msgstr "Mislukt om Windows-certificaatopslag op te halen %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 msgstr ""
 "Certificaatbundel %s bevat meer dan %d certificaten; rapportage van de "
 "eerste %d"
@@ -651,40 +678,40 @@ msgstr ""
 "Netwerkdetectie zag meer dan %d apparaten in één venster; de rest is niet "
 "vastgelegd"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:149
+#: src/sysmanage_agent/collection/os_info_collection.py:153
 msgid "Ubuntu Pro status check timed out"
 msgstr "Time-out bij Ubuntu Pro-statuscontrole"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:154
+#: src/sysmanage_agent/collection/os_info_collection.py:158
 #, python-format
 msgid "Failed to get Ubuntu Pro status: %s"
 msgstr "Mislukt om Ubuntu Pro-toestand op te halen: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:310
+#: src/sysmanage_agent/collection/os_info_collection.py:314
 #, python-format
 msgid "Failed to parse Ubuntu Pro JSON output: %s"
 msgstr "Mislukt om Ubuntu Pro JSON-uitvoer te parsen: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:313
+#: src/sysmanage_agent/collection/os_info_collection.py:317
 #, python-format
 msgid "Error processing Ubuntu Pro data: %s"
 msgstr "Fout bij het verwerken van Ubuntu Pro data: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:401
+#: src/sysmanage_agent/collection/os_info_collection.py:405
 msgid "Livepatch status check timed out"
 msgstr "Time-out bij controle van Livepatch-status"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:407
+#: src/sysmanage_agent/collection/os_info_collection.py:411
 #, python-format
 msgid "Failed to get Livepatch status: %s"
 msgstr "Ophalen van Livepatch-status mislukt: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:424
+#: src/sysmanage_agent/collection/os_info_collection.py:428
 #, python-format
 msgid "Failed to parse Livepatch JSON: %s"
 msgstr "Parseren van Livepatch-JSON mislukt: %s"
 
-#: src/sysmanage_agent/collection/os_info_collection.py:572
+#: src/sysmanage_agent/collection/os_info_collection.py:576
 #, python-format
 msgid "Failed to get timezone: %s"
 msgstr "Mislukt om tijdzone op te halen: %s"
@@ -1799,8 +1826,8 @@ msgstr "Fout bij verwerken van gepold bericht %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr ""
 "Kan de HTTP fallback niet gebruiken: deze agent heeft geen opgeslagen "
 "host_id. Registratie moet eerst voltooid zijn."
@@ -1813,8 +1840,8 @@ msgid ""
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
 "Gebruik HTTP polling in plaats van een WebSocket: dit netwerk weigert de "
-"WebSocket-upgrade. Commando's zullen met maximaal enkele seconden vertraging"
-" arriveren. Toestaan van WebSocket-upgrades naar %s om directe levering te "
+"WebSocket-upgrade. Commando's zullen met maximaal enkele seconden vertraging "
+"arriveren. Toestaan van WebSocket-upgrades naar %s om directe levering te "
 "herstellen."
 
 #: src/sysmanage_agent/communication/http_polling.py:254
@@ -1854,11 +1881,10 @@ msgstr "Kan tijdstempel van bericht voor verouderde controle niet parsen: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:396
 #: src/sysmanage_agent/communication/message_handler.py:732
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
-"Registratie van host wacht op goedkeuring. Periodieke pogingen zullen worden"
-" doorgestuurd."
+"Registratie van host wacht op goedkeuring. Periodieke pogingen zullen worden "
+"doorgestuurd."
 
 #: src/sysmanage_agent/communication/message_handler.py:403
 msgid "Server reports missing hostname in message. This is a bug."
@@ -1881,12 +1907,12 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:465
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Server meldde host_niet_geregistreerd (aanval %(n)d/%(limit)d) -- verbinding"
-" herstellen ZONDER het host_id te verwijderen zodat de server deze host kan "
+"Server meldde host_niet_geregistreerd (aanval %(n)d/%(limit)d) -- verbinding "
+"herstellen ZONDER het host_id te verwijderen zodat de server deze host kan "
 "opnieuw oplossen uit zijn tenant-index; zal alleen opnieuw registreren als "
 "dit blijft voorkomen."
 
@@ -2019,8 +2045,7 @@ msgstr "Kan de verwerkingstaak voor de expreswachtrij niet aanmaken: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:490
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
-msgstr ""
-"Mislukt om binnenkomende-wachtrij-verwerkingsopdracht aan te maken: %s"
+msgstr "Mislukt om binnenkomende-wachtrij-verwerkingsopdracht aan te maken: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:581
 #, python-format
@@ -2080,85 +2105,85 @@ msgstr "Pakketverzamelplanner-fout: %s"
 msgid "Failed to build capability report: %s"
 msgstr "Mislukt om capaciteitsrapportage op te bouwen: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:448
+#: src/sysmanage_agent/core/agent_utils.py:449
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "Scriptuitvoerings-UUID %s al verwerkt, duplicaat overgeslagen"
 
-#: src/sysmanage_agent/core/agent_utils.py:490
+#: src/sysmanage_agent/core/agent_utils.py:491
 msgid "Generic command missing nested command_type"
 msgstr "Generieke opdracht mist geneste command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:502
+#: src/sysmanage_agent/core/agent_utils.py:503
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Onbekend opdrachttype: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:561
+#: src/sysmanage_agent/core/agent_utils.py:562
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Kon scriptuitvoerresultaat niet in de wachtrij plaatsen: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:580
+#: src/sysmanage_agent/core/agent_utils.py:581
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Fout bij het controleren van uitvoering UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:594
+#: src/sysmanage_agent/core/agent_utils.py:595
 msgid "No execution UUID provided, cannot track"
 msgstr "Geen uitvoerings-UUID opgegeven, kan niet volgen"
 
-#: src/sysmanage_agent/core/agent_utils.py:609
+#: src/sysmanage_agent/core/agent_utils.py:610
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Uitvoerings-UUID %s bestaat al in database"
 
-#: src/sysmanage_agent/core/agent_utils.py:634
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Fout bij het opslaan van uitvoerings UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:699
+#: src/sysmanage_agent/core/agent_utils.py:700
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Fout in service-controlafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:746
+#: src/sysmanage_agent/core/agent_utils.py:747
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Time-out bij servicebeheer voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:752
+#: src/sysmanage_agent/core/agent_utils.py:753
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Servicebesturingsfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:837
+#: src/sysmanage_agent/core/agent_utils.py:838
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "%s van service %s mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:847
+#: src/sysmanage_agent/core/agent_utils.py:848
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Bijwerken van rollen na servicebeheer mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:886
+#: src/sysmanage_agent/core/agent_utils.py:887
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Fout in service-statusafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:929
+#: src/sysmanage_agent/core/agent_utils.py:930
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Time-out bij servicestatus voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:939
+#: src/sysmanage_agent/core/agent_utils.py:940
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Servicestatusfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:987
+#: src/sysmanage_agent/core/agent_utils.py:988
 #, python-format
 msgid "Failed to queue synthetic command_result for in-flight journal: %s"
 msgstr ""
@@ -2202,8 +2227,8 @@ msgid ""
 "enrollment_token found at '%s' is ignored; it must be under the top-level "
 "'security' section"
 msgstr ""
-"enrollment_token gevonden op '%s' wordt genegeerd; het moet in de "
-"'security'-sectie op het hoogste niveau staan"
+"enrollment_token gevonden op '%s' wordt genegeerd; het moet in de 'security'-"
+"sectie op het hoogste niveau staan"
 
 #: src/sysmanage_agent/core/unconfigured.py:45
 msgid "no server is configured (server.url is not set)"
@@ -2220,8 +2245,8 @@ msgid ""
 "Edit %s: set server.url to your SysManage server and, for a multi-tenant "
 "server, security.enrollment_token; then restart the sysmanage-agent service."
 msgstr ""
-"Bewerk %s: stel server.url in op uw SysManage-server en, voor een server met"
-" meerdere tenants, security.enrollment_token; start daarna de service "
+"Bewerk %s: stel server.url in op uw SysManage-server en, voor een server met "
+"meerdere tenants, security.enrollment_token; start daarna de service "
 "sysmanage-agent opnieuw."
 
 #: src/sysmanage_agent/core/unconfigured.py:91
@@ -2316,91 +2341,62 @@ msgstr "Fout bij verzamelen van agent-logboeken: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Fout bij verzamelen van foutlogboeken: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:270
+#: src/sysmanage_agent/operations/backup_operations.py:271
 msgid "That backup action is not configured on this host."
 msgstr "Die back-upactie is op deze host niet geconfigureerd."
 
-#: src/sysmanage_agent/operations/backup_operations.py:278
+#: src/sysmanage_agent/operations/backup_operations.py:279
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate is op deze host niet bruikbaar: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:297
+#: src/sysmanage_agent/operations/backup_operations.py:302
 msgid "This platform can only be a backup storage host."
 msgstr "Dit platform kan alleen een opslaghost voor back-ups zijn."
 
-#: src/sysmanage_agent/operations/backup_operations.py:303
+#: src/sysmanage_agent/operations/backup_operations.py:308
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Kan de back-uptaken niet installeren: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:330
+#: src/sysmanage_agent/operations/backup_operations.py:335
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Deze versie van restate ondersteunt niet: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:440
+#: src/sysmanage_agent/operations/backup_operations.py:453
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Deze restate kan %s niet als taak uitvoeren; werk restate bij."
 
-#: src/sysmanage_agent/operations/backup_operations.py:546
+#: src/sysmanage_agent/operations/backup_operations.py:561
 msgid "restate is not installed on this host."
 msgstr "restate is niet geïnstalleerd op deze host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:579
+#: src/sysmanage_agent/operations/backup_operations.py:594
 msgid "That backup job is already running."
 msgstr "Die back-uptaak wordt al uitgevoerd."
 
-#: src/sysmanage_agent/operations/backup_operations.py:601
+#: src/sysmanage_agent/operations/backup_operations.py:616
 msgid "The backup job could not be started."
 msgstr "De back-uptaak kon niet worden gestart."
 
-#: src/sysmanage_agent/operations/backup_operations.py:656
-#, python-format
-msgid ""
-"The backup storage is not mounted at %(where)s, and the server has not sent "
-"where to mount it from yet."
-msgstr ""
-"De back-upopslag is niet gekoppeld op %(where)s, en de server heeft nog niet"
-" doorgegeven waarvandaan die moet worden gekoppeld."
-
-#: src/sysmanage_agent/operations/backup_operations.py:665
-#, python-format
-msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
-msgstr "Kan de back-upopslag %(source)s niet koppelen op %(where)s: %(error)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:669
-#, python-format
-msgid "The backup storage is not mounted at %(where)s after mounting it."
-msgstr "De back-upopslag is na het koppelen niet gekoppeld op %(where)s."
-
-#: src/sysmanage_agent/operations/backup_operations.py:688
-#, python-format
-msgid "The backup storage at %s did not answer."
-msgstr "De back-upopslag op %s reageerde niet."
-
-#: src/sysmanage_agent/operations/backup_operations.py:710
-#, python-format
-msgid "Could not unmount the backup storage at %s: %s"
-msgstr "Kan de back-upopslag op %s niet ontkoppelen: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:760
+#: src/sysmanage_agent/operations/backup_operations.py:671
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Kan de verzegelde snapshots niet weergeven: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:775
+#: src/sysmanage_agent/operations/backup_operations.py:686
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Kan de oude verzegelde snapshot %(name)s niet verwijderen: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:853
+#: src/sysmanage_agent/operations/backup_operations.py:764
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "Kan de back-upopslag voor beleid %s niet voorbereiden: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:945
+#: src/sysmanage_agent/operations/backup_operations.py:867
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2409,103 +2405,104 @@ msgstr ""
 "restate is gestopt (exit %(code)s) voordat er een resultaat is geschreven; "
 "zie journalctl -u %(unit)s op deze host"
 
-#: src/sysmanage_agent/operations/backup_operations.py:973
+#: src/sysmanage_agent/operations/backup_operations.py:895
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "De opslagcontrole kon niet worden uitgevoerd: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:991
+#: src/sysmanage_agent/operations/backup_operations.py:913
 msgid "Could not queue the backup report"
 msgstr "Kan het back-uprapport niet in de wachtrij plaatsen"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:42
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:74
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:118
 msgid "Homebrew is not installed"
 msgstr "Homebrew is niet geïnstalleerd"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:70
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:102
 #, python-format
 msgid "Error listing Homebrew taps: %s"
 msgstr "Fout bij het opmaken van Homebrew taps: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:81
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:113
 msgid "Invalid tap format. Use 'user/repo' format"
 msgstr "Ongeldig tap-formaat. Gebruik 'user/repo'-formaat"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:101
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:136
 msgid "Tap added successfully"
 msgstr "Tap succesvol toegevoegd"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:106
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:141
 #, python-format
 msgid "Failed to add tap %s: %s"
 msgstr "Mislukt om tap %s toe te voegen: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:112
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:147
 #, python-format
 msgid "Failed to add tap: %s"
 msgstr "Mislukt om tap toe te voegen: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:116
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:151
 #, python-format
 msgid "Error adding Homebrew tap: %s"
 msgstr "Fout bij het toevoegen van Homebrew-tap: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:137
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
 #, python-format
 msgid "Error listing FreeBSD repositories: %s"
 msgstr "Fout bij opsommen van FreeBSD-reposities: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:172
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:207
 #: src/sysmanage_agent/operations/linux_repository_operations.py:250
 #: src/sysmanage_agent/operations/linux_repository_operations.py:441
 #, python-format
 msgid "Error reading %s: %s"
 msgstr "Fout bij lezen van %s: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:180
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:215
 msgid "Repository URL is required for FreeBSD pkg"
 msgstr "Repository-URL is vereist voor FreeBSD pkg"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:210
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:245
 #: src/sysmanage_agent/operations/linux_repository_operations.py:24
 #: src/sysmanage_agent/operations/windows_repository_operations.py:165
 msgid "Repository added successfully"
 msgstr "Repository succesvol toegevoegd"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:214
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:249
 #, python-format
 msgid "Error adding FreeBSD repository: %s"
 msgstr "Fout bij het toevoegen van FreeBSD-repository: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:262
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:297
 #, python-format
 msgid "Error listing NetBSD repositories: %s"
 msgstr "Fout bij het opmaken van NetBSD repositories: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:272
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
 msgid "Repository URL is required for NetBSD pkgsrc"
 msgstr "Repository-URL is vereist voor NetBSD pkgsrc"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:281
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:316
 #, python-format
 msgid "Repository directory already exists: %s"
 msgstr "Bestaande repositorymap: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:302
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:337
 msgid "Repository cloned successfully"
 msgstr "Repository succesvol gekloond"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:307
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:342
 #, python-format
 msgid "Failed to clone repository %s: %s"
 msgstr "Mislukt om repository %s te klonen: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:313
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:348
 #, python-format
 msgid "Failed to clone repository: %s"
 msgstr "Mislukt om repository te klonen: %s"
 
-#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:318
+#: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:353
 #, python-format
 msgid "Error adding NetBSD repository: %s"
 msgstr "Fout bij het toevoegen van NetBSD-repository: %s"
@@ -2729,8 +2726,7 @@ msgstr "Mislukt om hostname aan te passen: %s"
 #: src/sysmanage_agent/operations/hostname_operations.py:124
 #, python-format
 msgid "hostnamectl failed, trying manual hostname change: %s"
-msgstr ""
-"hostnamectl mislukt, handmatige hostnaamwijziging wordt geprobeerd: %s"
+msgstr "hostnamectl mislukt, handmatige hostnaamwijziging wordt geprobeerd: %s"
 
 #: src/sysmanage_agent/operations/hostname_operations.py:138
 #: src/sysmanage_agent/operations/hostname_operations.py:144
@@ -2988,103 +2984,107 @@ msgstr "Pakket zonder naam overslaan"
 msgid "No package name"
 msgstr "Geen pakketnaam"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:20
+#: src/sysmanage_agent/operations/package_manager_operations.py:23
 msgid "Installation failed"
 msgstr "Installatie mislukt"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:21
+#: src/sysmanage_agent/operations/package_manager_operations.py:24
 msgid "Installation timed out after 5 minutes"
 msgstr "Installatie is na 5 minuten verstreken afgebroken"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:103
+#: src/sysmanage_agent/operations/package_manager_operations.py:115
 msgid "Package manager name is required"
 msgstr "Pakketbeheernaam vereist"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:114
+#: src/sysmanage_agent/operations/package_manager_operations.py:126
 msgid "Enabling package managers requires privileged mode"
 msgstr "Het inschakelen van pakketbeheerders vereist privilegiegemodus"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:130
+#: src/sysmanage_agent/operations/package_manager_operations.py:142
 #, python-format
 msgid "Unknown package manager: %s"
 msgstr "Onbekende pakketbeheerder: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:137
+#: src/sysmanage_agent/operations/package_manager_operations.py:149
 #, python-format
 msgid "Error enabling package manager '%s': %s"
 msgstr "Fout bij inschakelen pakketbeheerder '%s': %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:149
+#: src/sysmanage_agent/operations/package_manager_operations.py:161
 msgid "Flatpak is only supported on Linux systems"
 msgstr "Flatpak wordt alleen ondersteund op Linux-systemen"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:159
+#: src/sysmanage_agent/operations/package_manager_operations.py:171
 msgid "Flatpak is already installed"
 msgstr "Flatpak is al geïnstalleerd"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:188
+#: src/sysmanage_agent/operations/package_manager_operations.py:200
 #, python-format
 msgid "No supported package manager found to install %s"
 msgstr "Geen ondersteunde pakketbeheerder gevonden om %s te installeren"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:211
+#: src/sysmanage_agent/operations/package_manager_operations.py:223
 #, python-format
 msgid "%s installed successfully"
 msgstr "%s succesvol geïnstalleerd"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:245
+#: src/sysmanage_agent/operations/package_manager_operations.py:257
 #, python-format
 msgid "Could not add Flathub repository: %s"
 msgstr "Kan Flathub-repository niet toevoegen: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:252
+#: src/sysmanage_agent/operations/package_manager_operations.py:264
 msgid "Snap is only supported on Linux systems"
 msgstr "Snap wordt alleen ondersteund op Linux-systemen"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:261
+#: src/sysmanage_agent/operations/package_manager_operations.py:273
 msgid "Snap is already installed"
 msgstr "Snap is al geínstalleerd"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:287
+#: src/sysmanage_agent/operations/package_manager_operations.py:299
 #, python-format
 msgid "Could not enable snapd service: %s"
 msgstr "Kan snapd-service niet activeren: %s"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:297
+#: src/sysmanage_agent/operations/package_manager_operations.py:309
 msgid "Homebrew is already installed"
 msgstr "Homebrew is al geœtalleerd"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:306
-msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-msgstr ""
-"Homebrew-installatie vereist handmatige interventie. Installeer met: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
+msgid ""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
+msgstr ""
+"Homebrew-installatie vereist handmatige interventie. Installeer met: /bin/"
+"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
+"HEAD/install.sh)\""
+
+#: src/sysmanage_agent/operations/package_manager_operations.py:335
+msgid "The installer script is unexpectedly large"
+msgstr "Het installatiescript is onverwacht groot"
+
+#: src/sysmanage_agent/operations/package_manager_operations.py:371
 msgid "Chocolatey is only supported on Windows systems"
 msgstr "Chocolatey wordt alleen ondersteund op Windows-systemen"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:327
+#: src/sysmanage_agent/operations/package_manager_operations.py:380
 msgid "Chocolatey is already installed"
 msgstr "Chocolatey is al geïnstalleerd"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:361
+#: src/sysmanage_agent/operations/package_manager_operations.py:400
 msgid "Chocolatey installed successfully"
 msgstr "Chocolatey is succesvol geïnstalleerd"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:380
+#: src/sysmanage_agent/operations/package_manager_operations.py:419
 msgid "Scoop is only supported on Windows systems"
 msgstr "Scoop wordt alleen ondersteund op Windows-systemen"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:389
+#: src/sysmanage_agent/operations/package_manager_operations.py:428
 msgid "Scoop is already installed"
 msgstr "Scoop is al geínstalleerd"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:420
+#: src/sysmanage_agent/operations/package_manager_operations.py:449
 msgid "Scoop installed successfully"
 msgstr "Scoop succesvol geïnstalleerd"
 
@@ -3317,8 +3317,7 @@ msgstr "Mislukt om antivirus-status op te halen/door te sturen: %s"
 #: src/sysmanage_agent/operations/system_control.py:168
 #, python-format
 msgid "Failed to collect/send commercial antivirus status: %s"
-msgstr ""
-"Mislukt om commerciële antivirus-status op te halen/door te sturen: %s"
+msgstr "Mislukt om commerciële antivirus-status op te halen/door te sturen: %s"
 
 #: src/sysmanage_agent/operations/system_control.py:177
 #, python-format
@@ -3687,42 +3686,42 @@ msgstr ""
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp niet beschikbaar, registratie overslaan"
 
-#: src/sysmanage_agent/registration/client_registration.py:382
+#: src/sysmanage_agent/registration/client_registration.py:386
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "Registratie mislukt met status %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:391
+#: src/sysmanage_agent/registration/client_registration.py:395
 #, python-format
 msgid "Error during registration: %s"
 msgstr "Fout bij registratie: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:428
+#: src/sysmanage_agent/registration/client_registration.py:432
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "Mislukt om na %s pogingen te registreren"
 
-#: src/sysmanage_agent/registration/client_registration.py:434
+#: src/sysmanage_agent/registration/client_registration.py:438
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "Inschrijving mislukt, opnieuw proberen over %s seconden..."
 
-#: src/sysmanage_agent/registration/client_registration.py:489
+#: src/sysmanage_agent/registration/client_registration.py:495
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "Fout bij het laden van opgeslagen auth data: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:512
+#: src/sysmanage_agent/registration/client_registration.py:525
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "Fout bij het opslaan van auth data: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:525
+#: src/sysmanage_agent/registration/client_registration.py:540
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Fout bij ophalen van opgeslagen host_id: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:540
+#: src/sysmanage_agent/registration/client_registration.py:557
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "Fout bij het ophalen van opgeslagen goedkeurings data: %s"
@@ -3788,7 +3787,7 @@ msgid "Error processing host approval notification: %s"
 msgstr "Fout bij het verwerken van host goedkeuring bericht: %s"
 
 #: src/sysmanage_agent/registration/registration_manager.py:322
-#: src/sysmanage_agent/registration/registration_manager.py:594
+#: src/sysmanage_agent/registration/registration_manager.py:597
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "Fout bij het wissen van hostgoedkeuringrecords: %s"
@@ -3802,33 +3801,33 @@ msgstr "Fout bij ophalen van opgeslagen referenties"
 msgid "Error storing host approval in database: %s"
 msgstr "Fout bij opslaan van host-goedkeuring in database: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:428
+#: src/sysmanage_agent/registration/registration_manager.py:434
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "Fout bij het ophalen van opgeslagen host_id: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:489
+#: src/sysmanage_agent/registration/registration_manager.py:493
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "Fout bij synchroon ophalen van opgeslagen host_id: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:542
+#: src/sysmanage_agent/registration/registration_manager.py:545
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "Fout bij het ophalen van host goedkeuring: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:596
+#: src/sysmanage_agent/registration/registration_manager.py:599
 msgid "Continuing despite cleanup error..."
 msgstr "Doorgaan ondanks opschoonfout..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:617
+#: src/sysmanage_agent/registration/registration_manager.py:620
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr ""
 "Gevonden corrupte entiteiten in host_approval tabel: %d, wordt "
 "schoongemaakt..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:631
+#: src/sysmanage_agent/registration/registration_manager.py:634
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "Fout tijdens database opruiming: %s"
@@ -3859,8 +3858,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Error fetching winget page %d (collected %d packages so far): %s"
 #~ msgstr ""
-#~ "Fout bij ophalen van winget-pagina %d (tot nu toe %d pakketten verzameld): "
-#~ "%s"
+#~ "Fout bij ophalen van winget-pagina %d (tot nu toe %d pakketten "
+#~ "verzameld): %s"
 
 #, python-format
 #~ msgid "Error fetching page at skip %d: %s"
@@ -3871,8 +3870,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "Uitzending %s: vernieuwing van inventaris gevraagd, maar data_collector mist"
-#~ " send_software_inventory_update"
+#~ "Uitzending %s: vernieuwing van inventaris gevraagd, maar data_collector "
+#~ "mist send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -3901,8 +3900,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 #~ msgstr ""
-#~ "Bericht %s mislukt (poging %d/%d), ingepland voor herhaalde poging over %d "
-#~ "seconden"
+#~ "Bericht %s mislukt (poging %d/%d), ingepland voor herhaalde poging over "
+#~ "%d seconden"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -3911,7 +3910,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 # Message Queue Recovery
 #, python-format
 #~ msgid "Recovered stuck message %s (type: %s), will retry"
-#~ msgstr "Vastgelopen bericht %s (type: %s) hersteld, wordt opnieuw geprobeerd"
+#~ msgstr ""
+#~ "Vastgelopen bericht %s (type: %s) hersteld, wordt opnieuw geprobeerd"
 
 #, python-format
 #~ msgid "Recovered %d stuck messages"
@@ -4007,7 +4007,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid ""
 #~ "Successfully collected %d packages from Chocolatey community repository"
-#~ msgstr "%d pakketten succesvol verzameld uit Chocolatey community-repository"
+#~ msgstr ""
+#~ "%d pakketten succesvol verzameld uit Chocolatey community-repository"
 
 #, python-format
 #~ msgid "Process snapshot truncated from %d to %d (cap)"
@@ -4026,7 +4027,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Gevonden pakket: %s v%s (%s)"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Dubbele rol overslaan: %s met dienst %s (hebben al pakket %s)"
 
 #, python-format
@@ -4085,8 +4087,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "Updatedetectie voltooid: %d updates gevonden (%d beveiliging, %d systeem, %d"
-#~ " toepassing)"
+#~ "Updatedetectie voltooid: %d updates gevonden (%d beveiliging, %d systeem, "
+#~ "%d toepassing)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -4185,8 +4187,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ "Bijwerken van .wslconfig om automatische afsluiting van WSL te voorkomen op "
-#~ "%s"
+#~ "Bijwerken van .wslconfig om automatische afsluiting van WSL te voorkomen "
+#~ "op %s"
 
 #~ msgid ".wslconfig saved successfully"
 #~ msgstr ".wslconfig succesvol opgeslagen"
@@ -4196,8 +4198,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "WSL shutdown complete, new settings will apply on next start"
 #~ msgstr ""
-#~ "WSL afsluiten voltooid, nieuwe instellingen zullen van toepassing zijn bij "
-#~ "de volgende opstart"
+#~ "WSL afsluiten voltooid, nieuwe instellingen zullen van toepassing zijn "
+#~ "bij de volgende opstart"
 
 #~ msgid "Starting WSL keep-alive processes"
 #~ msgstr "Start WSL keep-alive processen"
@@ -4247,14 +4249,16 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Found and sent %d certificates during initial collection"
-#~ msgstr "Tijdens de initiële verzameling %d certificaten gevonden en verzonden"
+#~ msgstr ""
+#~ "Tijdens de initiële verzameling %d certificaten gevonden en verzonden"
 
 #~ msgid "No certificates found during initial collection"
 #~ msgstr "Geen certificaten gevonden op het systeem"
 
 #, python-format
 #~ msgid "Found and sent %d server roles during initial collection"
-#~ msgstr "Tijdens de initiële verzameling %d serverrollen gevonden en verzonden"
+#~ msgstr ""
+#~ "Tijdens de initiële verzameling %d serverrollen gevonden en verzonden"
 
 #~ msgid "No server roles found during initial collection"
 #~ msgstr "Tijdens initiële verzameling geen serverrollen gevonden"
@@ -4284,18 +4288,19 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
-#~ msgstr "Batch met %d pakketten vanaf %s verzonden (batch %s, pakketten %d-%d)"
+#~ msgstr ""
+#~ "Batch met %d pakketten vanaf %s verzonden (batch %s, pakketten %d-%d)"
 
 #, python-format
 #~ msgid "Completed packages batch %s"
 #~ msgstr "Voltooide pakketbatch %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr ""
-#~ "Certificaatverzameling wordt uitgevoerd in modus zonder privileges - sommige"
-#~ " certificaten zijn mogelijk niet toegankelijk"
+#~ "Certificaatverzameling wordt uitgevoerd in modus zonder privileges - "
+#~ "sommige certificaten zijn mogelijk niet toegankelijk"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Verzamelen van SSL-certificaten uit systeem"
@@ -4329,7 +4334,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Ongeldige foutbericht [%s] genegeerd van %s (registratie om %s)"
 
 #~ msgid "Stored host_id cleared from database"
-#~ msgstr "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
+#~ msgstr ""
+#~ "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
 
 #~ msgid "Disconnecting to trigger re-registration..."
 #~ msgstr "Verbinding verbreken om herregistratie te triggeren..."
@@ -4352,7 +4358,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "Creating queue processing task from queue_outbound_message"
 #~ msgstr ""
-#~ "Taak voor het verwerken van berichten aanmaken vanaf queue_outbound_message"
+#~ "Taak voor het verwerken van berichten aanmaken vanaf "
+#~ "queue_outbound_message"
 
 #, python-format
 #~ msgid "Task created from queue_outbound_message: %s"
@@ -4394,7 +4401,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d vastgelopen berichten hersteld"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Taak voor het verwerken van uitgaande berichten aanmaken vanaf "
 #~ "on_connection_established"
@@ -4406,7 +4414,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Uitgaande wachtrijverwerker is al actief, start geen nieuwe"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Taak voor het verwerken van binnenkomende berichten aanmaken vanaf "
 #~ "on_connection_established"
@@ -4603,7 +4612,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 #~ msgstr ""
-#~ "Aangepaste metrieken gesynchroniseerd: %d actief, %d overgeslagen (ongeldig)"
+#~ "Aangepaste metrieken gesynchroniseerd: %d actief, %d overgeslagen "
+#~ "(ongeldig)"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
@@ -4620,7 +4630,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
 #~ msgstr ""
-#~ "GPG-sleutel %s (vingerafdruk %s) verwijderen voor target=%s, has_private=%s"
+#~ "GPG-sleutel %s (vingerafdruk %s) verwijderen voor target=%s, "
+#~ "has_private=%s"
 
 #~ msgid "NAT rules already configured in before.rules"
 #~ msgstr "NAT-regels zijn al geconfigureerd in before.rules"
@@ -4645,15 +4656,18 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Installing package %s (installation_id: %s, requested_by: %s)"
-#~ msgstr "Pakket %s wordt geïnstalleerd (installation_id: %s, requested_by: %s)"
+#~ msgstr ""
+#~ "Pakket %s wordt geïnstalleerd (installation_id: %s, requested_by: %s)"
 
 #, python-format
 #~ msgid "Installing %d packages for request %s (requested_by: %s)"
-#~ msgstr "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
+#~ msgstr ""
+#~ "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
 
 #, python-format
 #~ msgid "Uninstalling %d packages for request %s (requested_by: %s)"
-#~ msgstr "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
+#~ msgstr ""
+#~ "%d pakketten worden geïnstalleerd voor verzoek %s (requested_by: %s)"
 
 #, python-format
 #~ msgid "Installing packages with apt-get: %s"
@@ -4885,7 +4899,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "libvirt-pakketten succesvol geïnstalleerd"
 
 #~ msgid "No valid certificates found, checking host approval status..."
-#~ msgstr "Geen geldige certificaten gevonden, hostgoedkeuistatus controleren..."
+#~ msgstr ""
+#~ "Geen geldige certificaten gevonden, hostgoedkeuistatus controleren..."
 
 #, python-format
 #~ msgid "Retrieved server fingerprint for validation: %s"
@@ -4908,10 +4923,11 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Inschrijving ontvangen maar goedkeuring nog niet afgerond"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
 #~ msgstr ""
-#~ "Inschrijving succesvol maar geen host_id verstrekt - goedkeuring kan apart "
-#~ "komen"
+#~ "Inschrijving succesvol maar geen host_id verstrekt - goedkeuring kan "
+#~ "apart komen"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -4928,15 +4944,17 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
 #~ msgstr ""
-#~ "%d oude host-goedkeuringsrecord(s) verwijderd voordat nieuwe goedkeuring is "
-#~ "opgeslagen"
+#~ "%d oude host-goedkeuringsrecord(s) verwijderd voordat nieuwe goedkeuring "
+#~ "is opgeslagen"
 
 #, python-format
 #~ msgid "Host approval record stored in database: host_id=%s, status=%s"
-#~ msgstr "Host-goedkeuringsrecord opgeslagen in database: host_id=%s, status=%s"
+#~ msgstr ""
+#~ "Host-goedkeuringsrecord opgeslagen in database: host_id=%s, status=%s"
 
 #~ msgid "Host approval records and related data cleared from database"
-#~ msgstr "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
+#~ msgstr ""
+#~ "Host-goedkeuringsrecords en gerelateerde gegevens gewist uit database"
 
 #~ msgid "Corrupt database entries cleaned up"
 #~ msgstr "Gestoorde databaseteksten zijn opgeruimd"
@@ -4955,8 +4973,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "Server meldt dat de host niet geregistreerd is. Opgehaalde host_id wissen en"
-#~ " hernieuwde registratie activeren..."
+#~ "Server meldt dat de host niet geregistreerd is. Opgehaalde host_id wissen "
+#~ "en hernieuwde registratie activeren..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -5004,7 +5022,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Automatische migratie is ingeschakeld"
 
 #~ msgid "Auto-migration is disabled, skipping migrations"
-#~ msgstr "Automatische migratie is uitgeschakeld, migraties worden overgeslagen"
+#~ msgstr ""
+#~ "Automatische migratie is uitgeschakeld, migraties worden overgeslagen"
 
 #, python-format
 #~ msgid "Enqueued message: id=%s, type=%s, direction=%s, priority=%s"
@@ -5066,8 +5085,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
 #~ "Microsoft Defender for Endpoint gedetecteerd op macOS (versie: %s, "
 #~ "ingeschakeld: %s, gelicentieerd: %s)"
@@ -5094,7 +5113,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #~ msgid "PowerShell not found (not on Windows or PowerShell not installed)"
 #~ msgstr ""
-#~ "PowerShell niet gevonden (niet op Windows of PowerShell niet geïnstalleerd)"
+#~ "PowerShell niet gevonden (niet op Windows of PowerShell niet "
+#~ "geïnstalleerd)"
 
 #, python-format
 #~ msgid "Applying OpenBSD upgrade: %s"
@@ -5125,7 +5145,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ msgstr "Huidige OpenBSD-versie: %s"
 
 #~ msgid "Fetching https://www.openbsd.org/ to check for updates"
-#~ msgstr "https://www.openbsd.org/ wordt opgehaald om te controleren op updates"
+#~ msgstr ""
+#~ "https://www.openbsd.org/ wordt opgehaald om te controleren op updates"
 
 #, python-format
 #~ msgid "OpenBSD upgrade available: %s -> %s"
@@ -5160,7 +5181,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr "Chocolatey-opdrachtresultaat: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr ""
+#~ "Chocolatey-opdrachtresultaat: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -5343,8 +5365,8 @@ msgstr "Fout bij het controleren van WSL-ondersteuning: %s"
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
 #~ msgstr ""
-#~ "OpenBSD autoinstall bezig. De VM wordt automatisch geïnstalleerd en opnieuw "
-#~ "opgestart. Dit kan 10-15 minuten duren."
+#~ "OpenBSD autoinstall bezig. De VM wordt automatisch geïnstalleerd en "
+#~ "opnieuw opgestart. Dit kan 10-15 minuten duren."
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "Autoinstall HTTP-verzoek: %s van %s"

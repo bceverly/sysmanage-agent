@@ -367,6 +367,7 @@ class BackupOperations(BackupMountMixin):
             reply["hooks"] = contract.present_hooks(features)
             reply["abilities"] = contract.host_abilities(features)
         if policy["role"] == "storage":
+            await self._sweep_markers(policy["repository"])
             reply["abilities"] = contract.storage_abilities(features)
             # Can this filesystem seal at all?  The server warns when not.
             reply["storage_fs"] = storage_fs.describe(
@@ -796,6 +797,21 @@ class BackupOperations(BackupMountMixin):
             ):
                 self._spawn(self._watch(run_id, record, resumed=True))
         storage_reaudit.schedule(self.reaudit_storage)
+
+    async def _sweep_markers(self, repository: str) -> None:
+        """Remove empty ``.sysmanage-preflight-*`` files an older agent's
+        pre-flight check left at the top of a host's repository directory.
+        The host cannot (its access is append-only), and restate will not
+        create a repository in a directory that holds them (production,
+        ubiquiti, 2026-10-29).  Only zero-byte files of that exact name, one
+        level deep; anything else is left alone."""
+        code, _out, err = await self._run(self._privileged(
+            ["find", repository, "-maxdepth", "1", "-type", "f",
+             "-name", ".sysmanage-preflight-*", "-size", "0", "-delete"]
+        ))  # fmt: skip
+        if code != 0:
+            self.logger.warning("Could not sweep stale pre-flight files in %s: %s",
+                                repository, err.strip())  # fmt: skip
 
     async def reaudit_storage(self) -> int:
         """Send every storage policy's audit, and every policy's restate
