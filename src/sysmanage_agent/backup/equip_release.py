@@ -161,7 +161,7 @@ async def _download(
     base = f"{RELEASES_URL}/download/v{version}/"
     _, sums = await loop.run_in_executor(None, get, base + "SHA256SUMS", MAX_SUMS_BYTES)
     listed = parse_sums(sums.decode("utf-8", "replace"))
-    names = asset_names(kind, version, release, arch, listed) if release else None
+    names = asset_names(kind, version, release, arch, listed)
     if not names:
         return None, {}, failed("no_release", offered(kind, listed))
     packages = {}

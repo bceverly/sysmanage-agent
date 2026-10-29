@@ -2,8 +2,9 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Equip for backup: install restate where it is packaged for a host the agent
-backs up (Ubuntu's PPA; FreeBSD's checked release package), and refuse with a
+"""Equip for backup: install restate and the NFS client wherever restate is
+packaged (Ubuntu's PPA, Fedora's COPR, Homebrew on macOS, and the checked
+release packages for EL, openSUSE, Alpine and the BSDs), and refuse with a
 reason code everywhere else.  The server sends nothing but the request."""
 
 import asyncio
@@ -32,14 +33,45 @@ SUMS = (
         ("Linux", UBUNTU, "x86_64", None),
         ("Linux", {"ID": "ubuntu", "VERSION_ID": "20.04"}, "x86_64", "wrong_platform"),
         ("Linux", {"ID": "debian", "VERSION_ID": "13"}, "x86_64", "wrong_platform"),
+        ("Linux", {"ID": "fedora", "VERSION_ID": "44"}, "x86_64", None),
+        ("Linux", {"ID": "rocky", "VERSION_ID": "9.6"}, "aarch64", None),
+        ("Linux", {"ID": "rhel", "VERSION_ID": "8.10"}, "x86_64", "wrong_platform"),
+        (
+            "Linux",
+            {"ID": "opensuse-tumbleweed", "VERSION_ID": "20261026"},
+            "x86_64",
+            None,
+        ),
+        ("Linux", {"ID": "opensuse-leap", "VERSION_ID": "16.0"}, "x86_64", None),
+        (
+            "Linux",
+            {"ID": "opensuse-leap", "VERSION_ID": "15.6"},
+            "x86_64",
+            "wrong_platform",
+        ),
+        ("Linux", {"ID": "alpine", "VERSION_ID": "3.24.1"}, "aarch64", None),
+        ("Linux", {"ID": "alpine", "VERSION_ID": "3.20.3"}, "x86_64", "wrong_platform"),
+        ("Linux", {"ID": "fedora", "VERSION_ID": "44"}, "riscv64", "wrong_platform"),
         ("FreeBSD", {}, "amd64", None),
         ("FreeBSD", {}, "arm64", "wrong_platform"),
-        ("OpenBSD", {}, "amd64", "wrong_platform"),
-        ("Darwin", {}, "arm64", "wrong_platform"),
+        ("OpenBSD", {}, "amd64", None),
+        ("NetBSD", {}, "amd64", None),
+        ("Windows", {}, "AMD64", "wrong_platform"),
     ],
 )
 def test_where_equip_is_offered(system, info, machine, expected):
     assert equip.unavailable_reason(None, system, info, machine) == expected
+
+
+def test_macos_is_offered_only_with_homebrew():
+    def brew(path):
+        return path == "/opt/homebrew/bin/brew"
+
+    assert equip.unavailable_reason(None, "Darwin", {}, "arm64", exists=brew) is None
+    assert (
+        equip.unavailable_reason(None, "Darwin", {}, "arm64", exists=lambda _p: False)
+        == "wrong_platform"
+    )
 
 
 def test_the_release_parts():
@@ -138,9 +170,12 @@ def test_a_download_error_is_reported(monkeypatch, tmp_path):
     assert result["reason"] == "download_failed" and "unreachable" in result["detail"]
 
 
-def test_an_unsupported_host_is_refused_before_anything_runs():
+def test_an_unsupported_host_is_refused_before_anything_runs(monkeypatch):
+    monkeypatch.setattr(equip, "_os_release", lambda path="": {"ID": "debian"})
     ran, run = _runner()
-    result = asyncio.run(equip.equip("/x", run=run, system="OpenBSD"))
+    result = asyncio.run(equip.equip("/x", run=run, system="Linux"))
+    assert result["reason"] == "unsupported" and ran == []
+    result = asyncio.run(equip.equip("/x", run=run, system="Windows"))
     assert result["reason"] == "unsupported" and ran == []
 
 
