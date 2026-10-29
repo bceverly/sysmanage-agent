@@ -136,7 +136,10 @@ def install_steps(kind: str, paths: List[str]) -> List[List[str]]:
 def fetch(url: str, limit: int) -> Tuple[str, bytes]:
     """``(final URL, body)``; raises OSError past ``limit`` bytes."""
     # Only ever restate's own https release URLs, built in this module.
+    if not url.startswith(RELEASES_URL + "/"):
+        raise OSError(f"{url} is not one of restate's release URLs")
     request = urllib.request.Request(url, headers={"User-Agent": "sysmanage-agent"})
+    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
     opened = urllib.request.urlopen(request, timeout=DOWNLOAD_SECONDS)  # nosec B310
     with opened as answer:
         body = answer.read(limit + 1)

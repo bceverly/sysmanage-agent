@@ -326,10 +326,12 @@ class PackageManagerOperations:
     def _download_installer(url: str) -> str:
         """Fetch a package manager's installer script over HTTPS into a
         private temporary directory; the script's path."""
+        # Only the fixed https:// installer URLs in this module, never one sent.
+        if not url.startswith("https://"):
+            raise ValueError(f"{url} is not an https:// URL")  # a programming error
         request = urllib.request.Request(url, headers={"User-Agent": "sysmanage-agent"})
-        with urllib.request.urlopen(  # nosec B310 - fixed https:// URL
-            request, timeout=60
-        ) as response:
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+        with urllib.request.urlopen(request, timeout=60) as response:  # nosec B310
             data = response.read(_INSTALLER_MAX_BYTES + 1)
         if len(data) > _INSTALLER_MAX_BYTES:
             raise ValueError(_("The installer script is unexpectedly large"))
