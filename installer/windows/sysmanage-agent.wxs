@@ -251,13 +251,30 @@
                   ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]remove-service.ps1"'
                   Return="ignore" />
 
+    <!--
+      A FULL uninstall also removes the agent's runtime files (its logs and its
+      local database) from INSTALLFOLDER, so the folder does not outlive the
+      product (x13s, 2026-10-30).  Never during an upgrade: there the old
+      product is removed with UPGRADINGPRODUCTCODE set, and agent.db holds the
+      host's identity token.  The configuration in ProgramData stays.
+    -->
+    <CustomAction Id="RemoveServicePurge"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  ExeCommand='powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "[INSTALLFOLDER]remove-service.ps1" -PurgeRuntime'
+                  Return="ignore" />
+
     <InstallExecuteSequence>
       <!-- Run on fresh install only (upgrades do full uninstall first, then fresh install) -->
       <Custom Action="CheckPython" After="InstallFiles" Condition="NOT Installed" />
       <Custom Action="InstallDependencies" After="CheckPython" Condition="NOT Installed" />
       <Custom Action="CreateService" After="InstallDependencies" Condition="NOT Installed" />
-      <!-- Remove service on uninstall -->
-      <Custom Action="RemoveService" Before="RemoveFiles" Condition="REMOVE=&quot;ALL&quot;" />
+      <!-- Remove service on uninstall; a full uninstall also purges runtime files -->
+      <Custom Action="RemoveService" Before="RemoveFiles"
+              Condition="REMOVE=&quot;ALL&quot; AND UPGRADINGPRODUCTCODE" />
+      <Custom Action="RemoveServicePurge" Before="RemoveFiles"
+              Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
     </InstallExecuteSequence>
 
   </Package>

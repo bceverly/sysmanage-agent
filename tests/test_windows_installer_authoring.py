@@ -265,3 +265,49 @@ def test_installer_powershell_parses():
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Uninstall leaves nothing in Program Files -- but an upgrade keeps identity
+# ---------------------------------------------------------------------------
+
+
+def _custom(action: str) -> ET.Element:
+    root = ET.parse(MSI_WXS).getroot()
+    found = [
+        c for c in root.iter(f"{{{WIX_NS['w']}}}Custom") if c.get("Action") == action
+    ]
+    assert len(found) == 1, action
+    return found[0]
+
+
+def test_only_a_full_uninstall_purges_runtime_files():
+    """x13s, 2026-10-30: the folder outlived the uninstall with logs and
+    agent.db.  The purge must never run during an upgrade, where agent.db
+    holds the host's identity token."""
+    purge = _custom("RemoveServicePurge")
+    plain = _custom("RemoveService")
+    assert purge.get("Condition") == 'REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE'
+    assert plain.get("Condition") == 'REMOVE="ALL" AND UPGRADINGPRODUCTCODE'
+    assert purge.get("Before") == plain.get("Before") == "RemoveFiles"
+    root = ET.parse(MSI_WXS).getroot()
+    commands = {
+        a.get("Id"): a.get("ExeCommand")
+        for a in root.iter(f"{{{WIX_NS['w']}}}CustomAction")
+    }
+    assert commands["RemoveServicePurge"].endswith('remove-service.ps1" -PurgeRuntime')
+    assert "-PurgeRuntime" not in commands["RemoveService"]
+
+
+def test_runtime_files_go_only_after_the_service_and_only_on_purge():
+    script = _text(WINDOWS / "remove-service.ps1")
+    assert re.search(r"^param\(\[switch\]\$PurgeRuntime\)", script, re.M)
+    leftovers = script.index("$Leftovers = @(")
+    # After the service has been stopped and removed, never before.
+    assert script.index("Stop-Service -Name $ServiceName") < leftovers
+    assert script.index("& $nssmPath remove $ServiceName") < leftovers
+    purge = script[leftovers : script.index("foreach ($leftover in $Leftovers)")]
+    assert "if ($PurgeRuntime)" in purge and "'agent.db'" in purge and "'logs'" in purge
+    # The operator's configuration in ProgramData is never removed.
+    assert "Remove-Item -Path 'C:\\ProgramData" not in script
+    assert "Remove-Item -LiteralPath $LogPath" not in script

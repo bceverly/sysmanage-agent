@@ -19,7 +19,9 @@ permissions:
 jobs:
   canary:
     name: Newest test toolchain (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    # Python 3.9 has no build for Ubuntu 26.04 (ubuntu-latest since
+    # October 2026): its leg stays on 24.04.
+    runs-on: ${{ matrix.python-version == '3.9' && 'ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false

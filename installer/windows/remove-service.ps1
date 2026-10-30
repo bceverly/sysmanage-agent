@@ -6,6 +6,13 @@
 # Remove Windows Service for SysManage Agent
 #
 
+# -PurgeRuntime: a full uninstall (not the uninstall half of an upgrade).
+# Then the agent's own runtime files go too -- its logs and its local
+# database -- so nothing is left in Program Files.  An upgrade must keep them:
+# agent.db holds the host's identity token, and losing it would re-register
+# the host as a new one.
+param([switch]$PurgeRuntime)
+
 $ErrorActionPreference = "Continue"
 
 # Service details
@@ -22,25 +29,6 @@ try {
     Remove-Item -Path 'HKLM:\SOFTWARE\SysManage\Agent' -Recurse -Force -ErrorAction SilentlyContinue
 } catch { }
 
-# The venv and the extracted sources are created AFTER the install, by
-# install.ps1, so Windows Installer never owned them and would not remove them.
-# Measured on a clean uninstall: 59.4 MB of .venv and src left sitting in
-# C:\Program Files\SysManage Agent forever.  Removed here rather than in the
-# MSI because only this script knows the service is already stopped -- deleting
-# a venv whose python.exe is still hosting the service is how you get a
-# half-removed directory that the next install then fails to overwrite.
-$InstallDir = 'C:\Program Files\SysManage Agent'
-foreach ($leftover in @('.venv', 'src')) {
-    $path = Join-Path $InstallDir $leftover
-    if (-not (Test-Path $path)) { continue }
-    try {
-        Remove-Item -Path $path -Recurse -Force -ErrorAction Stop
-        Write-Host "Removed leftover $leftover"
-    } catch {
-        # Never fatal: a locked file must not fail the uninstall.
-        Write-Host "Could not remove $leftover (leaving it): $_"
-    }
-}
 $InstallDir = "C:\Program Files\SysManage Agent"
 
 # Log files
@@ -173,6 +161,30 @@ try {
     Write-Host "  $LogFile" -ForegroundColor Gray
     Write-Host "  $TranscriptFile" -ForegroundColor Gray
     Write-Host ""
+}
+
+# Files the agent made after the install, which Windows Installer never owned
+# and so would never remove.  Measured on a clean uninstall: 59.4 MB of .venv
+# and src left in C:\Program Files\SysManage Agent; and on x13s (2026-10-30)
+# the folder outlived the uninstall holding logs\ and agent.db.  Removed only
+# now, after the service is stopped and gone: deleting a venv whose python.exe
+# still hosts the service leaves a half-removed directory that the next
+# install then fails to overwrite.  The configuration in C:\ProgramData\SysManage
+# is the operator's and is never touched.
+$Leftovers = @('.venv', 'src', '__pycache__')
+if ($PurgeRuntime) {
+    $Leftovers += @('logs', 'agent.db', 'agent.db-wal', 'agent.db-shm', 'agent.db-journal')
+}
+foreach ($leftover in $Leftovers) {
+    $path = Join-Path $InstallDir $leftover
+    if (-not (Test-Path -LiteralPath $path)) { continue }
+    try {
+        Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction Stop
+        Write-Log "Removed leftover $leftover"
+    } catch {
+        # Never fatal: a locked file must not fail the uninstall.
+        Write-Log "Could not remove $leftover (leaving it): $_"
+    }
 }
 
 if ($ServiceRemoved) {
