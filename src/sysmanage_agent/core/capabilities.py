@@ -180,6 +180,10 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     # needed exactly when "backup" is unavailable (restate missing or old);
     # not applicable where restate has no package the agent can install.
     "backup_equip": ("equip_backup",),
+    # Can this host reach its backup storage (a TCP connection to NFS's port)?
+    # Its own group: asked before restate is installed, and on every agent
+    # that could back up.
+    "backup_reach": ("check_backup_storage",),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",

@@ -316,6 +316,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs create *
 # there alone left NFS exporting the empty directory beneath it.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- /usr/sbin/zfs create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- /usr/sbin/zfs mount *
+# Equip for backup: the install steps run in the host's mount namespace
+# (the agent's unit has its own, with /root read-only: add-apt-repository
+# failed writing /root/.launchpadlib).  The same commands as above, through
+# nsenter.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- zypper *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- dnf *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume create *, /usr/sbin/btrfs subvolume create *, /sbin/btrfs subvolume create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/exportfs -ra
 # Then the repository directory is made append-only for the hosts with the

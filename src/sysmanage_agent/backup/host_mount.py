@@ -53,6 +53,23 @@ HOST_MOUNTINFO = "/proc/1/mountinfo"
 SELF_MOUNTINFO = "/proc/self/mountinfo"
 
 
+# Linux with systemd: the agent's unit (PrivateTmp/ProtectHome) gives it a
+# private mount namespace, and sudo inherits it.  What must act on the host
+# as a whole runs in the host's (PID 1's) namespace instead: Prepare's ZFS
+# create and mount (a dataset mounted for the agent alone left NFS exporting
+# the empty directory beneath -- production, nas, 2026-10-27 and -29), and
+# Equip's package installs (add-apt-repository could not write
+# /root/.launchpadlib, read-only there -- production, milsurpmonitor,
+# 2026-10-30).  Mounts made there propagate back into the agent's.
+HOST_NAMESPACE = ("nsenter", "--mount=/proc/1/ns/mnt", "--")
+
+
+def in_host_namespace(argv: List[str], system: str, systemd: bool) -> List[str]:
+    """``argv`` run in the host's mount namespace where the agent has its own
+    (Linux under systemd); unchanged elsewhere."""
+    return [*HOST_NAMESPACE, *argv] if system == "Linux" and systemd else list(argv)
+
+
 def systemd_running(isdir=os.path.isdir) -> bool:
     """systemd is PID 1 (sd_booted's test)."""
     return isdir("/run/systemd/system")

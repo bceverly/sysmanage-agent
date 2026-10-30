@@ -117,8 +117,9 @@ def file_attributes(path: str) -> Optional[int]:
             return None
     except (OSError, AttributeError):  # no statx (glibc < 2.28)
         return None
-    (attributes,) = struct.unpack_from("=Q", buf, _STX_ATTRIBUTES)
-    (supported,) = struct.unpack_from("=Q", buf, _STX_ATTRIBUTES_MASK)
+    raw = buf.raw  # bytes, as struct expects (not the ctypes array)
+    (attributes,) = struct.unpack_from("=Q", raw, _STX_ATTRIBUTES)
+    (supported,) = struct.unpack_from("=Q", raw, _STX_ATTRIBUTES_MASK)
     if not supported & (ATTR_APPEND | ATTR_IMMUTABLE):
         return None
     return attributes & supported

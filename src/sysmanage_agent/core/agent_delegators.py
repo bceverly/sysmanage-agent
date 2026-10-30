@@ -432,6 +432,14 @@ class MiscDelegator:
 
         return await equip.equip(backup_operations.default_state_dir())
 
+    async def check_backup_storage(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Can this host reach its backup storage's NFS port?  The server
+        sends only the storage host's address; backup/storage_reach.py."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.backup import storage_reach  # noqa: PLC0415
+
+        return await storage_reach.check(parameters)
+
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Collect system diagnostics and send to server.  A backup storage
         host also re-sends its storage audit (Request Host Data is how an

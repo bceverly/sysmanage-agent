@@ -92,14 +92,42 @@ def _runner(code=0):
     return ran, run
 
 
+HOST_NS = ["nsenter", "--mount=/proc/1/ns/mnt", "--"]
+
+
 def test_ubuntu_adds_the_ppa_then_installs(monkeypatch):
     monkeypatch.setattr(equip, "_os_release", lambda path="": UBUNTU)
+    monkeypatch.setattr(equip.host_mount, "systemd_running", lambda: False)
     ran, run = _runner()
     result = asyncio.run(equip.equip("/var/lib/x", run=run, system="Linux"))
     assert result == {"success": True, "installed": "ppa"}
     bare = [a[2:] if a[:2] == ["sudo", "-n"] else a for a in ran]
     assert bare == equip.ubuntu_steps()
     assert bare[-1] == ["apt-get", "install", "-y", "restate", "nfs-common"]
+
+
+def test_under_systemd_the_steps_run_in_the_hosts_mount_namespace(monkeypatch):
+    """The agent's unit makes /root read-only for it, and add-apt-repository
+    writes /root/.launchpadlib (production, milsurpmonitor, 2026-10-30)."""
+    monkeypatch.setattr(equip, "_os_release", lambda path="": UBUNTU)
+    monkeypatch.setattr(equip.host_mount, "systemd_running", lambda: True)
+    monkeypatch.setattr(equip.os, "geteuid", lambda: 1000)
+    ran, run = _runner()
+    asyncio.run(equip.equip("/var/lib/x", run=run, system="Linux"))
+    assert ran == [["sudo", "-n", *HOST_NS, *step] for step in equip.ubuntu_steps()]
+
+
+def test_the_ubuntu_sudoers_admits_the_namespaced_steps():
+    import os  # pylint: disable=import-outside-toplevel
+
+    path = os.path.join(os.path.dirname(__file__), "..", "installer", "ubuntu",
+                        "sysmanage-agent.sudoers")  # fmt: skip
+    with open(path, encoding="utf-8") as handle:
+        rules = handle.read()
+    for command in ("add-apt-repository *", "apt-get *"):
+        assert (
+            f"NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- {command}" in rules
+        )
 
 
 def test_a_failing_apt_step_reports_install_failed(monkeypatch):

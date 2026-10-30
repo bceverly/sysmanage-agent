@@ -44,25 +44,32 @@ async def send_all(
     restate ``version`` when known; a host policy sends the version alone.
     How many were sent.  The audit runs commands, so it runs off the event
     loop."""
-    loop = asyncio.get_running_loop()
     sent = 0
     for policy_id, policy in sorted(policies.items()):
         if not isinstance(policy, dict):
             continue
-        payload: Dict[str, Any] = {"policy_id": policy_id}
-        if version:
-            payload["restate_version"] = version
-        if policy.get("role") == "storage":
-            found = await loop.run_in_executor(None, audit, policy)
-            if found is None and not version:
-                continue  # the audit could not run; _audit logged why
-            if found is not None:
-                payload["storage_audit"] = found
-        elif policy.get("role") != "host" or not version:
-            continue
-        await send(MESSAGE_TYPE, payload)
-        sent += 1
+        payload = await _payload(policy_id, policy, audit, version)
+        if payload is not None:
+            await send(MESSAGE_TYPE, payload)
+            sent += 1
     return sent
+
+
+async def _payload(
+    policy_id: str, policy: Dict[str, Any], audit: Audit, version: Optional[str]
+) -> Optional[Dict[str, Any]]:
+    """What one policy sends, or None when it has nothing to say."""
+    payload: Dict[str, Any] = {"policy_id": policy_id}
+    if version:
+        payload["restate_version"] = version
+    if policy.get("role") == "storage":
+        found = await asyncio.get_running_loop().run_in_executor(None, audit, policy)
+        if found is None and not version:
+            return None  # the audit could not run; _audit logged why
+        if found is not None:
+            payload["storage_audit"] = found
+        return payload
+    return payload if policy.get("role") == "host" and version else None
 
 
 # A strong reference to each running re-audit (an unreferenced task can be

@@ -41,17 +41,25 @@ def _body(name):
 SUMS = "".join(f"{hashlib.sha256(_body(n)).hexdigest()}  ./{n}\n" for n in FILES)
 
 
+HOST_NS = ["nsenter", "--mount=/proc/1/ns/mnt", "--"]
+
+
 def _bare(argv):
+    """The command itself: no sudo/doas, no host-namespace wrapper."""
     for prefix in (["sudo", "-n"], ["doas", "-n"]):
         if argv[: len(prefix)] == prefix:
-            return argv[len(prefix) :]
+            argv = argv[len(prefix) :]
+    if argv[: len(HOST_NS)] == HOST_NS:
+        argv = argv[len(HOST_NS) :]
     return argv
 
 
 @pytest.fixture
 def host(monkeypatch, tmp_path):
-    """Run equip as a non-root agent with a fake network and fake tools."""
+    """Run equip as a non-root agent with a fake network and fake tools,
+    under systemd (Linux steps in the host's mount namespace)."""
     monkeypatch.setattr(equip.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(equip.host_mount, "systemd_running", lambda: True)
     ran, fetched, seen = [], [], {}
 
     async def run(argv):
@@ -159,7 +167,12 @@ def test_a_tampered_package_installs_nothing(host, monkeypatch):
     assert result["reason"] == "checksum_mismatch" and host.ran == []
 
 
-def test_a_failing_install_step_is_reported_and_the_files_removed(host, tmp_path):
+def test_a_failing_install_step_is_reported_and_the_files_removed(
+    host, tmp_path, monkeypatch
+):
+    # NetBSD packages are amd64: never the machine running the tests (arm64 Macs).
+    monkeypatch.setattr(equip.platform, "machine", lambda: "amd64")
+
     async def failing(argv):
         host.ran.append(argv)
         return 1, "error: nothing provides libfoo"
@@ -233,7 +246,9 @@ def _rules(system):
     "system,rule",
     [
         ("centos", "NOPASSWD: /usr/bin/dnf *"),
+        ("centos", "NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- dnf *"),
         ("opensuse", "NOPASSWD: /usr/bin/zypper *"),
+        ("opensuse", "NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- zypper *"),
         ("alpine", "NOPASSWD: /sbin/apk add *"),
         ("netbsd", "NOPASSWD: /usr/sbin/pkg_add *"),
     ],

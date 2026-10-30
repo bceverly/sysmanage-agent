@@ -42,7 +42,7 @@ BACKUP_ROOTS = ("/srv", "/mnt", "/media", "/var/backups")
 SYSTEM_TREES = (
     "/bin", "/boot", "/dev", "/etc", "/home", "/lib", "/lib32", "/lib64",
     "/libexec", "/opt", "/proc", "/root", "/run", "/sbin", "/sys",
-    "/tmp",  # nosec B108 - a deny-list: paths that are never a backup root
+    "/tmp",  # NOSONAR  # nosec B108 - a deny-list: paths never a backup root
     "/usr", "/var",
 )  # fmt: skip
 RULES_ROOTS = ("/etc/restate", "/usr/share/restate")

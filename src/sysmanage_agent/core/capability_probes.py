@@ -44,6 +44,7 @@ from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
 
 from src.sysmanage_agent.backup import equip as backup_equip
 from src.sysmanage_agent.backup import restate_probe
+from src.sysmanage_agent.backup import storage_reach
 from src.sysmanage_agent.collection import malware_scan
 from src.sysmanage_agent.operations import config_mgmt_locator
 
@@ -169,6 +170,8 @@ _REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
     # Where restate has a package this agent can install (Ubuntu's PPA,
     # FreeBSD's release package); not applicable elsewhere.
     "equip_backup": backup_equip.unavailable_reason,
+    # A TCP connection: every agent but Windows' (no backups there).
+    "check_backup_storage": storage_reach.unavailable_reason,
 }
 
 

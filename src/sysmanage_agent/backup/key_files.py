@@ -33,7 +33,7 @@ from src.i18n import _
 KEY_DIR = "/run/sysmanage-agent/backup-keys"
 # tmpfs, so the key never reaches a disk: stage() makes a 0600 file there
 # with mkstemp (O_EXCL, random name), so no other user can plant the path.
-_STAGE_DIRS = ("/dev/shm", "/run/shm")  # nosec B108
+_STAGE_DIRS = ("/dev/shm", "/run/shm")  # NOSONAR  # nosec B108
 _KEY_NAME = re.compile(r"^[0-9a-f-]{36}-\d{1,2}\.key$")
 # The armor header's marker, without the dashes that make a secret scanner
 # take this check for a key.
@@ -110,25 +110,24 @@ async def fetch(agent: Any, run_id: str, session_factory=None) -> List[str]:
     factory = session_factory or (
         lambda: aiohttp.ClientSession(**endpoint.session_kwargs())
     )
-    async with factory() as session:
-        async with session.post(
-            endpoint.rest_url("/api/agent/backup-key"),
-            json={"host_id": host_id, "run_id": run_id},
-            headers={
-                "Authorization": f"Bearer {token}",
-                "X-Host-Token": host_token or "",
-            },
-            proxy=endpoint.proxy(),
-        ) as response:
-            if response.status != 200:
-                detail = await _detail(response)
-                raise KeyFetchError(
-                    _(
-                        "The server did not release the backup key: HTTP %(status)s, %(detail)s"
-                    )
-                    % {"status": response.status, "detail": detail}
+    async with factory() as session, session.post(
+        endpoint.rest_url("/api/agent/backup-key"),
+        json={"host_id": host_id, "run_id": run_id},
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Host-Token": host_token or "",
+        },
+        proxy=endpoint.proxy(),
+    ) as response:
+        if response.status != 200:
+            detail = await _detail(response)
+            raise KeyFetchError(
+                _(
+                    "The server did not release the backup key: HTTP %(status)s, %(detail)s"
                 )
-            return check_keys(await response.json())
+                % {"status": response.status, "detail": detail}
+            )
+        return check_keys(await response.json())
 
 
 async def _detail(response) -> str:

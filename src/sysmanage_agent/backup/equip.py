@@ -28,6 +28,11 @@ Not offered: Debian and every other Linux (restate is built from source
 there, by hand), and Windows (restate does not run there) -- reason
 ``wrong_platform``.
 
+On Linux under systemd every install step runs in the host's mount
+namespace (``host_mount.in_host_namespace``): the agent's unit gives it a
+private one with ``/root`` read-only, and add-apt-repository failed there
+writing ``/root/.launchpadlib`` (production, milsurpmonitor, 2026-10-30).
+
 Everything that decides what runs is HERE: the server sends no URL, package
 name or command, only "equip".  Downloads come only from restate's own
 release page, file names are built from this host's release, and nothing is
@@ -50,6 +55,7 @@ except ImportError:  # pragma: no cover - Windows
     pwd = None  # type: ignore[assignment]
 
 from src.sysmanage_agent.backup import equip_release as release
+from src.sysmanage_agent.backup import host_mount
 from src.sysmanage_agent.backup import restate_probe
 
 # Kept here for callers and tests that name them on this module.
@@ -184,6 +190,14 @@ def _privileged(argv: List[str], system: Optional[str] = None) -> List[str]:
     return ["sudo", "-n"] + list(argv)
 
 
+def _linux_privileged(argv: List[str], systemd: Optional[bool] = None) -> List[str]:
+    """A Linux install step: sudo, in the host's mount namespace under
+    systemd (the agent's own has /root read-only)."""
+    if systemd is None:
+        systemd = host_mount.systemd_running()
+    return _privileged(host_mount.in_host_namespace(argv, "Linux", systemd), "Linux")
+
+
 async def _run(argv: List[str]) -> Tuple[int, str]:
     proc = await asyncio.create_subprocess_exec(
         *argv, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, cwd="/"
@@ -201,8 +215,9 @@ _failed = release.failed
 
 
 async def _steps(run: Callable, steps: List[List[str]], installed: str):
+    """A Linux distribution's package-manager steps."""
     for argv in steps:
-        code, out = await run(_privileged(argv))
+        code, out = await run(_linux_privileged(argv))
         if code:
             return _failed("install_failed", out)
     return {"success": True, "installed": installed}
@@ -259,5 +274,5 @@ async def equip(  # pylint: disable=too-many-arguments
         return await _equip_macos(run, exists, stat)
     return await release.install(
         found.kind, found.release, found.arch, state_dir, run, fetch,
-        lambda argv: _privileged(argv, system),
+        _linux_privileged if system == "Linux" else lambda argv: _privileged(argv, system),
     )  # fmt: skip

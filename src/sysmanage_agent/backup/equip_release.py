@@ -47,9 +47,19 @@ FREEBSD, OPENBSD, NETBSD = "freebsd", "openbsd", "netbsd"
 ALPINE, EL, LEAP, TUMBLEWEED = "alpine", "el", "leap", "tumbleweed"
 KINDS = (FREEBSD, OPENBSD, NETBSD, ALPINE, EL, LEAP, TUMBLEWEED)
 
-_VERSION = r"[0-9]+(?:\.[0-9]+){3}"
+_VERSION = r"\d+(?:\.\d+){3}"
 _TAG = re.compile(r"/releases/tag/v(" + _VERSION + r")$")
-_RELEASE = re.compile(r"^([0-9]+\.[0-9]+)")
+_RELEASE = re.compile(r"^(\d+\.\d+)")
+
+
+def _write_packages(paths: List[str], bodies: List[bytes]) -> None:
+    """Each checked package to its path, readable by its owner only: the
+    install runs as root, which needs nothing more (off the event loop)."""
+    for path, body in zip(paths, bodies):
+        handle = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(handle, "wb") as out:
+            out.write(body)
+        os.chmod(path, 0o600)  # an existing file keeps its mode on O_CREAT
 
 
 def release_of(text: str) -> Optional[str]:
@@ -199,10 +209,9 @@ async def install(  # pylint: disable=too-many-arguments
     paths = [posixpath.join(folder, local_name(kind, version or "", name))
              for name in packages]  # fmt: skip
     try:
-        for path, package in zip(paths, packages.values()):
-            with open(path, "wb") as handle:
-                handle.write(package)
-            os.chmod(path, 0o644)
+        await asyncio.get_running_loop().run_in_executor(
+            None, _write_packages, paths, list(packages.values())
+        )
         for argv in install_steps(kind, paths):
             code, out = await run(privileged(argv))
             if code:

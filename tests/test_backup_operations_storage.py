@@ -91,6 +91,11 @@ async def test_prepare_creates_exports_and_protects_in_order(prepare_env, agent)
     assert report["storage_audit"][0]["code"] == "export_own"  # re-audited
 
 
+# The zfs the agent runs: /usr/sbin/zfs on Linux, /sbin/zfs on the BSDs
+# (where these tests also run, faking Linux).
+ZFS = ops_module._first(ops_module.ZFS_PATHS)
+
+
 def _zfs_prepare(prepare_env, monkeypatch, mounted_after):
     """Linux ZFS under systemd; the host's mount table shows the dataset
     once ``zfs mount`` has run (or never, with mounted_after=None)."""
@@ -124,10 +129,10 @@ async def test_linux_zfs_is_created_and_mounted_in_the_hosts_namespace(
     await _drain(prepare_env)
     bare = [c[2:] if c[:2] == ["sudo", "-n"] else c for c in prepare_env.fake.calls]
     host_ns = ["nsenter", "--mount=/proc/1/ns/mnt", "--"]
-    create = bare.index([*host_ns, "/usr/sbin/zfs", "create", "tank/b/h-1"])
+    create = bare.index([*host_ns, ZFS, "create", "tank/b/h-1"])
     assert create < bare.index(["exportfs", "-ra"]) < bare.index(
         ["chown", "root:restate", repo])  # fmt: skip
-    assert [*host_ns, "/usr/sbin/zfs", "mount", "tank/b/h-1"] not in bare
+    assert [*host_ns, ZFS, "mount", "tank/b/h-1"] not in bare
     assert _sent(agent, "backup_result")[0]["status"] == "ok"
 
 
@@ -142,7 +147,7 @@ async def test_a_dataset_not_mounted_host_wide_is_never_prepared_beneath(
     await prepare_env.backup_run({"run_id": RID, "policy_id": PID, "action": "prepare"})
     await _drain(prepare_env)
     bare = [c[2:] if c[:2] == ["sudo", "-n"] else c for c in prepare_env.fake.calls]
-    assert ["nsenter", "--mount=/proc/1/ns/mnt", "--", "/usr/sbin/zfs", "mount",
+    assert ["nsenter", "--mount=/proc/1/ns/mnt", "--", ZFS, "mount",
             "tank/b/h-1"] in bare  # fmt: skip
     report = _sent(agent, "backup_result")[0]
     assert (

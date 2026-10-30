@@ -30,7 +30,7 @@ from src.sysmanage_agent.communication import send_on_change
 # held a clock resync until the server gave up on it.  These are queued
 # URGENT and run by the express lane as well; only add a command that is
 # quick and safe to run concurrently with any other.
-EXPRESS_COMMANDS = frozenset({"resync_clock"})
+EXPRESS_COMMANDS = frozenset({"resync_clock", "check_backup_storage"})
 
 
 def is_express(message: Dict[str, Any]) -> bool:
