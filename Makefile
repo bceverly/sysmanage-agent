@@ -1608,12 +1608,12 @@ installer-rpm-suse:
 					echo "Using GPG passphrase from environment variable"; \
 					echo "$$GPG_PASSPHRASE" > /tmp/.rpm-gpg-pass-$$$$; \
 					chmod 600 /tmp/.rpm-gpg-pass-$$$$; \
-					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --passphrase-file /tmp/.rpm-gpg-pass-$$$$ --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg /usr/bin/gpg" --define "_gpg_sign_cmd_extra_args --batch --passphrase-file /tmp/.rpm-gpg-pass-$$$$ --no-secmem-warning" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
 					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "✓ Package signed successfully"; } || \
 					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "ERROR: Failed to sign package"; exit 1; }; \
 				elif [ -f "$$CURRENT_DIR/.gpg-passphrase" ]; then \
 					echo "Using GPG passphrase from .gpg-passphrase file"; \
-					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --pinentry-mode loopback --passphrase-file $$CURRENT_DIR/.gpg-passphrase --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg /usr/bin/gpg" --define "_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file $$CURRENT_DIR/.gpg-passphrase --no-secmem-warning" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
 					echo "✓ Package signed successfully" || \
 					{ echo "ERROR: Failed to sign package"; exit 1; }; \
 				else \
@@ -1967,12 +1967,12 @@ installer-rpm:
 					echo "Using GPG passphrase from environment variable"; \
 					echo "$$GPG_PASSPHRASE" > /tmp/.rpm-gpg-pass-$$$$; \
 					chmod 600 /tmp/.rpm-gpg-pass-$$$$; \
-					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --passphrase-file /tmp/.rpm-gpg-pass-$$$$ --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg /usr/bin/gpg" --define "_gpg_sign_cmd_extra_args --batch --passphrase-file /tmp/.rpm-gpg-pass-$$$$ --no-secmem-warning" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
 					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "✓ Package signed successfully"; } || \
 					{ rm -f /tmp/.rpm-gpg-pass-$$$$; echo "ERROR: Failed to sign package"; exit 1; }; \
 				elif [ -f "$$CURRENT_DIR/.gpg-passphrase" ]; then \
 					echo "Using GPG passphrase from .gpg-passphrase file"; \
-					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --pinentry-mode loopback --passphrase-file $$CURRENT_DIR/.gpg-passphrase --no-secmem-warning -u E033E691377F0AE3 -sbo %{__signature_filename} %{__plaintext_filename}" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
+					rpmsign --addsign --define "_gpg_name E033E691377F0AE3" --define "__gpg /usr/bin/gpg" --define "_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file $$CURRENT_DIR/.gpg-passphrase --no-secmem-warning" "$$OUTPUT_DIR/$$RPM_BASENAME" 2>&1 && \
 					echo "✓ Package signed successfully" || \
 					{ echo "ERROR: Failed to sign package"; exit 1; }; \
 				else \
