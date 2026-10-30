@@ -2680,13 +2680,21 @@ jobs:
             echo "deb [signed-by=/usr/share/keyrings/sysmanage-archive-keyring.gpg] https://repo.sysmanage.org/agent/deb stable main" \
               > /etc/apt/sources.list.d/sysmanage-agent.list
 
-            # R2 is read-after-write consistent, but retry briefly so a blip
-            # cannot fail a release that is otherwise fine.
-            for attempt in 1 2 3 4 5; do
+            # R2 is read-after-write consistent, but the CDN edge can keep
+            # serving the previous InRelease for a while after the purge
+            # (3.12.0.20, 2026-10-30: five tries over 50 s all got the old
+            # one, and apt said "Unable to parse package file"; the repo
+            # was fine minutes later).  So retry for up to 3 minutes, and on
+            # failure show what the edge served.
+            for attempt in $(seq 1 12); do
               if apt-get update; then break; fi
               echo "apt-get update failed (attempt $attempt) -- retrying"
-              sleep 10
-              [ "$attempt" = 5 ] && exit 1
+              if [ "$attempt" = 12 ]; then
+                curl -fsSI https://repo.sysmanage.org/agent/deb/dists/stable/InRelease || true
+                curl -fsS https://repo.sysmanage.org/agent/deb/dists/stable/InRelease | head -12 || true
+                exit 1
+              fi
+              sleep 15
             done
 
             # An index apt accepts but that lists nothing is still broken.
