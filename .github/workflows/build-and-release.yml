@@ -2151,7 +2151,7 @@ jobs:
           # avoid it.
           aws configure set default.s3.preferred_transfer_client classic
           aws configure set default.s3.multipart_threshold 512MB
-          WORK="${{ github.workspace }}/r2-stage"
+          WORK="$GITHUB_WORKSPACE/r2-stage"
           mkdir -p "$WORK"
           cd "$WORK"
 
@@ -2188,14 +2188,14 @@ jobs:
 
           # Copy package files to appropriate locations
           # DEB packages
-          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/sysmanage-agent_*.deb.sha256 "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent_*.deb "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent_*.deb.sha256 "repo/agent/deb/pool/main/$VERSION-1/" 2>/dev/null || true
 
           # RPM packages - CentOS/RHEL (from build-centos matrix job).  Artifacts
           # are sysmanage-agent-rpm-<arch> (x86_64 / aarch64), each holding
           # sysmanage-agent-VERSION-1.<arch>.rpm -- route each to its own repo dir.
           for RPMARCH in x86_64 aarch64; do
-            SRC="${{ github.workspace }}/artifacts/sysmanage-agent-rpm-$RPMARCH"
+            SRC="$GITHUB_WORKSPACE/artifacts/sysmanage-agent-rpm-$RPMARCH"
             [ -d "$SRC" ] || continue
             mkdir -p "repo/agent/rpm/el9/$RPMARCH"
             find "$SRC" -name "sysmanage-agent-*.rpm" -exec cp {} "repo/agent/rpm/el9/$RPMARCH/" \; 2>/dev/null || true
@@ -2203,47 +2203,47 @@ jobs:
           done
 
           # RPM packages - OpenSUSE Tumbleweed
-          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm "repo/agent/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*opensuse-tumbleweed*.rpm.sha256 "repo/agent/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*opensuse-tumbleweed*.rpm "repo/agent/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*opensuse-tumbleweed*.rpm.sha256 "repo/agent/rpm/opensuse-tumbleweed/x86_64/" 2>/dev/null || true
 
           # RPM packages - OpenSUSE Leap
-          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm "repo/agent/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*opensuse-leap*.rpm.sha256 "repo/agent/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*opensuse-leap*.rpm "repo/agent/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*opensuse-leap*.rpm.sha256 "repo/agent/rpm/opensuse-leap/15/x86_64/" 2>/dev/null || true
 
           # RPM packages - SLES
-          cp ${{ github.workspace }}/release-files/*sles*.rpm "repo/agent/rpm/sles/15/x86_64/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*sles*.rpm.sha256 "repo/agent/rpm/sles/15/x86_64/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*sles*.rpm "repo/agent/rpm/sles/15/x86_64/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*sles*.rpm.sha256 "repo/agent/rpm/sles/15/x86_64/" 2>/dev/null || true
 
           # macOS packages
-          cp ${{ github.workspace }}/release-files/*macos*.pkg "repo/agent/mac/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*macos*.pkg.sha256 "repo/agent/mac/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*macos*.pkg "repo/agent/mac/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*macos*.pkg.sha256 "repo/agent/mac/packages/$VERSION/" 2>/dev/null || true
 
           # Windows packages
-          cp ${{ github.workspace }}/release-files/*windows*.msi "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*windows*.msi.sha256 "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*windows*.msi "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*windows*.msi.sha256 "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
           # The bundle (chained VC++ + Python + agent).  Published alongside the
           # MSI rather than instead of it: winget and `msiexec /i` consume the
           # MSI, while the bundle is what the docs point a human at.
-          cp ${{ github.workspace }}/release-files/*windows*.exe "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*windows*.exe.sha256 "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*windows*.exe "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*windows*.exe.sha256 "repo/agent/windows/packages/$VERSION/" 2>/dev/null || true
 
           # FreeBSD packages
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg "repo/agent/freebsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.pkg.sha256 "repo/agent/freebsd/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent-$VERSION.pkg "repo/agent/freebsd/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent-$VERSION.pkg.sha256 "repo/agent/freebsd/packages/$VERSION/" 2>/dev/null || true
 
           # NetBSD packages
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz "repo/agent/netbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-$VERSION.tgz.sha256 "repo/agent/netbsd/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent-$VERSION.tgz "repo/agent/netbsd/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent-$VERSION.tgz.sha256 "repo/agent/netbsd/packages/$VERSION/" 2>/dev/null || true
 
           # OpenBSD port tarball
-          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*openbsd-port.tar.gz "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*openbsd-port.tar.gz.sha256 "repo/agent/openbsd/ports/$VERSION/" 2>/dev/null || true
 
           # OpenBSD packages (.tgz) -- wildcard so every built release (7.9, 8.0,
           # and future versions) is picked up.  The old enumerated 7.5/7.6/7.7
           # list silently dropped newer releases and kept dead globs.
-          cp ${{ github.workspace }}/release-files/*-openbsd*.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/*-openbsd*.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*-openbsd*.tgz "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*-openbsd*.tgz.sha256 "repo/agent/openbsd/packages/$VERSION/" 2>/dev/null || true
 
           # Alpine packages (.apk) -- glob over whatever the build matrix
           # produced rather than naming releases here.  The hardcoded list had
@@ -2253,11 +2253,11 @@ jobs:
           # to the GitHub release but never published to R2 at all.  A glob
           # cannot drift.  Fail loudly if it matches nothing: a silent no-op is
           # what let 3.22 go unpublished across multiple releases.
-          if ! cp ${{ github.workspace }}/release-files/*-alpine*.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null; then
+          if ! cp $GITHUB_WORKSPACE/release-files/*-alpine*.apk "repo/agent/alpine/packages/$VERSION/" 2>/dev/null; then
             echo "::error::no *-alpine*.apk found in release-files -- the Alpine build matrix produced nothing to publish"
             exit 1
           fi
-          cp ${{ github.workspace }}/release-files/*-alpine*.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/*-alpine*.apk.sha256 "repo/agent/alpine/packages/$VERSION/" 2>/dev/null || true
           echo "Alpine packages staged for publication:"
           ls -1 "repo/agent/alpine/packages/$VERSION/"
 
@@ -2279,8 +2279,8 @@ jobs:
 
           # Flatpak package and repository
           echo "Copying Flatpak files..."
-          cp ${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/sysmanage-agent-*.flatpak "repo/flatpak/" 2>/dev/null || true
-          cp ${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/sysmanage-agent-*.flatpak.sha256 "repo/flatpak/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/artifacts/sysmanage-agent-flatpak/installer/flatpak/sysmanage-agent-*.flatpak "repo/flatpak/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/artifacts/sysmanage-agent-flatpak/installer/flatpak/sysmanage-agent-*.flatpak.sha256 "repo/flatpak/" 2>/dev/null || true
 
           # Copy Flatpak repository data
           echo "Syncing Flatpak repository..."
@@ -2291,8 +2291,8 @@ jobs:
           # OSTree repo (the directory with config + objects/) wherever it is.
           FP_SRC=""
           for cand in \
-            "${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/repo" \
-            "${{ github.workspace }}/artifacts/sysmanage-agent-flatpak/installer/flatpak/repo"; do
+            "$GITHUB_WORKSPACE/artifacts/sysmanage-agent-flatpak/repo" \
+            "$GITHUB_WORKSPACE/artifacts/sysmanage-agent-flatpak/installer/flatpak/repo"; do
             if [ -f "$cand/config" ] && [ -d "$cand/objects" ]; then FP_SRC="$cand"; break; fi
           done
           if [ -n "$FP_SRC" ]; then
@@ -2305,8 +2305,8 @@ jobs:
           # The bundle, from the release-files copy the GitHub release itself
           # uses: the artifact-path copy above can match nothing, and the R2
           # bundle was missing for 3.11.0.4 while GitHub had it (2026-10-17).
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-*.flatpak "repo/flatpak/" 2>/dev/null || true
-          cp ${{ github.workspace }}/release-files/sysmanage-agent-*.flatpak.sha256 "repo/flatpak/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent-*.flatpak "repo/flatpak/" 2>/dev/null || true
+          cp $GITHUB_WORKSPACE/release-files/sysmanage-agent-*.flatpak.sha256 "repo/flatpak/" 2>/dev/null || true
           ls repo/flatpak/sysmanage-agent-*.flatpak >/dev/null 2>&1 \
             || echo "::warning::no Flatpak bundle staged for R2"
 
