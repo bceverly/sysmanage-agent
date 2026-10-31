@@ -267,7 +267,7 @@ class TestStorePackages:
             result = collector._store_packages("apt", packages)
 
         assert result == 2
-        assert mock_session.add.call_count == 2
+        assert sum(len(c.args[1]) for c in mock_session.execute.call_args_list) == 2
         mock_session.commit.assert_called_once()
 
     def test_store_packages_empty(self, collector):

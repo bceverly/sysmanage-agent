@@ -146,7 +146,7 @@ class TestPackageCollector:  # pylint: disable=too-many-public-methods
             assert count == 2
             # Verify database operations occurred
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("subprocess.Popen")
@@ -205,7 +205,7 @@ nginx.x86_64 1:1.20.1-1.el8 epel
 
             assert count == 2
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("subprocess.run")
@@ -237,7 +237,7 @@ code      1.82.2     148  latest/stable vscode✓    classic
 
             assert count == 2
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("subprocess.run")
@@ -285,7 +285,7 @@ python@3.11 3.11.5
 
             assert count == 3
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     def test_store_packages_success(self, mock_db_manager):
@@ -318,7 +318,9 @@ python@3.11 3.11.5
 
             # Verify database operations
             assert mock_session.query.called  # DELETE operation
-            assert mock_session.add.call_count == 2  # Two packages added
+            assert (
+                sum(len(c.args[1]) for c in mock_session.execute.call_args_list) == 2
+            )  # Two packages added
             assert mock_session.commit.called
 
     def test_store_packages_empty_list(self, mock_db_manager):
@@ -343,7 +345,7 @@ python@3.11 3.11.5
             # Should return 0 for empty list and not perform any database operations
             assert result == 0
             assert not mock_session.query.called  # No operations when empty
-            assert not mock_session.add.called  # No packages to add
+            assert not mock_session.execute.called  # No packages to add
             assert not mock_session.commit.called  # No commit when no operations
 
     def test_store_packages_database_error(self, mock_db_manager):

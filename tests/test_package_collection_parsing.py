@@ -199,7 +199,7 @@ python3.x86_64 3.9.16-1.el8_8.2 baseos
 
             assert count == 3
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("subprocess.run")
@@ -265,7 +265,7 @@ core/bash 5.1.016-1
 
             assert count == 2
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("subprocess.run")
@@ -297,7 +297,7 @@ org.gimp.GIMP	GNU Image Manipulation Program	2.10.34	stable	gimp
 
             assert count == 3
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("urllib.request.urlopen")
@@ -373,7 +373,7 @@ org.gimp.GIMP	GNU Image Manipulation Program	2.10.34	stable	gimp
 
             assert count > 1000
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("urllib.request.urlopen")
@@ -445,7 +445,7 @@ org.gimp.GIMP	GNU Image Manipulation Program	2.10.34	stable	gimp
 
             assert count > 1000
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     @patch("subprocess.run")
@@ -476,7 +476,7 @@ python39-3.9.16
 
             assert count == 3
             assert mock_session.query.called
-            assert mock_session.add.called
+            assert mock_session.execute.called  # batched INSERT
             assert mock_session.commit.called
 
     def test_parse_pacman_output_detailed(self, linux_package_collector):
