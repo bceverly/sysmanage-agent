@@ -2144,6 +2144,13 @@ jobs:
           set -euo pipefail
           ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           s3() { aws s3 "$@" --endpoint-url "$ENDPOINT" --region auto; }
+          # R2 rejected a multipart upload from the aws-cli on Ubuntu 26.04 runners
+          # (InvalidPart, agent 3.12.0.21, 2026-10-31): newer aws-cli can pick the CRT
+          # transfer client, whose parts R2 does not accept.  The classic client, and
+          # single-part uploads for anything under 512 MB (every package we publish),
+          # avoid it.
+          aws configure set default.s3.preferred_transfer_client classic
+          aws configure set default.s3.multipart_threshold 512MB
           WORK="${{ github.workspace }}/r2-stage"
           mkdir -p "$WORK"
           cd "$WORK"
