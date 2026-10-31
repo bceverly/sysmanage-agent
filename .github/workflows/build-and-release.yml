@@ -2151,6 +2151,9 @@ jobs:
           # avoid it.
           aws configure set default.s3.preferred_transfer_client classic
           aws configure set default.s3.multipart_threshold 512MB
+          # The classic client moves 10 files at a time by default; the flatpak
+          # OSTree store alone is thousands of small objects.
+          aws configure set default.s3.max_concurrent_requests 64
           WORK="$GITHUB_WORKSPACE/r2-stage"
           mkdir -p "$WORK"
           cd "$WORK"

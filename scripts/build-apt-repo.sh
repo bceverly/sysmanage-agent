@@ -144,7 +144,10 @@ else
         echo "Architectures: $ARCH_LIST"
         echo "Date: $(date -R -u)"
         for algo in "MD5Sum:md5sum" "SHA1:sha1sum" "SHA256:sha256sum" "SHA512:sha512sum"; do
-            echo "${algo%%:*}"
+            # "MD5Sum:" with its colon: without it apt cannot parse the
+            # Release at all ("Unable to parse package file"; agent 3.12.0.20
+            # to .23, once Ubuntu 26.04 runners came without apt-ftparchive).
+            echo "${algo%%:*}:"
             CMD="${algo##*:}"
             for f in $REL_FILES; do
                 [ -f "$f" ] || continue
@@ -155,7 +158,7 @@ else
 fi
 
 # Fail loudly rather than publishing a repo apt will reject.
-for required in Suite Codename Components Architectures; do
+for required in Suite Codename Components Architectures MD5Sum SHA256; do
     grep -q "^$required:" Release || {
         echo "ERROR: generated Release is missing '$required:' -- apt would refuse this repo" >&2
         exit 1
