@@ -10,6 +10,12 @@ limit.  ``DataCollectorSendersMixin`` is mixed into ``DataCollector`` and relies
 on attributes that ``DataCollector`` sets up (``agent``, ``logger``, and the
 ``*_collector`` helpers) plus its ``collect_certificates`` / ``collect_roles``
 methods.
+
+Every collector runs in a worker thread (``asyncio.to_thread``), never on the
+event loop: the loop also answers the server's websocket keepalive pings, and
+synchronous collection on a slow host with a large inventory kept it busy past
+the ping timeout -- ubiquiti dropped and reconnected about 49 times in a day
+(production, 2026-10-30/31).
 """
 
 import asyncio
@@ -33,7 +39,9 @@ class DataCollectorSendersMixin:
     async def _send_software_inventory_update(self):
         """Send software inventory update."""
         self.logger.debug("AGENT_DEBUG: Collecting software inventory data")
-        software_info = self.agent.registration.get_software_inventory_info()
+        software_info = await asyncio.to_thread(
+            self.agent.registration.get_software_inventory_info
+        )
         software_info["hostname"] = self.agent.registration.get_system_info()[
             "hostname"
         ]
@@ -61,7 +69,9 @@ class DataCollectorSendersMixin:
     async def _send_user_access_update(self):
         """Send user access update."""
         self.logger.debug("AGENT_DEBUG: Collecting user access data")
-        user_info = self.agent.registration.get_user_access_info()
+        user_info = await asyncio.to_thread(
+            self.agent.registration.get_user_access_info
+        )
         user_info["hostname"] = self.agent.registration.get_system_info()["hostname"]
 
         # Add host_id if available
@@ -85,7 +95,9 @@ class DataCollectorSendersMixin:
     async def _send_hardware_update(self):
         """Send hardware update."""
         self.logger.debug("AGENT_DEBUG: Collecting hardware data")
-        hardware_info = self.agent.registration.get_hardware_info()
+        hardware_info = await asyncio.to_thread(
+            self.agent.registration.get_hardware_info
+        )
         hardware_info["hostname"] = self.agent.registration.get_system_info()[
             "hostname"
         ]
@@ -149,7 +161,7 @@ class DataCollectorSendersMixin:
     async def _send_os_version_update(self):
         """Send OS version update."""
         self.logger.debug("AGENT_DEBUG: About to collect OS version info")
-        os_info = self.agent.registration.get_os_version_info()
+        os_info = await asyncio.to_thread(self.agent.registration.get_os_version_info)
         self.logger.debug("AGENT_DEBUG: OS info collected: %s", os_info)
 
         os_message = {
@@ -229,7 +241,9 @@ class DataCollectorSendersMixin:
         """Send antivirus status update."""
         self.logger.debug("AGENT_DEBUG: Collecting antivirus status data")
 
-        antivirus_info = self.agent.antivirus_collector.collect_antivirus_status()
+        antivirus_info = await asyncio.to_thread(
+            self.agent.antivirus_collector.collect_antivirus_status
+        )
 
         # Add host_id if available
         host_approval = self.agent.registration_manager.get_host_approval_from_db()
@@ -265,7 +279,9 @@ class DataCollectorSendersMixin:
         """Send firewall status update."""
         self.logger.debug("AGENT_DEBUG: Collecting firewall status data")
 
-        firewall_info = self.firewall_collector.collect_firewall_status()
+        firewall_info = await asyncio.to_thread(
+            self.firewall_collector.collect_firewall_status
+        )
 
         # Add host_id and hostname if available
         host_approval = self.agent.registration_manager.get_host_approval_from_db()
@@ -300,7 +316,9 @@ class DataCollectorSendersMixin:
         """Send Graylog attachment status update."""
         self.logger.debug("AGENT_DEBUG: Collecting Graylog attachment status data")
 
-        graylog_info = self.graylog_collector.collect_graylog_status()
+        graylog_info = await asyncio.to_thread(
+            self.graylog_collector.collect_graylog_status
+        )
 
         # Add host_id and hostname if available
         host_approval = self.agent.registration_manager.get_host_approval_from_db()

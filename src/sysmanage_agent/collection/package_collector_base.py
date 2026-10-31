@@ -14,7 +14,7 @@ import os
 import platform
 import subprocess  # nosec B404
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # Platform-specific imports
 try:
@@ -22,11 +22,37 @@ try:
 except ImportError:
     pwd = None  # Windows
 
+from sqlalchemy import func
+
 from src.database.base import get_database_manager
 from src.database.models import AvailablePackage, SentPackageSnapshot
 from src.i18n import _
 
 logger = logging.getLogger(__name__)
+
+# Rows per INSERT.  The catalogs run to ~120,000 rows; adding them one ORM
+# object at a time held SQLite's write lock for many seconds, and with the
+# rollback journal that also blocks readers -- including the event loop's own
+# small queries, which then stall the websocket keepalive (ubiquiti,
+# 2026-10-31).  A Core executemany per batch is several times faster.
+_INSERT_BATCH = 1000
+
+
+def _same_snapshot(session, fingerprint: str, count: int) -> bool:
+    """Does the stored snapshot already hold exactly this catalog?"""
+    stored = session.query(
+        SentPackageSnapshot.fingerprint, func.count(SentPackageSnapshot.id)
+    ).group_by(SentPackageSnapshot.fingerprint)
+    found = stored.all()
+    return len(found) == 1 and found[0][0] == fingerprint and found[0][1] == count
+
+
+def _insert_rows(session, model, rows: List[Dict[str, Any]]) -> None:
+    """Insert plain dicts into ``model``'s table, ``_INSERT_BATCH`` at a time."""
+    table = model.__table__
+    for start in range(0, len(rows), _INSERT_BATCH):
+        session.execute(table.insert(), rows[start : start + _INSERT_BATCH])
+
 
 HOMEBREW_ARM_PATH = "/opt/homebrew/bin/brew"
 HOMEBREW_INTEL_PATH = "/usr/local/bin/brew"
@@ -255,18 +281,19 @@ class BasePackageCollector:
                     AvailablePackage.package_manager == manager
                 ).delete()
 
-                # Insert new packages
-                for package in packages:
-                    db_package = AvailablePackage(
-                        package_manager=manager,
-                        package_name=package["name"],
-                        package_version=package["version"],
-                        package_description=package.get("description", ""),
-                        collection_date=collection_date,
-                        created_at=collection_date,
-                    )
-                    session.add(db_package)
-                    stored_count += 1
+                rows = [
+                    {
+                        "package_manager": manager,
+                        "package_name": package["name"],
+                        "package_version": package["version"],
+                        "package_description": package.get("description", ""),
+                        "collection_date": collection_date,
+                        "created_at": collection_date,
+                    }
+                    for package in packages
+                ]
+                _insert_rows(session, AvailablePackage, rows)
+                stored_count = len(rows)
 
                 session.commit()
 
@@ -282,15 +309,15 @@ class BasePackageCollector:
         """Replace stored packages for ``manager`` from an ITERATOR of dicts.
 
         Same end result as :meth:`_store_packages` (delete-then-insert in one
-        transaction) but never materializes the whole package list: it flushes
-        + expunges every ``batch_size`` rows so peak memory stays flat
+        transaction) but never materializes the whole package list: it inserts
+        and drops every ``batch_size`` rows so peak memory stays flat
         regardless of catalog size.  ``apt-cache dumpavail`` is the entire
         Ubuntu universe with descriptions -- building the full list (and all the
         ORM objects) at once OOM-killed the agent on small hosts.
         """
         collection_date = datetime.now(timezone.utc)
         stored_count = 0
-        pending = 0
+        batch: List[Dict[str, Any]] = []
 
         try:
             with self.db_manager.get_session() as session:
@@ -304,26 +331,24 @@ class BasePackageCollector:
                     version = package.get("version")
                     if not name or not version:
                         continue
-                    session.add(
-                        AvailablePackage(
-                            package_manager=manager,
-                            package_name=name,
-                            package_version=version,
-                            package_description=package.get("description", ""),
-                            collection_date=collection_date,
-                            created_at=collection_date,
-                        )
+                    batch.append(
+                        {
+                            "package_manager": manager,
+                            "package_name": name,
+                            "package_version": version,
+                            "package_description": package.get("description", ""),
+                            "collection_date": collection_date,
+                            "created_at": collection_date,
+                        }
                     )
                     stored_count += 1
-                    pending += 1
-                    if pending >= batch_size:
-                        # Push this batch to the DB and drop the Python objects
-                        # so the session's identity map doesn't grow unbounded.
+                    if len(batch) >= batch_size:
+                        # Insert this batch and drop it, so memory stays flat.
                         # Still one transaction -- committed at the end.
-                        session.flush()
-                        session.expunge_all()
-                        pending = 0
+                        _insert_rows(session, AvailablePackage, batch)
+                        batch = []
 
+                _insert_rows(session, AvailablePackage, batch)
                 session.commit()
 
         except Exception as error:  # pylint: disable=broad-exception-caught
@@ -473,22 +498,29 @@ class BasePackageCollector:
         """
         try:
             now = datetime.now(timezone.utc)
+            rows = [
+                {
+                    "package_manager": manager,
+                    "package_name": (pkg.get("name") or "").strip(),
+                    "package_version": (pkg.get("version") or "").strip(),
+                    "fingerprint": fingerprint,
+                    "sent_at": now,
+                }
+                for manager, packages in (package_managers or {}).items()
+                for pkg in packages or []
+                if (pkg.get("name") or "").strip()
+            ]
             with self.db_manager.get_session() as session:
-                session.query(SentPackageSnapshot).delete()
-                for manager, packages in (package_managers or {}).items():
-                    for pkg in packages or []:
-                        name = (pkg.get("name") or "").strip()
-                        if not name:
-                            continue
-                        session.add(
-                            SentPackageSnapshot(
-                                package_manager=manager,
-                                package_name=name,
-                                package_version=(pkg.get("version") or "").strip(),
-                                fingerprint=fingerprint,
-                                sent_at=now,
-                            )
-                        )
+                if _same_snapshot(session, fingerprint, len(rows)):
+                    # The usual case: the catalog has not changed.  Rewriting
+                    # ~120,000 identical rows took seconds under SQLite's write
+                    # lock; only the delivery time moves.
+                    session.query(SentPackageSnapshot).update(
+                        {SentPackageSnapshot.sent_at: now}, synchronize_session=False
+                    )
+                else:
+                    session.query(SentPackageSnapshot).delete()
+                    _insert_rows(session, SentPackageSnapshot, rows)
                 session.commit()
             return True
         except Exception as error:  # pylint: disable=broad-except
