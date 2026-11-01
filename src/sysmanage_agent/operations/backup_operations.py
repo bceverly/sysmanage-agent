@@ -55,6 +55,7 @@ DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
 # The driver's own state files, in its state directory.
 POLICIES_FILE = "policies.json"
 INFLIGHT_FILE = "inflight.json"
+RESEND_SECONDS = 60  # a report the queue refused is tried again this often
 SEALS_FILE = "seals.json"
 # The BSDs keep a daemon's state in /var/db (the FreeBSD rc script puts the
 # agent's database there); there is no /var/lib to create one in.
@@ -935,11 +936,9 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
             {"run_id": run_id, "policy_id": record["policy_id"], "action": record["action"],
              "status": status, "exit": code, "result": result,
              "started_at": record.get("started_at"), "finished_at": _now(),
-             "restate_version": features.get("version")}  # fmt: skip
+             "restate_version": features.get("version")},  # fmt: skip
+            then=lambda: self._forget(run_id),
         )
-        inflight = self._load(INFLIGHT_FILE)
-        inflight.pop(run_id, None)
-        self._save(INFLIGHT_FILE, inflight)
         await key_files.remove(
             record.get("key_files") or [], self._run, self._privileged
         )
@@ -958,19 +957,41 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
             self.logger.warning(_("The storage audit could not run: %s"), error)
             return None
 
-    async def _report(self, data: Dict[str, Any]) -> None:
+    def _forget(self, run_id: str) -> None:
+        inflight = self._load(INFLIGHT_FILE)
+        inflight.pop(run_id, None)
+        self._save(INFLIGHT_FILE, inflight)
+
+    async def _report(self, data: Dict[str, Any], then=None) -> None:
         # The storage side reports its audit with every job, so the server's
         # picture of the append-only set-up never goes stale.
         policy = self._policy(str(data.get("policy_id") or ""))
         if policy and policy.get("role") == "storage":
             data = dict(data, storage_audit=self._audit(policy))
-        await self._send("backup_result", data)
+        await self._send("backup_result", data, then)
 
-    async def _send(self, message_type: str, data: Dict[str, Any]) -> None:
+    async def _send(self, message_type: str, data: Dict[str, Any], then=None) -> None:
+        """Queue a report; one that cannot be queued is retried, never dropped.
+        A full disk refuses the agent's queue: beast's capture result was lost
+        that way and its run sat "running" for 12 hours (production,
+        2026-11-01).  ``then`` runs once it is queued -- a run's in-flight
+        record stays until then, so a restart reports it again."""
         payload = dict(data)
         approval = self.agent.registration_manager.get_host_approval_from_db()
         if approval:
             payload["host_id"] = str(approval.host_id)
         message = self.agent.create_message(message_type, payload)
-        if not await self.agent.send_message(message):
-            self.logger.warning(_("Could not queue the backup report"))
+        if await self.agent.send_message(message):
+            if then:
+                then()
+            return
+        self.logger.warning(_("Could not queue the backup report"))
+        self._spawn(self._send_later(message, then))
+
+    async def _send_later(self, message: Dict[str, Any], then) -> None:
+        await asyncio.sleep(RESEND_SECONDS)
+        while not await self.agent.send_message(message):
+            await asyncio.sleep(RESEND_SECONDS)
+        self.logger.info("Queued backup report %s", message.get("message_id"))
+        if then:
+            then()

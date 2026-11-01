@@ -189,3 +189,29 @@ async def test_a_restore_result_reaches_the_server_whole_and_incomplete(
     report = _sent(agent, "backup_result")[-1]
     assert (report["status"], report["exit"]) == ("incomplete", 3)
     assert report["result"]["restore"] == RESTORE
+
+
+@pytest.mark.asyncio
+async def test_a_result_the_queue_refuses_is_retried_and_kept_in_flight(
+    ops, agent, monkeypatch
+):
+    """A full disk refused the agent's queue and beast's capture result was
+    dropped (production, 2026-11-01): it is retried, and the run stays in
+    flight until it is queued, so a restart would report it again."""
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: NATIVE))
+    monkeypatch.setattr(
+        "src.sysmanage_agent.operations.backup_operations.RESEND_SECONDS", 0
+    )
+    await ops.backup_configure(_host_policy())
+    _write(
+        job_builder.result_path(ops.state_dir, PID, "capture"),
+        json.dumps({"schema": 1, "exit": 0, "status": "ok"}),
+    )
+    record = ops._new_record(PID, "capture")
+    ops._save("inflight.json", {RID: record})
+    agent.send_message.side_effect = [False, False, True]
+    await ops._finish(RID, record, 0)
+    assert RID in ops._load("inflight.json")
+    await _drain(ops)
+    assert len(_sent(agent, "backup_result")) == 3
+    assert RID not in ops._load("inflight.json")
