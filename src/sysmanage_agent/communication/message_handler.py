@@ -47,6 +47,8 @@ HOST_NOT_REGISTERED_STRIKE_LIMIT = 3
 
 # Seconds before asking again after host_credential_required; the last repeats.
 REFUSAL_RETRY_SECONDS = (60, 120, 300, 600, 900)
+# A connection's system_info the outbound queue refused is queued again this often.
+REGISTRATION_RETRY_SECONDS = 10
 
 
 class MessageHandler(MessageHandlerQueueMixin):
@@ -805,9 +807,14 @@ class MessageHandler(MessageHandlerQueueMixin):
         """Handle periodic outgoing messages to server."""
         self.logger.debug("Message sender started")
 
-        # Send initial system info
-        system_info = self.create_system_info_message()
-        await self.send_message(system_info)
+        # Send initial system info.  It is what registers this connection, so
+        # one the queue refuses (a full disk) is tried again: dropped, the host
+        # stayed connected and heartbeating yet "down" for hours (production,
+        # beast, 2026-11-01).
+        while not await self.send_message(self.create_system_info_message()):
+            if not self.agent.running:
+                return
+            await asyncio.sleep(REGISTRATION_RETRY_SECONDS)
 
         # Send periodic heartbeats
         ping_interval = self.agent.config.get_ping_interval()

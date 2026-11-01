@@ -443,6 +443,43 @@ class TestMessageHandlerReceiver:  # pylint: disable=too-many-public-methods
         assert first_call["message_type"] == "system_info"
 
     @pytest.mark.asyncio
+    async def test_message_sender_retries_a_refused_system_info(self, monkeypatch):
+        """A system_info the queue refuses (a full disk) is queued again: it
+        registers the connection (production, beast, 2026-11-01)."""
+        monkeypatch.setattr(
+            "src.sysmanage_agent.communication.message_handler."
+            "REGISTRATION_RETRY_SECONDS",
+            0,
+        )
+        sent = []
+
+        async def refuse_twice(message):
+            sent.append(message["message_type"])
+            if len(sent) <= 2:
+                return False
+            self.mock_agent.running = False
+            return True
+
+        self.handler.send_message = AsyncMock(side_effect=refuse_twice)
+        self.mock_agent.config.get_ping_interval.return_value = 0.1
+
+        await self.handler.message_sender()
+
+        assert sent[:3] == ["system_info"] * 3
+
+    @pytest.mark.asyncio
+    async def test_message_sender_stops_retrying_when_the_agent_stops(self):
+        """A refused system_info is not retried once the agent is stopping."""
+
+        async def refuse_and_stop(message):
+            self.mock_agent.running = False
+            return False
+
+        self.handler.send_message = AsyncMock(side_effect=refuse_and_stop)
+        await self.handler.message_sender()
+        assert self.handler.send_message.call_count == 1
+
+    @pytest.mark.asyncio
     async def test_message_sender_sends_periodic_heartbeats(self):
         """Test message_sender sends periodic heartbeats."""
         self.handler.send_message = AsyncMock(return_value=True)
