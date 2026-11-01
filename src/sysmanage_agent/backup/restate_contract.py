@@ -84,7 +84,9 @@ BOOL_KEYS = frozenset(
 INT_KEYS = frozenset(
     {"keep_last", "keep_daily", "keep_weekly", "keep_monthly", "keep_yearly"}
 )
-LIST_KEYS = frozenset({"rules", "quiesce_with", "include", "exclude", "trusted_key"})
+LIST_KEYS = frozenset(
+    {"rules", "quiesce_with", "include", "exclude", "trusted_key", "include_mount"}
+)
 SCALAR_KEYS = frozenset(
     {
         "command",
@@ -160,7 +162,9 @@ def features_usable(features: Optional[Dict[str, Any]]) -> bool:
 # reading no pack -- seconds, where ``dry_run`` reads the whole snapshot.
 # ``keep_yearly`` (2.2.0.12): a storage host whose restate lacks it is refused
 # the policy (``tool_outdated``), never given a prune without the yearly rule.
-GATED_KEYS = frozenset({"create", "plan", "keep_yearly"})
+# ``include_mount`` (after 2.2.0.14): a network mount an operator's keep path
+# leads into, walked by a restate that otherwise skips network mounts.
+GATED_KEYS = frozenset({"create", "plan", "keep_yearly", "include_mount"})
 
 
 def supports(features: Optional[Dict[str, Any]], key: str) -> bool:

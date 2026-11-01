@@ -21,13 +21,22 @@ agent waits (nas, 2026-10-27: 20-30 seconds) every call timed out, nothing
 was kept, and the storm came back -- one ``sudo pro status`` every 10
 seconds, each leaving a ``pro`` running after its sudo was killed, and every
 message the agent handled waiting out the timeout first.
+
+An expired answer is served at once while ONE background thread asks again
+(stale-while-revalidate).  Asking in the caller's place still froze the agent:
+``get_system_info()`` runs on the event loop from dozens of places, and every
+five minutes one of them waited for ``sudo pro status`` -- 37 seconds from the
+agent on ubiquiti -- while the loop answered no pings, so the server dropped
+the websocket every 5-40 minutes (production, 2026-11-01).  Only a key never
+asked (startup, before the agent connects, or right after :func:`invalidate`)
+is asked in the caller's place.
 """
 
 import logging
 import subprocess  # nosec B404
 import threading
 import time
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Set, Tuple
 
 TTL_SECONDS = 300.0
 FAILURE_TTL_SECONDS = 300.0
@@ -38,6 +47,36 @@ logger = logging.getLogger(__name__)
 
 _lock = threading.Lock()
 _cache: Dict[Tuple[str, ...], Tuple[float, subprocess.CompletedProcess]] = {}
+_refreshing: Set[Tuple[str, ...]] = set()  # keys a background thread is asking
+
+
+def _ask(argv: list, run: Callable[[list], subprocess.CompletedProcess]):
+    """``run(argv)``, with a timeout or a missing command as a failed answer."""
+    try:
+        return run(argv)
+    except subprocess.TimeoutExpired as error:
+        logger.warning(
+            "%s timed out after %ss; asking again in %d minutes",
+            " ".join(argv), error.timeout, FAILURE_TTL_SECONDS // 60,
+        )  # fmt: skip
+        return subprocess.CompletedProcess(argv, TIMED_OUT, "", "timed out")
+    except FileNotFoundError:
+        return subprocess.CompletedProcess(argv, NOT_FOUND, "", "not installed")
+
+
+def _keep(key: Tuple[str, ...], result: subprocess.CompletedProcess) -> None:
+    good = result.returncode == 0 and bool(result.stdout)
+    ttl = TTL_SECONDS if good else FAILURE_TTL_SECONDS
+    with _lock:
+        _cache[key] = (time.monotonic() + ttl, result)
+
+
+def _refresh(key, argv, run) -> None:
+    try:
+        _keep(key, _ask(argv, run))
+    finally:
+        with _lock:
+            _refreshing.discard(key)
 
 
 def cached_run(
@@ -48,29 +87,35 @@ def cached_run(
 
     A timeout or a missing command comes back as a non-zero result
     (``TIMED_OUT`` / ``NOT_FOUND``) rather than raising, and is kept like any
-    other failure, so a slow or absent ``pro`` is asked once per period.
+    other failure, so a slow or absent ``pro`` is asked once per period.  An
+    expired answer is returned as it is while a background thread asks again.
     """
     key = tuple(argv)
-    now = time.monotonic()
     with _lock:
         hit = _cache.get(key)
-        if hit is not None and now < hit[0]:
+        if hit is not None:
+            if time.monotonic() >= hit[0] and key not in _refreshing:
+                _refreshing.add(key)
+                threading.Thread(
+                    target=_refresh,
+                    args=(key, argv, run),
+                    name="pro-status-refresh",
+                    daemon=True,
+                ).start()
             return hit[1]
-    try:
-        result = run(argv)
-    except subprocess.TimeoutExpired as error:
-        logger.warning(
-            "%s timed out after %ss; asking again in %d minutes",
-            " ".join(argv), error.timeout, FAILURE_TTL_SECONDS // 60,
-        )  # fmt: skip
-        result = subprocess.CompletedProcess(argv, TIMED_OUT, "", "timed out")
-    except FileNotFoundError:
-        result = subprocess.CompletedProcess(argv, NOT_FOUND, "", "not installed")
-    good = result.returncode == 0 and bool(result.stdout)
-    ttl = TTL_SECONDS if good else FAILURE_TTL_SECONDS
-    with _lock:
-        _cache[key] = (time.monotonic() + ttl, result)
+    result = _ask(argv, run)
+    _keep(key, result)
     return result
+
+
+def wait_for_refreshes(timeout: float = 5.0) -> None:
+    """Wait until no background refresh is running (tests, shutdown)."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        with _lock:
+            if not _refreshing:
+                return
+        time.sleep(0.01)
 
 
 def invalidate() -> None:

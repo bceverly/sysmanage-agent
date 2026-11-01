@@ -18,6 +18,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from src.sysmanage_agent.backup import job_runner
+from src.sysmanage_agent.backup import network_mounts
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.operations import backup_operations as ops_module
 from src.sysmanage_agent.operations.backup_operations import BackupOperations
@@ -97,6 +98,10 @@ def ops(agent, tmp_path, monkeypatch):
     # Plain mount(8) unless a test says otherwise (the systemd path has its
     # own tests in test_backup_operations_storage.py).
     monkeypatch.setattr(ops_module.host_mount, "systemd_running", lambda: False)
+    # No network shares mounted on the host unless a test says otherwise
+    # (the machine running the tests may well have some).
+    monkeypatch.setattr(network_mounts,
+                        "read_host_mountinfo", lambda: "")  # fmt: skip
     # The host's repository is on NFS unless a test says otherwise.
     monkeypatch.setattr(BackupOperations, "_mounts",
                         staticmethod(lambda: {"/mnt/sysmanage-backup": "nfs4"}))  # fmt: skip

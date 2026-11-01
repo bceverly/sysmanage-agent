@@ -42,6 +42,8 @@ def _reports(state_dir: str, policy_id: str, action: str, group: str) -> Dict[st
 
 
 RULES_DIR = "/etc/restate/rules.d"
+# The policy's jobs that walk the host's files (its rules apply to them).
+WALKS = ("capture", "estimate")
 # Keys that become the policy's rules file, never job keys.
 _PATH_RULE_KEYS = ("keep_paths", "skip_paths")
 NOT_AN_OBJECT = "parameters must be an object"
@@ -50,6 +52,12 @@ NOT_AN_OBJECT = "parameters must be an object"
 def rules_path(policy_id: str) -> str:
     """The policy's own rules file: root-owned, under /etc/restate."""
     return posixpath.join(RULES_DIR, f"{policy_id}.rules")
+
+
+def network_rules_path(policy_id: str) -> str:
+    """The policy's network-mount rules file (see network_mounts): the
+    host's network and automount points, refreshed before each capture."""
+    return posixpath.join(RULES_DIR, f"{policy_id}.netmounts.rules")
 
 
 def policy_rules(policy: Dict[str, Any]) -> Optional[str]:
@@ -101,6 +109,8 @@ def build_jobs(
     group: str,
     key_installed: bool,
     can_create: bool = False,
+    network_rules: bool = False,
+    include_mounts: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """``{action: full job}`` for every restate action in the policy.
 
@@ -108,13 +118,21 @@ def build_jobs(
     itself), so it is left out here.  ``can_create``: this restate takes the
     capture key ``create``, so a host's first capture makes its repository
     (over NFS only the HOST can: the storage side's files must belong to the
-    export's mapped user).
+    export's mapped user).  ``network_rules``: the agent's network-mount
+    rules file is installed, and the walks (capture, estimate) read it.
+    ``include_mounts``: the network mounts an operator's keep path leads
+    into, which a restate that skips network mounts walks all the same
+    (``include_mount``).  A status job takes none: restate walks what the
+    snapshot's capture recorded, and the key would replace it.
     """
+    mounts = v.check_mount_points(list(include_mounts or []))
     jobs = {}
     for action, keys in policy["jobs"].items():
         if action == "seal":
             continue
-        job = _action_keys(policy, action, keys)
+        job = _action_keys(policy, action, keys, network_rules)
+        if mounts and action in WALKS:
+            job["include_mount"] = list(mounts)
         if action == "capture":
             job.update(_capture_keys(policy, key_installed, can_create))
         if action in _KEYLESS_STORAGE:
@@ -132,12 +150,23 @@ def build_jobs(
 
 
 def _action_keys(
-    policy: Dict[str, Any], action: str, keys: Dict[str, Any]
+    policy: Dict[str, Any],
+    action: str,
+    keys: Dict[str, Any],
+    network_rules: bool = False,
 ) -> Dict[str, Any]:
-    """The server's keys for ``action``, its rules file and repository."""
+    """The server's keys for ``action``, its rules files and repository.
+
+    The network-mount rules come BEFORE the operator's: restate's last match
+    wins, so an operator's keep inside a share still decides (and the agent
+    leaves an opted-in share out of the network file in the first place)."""
     job = {key: value for key, value in keys.items() if key not in _PATH_RULE_KEYS}
-    if action in ("capture", "estimate") and policy_rules(policy):
-        job["rules"] = list(job.get("rules") or []) + [rules_path(policy["policy_id"])]
+    if action in WALKS:
+        files = [network_rules_path(policy["policy_id"])] if network_rules else []
+        if policy_rules(policy):
+            files.append(rules_path(policy["policy_id"]))
+        if files:
+            job["rules"] = list(job.get("rules") or []) + files
     job["command"] = action
     if action != "estimate":  # estimate reads the live host, no repository
         job["repository"] = policy["repository"]

@@ -126,6 +126,35 @@ def current_database_path() -> Optional[str]:
 
 
 @contextmanager
+def write_transaction(session):
+    """One real SQLite transaction around a bulk write.
+
+    The engine runs pysqlite with ``isolation_level=None``, so SQLAlchemy emits
+    no BEGIN and every statement commits -- and syncs to disk -- on its own.
+    Replacing a 121,420-row package catalog was therefore ~120 separate
+    commits while the one shared connection (StaticPool) stayed busy; the
+    event loop's small queue reads waited behind it for minutes and the server
+    dropped the websocket for missed pings (production, ubiquiti, 2026-11-01).
+    Inside this block the whole write is one transaction (one sync).
+
+    The connection is shared by every thread, so another thread's statement
+    may land inside this transaction, and another thread's commit may end it
+    early; both are harmless.  Keep the block short: stage the data first.
+    """
+    raw = session.connection().connection.driver_connection
+    if not raw.in_transaction:
+        raw.execute("BEGIN IMMEDIATE")
+    try:
+        yield
+    except BaseException:
+        if raw.in_transaction:
+            raw.execute("ROLLBACK")
+        raise
+    if raw.in_transaction:
+        raw.execute("COMMIT")
+
+
+@contextmanager
 def get_db_session():
     """
     Get a database session. Use this in a context manager.

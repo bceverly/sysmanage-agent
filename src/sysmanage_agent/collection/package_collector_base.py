@@ -9,10 +9,12 @@ This module provides the base class and common functionality for package collect
 """
 
 import glob
+import json
 import logging
 import os
 import platform
 import subprocess  # nosec B404
+import tempfile
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -24,7 +26,7 @@ except ImportError:
 
 from sqlalchemy import func
 
-from src.database.base import get_database_manager
+from src.database.base import get_database_manager, write_transaction
 from src.database.models import AvailablePackage, SentPackageSnapshot
 from src.i18n import _
 
@@ -45,6 +47,37 @@ def _same_snapshot(session, fingerprint: str, count: int) -> bool:
     ).group_by(SentPackageSnapshot.fingerprint)
     found = stored.all()
     return len(found) == 1 and found[0][0] == fingerprint and found[0][1] == count
+
+
+def _stage_packages(package_iter, batch_size: int):
+    """Parse ``package_iter`` into a temporary file, ``batch_size`` packages
+    per JSON line, before the database is touched; ``(file, count)``.
+
+    Parsing ``apt-cache dumpavail`` takes minutes on a slow host.  Doing it
+    inside the write held the shared database connection for all that time
+    (see ``write_transaction``); staged, the write itself takes seconds, and
+    memory stays flat however large the catalog is."""
+    staged = tempfile.TemporaryFile("w+", encoding="utf-8")
+    count = 0
+    batch: List[List[str]] = []
+    try:
+        for package in package_iter:
+            name = package.get("name")
+            version = package.get("version")
+            if not name or not version:
+                continue
+            batch.append([name, version, package.get("description", "")])
+            count += 1
+            if len(batch) >= batch_size:
+                staged.write(json.dumps(batch) + "\n")
+                batch = []
+        if batch:
+            staged.write(json.dumps(batch) + "\n")
+        staged.seek(0)
+    except BaseException:
+        staged.close()
+        raise
+    return staged, count
 
 
 def _insert_rows(session, model, rows: List[Dict[str, Any]]) -> None:
@@ -275,7 +308,7 @@ class BasePackageCollector:
         stored_count = 0
 
         try:
-            with self.db_manager.get_session() as session:
+            with self.db_manager.get_session() as session, write_transaction(session):
                 # Delete existing packages for this manager
                 session.query(AvailablePackage).filter(
                     AvailablePackage.package_manager == manager
@@ -309,46 +342,44 @@ class BasePackageCollector:
         """Replace stored packages for ``manager`` from an ITERATOR of dicts.
 
         Same end result as :meth:`_store_packages` (delete-then-insert in one
-        transaction) but never materializes the whole package list: it inserts
-        and drops every ``batch_size`` rows so peak memory stays flat
-        regardless of catalog size.  ``apt-cache dumpavail`` is the entire
-        Ubuntu universe with descriptions -- building the full list (and all the
-        ORM objects) at once OOM-killed the agent on small hosts.
+        transaction) but never materializes the whole package list: the
+        iterator is parsed into a temporary file first (``_stage_packages``),
+        ``batch_size`` rows a line, so peak memory stays flat regardless of
+        catalog size.  ``apt-cache dumpavail`` is the entire Ubuntu universe
+        with descriptions -- building the full list (and all the ORM objects)
+        at once OOM-killed the agent on small hosts.  Only then is the database
+        written, in one real transaction (``write_transaction``).
         """
         collection_date = datetime.now(timezone.utc)
-        stored_count = 0
-        batch: List[Dict[str, Any]] = []
+        try:
+            staged, stored_count = _stage_packages(package_iter, batch_size)
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            logger.exception(_("Failed to store packages for %s: %s"), manager, error)
+            return 0
 
         try:
-            with self.db_manager.get_session() as session:
-                # Delete existing packages for this manager (bulk, no load).
-                session.query(AvailablePackage).filter(
-                    AvailablePackage.package_manager == manager
-                ).delete()
-
-                for package in package_iter:
-                    name = package.get("name")
-                    version = package.get("version")
-                    if not name or not version:
-                        continue
-                    batch.append(
-                        {
-                            "package_manager": manager,
-                            "package_name": name,
-                            "package_version": version,
-                            "package_description": package.get("description", ""),
-                            "collection_date": collection_date,
-                            "created_at": collection_date,
-                        }
-                    )
-                    stored_count += 1
-                    if len(batch) >= batch_size:
-                        # Insert this batch and drop it, so memory stays flat.
-                        # Still one transaction -- committed at the end.
-                        _insert_rows(session, AvailablePackage, batch)
-                        batch = []
-
-                _insert_rows(session, AvailablePackage, batch)
+            with staged, self.db_manager.get_session() as session:
+                with write_transaction(session):
+                    # Delete existing packages for this manager (bulk, no load).
+                    session.query(AvailablePackage).filter(
+                        AvailablePackage.package_manager == manager
+                    ).delete()
+                    for line in staged:
+                        _insert_rows(
+                            session,
+                            AvailablePackage,
+                            [
+                                {
+                                    "package_manager": manager,
+                                    "package_name": name,
+                                    "package_version": version,
+                                    "package_description": description,
+                                    "collection_date": collection_date,
+                                    "created_at": collection_date,
+                                }
+                                for name, version, description in json.loads(line)
+                            ],
+                        )
                 session.commit()
 
         except Exception as error:  # pylint: disable=broad-exception-caught
@@ -510,7 +541,7 @@ class BasePackageCollector:
                 for pkg in packages or []
                 if (pkg.get("name") or "").strip()
             ]
-            with self.db_manager.get_session() as session:
+            with self.db_manager.get_session() as session, write_transaction(session):
                 if _same_snapshot(session, fingerprint, len(rows)):
                     # The usual case: the catalog has not changed.  Rewriting
                     # ~120,000 identical rows took seconds under SQLite's write

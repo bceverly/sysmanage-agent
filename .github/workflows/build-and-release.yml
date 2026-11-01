@@ -3115,7 +3115,8 @@ jobs:
   deploy-launchpad:
     name: Deploy to Launchpad PPA (${{ matrix.release_name }})
     runs-on: ubuntu-22.04
-    timeout-minutes: 60
+    # Up to 3 upload rounds, each waiting up to 15 min for Launchpad to accept.
+    timeout-minutes: 90
     needs: [release, build-riscv64-wheels]
     # Runs even when a riscv64 wheel build failed: that only costs riscv64.
     if: startsWith(github.ref, 'refs/tags/') && !cancelled() && needs.release.result == 'success'
@@ -3202,16 +3203,43 @@ jobs:
           echo "Using GPG key: $GPG_KEY_ID"
 
       - name: Configure dput for Launchpad
+        env:
+          LAUNCHPAD_SSH_KEY: ${{ secrets.LAUNCHPAD_SSH_KEY }}
         run: |
+          # SFTP, as the server workflow uses: Launchpad's anonymous FTP
+          # endpoint can lose or truncate files from GitHub runners while dput
+          # reports success (Launchpad bug #1836059; here 3.12.0.25 resolute,
+          # 2026-10-31, rejected by email: "GPG verification of ...dsc failed:
+          # (7, 58, 'No data')").  Needs the LAUNCHPAD_SSH_KEY secret (the same
+          # Launchpad-registered key the sysmanage repo uses); without it this
+          # falls back to FTP, and the acceptance check in the upload step
+          # still catches a lost upload and sends it again.
           mkdir -p ~/.dput.d/profiles
-          cat > ~/.dput.d/profiles/launchpad.json << 'EOF'
+          if [ -n "$LAUNCHPAD_SSH_KEY" ]; then
+            mkdir -p ~/.ssh && chmod 700 ~/.ssh
+            printf '%s\n' "$LAUNCHPAD_SSH_KEY" > ~/.ssh/launchpad_sftp
+            chmod 600 ~/.ssh/launchpad_sftp
+            ssh-keyscan -t rsa,ecdsa,ed25519 ppa.launchpad.net >> ~/.ssh/known_hosts 2>/dev/null
+            # dput-ng's sftp (paramiko) ignores ~/.ssh/config: hand it the key
+            # through an agent kept for the later upload step.
+            eval "$(ssh-agent -s)"
+            ssh-add ~/.ssh/launchpad_sftp
+            echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+            echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> "$GITHUB_ENV"
+            METHOD='"method": "sftp", "login": "bceverly",'
+          else
+            echo "::warning::LAUNCHPAD_SSH_KEY is not set in this repository: uploading by FTP, which Launchpad can silently lose. Add the same secret the sysmanage repo has."
+            METHOD='"method": "ftp",'
+          fi
+          cat > ~/.dput.d/profiles/launchpad.json << EOF
           {
             "fqdn": "ppa.launchpad.net",
             "incoming": "~bceverly/ubuntu/sysmanage-agent",
-            "method": "ftp",
+            ${METHOD}
             "allow_unsigned_uploads": false
           }
           EOF
+          python3 -m json.tool ~/.dput.d/profiles/launchpad.json
 
       - name: Generate requirements-prod.txt
         run: |
@@ -3376,20 +3404,49 @@ jobs:
           # ``-f`` on the first attempt is harmless (no orphan to
           # overwrite yet) so we use it unconditionally.
           changes_file="sysmanage-agent_${VERSION}+ppa1~${RELEASE}1_source.changes"
-          attempt=1
-          max_attempts=3
-          until dput -f launchpad "$changes_file"; do
-            if [ "$attempt" -ge "$max_attempts" ]; then
-              echo "::error::dput failed after $attempt attempts uploading $changes_file"
-              exit 1
-            fi
-            sleep_for=$(( 30 * attempt ))
-            echo "::warning::dput attempt $attempt failed; retrying in ${sleep_for}s"
-            sleep "$sleep_for"
-            attempt=$(( attempt + 1 ))
-          done
+          upload() {
+            attempt=1
+            max_attempts=3
+            until dput -f launchpad "$changes_file" < /dev/null; do
+              if [ "$attempt" -ge "$max_attempts" ]; then
+                echo "::error::dput failed after $attempt attempts uploading $changes_file"
+                exit 1
+              fi
+              sleep_for=$(( 30 * attempt ))
+              echo "::warning::dput attempt $attempt failed; retrying in ${sleep_for}s"
+              sleep "$sleep_for"
+              attempt=$(( attempt + 1 ))
+            done
+          }
 
-          echo "SUCCESS! Uploaded to Launchpad PPA for $RELEASE"
+          # dput "succeeding" is not Launchpad accepting.  Its FTP endpoint
+          # can truncate a file without an error, and the upload is then
+          # rejected by email only (3.12.0.25 resolute, 2026-10-31: "GPG
+          # verification of ...dsc failed: (7, 58, 'No data')").  So wait
+          # for the source to appear in the PPA (any status: Pending counts),
+          # and upload again if it does not -- a rejected upload never
+          # entered the archive, so the same version may be sent again.
+          lp_version="${VERSION}+ppa1~${RELEASE}1"
+          lp_api="https://api.launchpad.net/devel/~bceverly/+archive/ubuntu/sysmanage-agent"
+          accepted() {
+            # "+" must be %2B in the query, or Launchpad reads a space.
+            curl -fsS "${lp_api}?ws.op=getPublishedSources&source_name=sysmanage-agent&version=${lp_version//+/%2B}&exact_match=true" \
+              | grep -q "\"source_package_version\": \"${lp_version}\""
+          }
+          for round in 1 2 3; do
+            upload
+            echo "Uploaded (round $round); waiting for Launchpad to accept $lp_version..."
+            for _ in $(seq 1 20); do
+              sleep 45
+              if accepted; then
+                echo "SUCCESS! Launchpad accepted $lp_version for $RELEASE"
+                exit 0
+              fi
+            done
+            echo "::warning::Launchpad has not accepted $lp_version after 15 minutes (round $round): it was rejected or dropped; check the uploader's email. Uploading again."
+          done
+          echo "::error::Launchpad did not accept $lp_version for $RELEASE after 3 uploads. Its rejection email to the uploader names the cause."
+          exit 1
 
   # Deploy to openSUSE Build Service
   deploy-obs:

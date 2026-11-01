@@ -579,9 +579,13 @@ class MessageHandler(MessageHandlerQueueMixin):
         if command_type == "create_child_host":
             log_child_host_received(self.logger, data, queue_message_id, params)
 
-        # Check for duplicate messages (server retry)
-        if queue_message_id and self.queue_manager.is_duplicate_message(
-            queue_message_id
+        # Check for duplicate messages (server retry).  A database read, so in
+        # a worker thread: on the event loop it waited behind the shared
+        # database connection for minutes during a catalog write, the loop
+        # answered no pings, and the server dropped the websocket (production,
+        # ubiquiti, 2026-11-01).
+        if queue_message_id and await asyncio.to_thread(
+            self.queue_manager.is_duplicate_message, queue_message_id
         ):
             log_duplicate_message(self.logger, command_type, params, queue_message_id)
             await self._send_command_acknowledgment(queue_message_id)

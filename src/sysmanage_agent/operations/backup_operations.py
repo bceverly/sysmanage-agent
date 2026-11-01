@@ -41,6 +41,7 @@ from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import key_files
 from src.sysmanage_agent.backup.mount_mixin import BackupMountMixin
+from src.sysmanage_agent.backup.network_rules_mixin import NetworkRulesMixin
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
@@ -152,7 +153,7 @@ def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
     return None
 
 
-class BackupOperations(BackupMountMixin):
+class BackupOperations(BackupMountMixin, NetworkRulesMixin):
     """The agent's half of Phase 24: the restate driver."""
 
     def __init__(self, agent_instance, state_dir: Optional[str] = None):
@@ -316,12 +317,15 @@ class BackupOperations(BackupMountMixin):
             )
         await self._apply_rules(policy)
         features = self._features() or {}
+        network_rules, network = await self._apply_network_rules(policy, features)
         jobs = job_builder.build_jobs(
             policy,
             state_dir=self.state_dir,
             group=_agent_group(),
             key_installed=bool(policy["encrypt_key"]),
             can_create=contract.supports(features, "create"),
+            network_rules=network_rules,
+            include_mounts=(network or {}).get("kept") if not network_rules else None,
         )
         for action in contract.GATED_COMMANDS & set(jobs):
             if not contract.supports_command(features, action):
@@ -350,6 +354,10 @@ class BackupOperations(BackupMountMixin):
             "service_account": policy.get("service_account", "restate"),
             "nfs": policy.get("nfs"),
             "previous": policy.get("previous"),
+            # For the network-mount refresh before each walk.
+            "network_rules": network_rules,
+            "network_excluded": (network or {}).get("excluded") or [],
+            "keep_paths": (policy["jobs"].get("capture") or {}).get("keep_paths") or [],
         }
         self._save(POLICIES_FILE, policies)
         reply = {
@@ -366,6 +374,8 @@ class BackupOperations(BackupMountMixin):
             # server offers them in the policy dialog.
             reply["hooks"] = contract.present_hooks(features)
             reply["abilities"] = contract.host_abilities(features)
+            # The network shares left out of this host's backup.
+            reply["network_mounts"] = network
         if policy["role"] == "storage":
             await self._sweep_markers(policy["repository"])
             reply["abilities"] = contract.storage_abilities(features)
@@ -434,6 +444,11 @@ class BackupOperations(BackupMountMixin):
             return {"success": True, "run_id": run_id, "status": "started"}
         if not os.path.exists(contract.job_path(policy_id, action)):
             return self._not_configured()
+        excluded = await self._refresh_network_rules(policy_id, policy, action)
+        if excluded is not None:
+            policies = self._load(POLICIES_FILE)
+            policies.setdefault(policy_id, {})["network_excluded"] = excluded
+            self._save(POLICIES_FILE, policies)
         return await self._start_job(run_id, policy_id, action)
 
     async def _start_browse(

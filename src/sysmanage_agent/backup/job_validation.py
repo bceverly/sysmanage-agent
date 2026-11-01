@@ -203,6 +203,25 @@ def check_path_patterns(key: str, value: Any) -> List[str]:
     return patterns
 
 
+def check_mount_points(value: Any) -> List[str]:
+    """``include_mount``: the network or automount points an operator's keep
+    path leads into, which restate (``skips_network_mounts``) then walks.
+    The agent fills it from the host's mount table, never the server; each
+    must be an absolute, normalized, single-line path."""
+    points = _list("include_mount", value)
+    for point in points:
+        if (
+            not isinstance(point, str)
+            or not point.startswith("/")
+            or len(point) > MAX_PATH_PATTERN
+            or posixpath.normpath(point) != point
+            or point != point.strip()
+            or any(ord(ch) < 32 or ord(ch) == 127 for ch in point)
+        ):
+            raise PolicyError("include_mount must be absolute, normalized paths")
+    return points
+
+
 def _string_value(key: str, value: Any) -> Any:
     if key in ("keep_paths", "skip_paths"):
         return check_path_patterns(key, value)

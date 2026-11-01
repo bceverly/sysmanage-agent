@@ -75,10 +75,14 @@ async def test_configure_installs_root_owned_job_files(ops):
     assert answer == {"success": True, "policy_id": PID,
                       "installed": ["capture", "snapshots"], "removed": [],
                       "hooks": [], "abilities": [],
+                      "network_mounts": {"excluded": [], "kept": [], "native": False},
                       "restate_version": "2.0.0.0"}  # fmt: skip
     installs = ops.fake.ran("install")
+    # The network-mount rules file is always there for a host (empty here),
+    # so a share mounted before the next capture can still be left out.
     assert [c[-1] for c in installs] == [
-        contract.job_path(PID, "capture"), contract.job_path(PID, "snapshots")
+        job_builder.network_rules_path(PID),
+        contract.job_path(PID, "capture"), contract.job_path(PID, "snapshots"),
     ]  # fmt: skip
     assert installs[0][:2] == ["sudo", "-n"] or os.geteuid() == 0
     assert ["-m", "644", "-o", "0", "-g", "0"] == installs[0][-9:-3]
