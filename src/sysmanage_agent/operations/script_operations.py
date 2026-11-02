@@ -33,6 +33,7 @@ import tempfile
 from typing import Any, Dict
 from uuid import uuid4
 from src.i18n import _
+from src.sysmanage_agent.operations import script_approval
 
 
 class ScriptOperations:
@@ -63,6 +64,10 @@ class ScriptOperations:
             The standard ``{success, ...}`` shape, surfacing the apply
             result so existing message-bus consumers don't need changes.
         """
+        refused = script_approval.check_script(self.agent, parameters)
+        if refused:
+            self.logger.warning(_("Refused a script that was not approved"))
+            return refused
         script_content = parameters.get("script_content")
         if not script_content:
             return {

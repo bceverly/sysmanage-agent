@@ -273,6 +273,12 @@ class ClientRegistration:
         system_info["script_execution_enabled"] = (
             self.config.is_script_execution_enabled()
         )
+        # Not in the registration POST: the server's registration model
+        # forbids fields it does not know, so an older server would refuse
+        # the agent (as agent_capabilities once did, 2026-08-11).
+        system_info["script_approval_required"] = (
+            self.config.is_script_approval_required()
+        )
         system_info["is_privileged"] = is_running_privileged()
         system_info["enabled_shells"] = self.config.get_allowed_shells()
 

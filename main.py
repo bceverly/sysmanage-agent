@@ -522,6 +522,7 @@ class SysManageAgent(
                 "ipv6": system_info["ipv6"],
                 "is_privileged": is_running_privileged(),
                 "script_execution_enabled": self.config.is_script_execution_enabled(),
+                "script_approval_required": self.config.is_script_approval_required(),
                 "enabled_shells": self.config.get_allowed_shells(),
             },
         )

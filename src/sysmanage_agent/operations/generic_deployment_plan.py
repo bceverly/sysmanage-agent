@@ -25,6 +25,7 @@ from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.operations import inflight_journal
+from src.sysmanage_agent.operations import script_approval
 from src.sysmanage_agent.operations.generic_deployment_helpers import (
     _decode_command_output,
 )
@@ -137,6 +138,10 @@ class GenericDeploymentPlanMixin:
             {success, results: {packages, files, commands, service_actions,
                                 packages_to_remove}, errors: [...]}
         """
+        refused = script_approval.check_plan(self.agent, parameters)
+        if refused:
+            self.logger.warning(_("Refused a script that was not approved"))
+            return refused
         plan = parameters.get("plan") or parameters
         # The dispatcher injects ``_message_id`` into parameters so the
         # in-flight journal (Phase 11.6) can name its file by it.  The

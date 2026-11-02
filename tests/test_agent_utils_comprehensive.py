@@ -11,6 +11,7 @@ Tests focus on uncovered code paths to improve coverage beyond 51%.
 
 import asyncio
 import ssl
+import threading
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -92,6 +93,56 @@ class TestPackageCollectionScheduler:
 
             assert result is False
             self.mock_logger.error.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_concurrent_collections_share_one_run(self):
+        """A second caller waits for the running collection instead of
+        starting another thread on the shared SQLite connection (production,
+        ubiquiti and nextcloud, 2026-11-02)."""
+        started = threading.Event()
+        release = threading.Event()
+        runs = []
+
+        def collect():
+            runs.append(1)
+            started.set()
+            release.wait(5)
+            return True
+
+        self.mock_collector.collect_all_available_packages.side_effect = collect
+        first = asyncio.create_task(self.scheduler.perform_package_collection())
+        await asyncio.to_thread(started.wait, 5)
+        second = asyncio.create_task(self.scheduler.perform_package_collection())
+        await asyncio.sleep(0)
+        release.set()
+        assert await first is True and await second is True
+        assert len(runs) == 1
+        assert await self.scheduler.perform_package_collection() is True
+        assert len(runs) == 2
+
+    @pytest.mark.asyncio
+    async def test_a_cancelled_caller_does_not_start_a_second_thread(self):
+        """A reconnect cancels the waiting coroutine, never the thread: the
+        next caller joins the thread still running."""
+        started = threading.Event()
+        release = threading.Event()
+        runs = []
+
+        def collect():
+            runs.append(1)
+            started.set()
+            release.wait(5)
+            return True
+
+        self.mock_collector.collect_all_available_packages.side_effect = collect
+        first = asyncio.create_task(self.scheduler.perform_package_collection())
+        await asyncio.to_thread(started.wait, 5)
+        first.cancel()
+        second = asyncio.create_task(self.scheduler.perform_package_collection())
+        await asyncio.sleep(0)
+        release.set()
+        assert await second is True
+        assert len(runs) == 1
 
     @pytest.mark.asyncio
     async def test_run_package_collection_loop_disabled(self):

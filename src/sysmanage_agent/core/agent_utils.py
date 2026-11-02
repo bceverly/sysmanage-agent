@@ -130,6 +130,8 @@ class PackageCollectionScheduler:
         self.agent = agent
         self.logger = logger
         self.package_collector = PackageCollector()
+        # The collection running in the thread pool, shared by every caller.
+        self._collection: Optional["asyncio.Future[bool]"] = None
 
     async def perform_package_collection(self) -> bool:
         """
@@ -143,15 +145,25 @@ class PackageCollectionScheduler:
             self.logger.debug("Package collection is disabled in configuration")
             return False
 
-        self.logger.info("Starting package collection")
         try:
-            # Run the blocking package collection in a thread pool executor
-            # to prevent blocking the async event loop during long HTTP operations
-            loop = asyncio.get_event_loop()
-            success = await loop.run_in_executor(
-                None,  # Use default ThreadPoolExecutor
-                self.package_collector.collect_all_available_packages,
-            )
+            # One collection at a time: a caller that finds one running waits
+            # for it.  The scheduler and the server's collect command started
+            # two together, and a reconnect cancels the waiting coroutine but
+            # never the thread; both threads wrote through the one shared
+            # SQLite connection ("bad parameter or other API misuse") and the
+            # event loop, blocked behind them, left commands unanswered
+            # (production, ubiquiti and nextcloud, 2026-11-02).
+            if self._collection is None or self._collection.done():
+                self.logger.info("Starting package collection")
+                # In the thread pool: it runs for minutes, off the event loop.
+                self._collection = asyncio.ensure_future(
+                    asyncio.get_event_loop().run_in_executor(
+                        None, self.package_collector.collect_all_available_packages
+                    )
+                )
+            else:
+                self.logger.info("Package collection already running; waiting for it")
+            success = await asyncio.shield(self._collection)
             if success:
                 self.logger.info("Package collection completed successfully")
             else:

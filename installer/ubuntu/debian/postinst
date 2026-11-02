@@ -47,16 +47,25 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 		systemctl --system daemon-reload >/dev/null 2>&1 || true
 	fi
 
-	# Enable and start the service using deb-systemd-invoke
+	# Enable and start the service; an upgrade ($2 is the old version)
+	# RESTARTS it, or the old code keeps running.  This script owns that on
+	# every series (dh_installsystemd --no-start in rules): jammy's debhelper
+	# looks for units only under /lib/systemd/system, missed ours under
+	# /usr/lib, and added no restart at all -- ubiquiti ran 3.12.0.25 for
+	# 20 minutes after upgrading to 3.12.0.27 (production, 2026-11-02).
+	action=start
+	if [ -n "$2" ]; then
+		action=restart
+	fi
 	if [ -x "/usr/bin/deb-systemd-invoke" ]; then
 		deb-systemd-invoke enable sysmanage-agent.service >/dev/null 2>&1 || true
-		deb-systemd-invoke start sysmanage-agent.service >/dev/null 2>&1 || true
+		deb-systemd-invoke "$action" sysmanage-agent.service >/dev/null 2>&1 || true
 	elif [ -x "/usr/bin/deb-systemd-helper" ]; then
 		deb-systemd-helper enable sysmanage-agent.service >/dev/null 2>&1 || true
-		deb-systemd-invoke start sysmanage-agent.service >/dev/null 2>&1 || true
+		deb-systemd-invoke "$action" sysmanage-agent.service >/dev/null 2>&1 || true
 	else
 		systemctl enable sysmanage-agent.service >/dev/null 2>&1 || true
-		systemctl start sysmanage-agent.service >/dev/null 2>&1 || true
+		systemctl "$action" sysmanage-agent.service >/dev/null 2>&1 || true
 	fi
 
 	echo ""

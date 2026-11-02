@@ -186,6 +186,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             "ipv6": system_info["ipv6"],
             "is_privileged": is_running_privileged(),
             "script_execution_enabled": self.agent.config.is_script_execution_enabled(),
+            "script_approval_required": self.agent.config.is_script_approval_required(),
             "enabled_shells": self.agent.config.get_allowed_shells(),
             "agent_version": get_agent_version(),
         }

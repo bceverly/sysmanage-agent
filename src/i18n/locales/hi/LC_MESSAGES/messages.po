@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 10:02-0400\n"
+"POT-Creation-Date: 2026-11-02 09:01-0500\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -71,17 +71,17 @@ msgstr ""
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  {config_dir} तक पहुँच नहीं, {fallback_dir} पर वापस"
 
-#: src/sysmanage_agent/backup/host_mount.py:130
+#: src/sysmanage_agent/backup/host_mount.py:147
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr "%(where)s पर बैकअप स्टोरेज लगभग भर गया है (%(free)d MB खाली)।"
 
-#: src/sysmanage_agent/backup/host_mount.py:136
+#: src/sysmanage_agent/backup/host_mount.py:153
 #, python-format
 msgid "The backup storage at %(where)s cannot take new files: %(error)s"
 msgstr "%(where)s पर बैकअप स्टोरेज नई फ़ाइलें नहीं ले सकता: %(error)s"
 
-#: src/sysmanage_agent/backup/host_mount.py:156
+#: src/sysmanage_agent/backup/host_mount.py:173
 #, python-format
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "%(where)s पर बैकअप स्टोरेज में लॉकिंग काम नहीं करती: %(error)s"
@@ -102,21 +102,21 @@ msgstr "कुंजी तैयार करने के लिए कोई 
 msgid "This host is not approved yet"
 msgstr "यह होस्ट अभी स्वीकृत नहीं है"
 
-#: src/sysmanage_agent/backup/key_files.py:127
+#: src/sysmanage_agent/backup/key_files.py:126
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr "सर्वर ने बैकअप कुंजी जारी नहीं की: HTTP %(status)s, %(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:138
+#: src/sysmanage_agent/backup/key_files.py:137
 msgid "no reason given"
 msgstr "कोई कारण नहीं बताया गया"
 
-#: src/sysmanage_agent/backup/key_files.py:158
+#: src/sysmanage_agent/backup/key_files.py:157
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "बैकअप कुंजी इंस्टॉल नहीं की जा सकी: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:201
+#: src/sysmanage_agent/backup/key_files.py:200
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr ""
 "यह restate किसी एन्क्रिप्टेड रिपॉज़िटरी को डिक्रिप्ट नहीं कर सकता; restate "
@@ -162,7 +162,7 @@ msgstr "%s पर बैकअप स्टोरेज ने जवाब न�
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "%s पर बैकअप स्टोरेज को अनमाउंट नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:129
+#: src/sysmanage_agent/backup/storage_prepare.py:120
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -171,7 +171,7 @@ msgstr ""
 "बैकअप सेवा खाता %(account)s (उपयोगकर्ता और समूह) इस स्टोरेज होस्ट पर मौजूद "
 "नहीं है। इसे बनाएँ, फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:159
+#: src/sysmanage_agent/backup/storage_prepare.py:150
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -181,7 +181,7 @@ msgstr ""
 "या नहीं। एजेंट को root के रूप में चलाएँ या डायरेक्टरी को कहीं और ले जाएँ, "
 "फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:170
+#: src/sysmanage_agent/backup/storage_prepare.py:161
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -194,7 +194,7 @@ msgstr ""
 "%(path)s.old), दोबारा तैयार करें, और root के रूप में इसकी सामग्री नए डेटासेट"
 " में कॉपी करें; या 2) अगर उन बैकअप की अब ज़रूरत नहीं है तो इसे हटा दें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:178
+#: src/sysmanage_agent/backup/storage_prepare.py:169
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -208,7 +208,7 @@ msgstr ""
 "सबवॉल्यूम में कॉपी करें; या 2) अगर उन बैकअप की अब ज़रूरत नहीं है तो इसे हटा "
 "दें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:209
+#: src/sysmanage_agent/backup/storage_prepare.py:200
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -218,12 +218,12 @@ msgstr ""
 "एक्सपोर्ट उस पते तक सीमित नहीं किया जा सकता। उस होस्ट के अपनी नेटवर्क "
 "जानकारी भेजने तक प्रतीक्षा करें, फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:220
+#: src/sysmanage_agent/backup/storage_prepare.py:211
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s पर स्टोरेज तैयार करना समर्थित नहीं है।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:228
+#: src/sysmanage_agent/backup/storage_prepare.py:219
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -232,7 +232,7 @@ msgstr ""
 " अपना अलग ZFS डेटासेट चाहिए। स्टोरेज पाथ को ZFS पर रखें, फिर दोबारा तैयार "
 "करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:296
+#: src/sysmanage_agent/backup/storage_prepare.py:287
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -243,7 +243,7 @@ msgstr ""
 "रिपॉज़िटरी की जगह पर नहीं बनेगा। वहाँ माउंट होने वाला डेटासेट बनाएँ (zfs "
 "create -o mountpoint=%(path)s POOL/NAME), फिर दोबारा तैयार करें।"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:323
+#: src/sysmanage_agent/backup/storage_prepare.py:314
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -263,7 +263,7 @@ msgid "Unsupported platform for certificate collection: %s"
 msgstr "संग्रह के लिए समर्थित नहीं है कि प्लेटफार्म: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:948
+#: src/sysmanage_agent/communication/data_collector.py:546
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "कैर्टिफिकेट एकलेक्ट करने में त्रुटि: %s"
@@ -736,42 +736,43 @@ msgstr "समर्थित नहीं है कि प्रणाली: 
 msgid "Failed to collect available packages: %s"
 msgstr "उपलब्ध पैकेज एकत्र करने में विफल हो गए: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:198
+#: src/sysmanage_agent/collection/package_collector_base.py:257
 msgid "winget not found in any common location"
 msgstr "winget किसी भी सामान्य स्थान पर नहीं मिला"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:274
-#: src/sysmanage_agent/collection/package_collector_base.py:330
+#: src/sysmanage_agent/collection/package_collector_base.py:334
+#: src/sysmanage_agent/collection/package_collector_base.py:357
+#: src/sysmanage_agent/collection/package_collector_base.py:386
 #, python-format
 msgid "Failed to store packages for %s: %s"
 msgstr "पैकेज लिस्ट %s के लिए संग्रहण में विफलता: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:360
+#: src/sysmanage_agent/collection/package_collector_base.py:416
 #, python-format
 msgid "Failed to get packages for %s: %s"
 msgstr "%s के लिए पैकेज प्राप्त करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:384
+#: src/sysmanage_agent/collection/package_collector_base.py:440
 #, python-format
 msgid "Failed to get all packages: %s"
 msgstr "सभी पैकेजज़ की जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:397
+#: src/sysmanage_agent/collection/package_collector_base.py:453
 #, python-format
 msgid "Failed to get package managers: %s"
 msgstr "पैकेज मैनेजरज़ की जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:433
+#: src/sysmanage_agent/collection/package_collector_base.py:489
 #, python-format
 msgid "Failed to get packages for transmission: %s"
 msgstr "प्रसारण के लिए पैकेजज़ की जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:462
+#: src/sysmanage_agent/collection/package_collector_base.py:518
 #, python-format
 msgid "Failed to read sent package snapshot: %s"
 msgstr "भेजे गए पैकेज संपीड़ित छवि को पढ़ने में विफल: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:495
+#: src/sysmanage_agent/collection/package_collector_base.py:558
 #, python-format
 msgid "Failed to store sent package snapshot: %s"
 msgstr "भेजे गए पैकेज संपीड़ित छवि को स्टोर करने में विफल: %s"
@@ -1485,309 +1486,309 @@ msgstr "बच्चे होस्टज़ डेटा भेजने म�
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:424
+#: src/sysmanage_agent/communication/data_collector.py:421
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "चाइल्ड होस्ट्स डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:83
+#: src/sysmanage_agent/communication/data_collector.py:80
 #, python-format
 msgid "Failed to send initial data updates: %s"
 msgstr "प्रारंभिक डेटा अपडेट भेजना विफल: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:177
+#: src/sysmanage_agent/communication/data_collector.py:174
 #, python-format
 msgid "Failed to perform initial update check: %s"
 msgstr "पहले से ही अपडेट चेक करने में विफलता: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:194
+#: src/sysmanage_agent/communication/data_collector.py:191
 #, python-format
 msgid "Certificate collection failed: %s"
 msgstr "सर्टिफिकेट संग्रहण विफल हुआ: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:197
+#: src/sysmanage_agent/communication/data_collector.py:194
 #, python-format
 msgid "Failed to perform initial certificate collection: %s"
 msgstr "पहले से ही सर्टिफिकेट कोलेक्शन करने में विफलता: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:214
+#: src/sysmanage_agent/communication/data_collector.py:211
 #, python-format
 msgid "Role collection failed: %s"
 msgstr "भूमिका संग्रह विफल हो गई: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:216
+#: src/sysmanage_agent/communication/data_collector.py:213
 #, python-format
 msgid "Failed to perform initial role collection: %s"
 msgstr "पहले से ही रॉल कोलेक्शन करने में विफलता: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:225
+#: src/sysmanage_agent/communication/data_collector.py:222
 #, python-format
 msgid "Failed to send initial third-party repository data: %s"
 msgstr "आरंभिक तृतीय-पक्ष अवस्थान डेटा प्रसारित करने में विफल: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:233
+#: src/sysmanage_agent/communication/data_collector.py:230
 #, python-format
 msgid "Failed to send initial firewall status data: %s"
 msgstr "फायरवॉल स्थिति डेटा को भेजने में विफल होगया: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:241
+#: src/sysmanage_agent/communication/data_collector.py:238
 #, python-format
 msgid "Failed to send initial Graylog status data: %s"
 msgstr "आरंभिक Graylog स्थिति डेटा को भेजने में विफल होगया: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:248
+#: src/sysmanage_agent/communication/data_collector.py:245
 #, python-format
 msgid "Failed to send initial process data: %s"
 msgstr "प्रारंभिक प्रक्रिया डेटा भेजने में विफल: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:254
+#: src/sysmanage_agent/communication/data_collector.py:251
 #, python-format
 msgid "Failed to send initial child hosts data: %s"
 msgstr "पुराने होस्ट्स की आरंभिक डेटा को भेजने में विफलता: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:273
+#: src/sysmanage_agent/communication/data_collector.py:270
 #, python-format
 msgid "Failed to update OS version: %s"
 msgstr "OS संस्करण को अद्ययन करने में विफल होगया: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:295
+#: src/sysmanage_agent/communication/data_collector.py:292
 #, python-format
 msgid "Failed to update hardware: %s"
 msgstr "हार्डवेयर को अद्ययन करने में विफलता: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:317
+#: src/sysmanage_agent/communication/data_collector.py:314
 #, python-format
 msgid "Failed to update user access: %s"
 msgstr "कार्यकर्ता पहुंच अपडेट करने में विफल: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:326
+#: src/sysmanage_agent/communication/data_collector.py:323
 #, python-format
 msgid "Error collecting processes: %s"
 msgstr "प्रक्रियाएँ एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:333
+#: src/sysmanage_agent/communication/data_collector.py:330
 msgid "Missing required parameter: pid"
 msgstr "आवश्यक पैरामीटर अनुपस्थित: pid"
 
-#: src/sysmanage_agent/communication/data_collector.py:337
+#: src/sysmanage_agent/communication/data_collector.py:334
 #, python-format
 msgid "Invalid pid: %s"
 msgstr "अमान्य pid: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:351
+#: src/sysmanage_agent/communication/data_collector.py:348
 #, python-format
 msgid "Failed to refresh processes after kill: %s"
 msgstr "समाप्ति के बाद प्रक्रियाओं को रिफ्रेश करने में विफल: %s"
 
 # Software Inventory Messages
-#: src/sysmanage_agent/communication/data_collector.py:366
+#: src/sysmanage_agent/communication/data_collector.py:363
 #, python-format
 msgid "Error collecting/sending software inventory: %s"
 msgstr "सॉफ्टवेअर इन्वेंट्री संकलन/प्रसारण में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:370
+#: src/sysmanage_agent/communication/data_collector.py:367
 #, python-format
 msgid "Error collecting/sending user access data: %s"
 msgstr "यूजर अक्सेस डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:374
+#: src/sysmanage_agent/communication/data_collector.py:371
 #, python-format
 msgid "Error collecting/sending hardware data: %s"
 msgstr "हार्डवेअर डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:378
+#: src/sysmanage_agent/communication/data_collector.py:375
 #, python-format
 msgid "Error collecting/sending certificate data: %s"
 msgstr "कैर्टिफिकेट डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:380
+#: src/sysmanage_agent/communication/data_collector.py:377
 #, python-format
 msgid "Error collecting/sending role data: %s"
 msgstr "रॉलों का डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:383
+#: src/sysmanage_agent/communication/data_collector.py:380
 #, python-format
 msgid "Error collecting/sending OS version data: %s"
 msgstr "ओएस वर्झन डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:387
+#: src/sysmanage_agent/communication/data_collector.py:384
 #, python-format
 msgid "Error collecting/sending reboot status: %s"
 msgstr "रिबॉट स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:391
+#: src/sysmanage_agent/communication/data_collector.py:388
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
 msgstr "थर्ड-पार्टी रिपोज़िटरी डेटा एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:395
+#: src/sysmanage_agent/communication/data_collector.py:392
 #, python-format
 msgid "Error collecting/sending antivirus status: %s"
 msgstr "एंटीवायरस स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:399
+#: src/sysmanage_agent/communication/data_collector.py:396
 #, python-format
 msgid "Error collecting/sending firewall status: %s"
 msgstr "फायरवॉल स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:403
+#: src/sysmanage_agent/communication/data_collector.py:400
 #, python-format
 msgid "Error collecting/sending Graylog status: %s"
 msgstr "ग्रेलॉग स्थिति एकलेक्ट/सेंड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:405
+#: src/sysmanage_agent/communication/data_collector.py:402
 #, python-format
 msgid "Error collecting/sending process data: %s"
 msgstr "प्रक्रिया डेटा एकत्र/भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:408
+#: src/sysmanage_agent/communication/data_collector.py:405
 #, python-format
 msgid "Error collecting/sending host metrics: %s"
 msgstr "होस्ट मेट्रिक्स एकत्र/भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:412
+#: src/sysmanage_agent/communication/data_collector.py:409
 #, python-format
 msgid "Error collecting/sending clock status: %s"
 msgstr "घड़ी स्थिति एकत्र करने/भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:416
-#: src/sysmanage_agent/communication/data_collector_senders.py:423
+#: src/sysmanage_agent/communication/data_collector.py:413
+#: src/sysmanage_agent/communication/data_collector_senders.py:441
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "हार्डवेयर स्वास्थ्य एकत्र करने/भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:420
+#: src/sysmanage_agent/communication/data_collector.py:417
 #, python-format
 msgid "Error collecting/sending compliance evidence: %s"
 msgstr "अनुपालन साक्ष्य एकत्र करने/भेजने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:460
+#: src/sysmanage_agent/communication/data_collector.py:457
 #, python-format
 msgid "Data collector error: %s"
 msgstr "डाटा कलेक्टर त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:488
+#: src/sysmanage_agent/communication/data_collector.py:485
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "प्रारंभिक डेटा संग्रह त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:711
-#, python-format
-msgid "Error collecting available packages: %s"
-msgstr "उपलब्ध पैकेज एकलेक्ट करने में त्रुटि: %s"
-
-#: src/sysmanage_agent/communication/data_collector.py:820
-#, python-format
-msgid "Error sending package delta: %s"
-msgstr "पैकेज डेल्टा भेजने में त्रुटि: %s"
-
-#: src/sysmanage_agent/communication/data_collector.py:899
-#, python-format
-msgid "Error sending paginated packages for batch %s: %s"
-msgstr "%s लैच पैगिनेटेड पैकेजज़ भेजने में त्रुटि: %s"
-
-#: src/sysmanage_agent/communication/data_collector.py:994
+#: src/sysmanage_agent/communication/data_collector.py:592
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "रॉलों का एकलेक्ट करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:59
+#: src/sysmanage_agent/communication/data_collector_catalog.py:257
+#, python-format
+msgid "Error collecting available packages: %s"
+msgstr "उपलब्ध पैकेज एकलेक्ट करने में त्रुटि: %s"
+
+#: src/sysmanage_agent/communication/data_collector_catalog.py:368
+#, python-format
+msgid "Error sending package delta: %s"
+msgstr "पैकेज डेल्टा भेजने में त्रुटि: %s"
+
+#: src/sysmanage_agent/communication/data_collector_catalog.py:447
+#, python-format
+msgid "Error sending paginated packages for batch %s: %s"
+msgstr "%s लैच पैगिनेटेड पैकेजज़ भेजने में त्रुटि: %s"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:67
 msgid "Failed to send periodic software inventory data"
 msgstr "सामान्यिक सॉफ़्टवेअर इन्वेंटरी डेटा भेजने में विफलता"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:83
+#: src/sysmanage_agent/communication/data_collector_senders.py:93
 msgid "Failed to send periodic user access data"
 msgstr "सामान्य उपयोगकर्ता पहुंच डेटा को भेजने में विफल हुए"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:107
+#: src/sysmanage_agent/communication/data_collector_senders.py:119
 msgid "Failed to send periodic hardware data"
 msgstr "हार्डवेयर डेटा को नियमित अंतराल पर भेजने में विफलता"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:127
+#: src/sysmanage_agent/communication/data_collector_senders.py:139
 #, python-format
 msgid "Periodic certificate collection failed: %s"
 msgstr "आवर्तिक पत्रक संग्रह विफल हो गया: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:147
+#: src/sysmanage_agent/communication/data_collector_senders.py:159
 #, python-format
 msgid "Periodic role collection failed: %s"
 msgstr "आवर्तिक भूमिका संग्रह विफल हो गई: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:171
+#: src/sysmanage_agent/communication/data_collector_senders.py:183
 msgid "Failed to send periodic OS version data"
 msgstr "संतत ऑपरेशन सिस्टम वर्झन डेटा भेजने में विफल"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:192
+#: src/sysmanage_agent/communication/data_collector_senders.py:204
 #, python-format
 msgid "Failed to collect third-party repositories: %s"
 msgstr "तीसरी पक्ष की रिपोज़िट्री संग्रह करने में विफल हुए: %s"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:226
+#: src/sysmanage_agent/communication/data_collector_senders.py:238
 msgid "Failed to send third-party repository data"
 msgstr "थर्ड-पार्टी रिपोज़िट्री डेटा भेजने में विफल होगया"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:258
+#: src/sysmanage_agent/communication/data_collector_senders.py:272
 msgid "Failed to send antivirus status data"
 msgstr "एन्टीवायरस स्थिति डेटा भेजने में विफल"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:261
+#: src/sysmanage_agent/communication/data_collector_senders.py:275
 msgid "Cannot send antivirus status data: no host approval"
 msgstr "एन्टीवायरस साइट डेटा भेजने में विफल: कोई होस्ट पहचान नहीं है"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:295
+#: src/sysmanage_agent/communication/data_collector_senders.py:311
 msgid "Failed to send firewall status data"
 msgstr "फायरवॉल स्थिति डेटा भेजने में विफल"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:297
+#: src/sysmanage_agent/communication/data_collector_senders.py:313
 msgid "Cannot send firewall status data: no host approval"
 msgstr "फायरवॉल साइट डेटा भेजने में विफल: कोई होस्ट पहचान नहीं है"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:329
+#: src/sysmanage_agent/communication/data_collector_senders.py:347
 msgid "Failed to send Graylog status data"
 msgstr "Graylog status data भेजने में विफल"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:331
+#: src/sysmanage_agent/communication/data_collector_senders.py:349
 msgid "Cannot send Graylog status data: no host approval"
 msgstr "Graylog साइट डेटा भेजने में विफल: कोई होस्ट पहचान नहीं है"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:339
+#: src/sysmanage_agent/communication/data_collector_senders.py:357
 msgid "Cannot send process data: no host approval"
 msgstr "प्रक्रिया डेटा नहीं भेजा जा सकता: कोई होस्ट स्वीकृति नहीं"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:369
+#: src/sysmanage_agent/communication/data_collector_senders.py:387
 msgid "Failed to send process status data"
 msgstr "प्रक्रिया स्थिति डेटा भेजने में विफल"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:380
+#: src/sysmanage_agent/communication/data_collector_senders.py:398
 msgid "Cannot send host metrics: no host approval"
 msgstr "होस्ट मेट्रिक्स नहीं भेजे जा सकते: होस्ट स्वीकृत नहीं है"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:392
+#: src/sysmanage_agent/communication/data_collector_senders.py:410
 msgid "Failed to send host metrics"
 msgstr "होस्ट मेट्रिक्स भेजने में विफल"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:405
+#: src/sysmanage_agent/communication/data_collector_senders.py:423
 msgid "Cannot send clock status: no host approval"
 msgstr "होस्ट की मंजूरी नहीं होने के कारण घड़ी स्थिति भेजी नहीं जा सकती"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:412
+#: src/sysmanage_agent/communication/data_collector_senders.py:430
 msgid "Failed to send clock status"
 msgstr "घड़ी स्थिति भेजने में विफलता"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:437
+#: src/sysmanage_agent/communication/data_collector_senders.py:455
 msgid "Cannot send hardware health: no host approval"
 msgstr ""
 "होस्ट की मंजूरी नहीं होने के कारण हार्डवेयर स्वास्थ्य भेजा नहीं जा सकता"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:457
+#: src/sysmanage_agent/communication/data_collector_senders.py:475
 msgid "Failed to send hardware health"
 msgstr "हार्डवेयर स्वास्थ्य भेजने में विफलता"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:469
+#: src/sysmanage_agent/communication/data_collector_senders.py:487
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "अनुपालन साक्ष्य नहीं भेजे जा सकते: होस्ट की स्वीकृति नहीं है"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:478
+#: src/sysmanage_agent/communication/data_collector_senders.py:496
 msgid "Failed to send compliance evidence"
 msgstr "अनुपालन साक्ष्य भेजने में विफल"
 
@@ -1861,48 +1862,48 @@ msgstr ""
 "इस नेटवर्क की अब WebSocket कनेक्शंस इजाजत दिए जा रहे हैं कि यह पुन: परीक्षण "
 "किया जाए"
 
-#: src/sysmanage_agent/communication/message_handler.py:205
+#: src/sysmanage_agent/communication/message_handler.py:208
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "मैसेज क्यू में डालने में विफल रहा: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:243
+#: src/sysmanage_agent/communication/message_handler.py:246
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "कमांड की पहचान के लिए संदेश को क्यू में विफल रहा: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:251
+#: src/sysmanage_agent/communication/message_handler.py:254
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "%s के लिए कमान्ड अक्सरेफीकेशन कोई क्वी संयोजित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:290
+#: src/sysmanage_agent/communication/message_handler.py:293
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "सर्वर त्रुटि [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:343
+#: src/sysmanage_agent/communication/message_handler.py:346
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "स्टेल चेक के लिए संदेश टाइमस्टॉप को पढ़ने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:396
-#: src/sysmanage_agent/communication/message_handler.py:732
+#: src/sysmanage_agent/communication/message_handler.py:399
+#: src/sysmanage_agent/communication/message_handler.py:739
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "होस्ट रजिस्ट्रेशन की पांडूज परवानगी मंजूरी है। अवधि-अवधि प्रयास करते रहेंगे।"
 
-#: src/sysmanage_agent/communication/message_handler.py:403
+#: src/sysmanage_agent/communication/message_handler.py:406
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "सर्वर के संदेश में नामकरण (hostname) अज्ञात है. यह एक बग है।"
 
-#: src/sysmanage_agent/communication/message_handler.py:406
+#: src/sysmanage_agent/communication/message_handler.py:409
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "सर्वर ने संदेश को पंजीकरण करने में विफल रहा: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:427
+#: src/sysmanage_agent/communication/message_handler.py:430
 #, python-format
 msgid ""
 "This host's registration was refused; asking the server again in %d seconds."
@@ -1910,7 +1911,7 @@ msgstr ""
 "इस होस्ट का पंजीकरण अस्वीकार कर दिया गया; %d सेकंड में सर्वर से फिर पूछा "
 "जाएगा।"
 
-#: src/sysmanage_agent/communication/message_handler.py:465
+#: src/sysmanage_agent/communication/message_handler.py:468
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -1921,7 +1922,7 @@ msgstr ""
 "आइडी को डिसार्ड न करके पुनः संलग्न करने की कोशिश कर रहा है; अगर यह जारी रहता"
 " है, तब ही पुनः रजिस्टर करेंगे;"
 
-#: src/sysmanage_agent/communication/message_handler.py:478
+#: src/sysmanage_agent/communication/message_handler.py:481
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -1930,37 +1931,37 @@ msgstr ""
 "host_not_registered जारी (%(n)d स्ट्राइक) -- इस होस्ट को वास्तव में गया "
 "समझते हैं; संचित host_id को स्पष्ट कर देते हैं और पुनः रजिस्टर करते हैं।"
 
-#: src/sysmanage_agent/communication/message_handler.py:489
+#: src/sysmanage_agent/communication/message_handler.py:492
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "संग्रहीत होस्ट_आईडी को साफ़ करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:545
+#: src/sysmanage_agent/communication/message_handler.py:548
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "प्रसारण %s: इन्वेंटरी रीफ़्रेश विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:555
+#: src/sysmanage_agent/communication/message_handler.py:558
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "ब्रॉडकास्ट %s: अज्ञात कार्रवाई '%s' -- नजरअंदाज किया गया"
 
-#: src/sysmanage_agent/communication/message_handler.py:654
+#: src/sysmanage_agent/communication/message_handler.py:661
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "अमान्य JSON प्राप्त: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:656
+#: src/sysmanage_agent/communication/message_handler.py:663
 #, python-format
 msgid "Error processing message: %s"
 msgstr "मैसेज प्रोसेसिंग में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:669
+#: src/sysmanage_agent/communication/message_handler.py:676
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: संदेश प्रतिवर्धक त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:687
+#: src/sysmanage_agent/communication/message_handler.py:694
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -1968,21 +1969,21 @@ msgstr ""
 "संदेश प्रतिवर्धक: websocket concurrent disconnect के द्वारा स्पष्ट हो गया; "
 "receive loop को exit करने के लिए आवश्यकता है reconnect"
 
-#: src/sysmanage_agent/communication/message_handler.py:742
+#: src/sysmanage_agent/communication/message_handler.py:749
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "अज्ञात संदेश प्रकार: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:820
+#: src/sysmanage_agent/communication/message_handler.py:832
 msgid "Heartbeat failed, connection may be lost"
 msgstr "हैर्टबीट विफल हो गया, कनेक्शन खो चुका हो सकता है"
 
-#: src/sysmanage_agent/communication/message_handler.py:829
+#: src/sysmanage_agent/communication/message_handler.py:841
 #, python-format
 msgid "Message sender error: %s"
 msgstr "मेसेज सेंडर त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:845
+#: src/sysmanage_agent/communication/message_handler.py:857
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "मैसेज हैंडलर को बंद करने में त्रुटि: %s"
@@ -2076,124 +2077,117 @@ msgstr "होस्टनाम का पता नहीं चल सका,
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "फ्लाइट में जर्नल रिकंसिलिएशन फेल हुआ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:58
+#: src/sysmanage_agent/core/agent_utils.py:60
 msgid "systemctl not found"
 msgstr "systemctl नहीं मिला"
 
-#: src/sysmanage_agent/core/agent_utils.py:86
+#: src/sysmanage_agent/core/agent_utils.py:88
 #, python-format
 msgid "Error during periodic update check: %s"
 msgstr "संचित अपडेट चेक के दौरान त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:118
+#: src/sysmanage_agent/core/agent_utils.py:120
 #, python-format
 msgid "Update checker error: %s"
 msgstr "अपडेट चेकर त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:156
+#: src/sysmanage_agent/core/agent_utils.py:170
 msgid "Package collection completed with some issues"
 msgstr "पैकेज संग्रह कुछ समस्याओं के साथ पूर्ण"
 
-#: src/sysmanage_agent/core/agent_utils.py:159
+#: src/sysmanage_agent/core/agent_utils.py:173
 #, python-format
 msgid "Error during package collection: %s"
 msgstr "पैकेज कलेक्शन के दौरान त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:206
+#: src/sysmanage_agent/core/agent_utils.py:220
 #, python-format
 msgid "Package collection scheduler error: %s"
 msgstr "पैकेज संग्रह शेड्यूलर त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:327
+#: src/sysmanage_agent/core/agent_utils.py:341
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "क्षमता रिपोर्ट बनाने में विफल हुए: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:449
+#: src/sysmanage_agent/core/agent_utils.py:464
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
 
-#: src/sysmanage_agent/core/agent_utils.py:491
+#: src/sysmanage_agent/core/agent_utils.py:506
 msgid "Generic command missing nested command_type"
 msgstr "जेनेरिक कमांड में नेस्टेड command_type गायब"
 
-#: src/sysmanage_agent/core/agent_utils.py:503
+#: src/sysmanage_agent/core/agent_utils.py:518
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "अज्ञात कमांड प्रकार: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:562
+#: src/sysmanage_agent/core/agent_utils.py:577
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "स्क्रिप्ट एक्ज़ीक्यूशन परिणाम को क्यू में फेल हुआ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:581
+#: src/sysmanage_agent/core/agent_utils.py:596
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "प्रोग्रेशियन UUID की जाँच में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:595
+#: src/sysmanage_agent/core/agent_utils.py:610
 msgid "No execution UUID provided, cannot track"
 msgstr "कोई निष्पादन UUID प्रदान नहीं किया गया, ट्रैक नहीं कर सकते"
 
-#: src/sysmanage_agent/core/agent_utils.py:610
+#: src/sysmanage_agent/core/agent_utils.py:625
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "निष्पादन UUID %s डेटाबेस में पहले से मौजूद है"
 
-#: src/sysmanage_agent/core/agent_utils.py:635
+#: src/sysmanage_agent/core/agent_utils.py:650
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "अद्यतन पहचान UUID संग्रहित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:700
+#: src/sysmanage_agent/core/agent_utils.py:715
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "सेवा नियंत्रण हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:747
+#: src/sysmanage_agent/core/agent_utils.py:762
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:753
+#: src/sysmanage_agent/core/agent_utils.py:768
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:838
+#: src/sysmanage_agent/core/agent_utils.py:853
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "सेवा %s पर %s विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:848
+#: src/sysmanage_agent/core/agent_utils.py:863
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "सेवा नियंत्रण के बाद भूमिकाएँ अद्यतन करने में विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:887
+#: src/sysmanage_agent/core/agent_utils.py:902
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "सेवा स्थिति हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:930
+#: src/sysmanage_agent/core/agent_utils.py:945
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s के लिए सेवा स्थिति समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:940
+#: src/sysmanage_agent/core/agent_utils.py:955
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s के लिए सेवा स्थिति त्रुटि: %s"
-
-#: src/sysmanage_agent/core/agent_utils.py:988
-#, python-format
-msgid "Failed to queue synthetic command_result for in-flight journal: %s"
-msgstr ""
-"इन-फ्लाइट जर्नल के लिए सिंथेटिक command_result को कतार में डालने में विफल: "
-"%s"
 
 #: src/sysmanage_agent/core/auth_helper.py:115
 #, python-format
@@ -2234,6 +2228,13 @@ msgid ""
 msgstr ""
 "'%s' पर मिला enrollment_token अनदेखा किया जाता है; इसे शीर्ष-स्तरीय "
 "'security' अनुभाग के अंतर्गत होना चाहिए"
+
+#: src/sysmanage_agent/core/inflight_reconcile.py:59
+#, python-format
+msgid "Failed to queue synthetic command_result for in-flight journal: %s"
+msgstr ""
+"इन-फ्लाइट जर्नल के लिए सिंथेटिक command_result को कतार में डालने में विफल: "
+"%s"
 
 #: src/sysmanage_agent/core/unconfigured.py:45
 msgid "no server is configured (server.url is not set)"
@@ -2346,67 +2347,67 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:271
+#: src/sysmanage_agent/operations/backup_operations.py:273
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:279
+#: src/sysmanage_agent/operations/backup_operations.py:281
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:302
+#: src/sysmanage_agent/operations/backup_operations.py:304
 msgid "This platform can only be a backup storage host."
 msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:308
+#: src/sysmanage_agent/operations/backup_operations.py:310
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:335
+#: src/sysmanage_agent/operations/backup_operations.py:340
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:454
+#: src/sysmanage_agent/operations/backup_operations.py:470
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "यह restate %s को जॉब के रूप में नहीं चला सकता; restate अपग्रेड करें।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:562
+#: src/sysmanage_agent/operations/backup_operations.py:578
 msgid "restate is not installed on this host."
 msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:595
+#: src/sysmanage_agent/operations/backup_operations.py:611
 msgid "That backup job is already running."
 msgstr "यह बैकअप जॉब पहले से चल रहा है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:617
+#: src/sysmanage_agent/operations/backup_operations.py:633
 msgid "The backup job could not be started."
 msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:672
+#: src/sysmanage_agent/operations/backup_operations.py:688
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "सील किए गए स्नैपशॉट की सूची नहीं बन सकी: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:687
+#: src/sysmanage_agent/operations/backup_operations.py:703
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "पुराना सील किया गया स्नैपशॉट %(name)s हटाया नहीं जा सका: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:762
+#: src/sysmanage_agent/operations/backup_operations.py:778
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s इस होस्ट पर %(path)s पर माउंट नहीं है"
 
-#: src/sysmanage_agent/operations/backup_operations.py:797
+#: src/sysmanage_agent/operations/backup_operations.py:813
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:915
+#: src/sysmanage_agent/operations/backup_operations.py:931
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2415,12 +2416,12 @@ msgstr ""
 "restate परिणाम लिखने से पहले रुक गया (निकास कोड %(code)s); इस होस्ट पर "
 "journalctl -u %(unit)s देखें"
 
-#: src/sysmanage_agent/operations/backup_operations.py:943
+#: src/sysmanage_agent/operations/backup_operations.py:957
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:961
+#: src/sysmanage_agent/operations/backup_operations.py:988
 msgid "Could not queue the backup report"
 msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 
@@ -2635,16 +2636,21 @@ msgstr "खाली wait_condition कमांड"
 msgid "Failed to send progress message: %s"
 msgstr "उग्र प्रगति संदेश को भेजने में विफल होगया: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:367
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:143
+#: src/sysmanage_agent/operations/script_operations.py:69
+msgid "Refused a script that was not approved"
+msgstr "एक स्क्रिप्ट अस्वीकार की गई जो अनुमोदित नहीं थी"
+
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:372
 msgid "no argv"
 msgstr "argv नहीं"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:410
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:415
 #, python-format
 msgid "FileNotFoundError: %s"
 msgstr "FileNotFoundError: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:582
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:587
 msgid "timeout"
 msgstr "टाइमआउट"
 
@@ -3074,31 +3080,31 @@ msgstr ""
 " करके इंस्टॉल करें: /bin/bash -c \"$(curl -fsSL "
 "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:335
+#: src/sysmanage_agent/operations/package_manager_operations.py:337
 msgid "The installer script is unexpectedly large"
 msgstr "इंस्टॉलर स्क्रिप्ट अपेक्षा से बहुत बड़ी है"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:371
+#: src/sysmanage_agent/operations/package_manager_operations.py:373
 msgid "Chocolatey is only supported on Windows systems"
 msgstr "Chocolatey Windows प्रणालियों पर ही समर्थित है"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:380
+#: src/sysmanage_agent/operations/package_manager_operations.py:382
 msgid "Chocolatey is already installed"
 msgstr "Chocolatey पहले से ही इनस्टॉल हो चुका है"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:400
+#: src/sysmanage_agent/operations/package_manager_operations.py:402
 msgid "Chocolatey installed successfully"
 msgstr "Chocolatey की सफल इनस्टॉलेशन"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:419
+#: src/sysmanage_agent/operations/package_manager_operations.py:421
 msgid "Scoop is only supported on Windows systems"
 msgstr "Scoop केवल Windows प्रणालियों पर समर्थित है"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:428
+#: src/sysmanage_agent/operations/package_manager_operations.py:430
 msgid "Scoop is already installed"
 msgstr "Scoop पहले से ही इनस्टॉल हो चुका है"
 
-#: src/sysmanage_agent/operations/package_manager_operations.py:449
+#: src/sysmanage_agent/operations/package_manager_operations.py:451
 msgid "Scoop installed successfully"
 msgstr "Scoop सफलतापूर्वक इनस्टॉल हुआ"
 
@@ -3286,20 +3292,29 @@ msgstr "तीसरे पक्ष की रिपोज़िट्री �
 msgid "Error re-scanning third-party repositories: %s"
 msgstr "थर्ड-पार्टी अवस्थाएँ की फिर से खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/script_operations.py:70
+#: src/sysmanage_agent/operations/script_approval.py:38
+msgid ""
+"This host requires approval for scripts, and this script was not approved. "
+"Run it from a saved script that goes through approval."
+msgstr ""
+"इस होस्ट पर स्क्रिप्ट के लिए अनुमोदन आवश्यक है, और यह स्क्रिप्ट अनुमोदित "
+"नहीं थी। इसे किसी सहेजी गई स्क्रिप्ट से चलाएँ जो अनुमोदन प्रक्रिया से "
+"गुज़रती है।"
+
+#: src/sysmanage_agent/operations/script_operations.py:75
 msgid "Missing required parameter 'script_content'"
 msgstr "आवश्यक पैरामीटर 'script_content' गायब"
 
-#: src/sysmanage_agent/operations/script_operations.py:79
+#: src/sysmanage_agent/operations/script_operations.py:84
 #, python-format
 msgid "Script timeout capped at %d seconds"
 msgstr "स्क्रिप्ट टाइमआउट %d सेकंड तक सीमित"
 
-#: src/sysmanage_agent/operations/script_operations.py:94
+#: src/sysmanage_agent/operations/script_operations.py:99
 msgid "Agent does not expose apply_deployment_plan; upgrade required"
 msgstr "एजेंट apply_deployment_plan एक्सपोज़ नहीं करता; अपग्रेड आवश्यक"
 
-#: src/sysmanage_agent/operations/script_operations.py:98
+#: src/sysmanage_agent/operations/script_operations.py:103
 #, python-format
 msgid "Script delegation failed: %s"
 msgstr "स्क्रिप्ट दान विफल हो गया: %s"
@@ -3695,46 +3710,46 @@ msgstr "Windows अनुभाग जोड़ने में त्रुट�
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  चेतावनी: aiohttp उपलब्ध नहीं, पंजीकरण छोड़ा जाएगा"
 
-#: src/sysmanage_agent/registration/client_registration.py:307
+#: src/sysmanage_agent/registration/client_registration.py:313
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp उपलब्ध नहीं, पंजीकरण को छोड़ दिया गया"
 
-#: src/sysmanage_agent/registration/client_registration.py:386
+#: src/sysmanage_agent/registration/client_registration.py:392
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "पंजीकरण विफल हुई: अवस्था %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:395
+#: src/sysmanage_agent/registration/client_registration.py:401
 #, python-format
 msgid "Error during registration: %s"
 msgstr "रजिस्ट्रेशन के दौरान त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:432
+#: src/sysmanage_agent/registration/client_registration.py:438
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "%s प्रयासों के बाद रिगिस्टर होना विफल"
 
-#: src/sysmanage_agent/registration/client_registration.py:438
+#: src/sysmanage_agent/registration/client_registration.py:444
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "पंजीकरण असफल हुआ, %s सेकंड में फिर से प्रयास कर रहा है..."
 
-#: src/sysmanage_agent/registration/client_registration.py:495
+#: src/sysmanage_agent/registration/client_registration.py:501
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "संग्रहित प्रमाण डेटा लोड करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:525
+#: src/sysmanage_agent/registration/client_registration.py:531
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "प्रमाण डेटा संग्रहित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:540
+#: src/sysmanage_agent/registration/client_registration.py:546
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "संग्रहित host_id को प्राप्त करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:557
+#: src/sysmanage_agent/registration/client_registration.py:563
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "संग्रहित स्वीकृति डेटा खोज करने में त्रुटि: %s"
