@@ -25,6 +25,7 @@ def mock_db_manager():
     mock_session = Mock()
     mock_manager.get_session.return_value.__enter__ = Mock(return_value=mock_session)
     mock_manager.get_session.return_value.__exit__ = Mock(return_value=False)
+    mock_manager.bulk_session = mock_manager.get_session  # catalog writes
     return mock_manager
 
 
@@ -258,7 +259,7 @@ class TestStorePackages:
         mock_query.filter.return_value.delete.return_value = None
         mock_session.query.return_value = mock_query
 
-        with patch.object(collector.db_manager, "get_session") as mock_get_session:
+        with patch.object(collector.db_manager, "bulk_session") as mock_get_session:
             mock_context = Mock()
             mock_context.__enter__ = Mock(return_value=mock_session)
             mock_context.__exit__ = Mock(return_value=False)
@@ -280,7 +281,7 @@ class TestStorePackages:
         """Test package storage with exception."""
         packages = [{"name": "pkg1", "version": "1.0", "description": "Package 1"}]
 
-        with patch.object(collector.db_manager, "get_session") as mock_get_session:
+        with patch.object(collector.db_manager, "bulk_session") as mock_get_session:
             mock_context = Mock()
             mock_context.__enter__ = Mock(side_effect=Exception("database error"))
             mock_context.__exit__ = Mock(return_value=False)

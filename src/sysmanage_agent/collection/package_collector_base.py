@@ -308,7 +308,7 @@ class BasePackageCollector:
         stored_count = 0
 
         try:
-            with self.db_manager.get_session() as session, write_transaction(session):
+            with self.db_manager.bulk_session() as session, write_transaction(session):
                 # Delete existing packages for this manager
                 session.query(AvailablePackage).filter(
                     AvailablePackage.package_manager == manager
@@ -358,7 +358,7 @@ class BasePackageCollector:
             return 0
 
         try:
-            with staged, self.db_manager.get_session() as session:
+            with staged, self.db_manager.bulk_session() as session:
                 with write_transaction(session):
                     # Delete existing packages for this manager (bulk, no load).
                     session.query(AvailablePackage).filter(
@@ -541,7 +541,7 @@ class BasePackageCollector:
                 for pkg in packages or []
                 if (pkg.get("name") or "").strip()
             ]
-            with self.db_manager.get_session() as session, write_transaction(session):
+            with self.db_manager.bulk_session() as session, write_transaction(session):
                 if _same_snapshot(session, fingerprint, len(rows)):
                     # The usual case: the catalog has not changed.  Rewriting
                     # ~120,000 identical rows took seconds under SQLite's write

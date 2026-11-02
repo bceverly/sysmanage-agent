@@ -90,18 +90,18 @@ def test_the_catalog_is_parsed_before_the_database_is_touched(manager):
     collector = pcb.BasePackageCollector.__new__(pcb.BasePackageCollector)
     collector.db_manager = manager
     events = []
-    real_get_session = manager.get_session
+    real_bulk_session = manager.bulk_session
 
-    def get_session():
+    def bulk_session():
         events.append("session")
-        return real_get_session()
+        return real_bulk_session()
 
     def packages():
         for package in PACKAGES:
             events.append("parse")
             yield package
 
-    collector.db_manager = MagicMock(get_session=get_session)
+    collector.db_manager = MagicMock(bulk_session=bulk_session)
     in_transaction = []
     real_insert = pcb._insert_rows
 
@@ -155,3 +155,28 @@ class TestDuplicateCheckOffTheLoop(MessageHandlerTestBase):
         asyncio.run(run())
         assert seen["thread"] != seen["loop"]
         self.handler._send_command_acknowledgment.assert_awaited_once_with("m1")
+
+
+def test_another_sessions_commit_cannot_end_a_bulk_transaction(manager):
+    """On the one shared connection the event loop's commits ended the
+    catalog's transaction early, and the rest of its rows went back to a sync
+    each: over an hour on ubiquiti (production, 2026-11-02).  bulk_session has
+    a connection of its own."""
+    with manager.bulk_session() as bulk, write_transaction(bulk):
+        bulk.add(_package())
+        bulk.flush()
+        with manager.get_session() as shared:
+            assert _raw(shared) is not _raw(bulk)
+            shared.query(AvailablePackage).count()
+            shared.commit()  # what the event loop does all the time
+        assert _raw(bulk).in_transaction
+    assert _count(manager) == 1
+
+
+def test_a_bulk_session_survives_its_own_commit(manager):
+    """Its own session.commit() must not hand the connection back (and close
+    it) before write_transaction's COMMIT."""
+    with manager.bulk_session() as bulk, write_transaction(bulk):
+        bulk.add(_package())
+        bulk.commit()
+    assert _count(manager) == 1

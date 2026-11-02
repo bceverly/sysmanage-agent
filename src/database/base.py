@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Optional
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.pool import NullPool, StaticPool
 
 from src.i18n import _
 
@@ -57,6 +57,8 @@ class DatabaseManager:
             },
         )
 
+        self._bulk_engine = None  # bulk_session's own connection, made on use
+
         # Create session factory
         self.session_local = sessionmaker(
             autocommit=False, autoflush=False, bind=self.engine
@@ -93,9 +95,40 @@ class DatabaseManager:
         """Get a database session."""
         return self.session_local()
 
+    @contextmanager
+    def bulk_session(self):
+        """A session on a connection of its own, for one large write.
+
+        Every other session shares ONE connection (StaticPool), so another
+        thread's commit there ended a bulk write's transaction early and the
+        rest of its rows were committed -- and synced -- one at a time: a
+        package catalog took over an hour on ubiquiti's disk while the event
+        loop waited on the same connection (production, 2026-11-02).  On its
+        own connection the transaction is the writer's alone; the others wait
+        for its single commit (``timeout``) instead.  The session is pinned to
+        that one connection until the block ends, so its own commit cannot
+        hand the connection back (and close it) mid-transaction."""
+        if self._bulk_engine is None:
+            self._bulk_engine = create_engine(
+                f"sqlite:///{self.database_path}",
+                echo=False,
+                poolclass=NullPool,
+                connect_args={"check_same_thread": False, "timeout": 30,
+                              "isolation_level": None},
+            )  # fmt: skip
+        connection = self._bulk_engine.connect()
+        session = Session(bind=connection, autoflush=False)
+        try:
+            yield session
+        finally:
+            session.close()
+            connection.close()
+
     def close(self):
         """Close the database connection."""
         self.engine.dispose()
+        if self._bulk_engine is not None:
+            self._bulk_engine.dispose()
         logger.info("Database connection closed")
 
 
@@ -137,9 +170,10 @@ def write_transaction(session):
     dropped the websocket for missed pings (production, ubiquiti, 2026-11-01).
     Inside this block the whole write is one transaction (one sync).
 
-    The connection is shared by every thread, so another thread's statement
-    may land inside this transaction, and another thread's commit may end it
-    early; both are harmless.  Keep the block short: stage the data first.
+    Use it on ``DatabaseManager.bulk_session()``: on the shared connection
+    another thread's commit ended the transaction early and the rest went back
+    to a sync per statement -- NOT harmless on a slow disk (production,
+    ubiquiti, 2026-11-02).  Keep the block short: stage the data first.
     """
     raw = session.connection().connection.driver_connection
     if not raw.in_transaction:
