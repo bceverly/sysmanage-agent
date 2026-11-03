@@ -25,6 +25,10 @@ from src.sysmanage_agent.backup import self_backup
 from src.sysmanage_agent.cloud_backup import layout, operations, runner, tool
 from src.sysmanage_agent.core import capabilities, capability_probes
 
+# icloudpd is offered only on Linux and FreeBSD storage hosts; these tests run a
+# shebang script as the tool and check POSIX modes and paths.
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Unix-only feature")
+
 PASSWORD = "correct-horse-battery-staple"  # nosec B105  # a test value
 CODE = "123456"
 SUDOERS = os.path.join(
