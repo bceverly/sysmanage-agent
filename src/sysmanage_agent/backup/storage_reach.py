@@ -51,10 +51,18 @@ def unavailable_reason(
     return None
 
 
+async def _open(connect: Callable, address: str):
+    """``connect`` to port 2049, given CONNECT_SECONDS at most -- inside a
+    timeout context where Python has one (3.11+), ``wait_for`` on 3.9/3.10."""
+    if hasattr(asyncio, "timeout"):
+        async with asyncio.timeout(CONNECT_SECONDS):
+            return await connect(address, NFS_PORT)
+    return await asyncio.wait_for(connect(address, NFS_PORT), CONNECT_SECONDS)
+
+
 async def check(
     parameters: Dict[str, Any],
     connect: Callable = asyncio.open_connection,
-    timeout: float = CONNECT_SECONDS,
 ) -> Dict[str, Any]:
     """``{"success", "reachable", "address", "port", "error"}`` for the
     address the server sent (port 2049 always)."""
@@ -63,7 +71,7 @@ async def check(
         return {"success": False, "reachable": None, "address": None,
                 "port": NFS_PORT, "error": "invalid_address"}  # fmt: skip
     try:
-        _reader, writer = await asyncio.wait_for(connect(address, NFS_PORT), timeout)
+        _reader, writer = await _open(connect, address)
     except asyncio.TimeoutError:
         return _answer(address, False, "timeout")
     except OSError as error:

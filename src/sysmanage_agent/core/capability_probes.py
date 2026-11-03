@@ -45,6 +45,7 @@ from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
 from src.sysmanage_agent.backup import equip as backup_equip
 from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.backup import storage_reach
+from src.sysmanage_agent.cloud_backup import tool as cloud_tool
 from src.sysmanage_agent.collection import malware_scan
 from src.sysmanage_agent.operations import config_mgmt_locator
 
@@ -172,7 +173,29 @@ _REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
     "equip_backup": backup_equip.unavailable_reason,
     # A TCP connection: every agent but Windows' (no backups there).
     "check_backup_storage": storage_reach.unavailable_reason,
+    # 24.12: where icloudpd can be installed; runs once it has been.
+    "cloud_backup_enable": cloud_tool.enable_unavailable_reason,
+    "cloud_backup_remove": cloud_tool.enable_unavailable_reason,
+    "cloud_backup_run": lambda _lookup, system: _cloud_run_reason(system),
 }
+
+
+def _cloud_run_reason(system: Optional[str]) -> Optional[str]:
+    """icloudpd installed by Enable, in the agent's state directory (a file
+    read: design rule 3)."""
+    # pylint: disable=import-outside-toplevel
+    from src.sysmanage_agent.operations import backup_operations  # noqa: PLC0415
+
+    def read_text(path: str) -> Optional[str]:
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                return handle.read()
+        except OSError:
+            return None
+
+    return cloud_tool.run_unavailable_reason(
+        backup_operations.default_state_dir(), read_text, system
+    )
 
 
 def _distro_ids(os_release_path: str = "/etc/os-release") -> frozenset:

@@ -178,14 +178,15 @@ def write_transaction(session):
     raw = session.connection().connection.driver_connection
     if not raw.in_transaction:
         raw.execute("BEGIN IMMEDIATE")
+    finished = False
     try:
         yield
-    except BaseException:
+        finished = True
+    finally:
+        # In ``finally`` so an early exit (GeneratorExit, an exception) still
+        # ends the transaction: committed only when the block finished.
         if raw.in_transaction:
-            raw.execute("ROLLBACK")
-        raise
-    if raw.in_transaction:
-        raw.execute("COMMIT")
+            raw.execute("COMMIT" if finished else "ROLLBACK")
 
 
 @contextmanager

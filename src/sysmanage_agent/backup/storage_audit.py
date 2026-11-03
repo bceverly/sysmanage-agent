@@ -36,6 +36,7 @@ except ImportError:  # pragma: no cover - Windows
     grp = pwd = None  # type: ignore[assignment]
 
 from src.sysmanage_agent.backup import storage_fs
+from src.sysmanage_agent.backup import storage_space
 
 ERROR, WARNING, OK = "error", "warning", "ok"
 PROTECTED_DIR_MODE = 0o1770
@@ -440,4 +441,17 @@ def audit(
         + filesystem
         + export_findings(system, repository, client, account, own_fs=own_fs)
         + layout_findings(repository, account)
+        + space_findings(repository, read_text)
     )
+
+
+def space_findings(
+    repository: str, read_text: Callable, measure: Optional[Callable] = None
+) -> List[Dict[str, Any]]:
+    """How full the storage under the storage path is, measured here: the
+    server reads it from this finding (``storage_space``), not from the disk
+    inventory, which on ZFS saw only the parent dataset (2026-11-03)."""
+    root = posixpath.dirname(posixpath.normpath(repository))
+    fstype = storage_fs.describe(root, read_text=read_text)["type"]
+    found = (measure or storage_space.measure)(root, fstype)
+    return [_finding("storage_space", OK, **found)] if found else []

@@ -16,6 +16,7 @@ import pytest
 
 from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import restate_contract as contract
+from src.sysmanage_agent.backup import storage_actions_mixin
 from src.sysmanage_agent.operations import backup_operations as ops_module
 from src.sysmanage_agent.operations.backup_operations import BackupOperations
 from tests.backup_ops_support import (  # noqa: F401  pylint: disable=unused-import
@@ -356,7 +357,7 @@ DS = "tank/b"
 @pytest.mark.asyncio
 async def test_a_seal_removes_its_own_seals_past_the_age(ops, agent, monkeypatch):
     now = 1_800_000_000.0
-    monkeypatch.setattr(ops_module.time, "time", lambda: now)
+    monkeypatch.setattr(storage_actions_mixin.time, "time", lambda: now)
     old = f"{DS}@sysmanage-6ed601a3-f093-4506-bc52-7a8ae504f03b"
     recent = f"{DS}@sysmanage-b4f0e030-409e-4861-b743-2e640a04e304"
     real = ops.fake.__call__
@@ -388,7 +389,7 @@ async def test_a_seal_removes_its_own_seals_past_the_age(ops, agent, monkeypatch
 @pytest.mark.asyncio
 async def test_a_failed_removal_never_fails_the_seal(ops, agent, monkeypatch):
     now = 1_800_000_000.0
-    monkeypatch.setattr(ops_module.time, "time", lambda: now)
+    monkeypatch.setattr(storage_actions_mixin.time, "time", lambda: now)
     old = f"{DS}@sysmanage-6ed601a3-f093-4506-bc52-7a8ae504f03b"
     real = ops.fake.__call__
 
@@ -418,7 +419,7 @@ async def test_a_failed_removal_never_fails_the_seal(ops, agent, monkeypatch):
 @pytest.mark.asyncio
 async def test_btrfs_seals_are_recorded_and_only_recorded_ones_expire(ops, monkeypatch):
     clock = {"t": 1_800_000_000.0}
-    monkeypatch.setattr(ops_module.time, "time", lambda: clock["t"])
+    monkeypatch.setattr(storage_actions_mixin.time, "time", lambda: clock["t"])
     seal = {"mode": "btrfs_snapshot", "subvolume": "/srv/backups/restate",
             "snapshot_dir": "/srv/backups/.snapshots", "keep_days": 1}  # fmt: skip
     await ops.backup_configure(_storage_policy(seal))

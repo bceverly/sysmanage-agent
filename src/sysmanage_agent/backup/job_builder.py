@@ -11,7 +11,7 @@ arbitrary path.
 """
 
 import posixpath
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.sysmanage_agent.backup import job_validation as v
 from src.sysmanage_agent.backup import restate_contract as contract
@@ -230,6 +230,44 @@ def _in_place_includes(include: List[str]) -> List[str]:
     return include
 
 
+def _restore_flags(params: Dict[str, Any]) -> Tuple[bool, bool, bool, bool]:
+    """``dry_run``, ``allow_unverified``, ``in_place`` and ``packages``,
+    each a real boolean, and a package restore only in place."""
+    dry_run = params.get("dry_run", True)
+    allow_unverified = params.get("allow_unverified", False)
+    in_place = params.get("in_place", False)
+    packages = params.get("packages", False)
+    if not all(
+        isinstance(x, bool) for x in (dry_run, allow_unverified, in_place, packages)
+    ):
+        raise v.PolicyError(
+            "dry_run, allow_unverified, in_place and packages must be true or false"
+        )
+    if packages and not dry_run and not in_place:
+        # restate installs the packages onto the running system: a staging
+        # directory cannot receive them (Pro+ 24.6).
+        raise v.PolicyError("a package restore runs on this host itself: in place only")
+    return dry_run, allow_unverified, in_place, packages
+
+
+def _restore_paths(
+    params: Dict[str, Any], in_place: bool, state_dir: str
+) -> Dict[str, List[str]]:
+    """The restore's ``include`` / ``exclude`` keys (only those that are set);
+    in place, specific paths only and the agent's own state left out."""
+    include = _patterns(params.get("include"), "include")
+    exclude = _patterns(params.get("exclude"), "exclude")
+    if in_place:
+        include = _in_place_includes(include)
+        exclude = exclude + [state_dir.rstrip("/") or "/"]
+    out: Dict[str, List[str]] = {}
+    if include:
+        out["include"] = include
+    if exclude:
+        out["exclude"] = exclude
+    return out
+
+
 def build_restore_job(
     params: Any,
     *,
@@ -262,20 +300,7 @@ def build_restore_job(
         raise v.PolicyError(NOT_AN_OBJECT)
     run_id = v.check_uuid(params.get("run_id"), "run_id")
     policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
-    dry_run = params.get("dry_run", True)
-    allow_unverified = params.get("allow_unverified", False)
-    in_place = params.get("in_place", False)
-    packages = params.get("packages", False)
-    if not all(
-        isinstance(x, bool) for x in (dry_run, allow_unverified, in_place, packages)
-    ):
-        raise v.PolicyError(
-            "dry_run, allow_unverified, in_place and packages must be true or false"
-        )
-    if packages and not dry_run and not in_place:
-        # restate installs the packages onto the running system: a staging
-        # directory cannot receive them (Pro+ 24.6).
-        raise v.PolicyError("a package restore runs on this host itself: in place only")
+    dry_run, allow_unverified, in_place, packages = _restore_flags(params)
     job: Dict[str, Any] = {
         "command": RESTORE_ACTION,
         "repository": repository,
@@ -293,15 +318,7 @@ def build_restore_job(
         job["packages"] = True
     if params.get("snapshot"):
         job["snapshot"] = v.check_snapshot(params["snapshot"])
-    include = _patterns(params.get("include"), "include")
-    exclude = _patterns(params.get("exclude"), "exclude")
-    if in_place:
-        include = _in_place_includes(include)
-        exclude = exclude + [state_dir.rstrip("/") or "/"]
-    if include:
-        job["include"] = include
-    if exclude:
-        job["exclude"] = exclude
+    job.update(_restore_paths(params, in_place, state_dir))
     # Both may be given: the signer's key checks a signed snapshot (refused,
     # exit 4, when the signature is bad or someone else's), and the server
     # allows an UNSIGNED one only when the operator acknowledged it.

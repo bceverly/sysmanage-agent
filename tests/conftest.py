@@ -298,6 +298,23 @@ def mock_os_operations():
 
 
 @pytest.fixture(autouse=True)
+def _backup_keys_on_linux(monkeypatch):
+    """Backup key staging as on Linux unless a test says otherwise.
+
+    ``key_files`` picks its staging path from ``platform.system()`` at import:
+    Linux stages on /dev/shm and installs under /run, the BSDs mount a RAM
+    file system under /var/run.  The macOS CI runner took the BSD path, so the
+    tests written for the Linux flow failed there (CI, 2026-11-03).  The BSD
+    tests set ``key_files.SYSTEM`` themselves, which overrides this."""
+    from src.sysmanage_agent.backup import (
+        key_files,
+    )  # pylint: disable=import-outside-toplevel
+
+    monkeypatch.setattr(key_files, "SYSTEM", "Linux")
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _isolated_run_ledger(request):
     """Give every test an empty, in-memory run ledger.
 

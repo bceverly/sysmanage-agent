@@ -18,6 +18,8 @@ and it would leave those out too.  So the agent leaves out, by rule:
   pools;
 * caches that rebuild themselves, such as an L2ARC backing file
   (``/var/lib/zfs-l2arc``, 120 GB on nas).
+* the agent's iCloud sign-in sessions (24.12): an Apple session is a
+  credential, and the photos themselves are on the storage path already.
 
 The points are written as a rules file of the policy's own (the same shape
 as the network-mount rules) and refreshed before each capture.
@@ -102,8 +104,11 @@ def leave_out(
     mounts: Iterable[Mount],
     storage_path: str,
     exists=posixpath.exists,
+    private: Iterable[str] = (),
 ) -> List[str]:
-    """The paths a self-backup must leave out, sorted (see the module)."""
+    """The paths a self-backup must leave out, sorted (see the module).
+    ``private``: the agent's own secrets kept beside its state, such as the
+    iCloud sign-in sessions (24.12) -- never copied into a repository."""
     mounts = list(mounts)
     by_point: Dict[str, Mount] = {posixpath.normpath(m.point): m for m in mounts}
     root = by_point.get("/")
@@ -120,6 +125,7 @@ def leave_out(
         if root_pool is None or _pool(mount.source) != root_pool:
             points.add(point)
     points.update(p for p in REBUILDABLE if exists(p))
+    points.update(posixpath.normpath(p) for p in private)
     # Nothing nested under a point already left out.
     kept: List[str] = []
     for point in sorted(points):

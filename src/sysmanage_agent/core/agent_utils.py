@@ -411,6 +411,10 @@ class MessageProcessor:
             "backup_configure": self.agent.backup_ops.backup_configure,
             "equip_backup": self.agent.equip_backup,
             "check_backup_storage": self.agent.check_backup_storage,
+            # 24.12: iCloud Photos to local, on the backup storage host.
+            "cloud_backup_enable": self.agent.cloud_backup_enable,
+            "cloud_backup_run": self.agent.cloud_backup_run,
+            "cloud_backup_remove": self.agent.cloud_backup_remove,
             "backup_run": self.agent.backup_ops.backup_run,
             "backup_restore": self.agent.backup_ops.backup_restore,
             "list_third_party_repositories": self.agent.list_third_party_repositories,

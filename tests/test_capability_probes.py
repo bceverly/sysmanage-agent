@@ -280,6 +280,11 @@ def _restate_present_means_usable(monkeypatch):
     # Only the fake ``which`` decides: a restate installed on the machine
     # running the tests must not be found through the fixed fallback paths.
     monkeypatch.setattr(restate_probe, "FALLBACK_PATHS", ())
+    # A fully equipped storage host has had iCloud backup enabled (24.12);
+    # its absence is tested in test_cloud_backup.py.
+    from src.sysmanage_agent.core import capability_probes as probes
+
+    monkeypatch.setattr(probes, "_cloud_run_reason", lambda system: None)
     # Nor may the machine's NFS client decide: CI runners have none, and a
     # fully equipped host has one (the missing-client case is tested in
     # test_backup_probe.py).

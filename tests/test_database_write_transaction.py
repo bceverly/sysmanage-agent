@@ -180,3 +180,18 @@ def test_a_bulk_session_survives_its_own_commit(manager):
         bulk.add(_package())
         bulk.commit()
     assert _count(manager) == 1
+
+
+def test_an_early_exit_rolls_the_transaction_back(manager):
+    """Closing the block early (GeneratorExit, as when the caller is torn
+    down) ends the transaction with a rollback -- never left open, never
+    committed half-way."""
+    with manager.bulk_session() as bulk:
+        block = write_transaction(bulk)
+        block.__enter__()  # pylint: disable=unnecessary-dunder-call
+        bulk.add(_package())
+        bulk.flush()
+        assert _raw(bulk).in_transaction
+        block.gen.close()  # an early exit at the yield
+        assert not _raw(bulk).in_transaction
+    assert _count(manager) == 0

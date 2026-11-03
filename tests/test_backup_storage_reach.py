@@ -8,6 +8,7 @@ of the address the server sent, and nothing else."""
 # pylint: disable=protected-access
 
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
@@ -28,7 +29,8 @@ class _Writer:
 
 
 def _check(address, connect, timeout=1.0):
-    return asyncio.run(storage_reach.check({"address": address}, connect, timeout))
+    with patch.object(storage_reach, "CONNECT_SECONDS", timeout):
+        return asyncio.run(storage_reach.check({"address": address}, connect))
 
 
 def test_a_reachable_storage_host_is_connected_to_and_let_go():

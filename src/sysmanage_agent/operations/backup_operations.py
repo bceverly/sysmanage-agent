@@ -29,7 +29,6 @@ import platform
 import posixpath
 import shutil
 import tempfile
-import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -40,18 +39,19 @@ from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import key_files
+from src.sysmanage_agent.backup.job_lifecycle_mixin import BackupJobLifecycleMixin
 from src.sysmanage_agent.backup.keys_mixin import BackupKeysMixin
 from src.sysmanage_agent.backup.mount_mixin import BackupMountMixin
 from src.sysmanage_agent.backup.network_rules_mixin import NetworkRulesMixin
 from src.sysmanage_agent.backup.self_backup_mixin import SelfBackupMixin
+from src.sysmanage_agent.backup.storage_actions_mixin import (
+    BackupStorageActionsMixin,
+)
 from src.sysmanage_agent.backup import restate_contract as contract
-from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import storage_prepare
-from src.sysmanage_agent.backup import storage_reaudit
 from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_probe
-from src.sysmanage_agent.backup import seal_retention
 from src.sysmanage_agent.backup import signing
 
 DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
@@ -157,8 +157,26 @@ def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
     return None
 
 
+def _allowed_actions(policy: Optional[Dict[str, Any]]) -> List[str]:
+    """What a ``backup_run`` may start for this policy: its job files'
+    actions, plus prepare and sign on the storage side and the read-only
+    browse jobs where it captures."""
+    allowed = list(policy.get("actions", [])) if policy else []
+    role = (policy or {}).get("role")
+    if role in ("storage", validation.SELF):
+        allowed += [storage_prepare.ACTION, signing.SIGN_ACTION]
+    if role in validation.CAPTURING_ROLES:
+        allowed += list(job_builder.BROWSE_JOBS)
+    return allowed
+
+
 class BackupOperations(  # pylint: disable=too-many-ancestors
-    BackupMountMixin, NetworkRulesMixin, BackupKeysMixin, SelfBackupMixin
+    BackupMountMixin,
+    NetworkRulesMixin,
+    BackupKeysMixin,
+    SelfBackupMixin,
+    BackupJobLifecycleMixin,
+    BackupStorageActionsMixin,
 ):
     """The agent's half of Phase 24: the restate driver."""
 
@@ -421,13 +439,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             return self._refusal("invalid_request", str(error))
         action = parameters.get("action")
         policy = self._policy(policy_id)
-        allowed = list(policy.get("actions", [])) if policy else []
         role = (policy or {}).get("role")
-        if role in ("storage", validation.SELF):
-            allowed += [storage_prepare.ACTION, signing.SIGN_ACTION]
-        if role in validation.CAPTURING_ROLES:
-            allowed += list(job_builder.BROWSE_JOBS)
-        if action not in allowed:
+        if action not in _allowed_actions(policy):
             return self._not_configured()
         if action == "seal":
             return self._start_seal(run_id, policy_id, policy.get("seal") or {})
@@ -438,6 +451,13 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         if action == storage_prepare.ACTION and role in ("storage", validation.SELF):
             self._spawn(self._prepare(run_id, policy_id, policy))
             return {"success": True, "run_id": run_id, "status": "started"}
+        return await self._start_configured(run_id, policy_id, policy, action)
+
+    async def _start_configured(
+        self, run_id: str, policy_id: str, policy: Dict[str, Any], action: str
+    ) -> Dict[str, Any]:
+        """An action with a job file of its own: refresh its rules files
+        (the self and network-mount ones), then start it."""
         if not os.path.exists(contract.job_path(policy_id, action)):
             return self._not_configured()
         await self._refresh_self_rules(policy_id, policy, action)
@@ -517,467 +537,3 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         return await self._start_job(
             run_id, policy_id, job_builder.RESTORE_ACTION, previous, keys
         )
-
-    async def _unit_state(self, unit: str) -> Dict[str, str]:
-        code, out, _err = await self._run(
-            ["systemctl", "show", unit, "-p", "ActiveState", "-p", "Result",
-             "-p", "ExecMainStatus"]
-        )  # fmt: skip
-        if code != 0:
-            return {}
-        state = {}
-        for line in out.splitlines():
-            key, sep, value = line.partition("=")
-            if sep:
-                state[key] = value
-        return state
-
-    async def _job_state(self, record: Dict[str, Any]) -> Tuple[bool, Optional[int]]:
-        """``(running, exit status)`` of a run; the status only from systemd."""
-        if record.get("pidfile"):
-            return job_runner.pidfile_locked(record["pidfile"]), None
-        state = await self._unit_state(record["unit"])
-        try:
-            code: Optional[int] = int(state.get("ExecMainStatus", ""))
-        except ValueError:
-            code = None
-        return state.get("ActiveState") in _ACTIVE, code
-
-    def _new_record(self, policy_id: str, action: str) -> Dict[str, Any]:
-        record = {"policy_id": policy_id, "action": action,
-                  "started_at": _now(), "started": time.time()}  # fmt: skip
-        if self.runner == job_runner.DAEMON:
-            name = contract.job_name(policy_id, action)
-            record["pidfile"] = job_runner.pidfile(self.state_dir, name)
-            record["log"] = job_runner.logfile(self.state_dir, name)
-        else:
-            record["unit"] = contract.unit_name(policy_id, action)
-        return record
-
-    async def _launch(self, record: Dict[str, Any]) -> Tuple[int, str]:
-        if not record.get("pidfile"):
-            argv = ["systemctl", "--no-block", "start", record["unit"]]
-            code, _out, err = await self._run(self._privileged(argv))
-            return code, err
-        restate = restate_probe.locate(shutil.which)
-        if not restate:
-            return 1, _("restate is not installed on this host.")
-        os.makedirs(job_runner.run_dir(self.state_dir), mode=0o700, exist_ok=True)
-        argv = job_runner.daemon_argv(
-            restate,
-            contract.job_path(record["policy_id"], record["action"]),
-            record["pidfile"],
-            record["log"],
-            self._privileged,
-        )
-        code, _out, err = await self._run(argv)
-        return code, err
-
-    async def _start_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self, run_id: str, policy_id: str, action: str, previous: bool = False,
-        keys: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:  # fmt: skip
-        """Start the job; a job that does not start leaves no key behind."""
-        answer = await self._launch_job(run_id, policy_id, action, previous, keys)
-        if not answer.get("success"):
-            await key_files.remove(keys or [], self._run, self._privileged)
-        return answer
-
-    async def _launch_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self, run_id: str, policy_id: str, action: str, previous: bool,
-        keys: Optional[List[str]],
-    ) -> Dict[str, Any]:  # fmt: skip
-        record = self._new_record(policy_id, action)
-        if previous:
-            record["previous"] = True  # the repository before an encrypted one
-        if keys:
-            record["key_files"] = list(keys)  # removed when the run ends
-        if (await self._job_state(record))[0]:
-            return {"success": False, "run_id": run_id, "reason": "busy",
-                    "error": _("That backup job is already running.")}  # fmt: skip
-        for path in (
-            job_builder.result_path(self.state_dir, policy_id, action),
-            job_builder.progress_path(self.state_dir, policy_id, action),
-            record.get("log"),
-        ):
-            if path and os.path.exists(path):
-                os.unlink(path)
-        error = await self._ensure_mount(run_id, policy_id, record)
-        if error:
-            return {"success": False, "run_id": run_id, "reason": "mount_failed",
-                    "error": error}  # fmt: skip
-        if action == "capture":
-            error = await self._preflight(policy_id)
-            if error:
-                await self._release_mount(run_id, policy_id, record)
-                return {"success": False, "run_id": run_id,
-                        "reason": "preflight_failed", "error": error}  # fmt: skip
-        code, err = await self._launch(record)
-        if code != 0:
-            await self._release_mount(run_id, policy_id, record)
-            return {"success": False, "run_id": run_id, "reason": "start_failed",
-                    "error": err or _("The backup job could not be started.")}  # fmt: skip
-        inflight = self._load(INFLIGHT_FILE)
-        inflight[run_id] = record
-        self._save(INFLIGHT_FILE, inflight)
-        self._spawn(self._watch(run_id, record, resumed=False))
-        return {"success": True, "run_id": run_id, "status": "started"}
-
-    # ------------------------------------------------------------------
-    # the host's own export, mounted only while a job runs
-    # ------------------------------------------------------------------
-
-    # ------------------------------------------------------------------
-    # seal: the NAS snapshots its own dataset
-    # ------------------------------------------------------------------
-
-    def _start_seal(
-        self, run_id: str, policy_id: str, seal: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        self._spawn(self._seal(run_id, policy_id, seal))
-        return {"success": True, "run_id": run_id, "status": "started"}
-
-    async def _seal(self, run_id: str, policy_id: str, seal: Dict[str, Any]) -> None:
-        started = _now()
-        code: Optional[int] = 0
-        message = ""
-        argv = seal_argv(seal, run_id)
-        result: Dict[str, Any] = {}
-        if argv:
-            code, _out, message = await self._run(self._privileged(argv))
-        if code == 0 and argv and seal.get("mode") == "btrfs_snapshot":
-            ledger = self._load(SEALS_FILE)
-            ledger[argv[-1]] = time.time()
-            self._save(SEALS_FILE, ledger)
-        if code == 0 and seal.get("keep_days"):
-            result = await self._expire_seals(seal)
-            message = message or "; ".join(result.get("errors", []))
-        if message:
-            result["message"] = message
-        status = "ok" if code == 0 else "failed"
-        await self._report(
-            {"run_id": run_id, "policy_id": policy_id, "action": "seal",
-             "status": status, "exit": code, "result": result or None,
-             "started_at": started, "finished_at": _now()}  # fmt: skip
-        )
-
-    async def _expire_seals(self, seal: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove this agent's seals older than ``keep_days`` (never the
-        newest).  A failure is reported but never fails the seal itself."""
-        keep, now = seal["keep_days"], time.time()
-        if seal["mode"] == "zfs_snapshot":
-            zfs = _first(ZFS_PATHS)
-            code, out, err = await self._run(
-                seal_retention.zfs_list_argv(zfs, seal["dataset"])
-            )
-            if code != 0:
-                return {"errors": [_("Could not list the sealed snapshots: %s") % err]}
-            seals = seal_retention.zfs_seals(out, seal["dataset"])
-            tool = zfs
-        else:
-            ledger = self._load(SEALS_FILE)
-            seals = seal_retention.btrfs_seals(ledger, seal["snapshot_dir"])
-            tool = _first(BTRFS_PATHS)
-        removed, errors = [], []
-        for name in seal_retention.expired(seals, keep, now):
-            code, _out, err = await self._run(
-                self._privileged(seal_retention.delete_argv(seal["mode"], tool, name))
-            )
-            if code == 0:
-                removed.append(name)
-            else:
-                errors.append(_("Could not remove the old sealed snapshot %(name)s: %(error)s")
-                              % {"name": name, "error": err or code})  # fmt: skip
-        if seal["mode"] == "btrfs_snapshot" and removed:
-            ledger = self._load(SEALS_FILE)
-            for path in removed:
-                ledger.pop(path, None)
-            self._save(SEALS_FILE, ledger)
-        return {"seals_removed": len(removed), "seals_kept": len(seals) - len(removed),
-                "errors": errors}  # fmt: skip
-
-    # ------------------------------------------------------------------
-    # prepare: the storage host gives one host its own export
-    # ------------------------------------------------------------------
-
-    async def _zfs_datasets(self) -> Dict[str, str]:
-        zfs = shutil.which("zfs") or _first(ZFS_PATHS)
-        if not os.path.exists(zfs):
-            return {}
-        code, out, _err = await self._run(
-            [zfs, "list", "-H", "-t", "filesystem", "-o", "name,mountpoint"]
-        )
-        return storage_prepare.zfs_datasets(out) if code == 0 else {}
-
-    @staticmethod
-    def _is_subvolume(path: str) -> bool:
-        try:
-            return os.stat(path).st_ino == storage_fs.BTRFS_SUBVOLUME_ROOT_INODE
-        except OSError:
-            return False
-
-    async def _prepare_steps(self, policy_id: str, steps: Dict[str, Any]) -> None:
-        tools = {storage_prepare.ZFS: _first(ZFS_PATHS),
-                 storage_prepare.BTRFS: _first(BTRFS_PATHS)}  # fmt: skip
-        # The dataset / subvolume / directory first, then its export, then
-        # its ownership (chown needs the new mount, not the directory under it).
-        systemd = host_mount.systemd_running()
-        for argv in steps["commands"]:
-            argv = [tools.get(argv[0], argv[0])] + argv[1:]
-            if argv[1:2] == ["create"] and steps["kind"] == storage_prepare.ZFS:
-                argv = storage_prepare.in_host_namespace(
-                    argv, platform.system(), systemd
-                )
-            await self._checked(argv)
-        if steps.get("zfs_dataset"):
-            await self._mount_host_wide(steps["zfs_dataset"], tools[storage_prepare.ZFS],
-                                        steps["repository"], systemd)  # fmt: skip
-        if steps["export_file"]:
-            path, text = steps["export_file"]
-            await self._install_root_file(text, path)
-            await self._checked(["exportfs", "-ra"])
-        for argv in steps["protect"]:
-            await self._checked(argv)
-        self.logger.info(
-            "Prepared backup storage for policy %s (%s)", policy_id, steps["kind"]
-        )
-
-    async def _mount_host_wide(
-        self, dataset: str, zfs: str, repository: str, systemd: bool
-    ) -> None:
-        """The dataset must be mounted where NFS exports it -- the host's
-        mount table -- before anything is set on it: mount it there if it is
-        not (one an older agent made in its own namespace), and stop if it
-        still is not, rather than prepare the directory beneath it."""
-
-        def mounted() -> bool:
-            text = _read_text(host_mount.HOST_MOUNTINFO) or _read_text(
-                host_mount.SELF_MOUNTINFO
-            )
-            return storage_prepare.zfs_mounted(repository, text)
-
-        if not mounted():
-            await self._checked(storage_prepare.in_host_namespace(
-                [zfs, "mount", dataset], platform.system(), systemd))  # fmt: skip
-        if not mounted():
-            raise PermissionError(
-                _("%(dataset)s is not mounted at %(path)s on this host") % {
-                    "dataset": dataset, "path": repository}  # fmt: skip
-            )
-
-    async def _checked(self, argv: List[str]) -> None:
-        code, _out, err = await self._run(self._privileged(argv))
-        if code != 0:
-            raise PermissionError(f"{' '.join(argv)}: {err or code}")
-
-    async def _prepare(
-        self, run_id: str, policy_id: str, policy: Dict[str, Any]
-    ) -> None:
-        started = _now()
-        result: Dict[str, Any] = {}
-        try:
-            mount_point = policy.get("mount_point") or posixpath.dirname(
-                policy["repository"]
-            )
-            steps = storage_prepare.plan(
-                dict(policy, policy_id=policy_id),
-                system=platform.system(),
-                fstype=storage_fs.describe(mount_point, read_text=_read_text)["type"],
-                datasets=await self._zfs_datasets(),
-                is_subvolume=self._is_subvolume,
-            )
-            await self._prepare_steps(policy_id, steps)
-            status, code = "ok", 0
-            result = {"kind": steps["kind"]}
-        except storage_prepare.PrepareRefused as refused:
-            status, code = "failed", 1
-            result = {"reason": refused.code, "errors": [str(refused)]}
-        except OSError as error:
-            status, code = "failed", 1
-            result = {"reason": "command_failed", "errors": [str(error)]}
-            self.logger.error(
-                _("Could not prepare backup storage for policy %s: %s"),
-                policy_id,
-                error,
-            )
-        await self._report(
-            {"run_id": run_id, "policy_id": policy_id,
-             "action": storage_prepare.ACTION, "status": status, "exit": code,
-             "result": result, "started_at": started, "finished_at": _now()}  # fmt: skip
-        )
-
-    # ------------------------------------------------------------------
-    # watching a run
-    # ------------------------------------------------------------------
-
-    def _spawn(self, coroutine) -> None:
-        task = asyncio.ensure_future(coroutine)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
-
-    def resume_in_flight(self) -> None:
-        """After a restart: watch every run the last agent left running.
-        Once per process -- the task loop that calls it runs per connection."""
-        if self._resumed:
-            return
-        self._resumed = True
-        # Key files a crash left behind (no running job owns them) go first.
-        self._spawn(
-            key_files.sweep(self._load(INFLIGHT_FILE), self._run, self._privileged)
-        )
-        for run_id, record in self._load(INFLIGHT_FILE).items():
-            if isinstance(record, dict) and (
-                record.get("unit") or record.get("pidfile")
-            ):
-                self._spawn(self._watch(run_id, record, resumed=True))
-        storage_reaudit.schedule(self.reaudit_storage)
-
-    async def _sweep_markers(self, repository: str) -> None:
-        """Remove empty ``.sysmanage-preflight-*`` files an older agent's
-        pre-flight check left at the top of a host's repository directory.
-        The host cannot (its access is append-only), and restate will not
-        create a repository in a directory that holds them (production,
-        ubiquiti, 2026-10-29).  Only zero-byte files of that exact name, one
-        level deep; anything else is left alone."""
-        code, _out, err = await self._run(self._privileged(
-            ["find", repository, "-maxdepth", "1", "-type", "f",
-             "-name", ".sysmanage-preflight-*", "-size", "0", "-delete"]
-        ))  # fmt: skip
-        if code != 0:
-            self.logger.warning("Could not sweep stale pre-flight files in %s: %s",
-                                repository, err.strip())  # fmt: skip
-
-    async def reaudit_storage(self) -> int:
-        """Send every storage policy's audit, and every policy's restate
-        version, now (start, daily, Request Host Data)."""
-        policies = self._load(POLICIES_FILE)
-        loop = asyncio.get_running_loop()
-        features = await loop.run_in_executor(None, self._features) or {}
-        return await storage_reaudit.send_all(
-            policies, self._audit, self._send, features.get("version")
-        )
-
-    def _new_progress(
-        self, record: Dict[str, Any], offset: int
-    ) -> Tuple[Optional[dict], int]:
-        path = job_builder.progress_path(
-            self.state_dir, record["policy_id"], record["action"]
-        )
-        try:
-            with open(path, "r", encoding="utf-8") as handle:
-                handle.seek(offset)
-                lines = handle.read().splitlines()
-                return contract.last_progress(lines), handle.tell()
-        except OSError:
-            return None, offset
-
-    async def _watch(self, run_id: str, record: Dict[str, Any], resumed: bool) -> None:
-        seen_active, offset, last_sent = resumed, 0, 0.0
-        while True:
-            await asyncio.sleep(POLL_SECONDS)
-            active, unit_exit = await self._job_state(record)
-            progress, offset = self._new_progress(record, offset)
-            if progress and time.time() - last_sent >= PROGRESS_EVERY_SECONDS:
-                last_sent = time.time()
-                await self._send("backup_progress", {"run_id": run_id,
-                    "policy_id": record["policy_id"], "action": record["action"],
-                    "progress": progress})  # fmt: skip
-            seen_active = seen_active or active
-            waited = time.time() - float(record.get("started") or 0)
-            # A result file means it ran (the old one was cleared before the
-            # start): a job quicker than one poll need not wait out the grace.
-            ended = seen_active or os.path.exists(
-                job_builder.result_path(
-                    self.state_dir, record["policy_id"], record["action"]
-                )
-            )
-            if not active and (ended or waited > START_GRACE_SECONDS):
-                await self._finish(run_id, record, unit_exit)
-                return
-
-    async def _finish(
-        self, run_id: str, record: Dict[str, Any], unit_exit: Optional[int]
-    ) -> None:
-        text = _read_text(
-            job_builder.result_path(
-                self.state_dir, record["policy_id"], record["action"]
-            )
-        )
-        result = contract.parse_result(text) if text else None
-        status, code = contract.outcome(result, unit_exit)
-        if result is None and record.get("log"):
-            # No result file: what restate said is the only clue to why.
-            tail = job_runner.log_tail(record["log"])
-            result = {"message": tail} if tail else None
-        if result is None:
-            # systemd keeps restate's output in the journal, which the
-            # agent does not read; say where the reason is.
-            unit = contract.unit_name(record["policy_id"], record["action"])
-            result = {"message": _(
-                "restate stopped (exit %(code)s) before writing a result; "
-                "see journalctl -u %(unit)s on this host"
-            ) % {"code": code, "unit": unit}}  # fmt: skip
-        features = self._features() or {}
-        await self._report(
-            {"run_id": run_id, "policy_id": record["policy_id"], "action": record["action"],
-             "status": status, "exit": code, "result": result,
-             "started_at": record.get("started_at"), "finished_at": _now(),
-             "restate_version": features.get("version")},  # fmt: skip
-            then=lambda: self._forget(run_id),
-        )
-        await key_files.remove(
-            record.get("key_files") or [], self._run, self._privileged
-        )
-        await self._release_mount(run_id, record["policy_id"], record)
-
-    def _audit(self, policy: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
-        """The storage audit for one repository; None if it cannot run."""
-        try:
-            return storage_audit.audit(
-                policy["repository"],
-                client=policy.get("client_address"),
-                account=policy.get("service_account") or "restate",
-                read_text=_read_text,
-            )
-        except Exception as error:  # pylint: disable=broad-except
-            self.logger.warning(_("The storage audit could not run: %s"), error)
-            return None
-
-    def _forget(self, run_id: str) -> None:
-        inflight = self._load(INFLIGHT_FILE)
-        inflight.pop(run_id, None)
-        self._save(INFLIGHT_FILE, inflight)
-
-    async def _report(self, data: Dict[str, Any], then=None) -> None:
-        # The storage side reports its audit with every job, so the server's
-        # picture of the append-only set-up never goes stale.
-        policy = self._policy(str(data.get("policy_id") or ""))
-        if policy and policy.get("role") == "storage":
-            data = dict(data, storage_audit=self._audit(policy))
-        await self._send("backup_result", data, then)
-
-    async def _send(self, message_type: str, data: Dict[str, Any], then=None) -> None:
-        """Queue a report; one that cannot be queued is retried, never dropped.
-        A full disk refuses the agent's queue: beast's capture result was lost
-        that way and its run sat "running" for 12 hours (production,
-        2026-11-01).  ``then`` runs once it is queued -- a run's in-flight
-        record stays until then, so a restart reports it again."""
-        payload = dict(data)
-        approval = self.agent.registration_manager.get_host_approval_from_db()
-        if approval:
-            payload["host_id"] = str(approval.host_id)
-        message = self.agent.create_message(message_type, payload)
-        if await self.agent.send_message(message):
-            if then:
-                then()
-            return
-        self.logger.warning(_("Could not queue the backup report"))
-        self._spawn(self._send_later(message, then))
-
-    async def _send_later(self, message: Dict[str, Any], then) -> None:
-        await asyncio.sleep(RESEND_SECONDS)
-        while not await self.agent.send_message(message):
-            await asyncio.sleep(RESEND_SECONDS)
-        self.logger.info("Queued backup report %s", message.get("message_id"))
-        if then:
-            then()

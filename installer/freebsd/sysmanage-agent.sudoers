@@ -154,3 +154,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/setfacl ^-a 0 (group@:D::deny|owner@:d:
 # ``zfs destroy -r <dataset>@sysmanage-<run id>`` (recursive: every host's
 # child dataset was sealed too), and nothing else can be destroyed.
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^destroy -r [A-Za-z0-9_.:/-]+@sysmanage-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+# iCloud Photos to local (server ROADMAP 24.12), started by an administrator
+# from the Backups page ("Enable iCloud backup", then each account's first
+# download): the cloud root and each account's place become ZFS child
+# datasets of the storage path's dataset, so the target's recursive seal
+# covers them.  Exactly ``zfs create <dataset>/cloud-photos`` and
+# ``zfs create <dataset>/cloud-photos/icloud-<8 hex>`` -- no option, no other
+# name.  (Ownership uses the chown/chmod grants above; icloudpd itself runs
+# as the agent's account, never through sudo.)
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^create [A-Za-z0-9_.:/-]+/cloud-photos(/icloud-[0-9a-f]{8})?$

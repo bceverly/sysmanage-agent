@@ -28,7 +28,7 @@ from sqlalchemy import func
 
 from src.database.base import get_database_manager, write_transaction
 from src.database.models import AvailablePackage, SentPackageSnapshot
-from src.i18n import _
+from src.i18n import N_, _
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 # small queries, which then stall the websocket keepalive (ubiquiti,
 # 2026-10-31).  A Core executemany per batch is several times faster.
 _INSERT_BATCH = 1000
+_STORE_FAILED = N_("Failed to store packages for %s: %s")
 
 
 def _same_snapshot(session, fingerprint: str, count: int) -> bool:
@@ -331,7 +332,7 @@ class BasePackageCollector:
                 session.commit()
 
         except Exception as error:
-            logger.exception(_("Failed to store packages for %s: %s"), manager, error)
+            logger.exception(_(_STORE_FAILED), manager, error)
             return 0
 
         return stored_count
@@ -354,7 +355,7 @@ class BasePackageCollector:
         try:
             staged, stored_count = _stage_packages(package_iter, batch_size)
         except Exception as error:  # pylint: disable=broad-exception-caught
-            logger.exception(_("Failed to store packages for %s: %s"), manager, error)
+            logger.exception(_(_STORE_FAILED), manager, error)
             return 0
 
         try:
@@ -383,7 +384,7 @@ class BasePackageCollector:
                 session.commit()
 
         except Exception as error:  # pylint: disable=broad-exception-caught
-            logger.exception(_("Failed to store packages for %s: %s"), manager, error)
+            logger.exception(_(_STORE_FAILED), manager, error)
             return 0
 
         return stored_count

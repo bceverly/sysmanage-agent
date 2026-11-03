@@ -67,10 +67,15 @@ SUFFIXES = HASH_COMMENT | SLASH_COMMENT
 HEAD_LINES = 15
 
 # Not ours to label: third-party or generated files kept in the tree.
+# oss_vendor/: byte-for-byte copies of open-source (AGPL) SysManage modules,
+# vendored for the engines' parity tests (backup_engine/test_oss_parity.py
+# checks them against the server's by hash) -- relabeling them would break
+# that and misstate their license.
 EXEMPT = re.compile(
     r"(^|/)("
     r"node_modules|\.venv[^/]*|venv|dist|build|coverage|htmlcov|__pycache__"
     r"|playwright-report|test-results|\.vagrant|plugin-dist|\.runtime-logs"
+    r"|oss_vendor"
     r")/"
     r"|\.min\.js$|(^|/)mockServiceWorker\.js$"
 )

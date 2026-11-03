@@ -440,6 +440,36 @@ class MiscDelegator:
 
         return await storage_reach.check(parameters)
 
+    def _cloud_backup(self):
+        """The iCloud Photos commands (24.12), made on first use."""
+        ops = getattr(self, "_cloud_backup_ops", None)
+        if ops is None:
+            # pylint: disable=import-outside-toplevel
+            from src.sysmanage_agent.cloud_backup import operations  # noqa: PLC0415
+            from src.sysmanage_agent.operations import (
+                backup_operations,
+            )  # noqa: PLC0415
+
+            ops = operations.CloudBackupOperations(
+                self, backup_operations.default_state_dir()
+            )
+            self._cloud_backup_ops = (
+                ops  # pylint: disable=attribute-defined-outside-init
+            )
+        return ops
+
+    async def cloud_backup_enable(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """ "Enable iCloud backup" on the backup storage host (24.12)."""
+        return await self._cloud_backup().cloud_backup_enable(parameters)
+
+    async def cloud_backup_run(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """One iCloud account's job: sign in, download, list libraries."""
+        return await self._cloud_backup().cloud_backup_run(parameters)
+
+    async def cloud_backup_remove(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Forget an iCloud account's sign-in (its photos are kept)."""
+        return await self._cloud_backup().cloud_backup_remove(parameters)
+
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Collect system diagnostics and send to server.  A backup storage
         host also re-sends its storage audit (Request Host Data is how an

@@ -184,6 +184,11 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     # Its own group: asked before restate is installed, and on every agent
     # that could back up.
     "backup_reach": ("check_backup_storage",),
+    # 24.12 iCloud Photos to local, on the backup storage host.  Enabling
+    # (and forgetting an account) wherever icloudpd can be installed; runs
+    # once Enable has installed it -- a missing tool is the host's to fix.
+    "cloud_backup_enable": ("cloud_backup_enable", "cloud_backup_remove"),
+    "cloud_backup": ("cloud_backup_run",),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",

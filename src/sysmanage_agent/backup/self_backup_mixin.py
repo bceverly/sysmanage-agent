@@ -41,7 +41,14 @@ class SelfBackupMixin:
         mounts = await asyncio.get_running_loop().run_in_executor(
             None, self_backup.read_mounts, platform.system()
         )
-        return self_backup.leave_out(mounts, policy["mount_point"])
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.cloud_backup import layout  # noqa: PLC0415
+
+        return self_backup.leave_out(
+            mounts,
+            policy["mount_point"],
+            private=(layout.sessions_root(self.state_dir),),
+        )
 
     async def _apply_self_rules(self, policy: Dict[str, Any]) -> List[str]:
         """Write (or, for another role, remove) the self rules file; the

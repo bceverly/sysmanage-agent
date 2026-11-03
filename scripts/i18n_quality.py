@@ -29,7 +29,11 @@ translations and the defects a scan found in sysmanage-docs that day:
   SHAPE     a value that is not a translation at all: a Python list literal
             ("['Main Config File', 'Arquivo de Configuração Principal']"), a
             non-string JSON leaf, or a "[MISSING: ...]" / "[... MANQUANT: ...]"
-            marker a pipeline wrote and a later run translated.
+            marker a pipeline wrote and a later run translated.  Also an
+            identifier slug in place of prose: "Failed Rules" came back as
+            "_failed_rules_" (Arabic, 2026-11-03) -- and the model verifier
+            PASSED it, because a slug of the source embeds right next to the
+            source.  Only a structural rule catches that.
 
   PLACEHOLDERS  an interpolation token added, dropped or altered.
 
@@ -127,6 +131,30 @@ PLACEHOLDER = re.compile(
 _MARKER = re.compile(r"^\s*\[[^\]]*(?:MISSING|MANQUANT|FEHLT|FALTA|MANCANTE)\b[^\]]*:")
 _LIST_LITERAL = re.compile(r"^\s*\[\s*['\"]")
 
+# A snake_case slug standing in for prose: "_failed_rules_", "_passed_",
+# "_agent_not_found_or_unreachable_", "nome_de_usuário".  The value is one
+# run of word characters (letters of ANY script, digits, underscores) with at
+# least one underscore and no space.  A source that is itself such an
+# identifier ("hardware_updated", a slug msgid) is exempt: there an identical
+# value is correct.  Identifiers the SOURCE contains are removed from the value
+# first, because Chinese and Japanese write no spaces: "dest_path是必需的" is
+# one run of word characters, and a correct sentence.
+_SLUG = re.compile(r"^\w*_\w*$")
+_IDENT = re.compile(r"\w*_\w*")
+
+
+def is_slug(source: str, value: str) -> bool:
+    """True when ``value`` is an identifier slug standing in for prose."""
+    if _SLUG.match(source.strip()):
+        return False
+    for ident in sorted(set(_IDENT.findall(source)), key=len, reverse=True):
+        if ident.strip("_"):
+            value = value.replace(ident, "")
+    # Edge punctuation does not make it prose: "La_federazione_richiede_una_
+    # licenza_Enterprise." (Italian, 2026-11-03) carried a final period.
+    value = value.strip(" .,:;!?\"'()[]\u3002\uff0c\uff1a")
+    return bool(_SLUG.match(value)) and any(ch.isalpha() for ch in value)
+
 
 def english_words(lang: str, value: str) -> List[str]:
     """English function words found in ``value`` outside code and quotes."""
@@ -170,6 +198,8 @@ def problem(lang: str, source: str, value) -> Optional[str]:
         return "a list literal, not a translation"
     if _MARKER.match(value) and not _MARKER.match(source):
         return "a pipeline marker, not a translation"
+    if is_slug(source, value):
+        return "an identifier slug, not a translation"
     if placeholders(value) != placeholders(source):
         want = sorted(placeholders(source).elements())
         have = sorted(placeholders(value).elements())
