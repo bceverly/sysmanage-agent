@@ -485,6 +485,8 @@ def test_enable_installs_prepares_and_reports(tmp_path, monkeypatch):
     _policies(tmp_path, "/srv/backups/restate")
     agent = _Agent()
     ops = operations.CloudBackupOperations(agent, str(tmp_path))
+    # icloudpd is offered only on Linux and FreeBSD; this runs on every CI OS.
+    monkeypatch.setattr(tool, "method", lambda *_a, **_k: "venv")
     monkeypatch.setattr(tool, "install", lambda *_a, **_k: {
         "version": "1.32.3", "method": "venv", "path": "/x"})  # fmt: skip
     made = []

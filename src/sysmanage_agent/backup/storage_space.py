@@ -97,9 +97,16 @@ def zfs_space(
     }
 
 
+# Windows has no os.statvfs; a default argument is evaluated at import, so
+# naming it directly broke importing this module (and the agent) there.
+_STATVFS: Optional[Callable] = getattr(os, "statvfs", None)
+
+
 def statvfs_space(
-    path: str, statvfs: Callable = os.statvfs
+    path: str, statvfs: Optional[Callable] = _STATVFS
 ) -> Optional[Dict[str, Any]]:
+    if statvfs is None:
+        return None
     try:
         st = statvfs(path)
     except OSError:
@@ -116,7 +123,7 @@ def statvfs_space(
 
 
 def measure(path: str, fstype: Optional[str], run: Callable = _run,
-            statvfs: Callable = os.statvfs) -> Optional[Dict[str, Any]]:  # fmt: skip
+            statvfs: Optional[Callable] = _STATVFS) -> Optional[Dict[str, Any]]:  # fmt: skip
     """The storage path's space: ZFS-aware where it is ZFS, else statvfs."""
     if not path:
         return None
