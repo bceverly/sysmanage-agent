@@ -60,6 +60,12 @@ def network_rules_path(policy_id: str) -> str:
     return posixpath.join(RULES_DIR, f"{policy_id}.netmounts.rules")
 
 
+def self_rules_path(policy_id: str) -> str:
+    """The storage host's own backup's rules file (24.13, see self_backup):
+    the backups, the data pools and rebuildable caches, left out."""
+    return posixpath.join(RULES_DIR, f"{policy_id}.self.rules")
+
+
 def policy_rules(policy: Dict[str, Any]) -> Optional[str]:
     """The rules file for the operator's paths, or None when there are none.
 
@@ -165,6 +171,9 @@ def _action_keys(
         files = [network_rules_path(policy["policy_id"])] if network_rules else []
         if policy_rules(policy):
             files.append(rules_path(policy["policy_id"]))
+        if policy.get("role") == v.SELF:
+            # Last, so it wins: no operator keep brings the backups back in.
+            files.append(self_rules_path(policy["policy_id"]))
         if files:
             job["rules"] = list(job.get("rules") or []) + files
     job["command"] = action

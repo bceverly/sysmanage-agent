@@ -69,7 +69,8 @@ async def _payload(
         if found is not None:
             payload["storage_audit"] = found
         return payload
-    return payload if policy.get("role") == "host" and version else None
+    # A host, or the storage host's own backup (24.13): its version alone.
+    return payload if policy.get("role") in ("host", "self") and version else None
 
 
 # A strong reference to each running re-audit (an unreferenced task can be

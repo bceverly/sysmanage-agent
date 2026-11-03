@@ -66,7 +66,8 @@ def test_runners_by_platform():
     assert job_runner.runner_for("FreeBSD") == job_runner.DAEMON
     for system in ("OpenBSD", "NetBSD", "Darwin", "Windows", "", None):
         assert job_runner.runner_for(system) is None
-    assert job_runner.ROLES[job_runner.DAEMON] == ("storage",)
+    # A FreeBSD storage host may also back up its own OS (24.13).
+    assert job_runner.ROLES[job_runner.DAEMON] == ("storage", "self")
 
 
 def test_a_pidfile_is_running_only_while_locked(tmp_path):
@@ -244,7 +245,7 @@ def test_the_state_directory_follows_the_platform(agent, monkeypatch):
     assert ops_module.BackupOperations(agent).state_dir == "/var/lib/sysmanage-agent"
 
 
-def test_the_freebsd_sudoers_rule_admits_exactly_the_storage_jobs():
+def test_the_freebsd_sudoers_rule_admits_exactly_the_storage_and_self_jobs():
     """The sudoers regex and the agent's job paths must not drift apart."""
     import re  # pylint: disable=import-outside-toplevel
 
@@ -264,8 +265,19 @@ def test_the_freebsd_sudoers_rule_admits_exactly_the_storage_jobs():
     run = [a for a in job_validation.STORAGE_ACTIONS if a != "seal"] + ["sign"]
     for action in run:
         assert re.fullmatch(pattern, f"run {contract.job_path(PID, action)}"), action
-    for action in job_validation.HOST_ACTIONS:
-        assert not re.fullmatch(pattern, f"run {contract.job_path(PID, action)}")
+    # The storage host's own backup (24.13): its capture side, restores and
+    # browsing run there too -- and nothing else.
+    for action in list(job_validation.HOST_ACTIONS) + [
+        "restore",
+        "list",
+        "status",
+        "diff",
+    ]:
+        assert re.fullmatch(pattern, f"run {contract.job_path(PID, action)}"), action
+    for action in ("install", "baseline", "keys"):
+        assert not re.fullmatch(
+            pattern, f"run {contract.job_path(PID, action)}"
+        ), action
     good = f"run {contract.job_path(PID, 'prune')}"
     for bad in (good + " --result /etc/master.passwd", "--result /x " + good,
                 good.replace(PID, "../" + PID), good.replace(".d/", "Xd/")):  # fmt: skip

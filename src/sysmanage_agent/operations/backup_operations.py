@@ -43,6 +43,7 @@ from src.sysmanage_agent.backup import key_files
 from src.sysmanage_agent.backup.keys_mixin import BackupKeysMixin
 from src.sysmanage_agent.backup.mount_mixin import BackupMountMixin
 from src.sysmanage_agent.backup.network_rules_mixin import NetworkRulesMixin
+from src.sysmanage_agent.backup.self_backup_mixin import SelfBackupMixin
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
@@ -156,7 +157,9 @@ def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
     return None
 
 
-class BackupOperations(BackupMountMixin, NetworkRulesMixin, BackupKeysMixin):
+class BackupOperations(  # pylint: disable=too-many-ancestors
+    BackupMountMixin, NetworkRulesMixin, BackupKeysMixin, SelfBackupMixin
+):
     """The agent's half of Phase 24: the restate driver."""
 
     def __init__(self, agent_instance, state_dir: Optional[str] = None):
@@ -322,6 +325,7 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin, BackupKeysMixin):
         await self._apply_rules(policy)
         features = self._features() or {}
         network_rules, network = await self._apply_network_rules(policy, features)
+        self_points = await self._apply_self_rules(policy)
         jobs = job_builder.build_jobs(
             policy,
             state_dir=self.state_dir,
@@ -373,27 +377,9 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin, BackupKeysMixin):
             # it, and re-sends the files when a later job reports another).
             "restate_version": features.get("version"),
         }
-        if policy["role"] == "host":
-            # The quiesce hooks this host's restate finds present (2.1+): the
-            # server offers them in the policy dialog.
-            reply["hooks"] = contract.present_hooks(features)
-            reply["abilities"] = contract.host_abilities(features)
-            # The network shares left out of this host's backup.
-            reply["network_mounts"] = network
-        if policy["role"] == "storage":
-            await self._sweep_markers(policy["repository"])
-            reply["abilities"] = contract.storage_abilities(features)
-            # Can this filesystem seal at all?  The server warns when not.
-            reply["storage_fs"] = storage_fs.describe(
-                policy["mount_point"], read_text=_read_text
-            )
-            reply["storage_audit"] = self._audit(policies[policy_id])
-            # Where a host mounts its repository over NFSv4 (the server
-            # sends it to the host, which mounts it only while a job runs).
-            reply["nfs_path"] = storage_audit.client_path(
-                platform.system(), policy["repository"]
-            )
-        return reply
+        return await self._configure_reply(
+            policy, policies[policy_id], reply, network, self_points
+        )
 
     async def _apply_rules(self, policy: Dict[str, Any]) -> None:
         """Install the policy's rules file, or remove one it no longer needs."""
@@ -431,9 +417,10 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin, BackupKeysMixin):
         action = parameters.get("action")
         policy = self._policy(policy_id)
         allowed = list(policy.get("actions", [])) if policy else []
-        if policy and policy.get("role") == "storage":
+        role = (policy or {}).get("role")
+        if role in ("storage", validation.SELF):
             allowed += [storage_prepare.ACTION, signing.SIGN_ACTION]
-        if policy and policy.get("role") == "host":
+        if role in validation.CAPTURING_ROLES:
             allowed += list(job_builder.BROWSE_JOBS)
         if action not in allowed:
             return self._not_configured()
@@ -441,13 +428,14 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin, BackupKeysMixin):
             return self._start_seal(run_id, policy_id, policy.get("seal") or {})
         if action in job_builder.BROWSE_JOBS:
             return await self._start_browse(run_id, policy_id, policy, parameters)
-        if action == signing.SIGN_ACTION and policy.get("role") == "storage":
+        if action == signing.SIGN_ACTION and role in ("storage", validation.SELF):
             return await self._start_sign(run_id, policy_id, policy, parameters)
-        if action == storage_prepare.ACTION and policy.get("role") == "storage":
+        if action == storage_prepare.ACTION and role in ("storage", validation.SELF):
             self._spawn(self._prepare(run_id, policy_id, policy))
             return {"success": True, "run_id": run_id, "status": "started"}
         if not os.path.exists(contract.job_path(policy_id, action)):
             return self._not_configured()
+        await self._refresh_self_rules(policy_id, policy, action)
         excluded = await self._refresh_network_rules(policy_id, policy, action)
         if excluded is not None:
             policies = self._load(POLICIES_FILE)
@@ -498,7 +486,7 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin, BackupKeysMixin):
         try:
             policy_id = validation.check_uuid(params.get("policy_id"), "policy_id")
             policy = self._policy(policy_id)
-            if not policy or policy.get("role") != "host":
+            if not policy or policy.get("role") not in validation.CAPTURING_ROLES:
                 return self._not_configured()
             repository, _source, previous = repository_choice.choose(policy, params)
             run_id = validation.check_uuid(params.get("run_id"), "run_id")

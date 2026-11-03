@@ -35,7 +35,9 @@ RUNNERS = {"Linux": SYSTEMD, "FreeBSD": DAEMON}
 # The roles each runner may drive.  A FreeBSD host is a storage host only:
 # the host role checks its NFS mount through /proc/self/mountinfo, which the
 # BSDs do not have.
-ROLES = {SYSTEMD: ("host", "storage"), DAEMON: ("storage",)}
+# ``self`` (24.13): a storage host backing up its own OS -- on FreeBSD too,
+# through daemon(8) like its storage jobs.
+ROLES = {SYSTEMD: ("host", "storage", "self"), DAEMON: ("storage", "self")}
 
 LOG_TAIL_BYTES = 2000
 

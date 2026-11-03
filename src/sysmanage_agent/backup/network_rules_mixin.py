@@ -60,7 +60,7 @@ class NetworkRulesMixin:
         self, policy: Dict[str, Any], features: Optional[Dict[str, Any]]
     ) -> Tuple[bool, Optional[Dict[str, Any]]]:
         """``(the walks read the agent's rules file, what to report)``."""
-        if policy.get("role") != "host":
+        if policy.get("role") not in job_validation.CAPTURING_ROLES:
             return False, None
         path = job_builder.network_rules_path(policy["policy_id"])
         native = network_mounts.skips_network_mounts(features)

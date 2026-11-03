@@ -30,7 +30,17 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 HOST_ACTIONS = ("capture", "snapshots", "estimate")
 STORAGE_ACTIONS = ("prune", "check", "copy", "du", "repack", "protect", "seal")
-ROLES = {"host": HOST_ACTIONS, "storage": STORAGE_ACTIONS}
+# ``self``: the storage host's own backup (24.13) -- it captures its OS into a
+# repository on its own pool, written locally (no NFS mount), and runs that
+# repository's storage-side jobs too.
+SELF = "self"
+ROLES = {
+    "host": HOST_ACTIONS,
+    "storage": STORAGE_ACTIONS,
+    SELF: HOST_ACTIONS + STORAGE_ACTIONS,
+}
+# The roles that walk this machine's own files.
+CAPTURING_ROLES = ("host", SELF)
 
 # Where repositories and their mounts may live.
 BACKUP_ROOTS = ("/srv", "/mnt", "/media", "/var/backups")
@@ -266,7 +276,7 @@ def check_job(role: str, action: str, job: Any) -> Dict[str, Any]:
     if unknown:
         raise PolicyError(f"{action} job has keys it may not set: {', '.join(unknown)}")
     checked = {key: check_value(key, value) for key, value in job.items()}
-    if action == "capture" and role == "host":
+    if action == "capture" and role in CAPTURING_ROLES:
         if checked.get("append_only") is False:
             raise PolicyError("a host capture is always append-only")
         checked["append_only"] = True
@@ -377,7 +387,7 @@ def check_target(
     """``(mount_point, repository)`` for the target, both real paths."""
     if not isinstance(target, dict):
         raise PolicyError("target must be an object")
-    if role == "storage":
+    if role in ("storage", SELF):
         mount_point = storage_mount_point(target.get("mount_point"), zfs_mounts)
     else:
         mount_point = confined_path(
@@ -397,7 +407,7 @@ def check_target(
             and mounts.get(own) not in NFS_TYPES
         ):
             raise PolicyError("mount_point is not an NFS mount on this host")
-    elif role == "storage" and not isdir(mount_point):
+    elif role in ("storage", SELF) and not isdir(mount_point):
         raise PolicyError("mount_point is not a directory on this host")
     real_mount = realpath(mount_point)
     repository = posixpath.join(mount_point, repo_dir)
@@ -482,7 +492,7 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
     policy_id = check_uuid(params.get("policy_id"), "policy_id")
     role = params.get("role")
     if role not in ROLES:
-        raise PolicyError("role must be host or storage")
+        raise PolicyError("role must be host, storage or self")
     jobs = params.get("jobs")
     if not isinstance(jobs, dict) or not jobs:
         raise PolicyError("jobs must name at least one action")
@@ -514,7 +524,7 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         # The snapshot signer's public key (Pro+ 24.6): restores check it.
         "trusted_key": (
             check_key(params.get("trusted_key"), "trusted_key")
-            if role == "host"
+            if role in CAPTURING_ROLES
             else None
         ),
     }

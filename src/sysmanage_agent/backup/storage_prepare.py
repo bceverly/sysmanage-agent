@@ -60,6 +60,8 @@ ZFS = "zfs"
 BTRFS = "btrfs"
 PLAIN = "directory"
 EXPORTS_D = "/etc/exports.d"
+# The policy role of the storage host's own backup (24.13).
+SELF_ROLE = "self"
 # Never the sticky bit: Linux NFS clients refuse files made in a sticky,
 # group-writable directory (fs.protected_regular=2), after the server has
 # made them, so a capture could never write a pack.
@@ -193,7 +195,11 @@ def plan(  # pylint: disable=too-many-arguments
         policy.get("mount_point") or posixpath.dirname(repository)
     )
     address = policy.get("client_address")
-    if not address:
+    # The storage host's own backup (24.13): its repository on its own pool,
+    # written locally -- a dataset / subvolume / directory and the append-only
+    # rule, but no export and so no client address.
+    local = policy.get("role") == SELF_ROLE
+    if not address and not local:
         raise PrepareRefused(
             "no_address",
             _(
@@ -225,7 +231,9 @@ def plan(  # pylint: disable=too-many-arguments
         steps = _btrfs_steps(repository, listdir, is_subvolume)
     else:
         steps = _plain_steps(repository, listdir)
-    if system == "FreeBSD":
+    if local:
+        _no_export(steps)
+    elif system == "FreeBSD":
         _freebsd_export(steps, address, account)
     else:
         # Linux: one /etc/exports.d file per policy, whatever the filesystem
@@ -259,6 +267,14 @@ def _protect_steps(system: str, account: str, repository: str) -> List[List[str]
         ["chmod", DIR_MODE, repository],
         [*APPEND_ONLY_ON, repository],
     ]
+
+
+def _no_export(steps: Dict[str, Any]) -> None:
+    """A self-backup repository: created like any other, exported to no one."""
+    dataset = steps.pop("dataset", None)
+    if dataset and not steps["exists"]:
+        steps["commands"] = [[ZFS, "create", dataset]]
+    steps["export_file"], steps["reload"] = None, False
 
 
 def _freebsd_export(steps: Dict[str, Any], address: str, account: str) -> None:
