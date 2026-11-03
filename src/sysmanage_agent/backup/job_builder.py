@@ -141,22 +141,35 @@ def build_jobs(
         job = _action_keys(policy, action, keys, network_rules)
         if mounts and action in WALKS:
             job["include_mount"] = list(mounts)
-        if action == "capture":
-            job.update(_capture_keys(policy, key_installed, can_create))
-        if action == SIGNATURES_ACTION:
-            job.update(_signatures_keys(policy))
-        if action in _KEYLESS_STORAGE:
-            job.update(_KEYLESS_STORAGE[action])
-            job["record"] = record_path(state_dir, policy["policy_id"])
-        if action == "protect":
-            # After each capture, on the storage host: finished packs and
-            # snapshots become root's, read-only and (Linux) immutable, the
-            # directories writable by the hosts' (mapped) group and
-            # append-only (never sticky) -- hosts append only.
-            job["group"] = policy.get("service_account") or "restate"
+        job.update(_extra_keys(policy, action, state_dir, key_installed, can_create))
         job.update(_reports(state_dir, policy["policy_id"], action, group))
         jobs[action] = job
     return jobs
+
+
+def _extra_keys(
+    policy: Dict[str, Any],
+    action: str,
+    state_dir: str,
+    key_installed: bool,
+    can_create: bool,
+) -> Dict[str, Any]:
+    """What one action adds to the server's keys and its rules files."""
+    if action == "capture":
+        return _capture_keys(policy, key_installed, can_create)
+    if action == SIGNATURES_ACTION:
+        return _signatures_keys(policy)
+    if action in _KEYLESS_STORAGE:
+        return dict(
+            _KEYLESS_STORAGE[action], record=record_path(state_dir, policy["policy_id"])
+        )
+    if action == "protect":
+        # After each capture, on the storage host: finished packs and
+        # snapshots become root's, read-only and (Linux) immutable, the
+        # directories writable by the hosts' (mapped) group and
+        # append-only (never sticky) -- hosts append only.
+        return {"group": policy.get("service_account") or "restate"}
+    return {}
 
 
 def _action_keys(

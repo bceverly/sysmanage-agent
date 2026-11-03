@@ -65,7 +65,7 @@ MARKER = "tool.json"
 
 REASON_WRONG_PLATFORM = "wrong_platform"
 REASON_MISSING_TOOL = "missing_tool"
-_VERSION_LINE = re.compile(r"version:\s*([0-9][0-9A-Za-z.+-]*)")
+_VERSION_LINE = re.compile(r"version:\s*(\d[\dA-Za-z.+-]*)")
 
 
 class ToolError(Exception):
@@ -231,6 +231,9 @@ def install(
         raise ToolError(REASON_WRONG_PLATFORM, "icloudpd is not offered on this system")
     base = tool_dir(state_dir)
     os.makedirs(base, mode=0o700, exist_ok=True)
+    # Owner-only, also when the directory already existed (makedirs' mode
+    # applies only to a new one): the tool and its marker are the agent's.
+    # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
     os.chmod(base, 0o700)
     if how == BINARY:
         name, digest = BINARIES[_machine(machine)]

@@ -249,6 +249,8 @@ class CloudBackupOperations:
     def _sessions(self) -> str:
         root = layout.sessions_root(self.state_dir)
         os.makedirs(root, mode=0o700, exist_ok=True)
+        # Owner-only, also when it already existed: Apple sessions live here.
+        # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(root, 0o700)
         return root
 
@@ -257,8 +259,12 @@ class CloudBackupOperations:
     async def cloud_backup_enable(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         try:
             run_id = layout.run_id(parameters)
-            storage = layout.storage_path(
-                parameters.get("storage_path"), self.state_dir, _read_text
+            # Reads the mount table: off the event loop.
+            storage = await asyncio.to_thread(
+                layout.storage_path,
+                parameters.get("storage_path"),
+                self.state_dir,
+                _read_text,
             )
         except layout.LayoutError as error:
             return self._refusal("invalid_request", str(error))
@@ -289,7 +295,7 @@ class CloudBackupOperations:
             )
         except tool.ToolError as error:
             result.update(reason=error.reason, message=str(error), detail=str(error))
-        except (OSError, PermissionError) as error:
+        except OSError as error:
             result.update(
                 reason="prepare_failed", message=str(error), detail=str(error)
             )
@@ -304,10 +310,13 @@ class CloudBackupOperations:
 
     async def cloud_backup_run(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            job = layout.account_job(parameters, self.state_dir, _read_text)
+            # Both read files (the mount table, the tool marker): off the loop.
+            job = await asyncio.to_thread(
+                layout.account_job, parameters, self.state_dir, _read_text
+            )
         except layout.LayoutError as error:
             return self._refusal("invalid_request", str(error))
-        found = tool.installed(self.state_dir, _read_text)
+        found = await asyncio.to_thread(tool.installed, self.state_dir, _read_text)
         if found is None:
             return self._refusal(tool.REASON_MISSING_TOOL,
                                  "icloudpd is not installed: enable iCloud backup first")  # fmt: skip
@@ -323,6 +332,8 @@ class CloudBackupOperations:
         try:
             os.makedirs(self._sessions(), exist_ok=True)
             os.makedirs(job["session_dir"], mode=0o700, exist_ok=True)
+            # Owner-only, also when it already existed: one account's session.
+            # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
             os.chmod(job["session_dir"], 0o700)
             transfer = action in ("download", "reconcile")
             before = (0, 0)
@@ -342,7 +353,7 @@ class CloudBackupOperations:
                 photos, size = await asyncio.to_thread(library_size, job["directory"])
                 result.update(photos_local=photos, bytes_local=size,
                               bytes=max(0, size - before[1]))  # fmt: skip
-        except (OSError, PermissionError) as error:
+        except OSError as error:
             result = {"status": runner.FAILED, "reason": "prepare_failed",
                       "message": str(error)}  # fmt: skip
         except Exception as error:  # pylint: disable=broad-except

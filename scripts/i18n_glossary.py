@@ -223,6 +223,8 @@ GLOSSARY: Dict[str, str] = {
     "repository": "a server holding software packages",
     "mirror": "a local copy of a software repository. NOT a reflective " "surface",
     "snapshot": "a point-in-time copy of a repository or machine state",
+    "pool": "a ZFS storage pool (the disks holding datasets and backups), or "
+    "a connection or worker pool. NOT a swimming pool",
     "channel": "a release stream software is published on",
     "upstream": "the original source a mirror copies from",
     "update": "a newer version of installed software",

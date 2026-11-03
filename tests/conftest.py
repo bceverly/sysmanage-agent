@@ -311,7 +311,6 @@ def _backup_keys_on_linux(monkeypatch):
     )  # pylint: disable=import-outside-toplevel
 
     monkeypatch.setattr(key_files, "SYSTEM", "Linux")
-    yield
 
 
 @pytest.fixture(autouse=True)

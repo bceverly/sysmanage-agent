@@ -74,20 +74,7 @@ def zfs_space(
         used, avail, quota = int(parts[1]), int(parts[2]), int(parts[3])
     except ValueError:
         return None
-    if quota > 0:
-        total = quota
-    else:
-        pool = name.split("/", 1)[0]
-        root = run([zfs, "list", "-Hp", "-o", "used,avail", pool])
-        rparts = _ints((root or "").splitlines()[0]) if root else None
-        try:
-            total = (
-                int(rparts[0]) + int(rparts[1])
-                if rparts and len(rparts) == 2
-                else used + avail
-            )
-        except ValueError:
-            total = used + avail
+    total = quota if quota > 0 else _pool_total(zfs, name, used + avail, run)
     return {
         "filesystem": "zfs",
         "dataset": name,
@@ -95,6 +82,20 @@ def zfs_space(
         "available_bytes": min(avail, total),
         "backups_bytes": used,
     }
+
+
+def _pool_total(zfs: str, dataset: str, fallback: int, run: Callable) -> int:
+    """No quota: the dataset can grow to its pool's size (used + avail of the
+    pool's root dataset), else ``fallback`` -- its own used + avail."""
+    pool = dataset.split("/", 1)[0]
+    root = run([zfs, "list", "-Hp", "-o", "used,avail", pool])
+    parts = _ints((root or "").splitlines()[0]) if root else None
+    if not parts or len(parts) != 2:
+        return fallback
+    try:
+        return int(parts[0]) + int(parts[1])
+    except ValueError:
+        return fallback
 
 
 # Windows has no os.statvfs; a default argument is evaluated at import, so

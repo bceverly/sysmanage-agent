@@ -4468,15 +4468,42 @@ jobs:
           #
           # komac v2.16 also dropped ``--identifier <id>`` -- the
           # identifier is the trailing positional now.
+          #
+          # KEEP THE FORK SYNCED WHILE KOMAC RUNS.  komac downloads both MSIs to
+          # hash them and only then creates its branch at upstream HEAD -- and
+          # microsoft/winget-pkgs merges PRs every few minutes.  When upstream
+          # moved after the one sync above, that HEAD is not in the fork and
+          # CreateRef fails with "Ref cannot be created" although every
+          # preflight passed (v3.12.0.36, 2026-11-03).  So re-sync every 5s for
+          # as long as komac runs, and retry that one failure twice.
+          (
+            while :; do
+              curl -sS -o /dev/null -X POST \
+                -H "Authorization: token $WINGET_PKGS_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$login/winget-pkgs/merge-upstream" \
+                -d '{"branch":"master"}' || true
+              sleep 5
+            done
+          ) &
+          syncer=$!
+          trap 'kill "$syncer" 2>/dev/null || true' EXIT
           set +e
-          "$KOMAC" update \
-            --version "${VERSION}" \
-            --urls "${MSI_URL}" "${MSI_URL_ARM64}" \
-            --submit \
-            --token "${WINGET_PKGS_TOKEN}" \
-            sysmanage.sysmanage-agent 2>&1 | tee /tmp/komac.out
-          update_rc=${PIPESTATUS[0]}
+          for attempt in 1 2 3; do
+            "$KOMAC" update \
+              --version "${VERSION}" \
+              --urls "${MSI_URL}" "${MSI_URL_ARM64}" \
+              --submit \
+              --token "${WINGET_PKGS_TOKEN}" \
+              sysmanage.sysmanage-agent 2>&1 | tee /tmp/komac.out
+            update_rc=${PIPESTATUS[0]}
+            [ "$update_rc" -eq 0 ] && break
+            grep -q "Ref cannot be created" /tmp/komac.out || break
+            echo "::warning::komac attempt $attempt: upstream moved past the fork (Ref cannot be created); retrying"
+            sleep 10
+          done
           set -e
+          kill "$syncer" 2>/dev/null || true
 
           if [ "$update_rc" -ne 0 ]; then
             if grep -q "does not exist in microsoft/winget-pkgs" /tmp/komac.out; then

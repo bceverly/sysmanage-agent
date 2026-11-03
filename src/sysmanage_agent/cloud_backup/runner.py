@@ -48,7 +48,9 @@ TWO_STEP_PROMPT = re.compile(
     r"(Please choose an option:|Please enter two-step authentication code)[^\n]*$"
 )
 _LOG_LINE = re.compile(
-    r"^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:,\d+)? (DEBUG|INFO|WARNING|ERROR|CRITICAL)\s+(.*)$"
+    # ``(\S.*|)`` rather than ``(.*)``: the message cannot start with the
+    # whitespace ``\s+`` takes, so the split is unique and matching linear.
+    r"^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(?:,\d+)? (DEBUG|INFO|WARNING|ERROR|CRITICAL)\s+(\S.*|)$"
 )
 _DOWNLOADED = re.compile(r"^Downloaded ")
 _PRESENT = re.compile(r" (already exists|deduplicated)$")

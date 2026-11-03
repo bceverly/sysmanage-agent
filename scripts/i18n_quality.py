@@ -139,21 +139,36 @@ _LIST_LITERAL = re.compile(r"^\s*\[\s*['\"]")
 # value is correct.  Identifiers the SOURCE contains are removed from the value
 # first, because Chinese and Japanese write no spaces: "dest_path是必需的" is
 # one run of word characters, and a correct sentence.
-_SLUG = re.compile(r"^\w*_\w*$")
-_IDENT = re.compile(r"\w*_\w*")
+# Linear on purpose: ``\w*_\w*`` -- ``_`` is itself a word character --
+# backtracks quadratically over a long run of underscores (CodeQL, polynomial
+# regular expression on uncontrolled data, 2026-11-03).  A whole run of word
+# characters that contains an underscore is the same set, matched once.
+_WORD_RUN = re.compile(r"\w+")
+
+
+def _slug(text: str) -> bool:
+    r"""``^\w*_\w*$`` as ``match`` read it: one word run with an underscore
+    (``$`` also matched before a final newline)."""
+    text = text[:-1] if text.endswith("\n") else text
+    return _WORD_RUN.fullmatch(text) is not None and "_" in text
+
+
+def _identifiers(text: str) -> List[str]:
+    """Every word run of ``text`` that contains an underscore."""
+    return [run for run in _WORD_RUN.findall(text) if "_" in run]
 
 
 def is_slug(source: str, value: str) -> bool:
     """True when ``value`` is an identifier slug standing in for prose."""
-    if _SLUG.match(source.strip()):
+    if _slug(source.strip()):
         return False
-    for ident in sorted(set(_IDENT.findall(source)), key=len, reverse=True):
+    for ident in sorted(set(_identifiers(source)), key=len, reverse=True):
         if ident.strip("_"):
             value = value.replace(ident, "")
     # Edge punctuation does not make it prose: "La_federazione_richiede_una_
     # licenza_Enterprise." (Italian, 2026-11-03) carried a final period.
     value = value.strip(" .,:;!?\"'()[]\u3002\uff0c\uff1a")
-    return bool(_SLUG.match(value)) and any(ch.isalpha() for ch in value)
+    return _slug(value) and any(ch.isalpha() for ch in value)
 
 
 def english_words(lang: str, value: str) -> List[str]:

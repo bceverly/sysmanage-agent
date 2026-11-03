@@ -654,6 +654,25 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         "forbid": {"hi": ["संवेदनशीलता", "संवेदनशीलताओं", "संवेदना", "संवेदनाओं"]},
     },
     "repository": {"forbid": {"ar": ["الجمهورية"]}},  # a republic
+    "pool": {
+        # 2026-11-03: es/pt docs rendered the ZFS pool (and connection pools)
+        # as piscina -- a swimming pool -- in the storage-host recovery
+        # runbook and eight older pages.  "pool" is the IT term in both.
+        "canonical": {"es": "pool", "pt": "pool"},
+        "forbid": {
+            "es": ["piscina", "piscinas"],
+            "pt": ["piscina", "piscinas"],
+            "it": ["piscina", "piscine"],
+            "fr": ["piscine", "piscines"],
+            "de": ["Schwimmbad", "Schwimmbecken"],
+            "nl": ["zwembad", "zwembaden"],
+            "ru": ["бассейн", "бассейна", "бассейны", "бассейнов"],
+            "zh_CN": ["游泳池", "泳池"],
+            "zh_TW": ["游泳池", "泳池"],
+            "ko": ["수영장"],
+            "ar": ["مسبح", "حمام السباحة"],
+        },
+    },
     "target": {
         "canonical": {"nl": "doel"},
         "forbid": {"nl": ["doelwit"]},  # the target of an attack
@@ -688,6 +707,7 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
 ALIASES: Dict[str, Tuple[str, ...]] = {
     "vulnerability": ("vulnerabilities",),
     "policy": ("policies",),
+    "pool": ("pools",),
     "inventory": ("inventories",),
     "severity": ("severities",),
     "dry run": ("dry-run", "dry runs", "dry-runs"),
