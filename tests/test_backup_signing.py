@@ -48,7 +48,7 @@ def _storage_policy():
 
 
 def test_the_storage_host_reports_it_can_sign():
-    assert contract.storage_abilities(SIGNING) == ["keep_yearly", "sign"]
+    assert contract.storage_abilities(SIGNING) == ["keep_yearly", "sign", "signatures"]
     assert "sign" not in contract.storage_abilities(FEATURES)
 
 
@@ -175,6 +175,34 @@ async def test_restores_name_the_signers_key(signing_ops, monkeypatch, tmp_path)
     assert job["trusted_key"] == [path] and job["allow_unverified"] is True
     for task in list(ops._tasks):
         task.cancel()
+
+
+@pytest.mark.asyncio
+async def test_the_storage_host_lists_signatures_against_the_signer(
+    signing_ops, monkeypatch, tmp_path
+):
+    """The storage side's ``signatures`` job is restate ``snapshots`` with
+    the signer's key, so the server learns which snapshots are signed from
+    the trusted side even after its catalog lost them (lab, t14,
+    2026-11-03).  A backed-up host may not run it."""
+    ops = signing_ops
+    monkeypatch.setattr(contract, "KEYS_DIR", str(tmp_path))
+    policy = _storage_policy()
+    policy["jobs"]["signatures"] = {}
+    answer = await ops.backup_configure(dict(policy, trusted_key=PUBLIC))
+    assert answer["success"] is True, answer
+    path = contract.trusted_key_path(PID)
+    assert ops.fake.ran("install", path)
+    listing = [j for j in ops.rendered if j["command"] == "snapshots"][-1]
+    assert listing["trusted_key"] == [path] and listing["repository"]
+    assert ops.fake.ran("install", contract.job_path(PID, "signatures"))
+    answer = await ops.backup_configure(policy)  # signing off: no key named
+    listing = [j for j in ops.rendered if j["command"] == "snapshots"][-1]
+    assert answer["success"] is True and "trusted_key" not in listing
+    host = _host_policy()
+    host["jobs"]["signatures"] = {}
+    answer = await ops.backup_configure(host)
+    assert answer["success"] is False
 
 
 @pytest.mark.asyncio

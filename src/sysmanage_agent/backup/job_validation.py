@@ -29,7 +29,9 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 HOST_ACTIONS = ("capture", "snapshots", "estimate")
-STORAGE_ACTIONS = ("prune", "check", "copy", "du", "repack", "protect", "seal")
+STORAGE_ACTIONS = (
+    "prune", "check", "copy", "du", "repack", "protect", "seal", "signatures",
+)  # fmt: skip
 # ``self``: the storage host's own backup (24.13) -- it captures its OS into a
 # repository on its own pool, written locally (no NFS mount), and runs that
 # repository's storage-side jobs too.
@@ -99,6 +101,10 @@ SERVER_KEYS = {
     # Make finished packs and snapshots root's and read-only (restate
     # 2.1.0.1); the agent fills ``group`` from the validated service account.
     "protect": set(),
+    # restate ``snapshots`` on the STORAGE host, checked against the
+    # signer's public key: which snapshots it signed, from the trusted side
+    # (a host must never vouch for its own).  The agent adds trusted_key.
+    "signatures": set(),
 }
 
 BOOLS = {
@@ -521,10 +527,11 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         ),
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
         "encrypt_key": check_key(params.get("encrypt_key")),
-        # The snapshot signer's public key (Pro+ 24.6): restores check it.
+        # The snapshot signer's public key (Pro+ 24.6): restores check it,
+        # and the storage side's ``signatures`` listing.
         "trusted_key": (
             check_key(params.get("trusted_key"), "trusted_key")
-            if role in CAPTURING_ROLES
+            if role in CAPTURING_ROLES or "signatures" in jobs
             else None
         ),
     }

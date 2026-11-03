@@ -223,10 +223,14 @@ def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     before offering it: ``keep_yearly`` (restate 2.2.0.12), since a policy
     may keep yearly snapshots only where the prune that honors it runs, and
     ``sign`` (the ``sign`` job command with ``sign_with``), since snapshots
-    are signed on the storage host, between the capture and protect."""
+    are signed on the storage host, between the capture and protect, and
+    ``signatures``: this agent lists them there, checked against the
+    signer's key, so the server learns them from the trusted side."""
     found = ["keep_yearly"] if supports(features, "keep_yearly") else []
     if supports_job_command(features, "sign") and supports(features, "sign_with"):
         found.append("sign")
+    if supports(features, "trusted_key"):
+        found.append("signatures")
     return found
 
 

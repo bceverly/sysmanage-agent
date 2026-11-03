@@ -99,6 +99,8 @@ def record_path(state_dir: str, policy_id: str) -> str:
 # The storage host (the NAS) holds no private key, so restate can only prune
 # whole packs and check metadata there (restate 2.0): forced, never left to
 # the server, so a keyless repository is never asked for what needs the key.
+# Signatures listed on the storage host (its job runs restate ``snapshots``).
+SIGNATURES_ACTION = "signatures"
 _KEYLESS_STORAGE = {
     "prune": {"whole_packs": True},
     "check": {"metadata_only": True, "read_all": False},
@@ -141,6 +143,8 @@ def build_jobs(
             job["include_mount"] = list(mounts)
         if action == "capture":
             job.update(_capture_keys(policy, key_installed, can_create))
+        if action == SIGNATURES_ACTION:
+            job.update(_signatures_keys(policy))
         if action in _KEYLESS_STORAGE:
             job.update(_KEYLESS_STORAGE[action])
             job["record"] = record_path(state_dir, policy["policy_id"])
@@ -180,6 +184,16 @@ def _action_keys(
     if action != "estimate":  # estimate reads the live host, no repository
         job["repository"] = policy["repository"]
     return job
+
+
+def _signatures_keys(policy: Dict[str, Any]) -> Dict[str, Any]:
+    """The storage side's listing is restate ``snapshots``, checked against
+    the signer's key when the policy has one.  It refuses nothing: restate
+    only reports which key, if any, signed each snapshot."""
+    extra: Dict[str, Any] = {"command": "snapshots"}
+    if policy.get("trusted_key"):
+        extra["trusted_key"] = [contract.trusted_key_path(policy["policy_id"])]
+    return extra
 
 
 def _capture_keys(
