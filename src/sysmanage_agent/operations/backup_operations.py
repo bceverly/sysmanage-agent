@@ -40,6 +40,7 @@ from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import key_files
+from src.sysmanage_agent.backup.keys_mixin import BackupKeysMixin
 from src.sysmanage_agent.backup.mount_mixin import BackupMountMixin
 from src.sysmanage_agent.backup.network_rules_mixin import NetworkRulesMixin
 from src.sysmanage_agent.backup import restate_contract as contract
@@ -50,6 +51,7 @@ from src.sysmanage_agent.backup import storage_reaudit
 from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.backup import seal_retention
+from src.sysmanage_agent.backup import signing
 
 DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
 # The driver's own state files, in its state directory.
@@ -154,7 +156,7 @@ def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
     return None
 
 
-class BackupOperations(BackupMountMixin, NetworkRulesMixin):
+class BackupOperations(BackupMountMixin, NetworkRulesMixin, BackupKeysMixin):
     """The agent's half of Phase 24: the restate driver."""
 
     def __init__(self, agent_instance, state_dir: Optional[str] = None):
@@ -316,6 +318,7 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
             await self._install_root_file(
                 policy["encrypt_key"], contract.key_path(policy_id)
             )
+        await self._apply_trusted_key(policy)
         await self._apply_rules(policy)
         features = self._features() or {}
         network_rules, network = await self._apply_network_rules(policy, features)
@@ -429,17 +432,17 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
         policy = self._policy(policy_id)
         allowed = list(policy.get("actions", [])) if policy else []
         if policy and policy.get("role") == "storage":
-            allowed.append(storage_prepare.ACTION)
+            allowed += [storage_prepare.ACTION, signing.SIGN_ACTION]
         if policy and policy.get("role") == "host":
-            allowed += [job_builder.LIST_ACTION, job_builder.STATUS_ACTION,
-                        job_builder.VERIFY_ACTION]  # fmt: skip
+            allowed += list(job_builder.BROWSE_JOBS)
         if action not in allowed:
             return self._not_configured()
         if action == "seal":
             return self._start_seal(run_id, policy_id, policy.get("seal") or {})
-        if action in (job_builder.LIST_ACTION, job_builder.STATUS_ACTION,
-                      job_builder.VERIFY_ACTION):  # fmt: skip
+        if action in job_builder.BROWSE_JOBS:
             return await self._start_browse(run_id, policy_id, policy, parameters)
+        if action == signing.SIGN_ACTION and policy.get("role") == "storage":
+            return await self._start_sign(run_id, policy_id, policy, parameters)
         if action == storage_prepare.ACTION and policy.get("role") == "storage":
             self._spawn(self._prepare(run_id, policy_id, policy))
             return {"success": True, "run_id": run_id, "status": "started"}
@@ -459,11 +462,11 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
         policy: Dict[str, Any],
         params: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """A snapshot listing, a what-changed check or a full-read
-        verification: read-only host jobs, each written fresh from the
-        request (like a restore)."""
+        """A snapshot listing, a what-changed check, a full-read verification
+        or two snapshots compared: read-only host jobs, each written fresh
+        from the request (like a restore)."""
         action = params.get("action")
-        command = "check" if action == job_builder.VERIFY_ACTION else action
+        command, build = job_builder.BROWSE_JOBS[action]
         if not contract.supports_job_command(self._features(), command):
             return self._refusal(
                 "tool_outdated",
@@ -475,12 +478,7 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
             keys = await self._decrypt_keys(run_id, params)
             common = {"repository": repository, "decrypt_with": keys,
                       "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
-            builders = {
-                job_builder.LIST_ACTION: job_builder.build_list_job,
-                job_builder.STATUS_ACTION: job_builder.build_status_job,
-                job_builder.VERIFY_ACTION: job_builder.build_verify_job,
-            }
-            job = builders[action](params, **common)
+            job = build(params, **common)
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
@@ -512,6 +510,7 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
                 group=_agent_group(),
                 can_plan=contract.supports(self._features(), "plan"),
                 decrypt_with=keys,
+                trusted_key=self._trusted_key(policy_id),
             )
             if job["restore_root"] != "/":
                 os.makedirs(job["restore_root"], mode=0o700, exist_ok=True)
@@ -524,12 +523,6 @@ class BackupOperations(BackupMountMixin, NetworkRulesMixin):
             return self._refusal(key_files.refusal_code(error), str(error))
         return await self._start_job(
             run_id, policy_id, job_builder.RESTORE_ACTION, previous, keys
-        )
-
-    async def _decrypt_keys(self, run_id: str, params: Dict[str, Any]) -> List[str]:
-        """This run's key files when it reads an encrypted repository."""
-        return await key_files.for_run(
-            self.agent, self._features(), run_id, params, self._run, self._privileged
         )
 
     async def _unit_state(self, unit: str) -> Dict[str, str]:

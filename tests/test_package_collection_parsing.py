@@ -32,6 +32,7 @@ class TestPackageCollectorParsing:  # pylint: disable=too-many-public-methods
         context_manager.__enter__ = Mock(return_value=mock_session)
         context_manager.__exit__ = Mock(return_value=None)
         db_manager.get_session.return_value = context_manager
+        db_manager.bulk_session.return_value = context_manager  # catalog writes
         return db_manager, mock_session
 
     @pytest.fixture

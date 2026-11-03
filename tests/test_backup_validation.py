@@ -339,7 +339,15 @@ def test_unsigned_snapshots_restore_only_when_explicitly_allowed():
         repository="/r", state_dir="/s", group="g", trusted_key="/etc/restate/keys/k.asc",
     )  # fmt: skip
     assert keyed["trusted_key"] == ["/etc/restate/keys/k.asc"]
-    assert "allow_unverified" not in keyed
+    # The server allows an UNSIGNED snapshot only on the operator's explicit
+    # acknowledgment; with signing on, the snapshots from before it stay
+    # restorable that way, while a signed one is still checked (24.6).
+    assert keyed["allow_unverified"] is True
+    signed = builder.build_restore_job(
+        {"run_id": RID, "policy_id": PID},
+        repository="/r", state_dir="/s", group="g", trusted_key="/etc/restate/keys/k.asc",
+    )  # fmt: skip
+    assert "allow_unverified" not in signed
 
 
 @pytest.mark.parametrize(

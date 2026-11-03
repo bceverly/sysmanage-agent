@@ -256,10 +256,17 @@ def build_restore_job(
     dry_run = params.get("dry_run", True)
     allow_unverified = params.get("allow_unverified", False)
     in_place = params.get("in_place", False)
-    if not all(isinstance(x, bool) for x in (dry_run, allow_unverified, in_place)):
+    packages = params.get("packages", False)
+    if not all(
+        isinstance(x, bool) for x in (dry_run, allow_unverified, in_place, packages)
+    ):
         raise v.PolicyError(
-            "dry_run, allow_unverified and in_place must be true or false"
+            "dry_run, allow_unverified, in_place and packages must be true or false"
         )
+    if packages and not dry_run and not in_place:
+        # restate installs the packages onto the running system: a staging
+        # directory cannot receive them (Pro+ 24.6).
+        raise v.PolicyError("a package restore runs on this host itself: in place only")
     job: Dict[str, Any] = {
         "command": RESTORE_ACTION,
         "repository": repository,
@@ -270,6 +277,11 @@ def build_restore_job(
     if dry_run and can_plan:
         job["plan"] = True
         del job["dry_run"], job["check_first"]  # both read the packs
+    if packages:
+        # The snapshot's repositories, keys and packages at their versions
+        # first -- and what it did not have removed -- then the files; a
+        # preview's result carries the script (``packages.script``).
+        job["packages"] = True
     if params.get("snapshot"):
         job["snapshot"] = v.check_snapshot(params["snapshot"])
     include = _patterns(params.get("include"), "include")
@@ -281,9 +293,12 @@ def build_restore_job(
         job["include"] = include
     if exclude:
         job["exclude"] = exclude
+    # Both may be given: the signer's key checks a signed snapshot (refused,
+    # exit 4, when the signature is bad or someone else's), and the server
+    # allows an UNSIGNED one only when the operator acknowledged it.
     if trusted_key:
         job["trusted_key"] = [trusted_key]
-    elif allow_unverified:
+    if allow_unverified:
         job["allow_unverified"] = True
     if decrypt_with:
         job["decrypt_with"] = list(decrypt_with)  # this run's key files
@@ -367,6 +382,41 @@ def build_status_job(
     return job
 
 
+DIFF_ACTION = "diff"
+
+
+def build_diff_job(
+    params: Any,
+    *,
+    repository: str,
+    state_dir: str,
+    group: str,
+    decrypt_with: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Two snapshots of the host's current repository compared, by package
+    too (restate ``diff --packages`` as a job): the Pro+ drift timeline
+    (24.7).  ``to`` defaults to the newest and ``from`` to the snapshot
+    before it.  Read from the indexes; the result holds the first 1000
+    changes and package changes, and the job exits 1 when they differ.  No
+    ``trusted_key``: it would refuse every unsigned snapshot, and a diff
+    restores nothing."""
+    if not isinstance(params, dict):
+        raise v.PolicyError(NOT_AN_OBJECT)
+    policy_id = v.check_uuid(params.get("policy_id"), "policy_id")
+    job: Dict[str, Any] = {
+        "command": DIFF_ACTION,
+        "repository": repository,
+        "packages": True,
+    }
+    for end in ("from", "to"):
+        if params.get(end):
+            job[end] = v.check_snapshot(params[end])
+    if decrypt_with:
+        job["decrypt_with"] = list(decrypt_with)
+    job.update(_reports(state_dir, policy_id, DIFF_ACTION, group))
+    return job
+
+
 # Scheduled verification (Pro+ 24.6): restate ``check --read-all`` run on the
 # backed-up HOST -- an encrypted repository can only be read with its secret
 # keys, which the storage host never holds and the host receives for one job
@@ -397,3 +447,13 @@ def build_verify_job(
         job["decrypt_with"] = list(decrypt_with)
     job.update(_reports(state_dir, policy_id, VERIFY_ACTION, group))
     return job
+
+
+# Read-only host jobs written fresh from each request, by action: the
+# restate command each runs (a verification is ``check``) and its builder.
+BROWSE_JOBS = {
+    LIST_ACTION: (LIST_ACTION, build_list_job),
+    STATUS_ACTION: (STATUS_ACTION, build_status_job),
+    VERIFY_ACTION: ("check", build_verify_job),
+    DIFF_ACTION: (DIFF_ACTION, build_diff_job),
+}

@@ -185,19 +185,25 @@ async def sweep(inflight: Dict[str, Any], run, privileged, listdir=os.listdir) -
 
 
 async def for_run(
-    agent, features, run_id: str, params: Dict[str, Any], run, privileged
-):
-    """The key files a run needs (``needs_key``: an encrypted repository),
-    fetched for this run only; [] when it needs none."""
+    agent, features, run_id: str, params: Dict[str, Any], run, privileged,
+    need: str = "decrypt_with",
+):  # fmt: skip
+    """The key files a run needs (``needs_key``: an encrypted repository to
+    read, or -- ``need="sign_with"`` -- a snapshot to sign), fetched for this
+    run only; [] when it needs none."""
     # pylint: disable=import-outside-toplevel,too-many-arguments,too-many-positional-arguments
     from src.sysmanage_agent.backup import restate_contract as contract
     from src.sysmanage_agent.backup.job_validation import PolicyError
 
     if not params.get("needs_key"):
         return []
-    if not contract.supports(features, "decrypt_with"):
+    if not contract.supports(features, need):
         raise PolicyError(
-            _("This restate cannot decrypt an encrypted repository; upgrade restate.")
+            _("This restate cannot sign a snapshot; upgrade restate.")
+            if need == "sign_with"
+            else _(
+                "This restate cannot decrypt an encrypted repository; upgrade restate."
+            )
         )
     return await install(await fetch(agent, run_id), run_id, run, privileged)
 

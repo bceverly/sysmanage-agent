@@ -330,15 +330,15 @@ def check_seal(job: Any) -> Dict[str, Any]:
     return {"mode": mode, "subvolume": subvolume, "snapshot_dir": snapshot_dir, **keep}
 
 
-def check_key(text: Any) -> Optional[str]:
+def check_key(text: Any, what: str = "encrypt_key") -> Optional[str]:
     """An armored OpenPGP public key, or None when none was sent."""
     if text is None:
         return None
     if not isinstance(text, str) or len(text.encode("utf-8")) > MAX_KEY_BYTES:
-        raise PolicyError("encrypt_key must be an armored public key")
+        raise PolicyError(f"{what} must be an armored public key")
     stripped = text.strip()
     if not stripped.startswith(_KEY_BEGIN) or "PRIVATE KEY" in stripped:
-        raise PolicyError("encrypt_key must be an armored PUBLIC key")
+        raise PolicyError(f"{what} must be an armored PUBLIC key")
     return stripped + "\n"
 
 
@@ -511,4 +511,10 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         ),
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
         "encrypt_key": check_key(params.get("encrypt_key")),
+        # The snapshot signer's public key (Pro+ 24.6): restores check it.
+        "trusted_key": (
+            check_key(params.get("trusted_key"), "trusted_key")
+            if role == "host"
+            else None
+        ),
     }

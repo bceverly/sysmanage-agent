@@ -260,7 +260,8 @@ def test_the_freebsd_sudoers_rule_admits_exactly_the_storage_jobs():
         rules = [line for line in handle if f"{RESTATE} ^run " in line]
     assert len(rules) == 1
     pattern = rules[0].split(f"{RESTATE} ", 1)[1].strip()
-    run = [a for a in job_validation.STORAGE_ACTIONS if a != "seal"]
+    # sign (24.6) is a per-run storage job, not a configured one.
+    run = [a for a in job_validation.STORAGE_ACTIONS if a != "seal"] + ["sign"]
     for action in run:
         assert re.fullmatch(pattern, f"run {contract.job_path(PID, action)}"), action
     for action in job_validation.HOST_ACTIONS:

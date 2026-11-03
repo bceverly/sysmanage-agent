@@ -117,6 +117,11 @@ def key_path(policy_id: str) -> str:
     return posixpath.join(KEYS_DIR, policy_id + ".asc")
 
 
+def trusted_key_path(policy_id: str) -> str:
+    """The snapshot signer's PUBLIC key: restores check signatures with it."""
+    return posixpath.join(KEYS_DIR, policy_id + ".trusted.asc")
+
+
 def unit_name(policy_id: str, action: str) -> str:
     return f"restate-job@{job_name(policy_id, action)}.service"
 
@@ -204,14 +209,25 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     if supports_job_command(features, "check"):
         # A full-read check can run here (Pro+ scheduled verification).
         found.append("verify")
+    if supports_job_command(features, "diff") and supports(features, "from"):
+        # Two snapshots compared, by package too (Pro+ drift timeline, 24.7).
+        found.append("diff")
+    if supports(features, "packages"):
+        # A restore puts the snapshot's packages back first (Pro+ 24.6).
+        found.append("packages")
     return found
 
 
 def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     """What the storage host's restate can do that the server must know
     before offering it: ``keep_yearly`` (restate 2.2.0.12), since a policy
-    may keep yearly snapshots only where the prune that honors it runs."""
-    return ["keep_yearly"] if supports(features, "keep_yearly") else []
+    may keep yearly snapshots only where the prune that honors it runs, and
+    ``sign`` (the ``sign`` job command with ``sign_with``), since snapshots
+    are signed on the storage host, between the capture and protect."""
+    found = ["keep_yearly"] if supports(features, "keep_yearly") else []
+    if supports_job_command(features, "sign") and supports(features, "sign_with"):
+        found.append("sign")
+    return found
 
 
 _HOOK = re.compile(r"^[a-z0-9_-]{1,32}$")

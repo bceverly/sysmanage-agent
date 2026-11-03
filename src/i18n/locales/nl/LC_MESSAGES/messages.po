@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 09:01-0500\n"
+"POT-Creation-Date: 2026-11-02 15:53-0500\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:79
+#: src/database/base.py:81
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "Mislukt om database-map %s aan te maken: %s"
 
-#: src/database/base.py:89
+#: src/database/base.py:91
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "Mislukt om database-tabellen aan te maken: %s"
@@ -120,11 +120,20 @@ msgstr "geen reden opgegeven"
 msgid "Could not install the backup key: %s"
 msgstr "De back-upsleutel kon niet worden geïnstalleerd: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:200
+#: src/sysmanage_agent/backup/key_files.py:202
+#: src/sysmanage_agent/backup/keys_mixin.py:64
+msgid "This restate cannot sign a snapshot; upgrade restate."
+msgstr "Deze restate kan geen snapshot ondertekenen; werk restate bij."
+
+#: src/sysmanage_agent/backup/key_files.py:205
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr ""
 "Deze restate kan een versleutelde repository niet ontsleutelen; werk restate"
 " bij."
+
+#: src/sysmanage_agent/backup/keys_mixin.py:73
+msgid "A signing run needs its key"
+msgstr "Een ondertekeningsrun heeft zijn sleutel nodig"
 
 #: src/sysmanage_agent/backup/mount_mixin.py:28
 msgid ""
@@ -2356,30 +2365,30 @@ msgstr "Fout bij verzamelen van agent-logboeken: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Fout bij verzamelen van foutlogboeken: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:273
+#: src/sysmanage_agent/operations/backup_operations.py:275
 msgid "That backup action is not configured on this host."
 msgstr "Die back-upactie is op deze host niet geconfigureerd."
 
-#: src/sysmanage_agent/operations/backup_operations.py:281
+#: src/sysmanage_agent/operations/backup_operations.py:283
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate is op deze host niet bruikbaar: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:304
+#: src/sysmanage_agent/operations/backup_operations.py:306
 msgid "This platform can only be a backup storage host."
 msgstr "Dit platform kan alleen een opslaghost voor back-ups zijn."
 
-#: src/sysmanage_agent/operations/backup_operations.py:310
+#: src/sysmanage_agent/operations/backup_operations.py:312
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Kan de back-uptaken niet installeren: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:340
+#: src/sysmanage_agent/operations/backup_operations.py:343
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Deze versie van restate ondersteunt niet: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:470
+#: src/sysmanage_agent/operations/backup_operations.py:475
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Deze restate kan %s niet als taak uitvoeren; werk restate bij."
@@ -3298,7 +3307,7 @@ msgstr "Fout bij uitschakelen van derden repositories: %s"
 msgid "Error re-scanning third-party repositories: %s"
 msgstr "Fout bij het opnieuw scannen van derde-partij repositories: %s"
 
-#: src/sysmanage_agent/operations/script_approval.py:38
+#: src/sysmanage_agent/operations/script_approval.py:42
 msgid ""
 "This host requires approval for scripts, and this script was not approved. "
 "Run it from a saved script that goes through approval."

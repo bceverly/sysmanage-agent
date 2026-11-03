@@ -2,16 +2,16 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 09:01-0500\n"
+"POT-Creation-Date: 2026-11-02 15:53-0500\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: src/database/base.py:79
+#: src/database/base.py:81
 #, python-format
 msgid "Failed to create database directory %s: %s"
 msgstr "कड़ियाँ डेटाबेस डिरेक्टरी %s निर्माण में विफल: %s"
 
-#: src/database/base.py:89
+#: src/database/base.py:91
 #, python-format
 msgid "Failed to create database tables: %s"
 msgstr "काबल्ट डेटाबेस तालिकाएँ नहीं बना पाई: %s"
@@ -116,11 +116,21 @@ msgstr "कोई कारण नहीं बताया गया"
 msgid "Could not install the backup key: %s"
 msgstr "बैकअप कुंजी इंस्टॉल नहीं की जा सकी: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:200
+#: src/sysmanage_agent/backup/key_files.py:202
+#: src/sysmanage_agent/backup/keys_mixin.py:64
+msgid "This restate cannot sign a snapshot; upgrade restate."
+msgstr ""
+"यह restate स्नैपशॉट पर हस्ताक्षर नहीं कर सकता; restate को अपग्रेड करें।"
+
+#: src/sysmanage_agent/backup/key_files.py:205
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr ""
 "यह restate किसी एन्क्रिप्टेड रिपॉज़िटरी को डिक्रिप्ट नहीं कर सकता; restate "
 "अपग्रेड करें।"
+
+#: src/sysmanage_agent/backup/keys_mixin.py:73
+msgid "A signing run needs its key"
+msgstr "हस्ताक्षर रन को उसकी कुंजी चाहिए"
 
 #: src/sysmanage_agent/backup/mount_mixin.py:28
 msgid ""
@@ -2347,30 +2357,30 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:273
+#: src/sysmanage_agent/operations/backup_operations.py:275
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:281
+#: src/sysmanage_agent/operations/backup_operations.py:283
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:304
+#: src/sysmanage_agent/operations/backup_operations.py:306
 msgid "This platform can only be a backup storage host."
 msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:310
+#: src/sysmanage_agent/operations/backup_operations.py:312
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:340
+#: src/sysmanage_agent/operations/backup_operations.py:343
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:470
+#: src/sysmanage_agent/operations/backup_operations.py:475
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "यह restate %s को जॉब के रूप में नहीं चला सकता; restate अपग्रेड करें।"
@@ -3292,7 +3302,7 @@ msgstr "तीसरे पक्ष की रिपोज़िट्री �
 msgid "Error re-scanning third-party repositories: %s"
 msgstr "थर्ड-पार्टी अवस्थाएँ की फिर से खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/script_approval.py:38
+#: src/sysmanage_agent/operations/script_approval.py:42
 msgid ""
 "This host requires approval for scripts, and this script was not approved. "
 "Run it from a saved script that goes through approval."
