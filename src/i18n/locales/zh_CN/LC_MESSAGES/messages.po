@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 15:53-0500\n"
+"POT-Creation-Date: 2026-11-03 07:51-0500\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -85,42 +85,52 @@ msgstr "%(where)s 处的备份存储无法写入新文件：%(error)s"
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "%(where)s 处的备份存储上锁定不起作用：%(error)s"
 
-#: src/sysmanage_agent/backup/key_files.py:56
+#: src/sysmanage_agent/backup/key_files.py:67
 msgid "The server sent no usable keys"
 msgstr "服务器未发送可用的密钥"
 
-#: src/sysmanage_agent/backup/key_files.py:58
+#: src/sysmanage_agent/backup/key_files.py:69
 msgid "The server sent something that is not a secret key"
 msgstr "服务器发送的内容不是私钥"
 
-#: src/sysmanage_agent/backup/key_files.py:66
+#: src/sysmanage_agent/backup/key_files.py:77
 msgid "No tmpfs to stage the key on"
 msgstr "没有可用于暂存密钥的 tmpfs"
 
-#: src/sysmanage_agent/backup/key_files.py:107
+#: src/sysmanage_agent/backup/key_files.py:118
 msgid "This host is not approved yet"
 msgstr "此主机尚未获批准"
 
-#: src/sysmanage_agent/backup/key_files.py:126
+#: src/sysmanage_agent/backup/key_files.py:137
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr "服务器未发放备份密钥：HTTP %(status)s，%(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:137
+#: src/sysmanage_agent/backup/key_files.py:148
 msgid "no reason given"
 msgstr "未说明原因"
 
-#: src/sysmanage_agent/backup/key_files.py:157
+#: src/sysmanage_agent/backup/key_files.py:169
+msgid "This operating system has no RAM file system for backup keys"
+msgstr "此操作系统没有可用于备份密钥的 RAM 文件系统"
+
+#: src/sysmanage_agent/backup/key_files.py:189
+#, python-format
+msgid "Could not prepare a RAM file system for the backup key: %s"
+msgstr "无法为备份密钥准备 RAM 文件系统：%s"
+
+#: src/sysmanage_agent/backup/key_files.py:208
+#: src/sysmanage_agent/backup/key_files.py:233
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "无法安装备份密钥：%s"
 
-#: src/sysmanage_agent/backup/key_files.py:202
+#: src/sysmanage_agent/backup/key_files.py:278
 #: src/sysmanage_agent/backup/keys_mixin.py:64
 msgid "This restate cannot sign a snapshot; upgrade restate."
 msgstr "此 restate 无法为快照签名；请升级 restate。"
 
-#: src/sysmanage_agent/backup/key_files.py:205
+#: src/sysmanage_agent/backup/key_files.py:281
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr "此 restate 无法解密加密的存储库；请升级 restate。"
 
@@ -164,21 +174,21 @@ msgstr "%s 处的备份存储没有响应。"
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "无法卸载 %s 处的备份存储：%s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:120
+#: src/sysmanage_agent/backup/storage_prepare.py:122
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
 "this storage host. Create it, then prepare again."
 msgstr "此存储主机上不存在备份服务账户 %(account)s（用户和组）。请创建它，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:150
+#: src/sysmanage_agent/backup/storage_prepare.py:152
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr "代理无法读取 %(path)s，因此无法判断其中是否有备份。请以 root 身份运行代理，或将该目录移到别处，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:161
+#: src/sysmanage_agent/backup/storage_prepare.py:163
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -189,7 +199,7 @@ msgstr ""
 "%(path)s 中已有文件，但它不是独立的 ZFS 数据集，而准备操作从不移动备份。请 1) 将其重命名（例如改为 "
 "%(path)s.old），重新准备，再以 root 身份将其内容复制到新数据集中；或 2) 如果不再需要这些备份，则将其删除。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:169
+#: src/sysmanage_agent/backup/storage_prepare.py:171
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -200,25 +210,25 @@ msgstr ""
 "%(path)s 中已有文件，但它不是独立的 btrfs 子卷，而准备操作从不移动备份。请 1) 将其重命名（例如改为 "
 "%(path)s.old），重新准备，再以 root 身份将其内容复制到新子卷中；或 2) 如果不再需要这些备份，则将其删除。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:200
+#: src/sysmanage_agent/backup/storage_prepare.py:206
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
 msgstr "服务器尚不知道被备份主机的 IP 地址，因此无法将其导出限制为该地址。请等待该主机报告其网络信息，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:211
+#: src/sysmanage_agent/backup/storage_prepare.py:217
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s 不支持准备存储。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:219
+#: src/sysmanage_agent/backup/storage_prepare.py:225
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
 msgstr "FreeBSD 导出的是整个文件系统，因此每台主机的存储库都需要独立的 ZFS 数据集。请将存储路径放在 ZFS 上，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:287
+#: src/sysmanage_agent/backup/storage_prepare.py:303
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -228,7 +238,7 @@ msgstr ""
 "存储路径 %(path)s 处未挂载 ZFS 数据集，因此子数据集不会位于存储库所在位置。请在该处创建一个挂载的数据集（zfs create -o "
 "mountpoint=%(path)s POOL/NAME），然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:314
+#: src/sysmanage_agent/backup/storage_prepare.py:330
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -2294,79 +2304,79 @@ msgstr "收集代理日志时出错：%s"
 msgid "Error collecting error logs: %s"
 msgstr "收集错误日志时出错：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:283
 msgid "That backup action is not configured on this host."
 msgstr "该备份操作在此主机上未配置。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:283
+#: src/sysmanage_agent/operations/backup_operations.py:291
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate在此主机上不可用：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:306
+#: src/sysmanage_agent/operations/backup_operations.py:314
 msgid "This platform can only be a backup storage host."
 msgstr "此平台只能作为备份存储主机。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:312
+#: src/sysmanage_agent/operations/backup_operations.py:320
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "无法安装备份作业：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:343
+#: src/sysmanage_agent/operations/backup_operations.py:352
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支持：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:475
+#: src/sysmanage_agent/operations/backup_operations.py:466
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 无法将 %s 作为作业运行；请升级 restate。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:578
+#: src/sysmanage_agent/operations/backup_operations.py:564
 msgid "restate is not installed on this host."
 msgstr "此主机上未安装restate。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:611
+#: src/sysmanage_agent/operations/backup_operations.py:597
 msgid "That backup job is already running."
 msgstr "该备份作业正在运行中。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:633
+#: src/sysmanage_agent/operations/backup_operations.py:619
 msgid "The backup job could not be started."
 msgstr "无法启动备份作业。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:688
+#: src/sysmanage_agent/operations/backup_operations.py:674
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "无法列出封存快照：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:703
+#: src/sysmanage_agent/operations/backup_operations.py:689
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "无法删除旧的封存快照 %(name)s：%(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:778
+#: src/sysmanage_agent/operations/backup_operations.py:764
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s 未挂载在此主机的 %(path)s 上"
 
-#: src/sysmanage_agent/operations/backup_operations.py:813
+#: src/sysmanage_agent/operations/backup_operations.py:799
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "无法为策略 %s 准备备份存储：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:931
+#: src/sysmanage_agent/operations/backup_operations.py:917
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
 "%(unit)s on this host"
 msgstr "restate 在写入结果之前已停止（退出码 %(code)s）；请在此主机上查看 journalctl -u %(unit)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:957
+#: src/sysmanage_agent/operations/backup_operations.py:943
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "无法运行存储审核：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:988
+#: src/sysmanage_agent/operations/backup_operations.py:974
 msgid "Could not queue the backup report"
 msgstr "无法将备份报告加入队列"
 

@@ -134,6 +134,15 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg ^add -f /var/db/sysmanage-agen
 # another property.  (Ownership uses the chown/chmod grants above.)
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^create -o sharenfs=-mapall=[a-z_][a-z0-9_-]*:[a-z_][a-z0-9_-]* [0-9a-fA-F.:]+ [A-Za-z0-9_.:/-]+$
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^set sharenfs=-mapall=[a-z_][a-z0-9_-]*:[a-z_][a-z0-9_-]* [0-9a-fA-F.:]+ [A-Za-z0-9_.:/-]+$
+# Pro+ backup keys for ONE job (restore / verify of an encrypted repository,
+# signing on the storage host): FreeBSD has no /run and no tmpfs mounted, so
+# the agent mounts a root-owned tmpfs of its own (mount is allowed above),
+# pipes each key into it with tee (stdin, never argv), makes it 0600 and
+# removes it when the job ends -- only there, only <run uuid>-<n>.key.
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/mkdir ^-p -m 0755 /var/run/sysmanage-agent/backup-keys$
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/tee ^/var/run/sysmanage-agent/backup-keys/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[0-9]{1,2}\.key$
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/chmod ^600 /var/run/sysmanage-agent/backup-keys/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[0-9]{1,2}\.key$
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/rm ^-f -- (/var/run/sysmanage-agent/backup-keys/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[0-9]{1,2}\.key ?)+$
 # Prepare's append-only rule on ZFS: FreeBSD's NFS server refuses a file made
 # in a sticky directory (after making it), so the repository directory is
 # 0770 with an NFSv4 ACL instead -- the group may not delete what it does not

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 15:53-0500\n"
+"POT-Creation-Date: 2026-11-03 07:51-0500\n"
 "Language: ar\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -88,42 +88,54 @@ msgstr "لا يقبل تخزين النسخ الاحتياطي في %(where)s م
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "القفل لا يعمل على تخزين النسخ الاحتياطي في %(where)s: %(error)s"
 
-#: src/sysmanage_agent/backup/key_files.py:56
+#: src/sysmanage_agent/backup/key_files.py:67
 msgid "The server sent no usable keys"
 msgstr "لم يرسل الخادم أي مفاتيح صالحة للاستخدام"
 
-#: src/sysmanage_agent/backup/key_files.py:58
+#: src/sysmanage_agent/backup/key_files.py:69
 msgid "The server sent something that is not a secret key"
 msgstr "أرسل الخادم شيئًا ليس مفتاحًا سريًا"
 
-#: src/sysmanage_agent/backup/key_files.py:66
+#: src/sysmanage_agent/backup/key_files.py:77
 msgid "No tmpfs to stage the key on"
 msgstr "لا يوجد tmpfs لتجهيز المفتاح"
 
-#: src/sysmanage_agent/backup/key_files.py:107
+#: src/sysmanage_agent/backup/key_files.py:118
 msgid "This host is not approved yet"
 msgstr "لم تتم الموافقة على هذا المضيف بعد"
 
-#: src/sysmanage_agent/backup/key_files.py:126
+#: src/sysmanage_agent/backup/key_files.py:137
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr "لم يُطلق الخادم مفتاح النسخ الاحتياطي: HTTP %(status)s، %(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:137
+#: src/sysmanage_agent/backup/key_files.py:148
 msgid "no reason given"
 msgstr "لم يُذكر سبب"
 
-#: src/sysmanage_agent/backup/key_files.py:157
+#: src/sysmanage_agent/backup/key_files.py:169
+msgid "This operating system has no RAM file system for backup keys"
+msgstr ""
+"لا يحتوي نظام التشغيل هذا على نظام ملفات في الذاكرة (RAM) لمفاتيح النسخ "
+"الاحتياطي"
+
+#: src/sysmanage_agent/backup/key_files.py:189
+#, python-format
+msgid "Could not prepare a RAM file system for the backup key: %s"
+msgstr "تعذّر تجهيز نظام ملفات في الذاكرة (RAM) لمفتاح النسخ الاحتياطي: %s"
+
+#: src/sysmanage_agent/backup/key_files.py:208
+#: src/sysmanage_agent/backup/key_files.py:233
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "تعذّر تثبيت مفتاح النسخ الاحتياطي: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:202
+#: src/sysmanage_agent/backup/key_files.py:278
 #: src/sysmanage_agent/backup/keys_mixin.py:64
 msgid "This restate cannot sign a snapshot; upgrade restate."
 msgstr "لا يستطيع restate هذا توقيع لقطة؛ قم بترقية restate."
 
-#: src/sysmanage_agent/backup/key_files.py:205
+#: src/sysmanage_agent/backup/key_files.py:281
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr "لا يستطيع restate هذا فك تشفير مستودع مشفّر؛ حدّث restate."
 
@@ -170,7 +182,7 @@ msgstr "لم يستجب تخزين النسخ الاحتياطي في %s."
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "تعذّر إلغاء تركيب تخزين النسخ الاحتياطي على %s: %s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:120
+#: src/sysmanage_agent/backup/storage_prepare.py:122
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -179,7 +191,7 @@ msgstr ""
 "حساب خدمة النسخ الاحتياطي %(account)s (المستخدم والمجموعة) غير موجود على "
 "مضيف التخزين هذا. أنشئه، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:150
+#: src/sysmanage_agent/backup/storage_prepare.py:152
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -189,7 +201,7 @@ msgstr ""
 " احتياطية. شغّل الوكيل بصلاحيات root أو انقل الدليل إلى مكان آخر، ثم أعد "
 "التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:161
+#: src/sysmanage_agent/backup/storage_prepare.py:163
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -202,7 +214,7 @@ msgstr ""
 " وأعد التحضير، وانسخ محتواه إلى مجموعة البيانات الجديدة بصلاحيات root؛ أو 2)"
 " احذفه إذا لم تعد هذه النسخ الاحتياطية مطلوبة."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:169
+#: src/sysmanage_agent/backup/storage_prepare.py:171
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -215,7 +227,7 @@ msgstr ""
 "وأعد التحضير، وانسخ محتواه إلى الوحدة الفرعية الجديدة بصلاحيات root؛ أو 2) "
 "احذفه إذا لم تعد هذه النسخ الاحتياطية مطلوبة."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:200
+#: src/sysmanage_agent/backup/storage_prepare.py:206
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -224,12 +236,12 @@ msgstr ""
 "لا يعرف الخادم بعد عنوان IP للمضيف المنسوخ احتياطيًا، لذا لا يمكن قصر تصديره"
 " عليه. انتظر حتى يبلّغ ذلك المضيف عن بيانات شبكته، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:211
+#: src/sysmanage_agent/backup/storage_prepare.py:217
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "تحضير التخزين غير مدعوم على %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:219
+#: src/sysmanage_agent/backup/storage_prepare.py:225
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -237,7 +249,7 @@ msgstr ""
 "يصدّر FreeBSD أنظمة ملفات كاملة، لذا يحتاج مستودع كل مضيف إلى مجموعة بيانات "
 "ZFS خاصة به. ضع مسار التخزين على ZFS، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:287
+#: src/sysmanage_agent/backup/storage_prepare.py:303
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -248,7 +260,7 @@ msgstr ""
 "مجموعة بيانات فرعية في موضع المستودع. أنشئ مجموعة بيانات مركّبة هناك (zfs "
 "create -o mountpoint=%(path)s POOL/NAME)، ثم أعد التحضير."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:314
+#: src/sysmanage_agent/backup/storage_prepare.py:330
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -2334,67 +2346,67 @@ msgstr "خطأ في جمع سجلات الوكيل: %s"
 msgid "Error collecting error logs: %s"
 msgstr "خطأ في جمع سجلات الأخطاء: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:283
 msgid "That backup action is not configured on this host."
 msgstr "إجراء النسخ الاحتياطي هذا غير مُهيأ على هذا المضيف."
 
-#: src/sysmanage_agent/operations/backup_operations.py:283
+#: src/sysmanage_agent/operations/backup_operations.py:291
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "لا يمكن استخدام restate على هذا المضيف: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:306
+#: src/sysmanage_agent/operations/backup_operations.py:314
 msgid "This platform can only be a backup storage host."
 msgstr "لا يمكن لهذه المنصة أن تكون إلا مضيف تخزين للنسخ الاحتياطية."
 
-#: src/sysmanage_agent/operations/backup_operations.py:312
+#: src/sysmanage_agent/operations/backup_operations.py:320
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "تعذر تثبيت مهام النسخ الاحتياطي: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:343
+#: src/sysmanage_agent/operations/backup_operations.py:352
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "إصدار restate هذا لا يدعم: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:475
+#: src/sysmanage_agent/operations/backup_operations.py:466
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "لا يستطيع restate هذا تشغيل %s كمهمة؛ حدّث restate."
 
-#: src/sysmanage_agent/operations/backup_operations.py:578
+#: src/sysmanage_agent/operations/backup_operations.py:564
 msgid "restate is not installed on this host."
 msgstr "restate غير مثبت على هذا المضيف."
 
-#: src/sysmanage_agent/operations/backup_operations.py:611
+#: src/sysmanage_agent/operations/backup_operations.py:597
 msgid "That backup job is already running."
 msgstr "مهمة النسخ الاحتياطي هذه قيد التشغيل بالفعل."
 
-#: src/sysmanage_agent/operations/backup_operations.py:633
+#: src/sysmanage_agent/operations/backup_operations.py:619
 msgid "The backup job could not be started."
 msgstr "تعذر بدء مهمة النسخ الاحتياطي."
 
-#: src/sysmanage_agent/operations/backup_operations.py:688
+#: src/sysmanage_agent/operations/backup_operations.py:674
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "تعذّر سرد اللقطات المختومة: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:703
+#: src/sysmanage_agent/operations/backup_operations.py:689
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "تعذّر إزالة اللقطة المختومة القديمة %(name)s: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:778
+#: src/sysmanage_agent/operations/backup_operations.py:764
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s غير مُركّب في %(path)s على هذا المضيف"
 
-#: src/sysmanage_agent/operations/backup_operations.py:813
+#: src/sysmanage_agent/operations/backup_operations.py:799
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "تعذّر تحضير تخزين النسخ الاحتياطي للسياسة %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:931
+#: src/sysmanage_agent/operations/backup_operations.py:917
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2403,12 +2415,12 @@ msgstr ""
 "توقف restate (رمز الخروج %(code)s) قبل كتابة نتيجة؛ راجع journalctl -u "
 "%(unit)s على هذا المضيف"
 
-#: src/sysmanage_agent/operations/backup_operations.py:957
+#: src/sysmanage_agent/operations/backup_operations.py:943
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "تعذر تشغيل تدقيق التخزين: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:988
+#: src/sysmanage_agent/operations/backup_operations.py:974
 msgid "Could not queue the backup report"
 msgstr "تعذر إدراج تقرير النسخ الاحتياطي في قائمة الانتظار"
 

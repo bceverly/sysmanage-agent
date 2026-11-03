@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 15:53-0500\n"
+"POT-Creation-Date: 2026-11-03 07:51-0500\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -85,42 +85,52 @@ msgstr "The backup storage at %(where)s cannot take new files: %(error)s"
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "Locking does not work on the backup storage at %(where)s: %(error)s"
 
-#: src/sysmanage_agent/backup/key_files.py:56
+#: src/sysmanage_agent/backup/key_files.py:67
 msgid "The server sent no usable keys"
 msgstr "The server sent no usable keys"
 
-#: src/sysmanage_agent/backup/key_files.py:58
+#: src/sysmanage_agent/backup/key_files.py:69
 msgid "The server sent something that is not a secret key"
 msgstr "The server sent something that is not a secret key"
 
-#: src/sysmanage_agent/backup/key_files.py:66
+#: src/sysmanage_agent/backup/key_files.py:77
 msgid "No tmpfs to stage the key on"
 msgstr "No tmpfs to stage the key on"
 
-#: src/sysmanage_agent/backup/key_files.py:107
+#: src/sysmanage_agent/backup/key_files.py:118
 msgid "This host is not approved yet"
 msgstr "This host is not approved yet"
 
-#: src/sysmanage_agent/backup/key_files.py:126
+#: src/sysmanage_agent/backup/key_files.py:137
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 msgstr "The server did not release the backup key: HTTP %(status)s, %(detail)s"
 
-#: src/sysmanage_agent/backup/key_files.py:137
+#: src/sysmanage_agent/backup/key_files.py:148
 msgid "no reason given"
 msgstr "no reason given"
 
-#: src/sysmanage_agent/backup/key_files.py:157
+#: src/sysmanage_agent/backup/key_files.py:169
+msgid "This operating system has no RAM file system for backup keys"
+msgstr "This operating system has no RAM file system for backup keys"
+
+#: src/sysmanage_agent/backup/key_files.py:189
+#, python-format
+msgid "Could not prepare a RAM file system for the backup key: %s"
+msgstr "Could not prepare a RAM file system for the backup key: %s"
+
+#: src/sysmanage_agent/backup/key_files.py:208
+#: src/sysmanage_agent/backup/key_files.py:233
 #, python-format
 msgid "Could not install the backup key: %s"
 msgstr "Could not install the backup key: %s"
 
-#: src/sysmanage_agent/backup/key_files.py:202
+#: src/sysmanage_agent/backup/key_files.py:278
 #: src/sysmanage_agent/backup/keys_mixin.py:64
 msgid "This restate cannot sign a snapshot; upgrade restate."
 msgstr "This restate cannot sign a snapshot; upgrade restate."
 
-#: src/sysmanage_agent/backup/key_files.py:205
+#: src/sysmanage_agent/backup/key_files.py:281
 msgid "This restate cannot decrypt an encrypted repository; upgrade restate."
 msgstr "This restate cannot decrypt an encrypted repository; upgrade restate."
 
@@ -167,7 +177,7 @@ msgstr "The backup storage at %s did not answer."
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Could not unmount the backup storage at %s: %s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:120
+#: src/sysmanage_agent/backup/storage_prepare.py:122
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -176,7 +186,7 @@ msgstr ""
 "The backup service account %(account)s (user and group) does not exist on "
 "this storage host. Create it, then prepare again."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:150
+#: src/sysmanage_agent/backup/storage_prepare.py:152
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -185,7 +195,7 @@ msgstr ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:161
+#: src/sysmanage_agent/backup/storage_prepare.py:163
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -198,7 +208,7 @@ msgstr ""
 "prepare again, and copy its contents into the new dataset as root; or 2) "
 "remove it if those backups are no longer needed."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:169
+#: src/sysmanage_agent/backup/storage_prepare.py:171
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -211,7 +221,7 @@ msgstr ""
 "%(path)s.old), prepare again, and copy its contents into the new subvolume "
 "as root; or 2) remove it if those backups are no longer needed."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:200
+#: src/sysmanage_agent/backup/storage_prepare.py:206
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -221,12 +231,12 @@ msgstr ""
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:211
+#: src/sysmanage_agent/backup/storage_prepare.py:217
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "Preparing storage is not supported on %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:219
+#: src/sysmanage_agent/backup/storage_prepare.py:225
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -234,7 +244,7 @@ msgstr ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:287
+#: src/sysmanage_agent/backup/storage_prepare.py:303
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -245,7 +255,7 @@ msgstr ""
 "dataset would not land at the repository. Create a dataset mounted there "
 "(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:314
+#: src/sysmanage_agent/backup/storage_prepare.py:330
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -2333,67 +2343,67 @@ msgstr "Error collecting agent logs: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Error collecting error logs: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:275
+#: src/sysmanage_agent/operations/backup_operations.py:283
 msgid "That backup action is not configured on this host."
 msgstr "That backup action is not configured on this host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:283
+#: src/sysmanage_agent/operations/backup_operations.py:291
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate is not usable on this host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:306
+#: src/sysmanage_agent/operations/backup_operations.py:314
 msgid "This platform can only be a backup storage host."
 msgstr "This platform can only be a backup storage host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:312
+#: src/sysmanage_agent/operations/backup_operations.py:320
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Could not install the backup jobs: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:343
+#: src/sysmanage_agent/operations/backup_operations.py:352
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "This restate does not support: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:475
+#: src/sysmanage_agent/operations/backup_operations.py:466
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "This restate cannot run %s as a job; upgrade restate."
 
-#: src/sysmanage_agent/operations/backup_operations.py:578
+#: src/sysmanage_agent/operations/backup_operations.py:564
 msgid "restate is not installed on this host."
 msgstr "restate is not installed on this host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:611
+#: src/sysmanage_agent/operations/backup_operations.py:597
 msgid "That backup job is already running."
 msgstr "That backup job is already running."
 
-#: src/sysmanage_agent/operations/backup_operations.py:633
+#: src/sysmanage_agent/operations/backup_operations.py:619
 msgid "The backup job could not be started."
 msgstr "The backup job could not be started."
 
-#: src/sysmanage_agent/operations/backup_operations.py:688
+#: src/sysmanage_agent/operations/backup_operations.py:674
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Could not list the sealed snapshots: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:703
+#: src/sysmanage_agent/operations/backup_operations.py:689
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Could not remove the old sealed snapshot %(name)s: %(error)s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:778
+#: src/sysmanage_agent/operations/backup_operations.py:764
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s is not mounted at %(path)s on this host"
 
-#: src/sysmanage_agent/operations/backup_operations.py:813
+#: src/sysmanage_agent/operations/backup_operations.py:799
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "Could not prepare backup storage for policy %s: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:931
+#: src/sysmanage_agent/operations/backup_operations.py:917
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -2402,12 +2412,12 @@ msgstr ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
 "%(unit)s on this host"
 
-#: src/sysmanage_agent/operations/backup_operations.py:957
+#: src/sysmanage_agent/operations/backup_operations.py:943
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "The storage audit could not run: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:988
+#: src/sysmanage_agent/operations/backup_operations.py:974
 msgid "Could not queue the backup report"
 msgstr "Could not queue the backup report"
 

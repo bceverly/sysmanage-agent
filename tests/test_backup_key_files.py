@@ -282,3 +282,76 @@ async def test_leftover_keys_are_swept_at_start():
     await key_files.sweep(owned, run, lambda a: a,
                           listdir=lambda _d: [f"{RID}-0.key", f"{RID}-1.key"])  # fmt: skip
     assert calls == [["rm", "-f", "--", key_files.key_path(RID, 1)]]
+
+
+# --- the BSDs: no /run, no tmpfs mounted -- a RAM filesystem of the agent's own
+# (lab, freebsd as the storage host signing, 2026-11-03)
+
+FREEBSD_MOUNT = (
+    "zroot/ROOT/default on / (zfs, local, noatime, nfsv4acls)\n"
+    f"tmpfs on {key_files.BSD_KEY_DIR} (tmpfs, local)\n"
+)
+
+
+def test_a_ramfs_mount_is_recognized_and_a_disk_is_not():
+    assert key_files.ramfs_mounted(FREEBSD_MOUNT)
+    assert not key_files.ramfs_mounted("zroot/var on /var (zfs, local)\n")
+    assert not key_files.ramfs_mounted(
+        f"tmpfs on {key_files.BSD_KEY_DIR}-other (tmpfs, local)\n"
+    )
+    assert key_files.ramfs_mounted(
+        f"mfs:4211 on {key_files.BSD_KEY_DIR} type mfs (asynchronous, local)\n"
+    )
+
+
+def test_each_bsd_gets_its_own_ram_filesystem_and_others_are_refused():
+    assert key_files.ramfs_mount_argvs("FreeBSD")[1][:3] == ["mount", "-t", "tmpfs"]
+    assert key_files.ramfs_mount_argvs("NetBSD")[1][0] == "mount_tmpfs"
+    assert key_files.ramfs_mount_argvs("OpenBSD")[1][0] == "mount_mfs"
+    with pytest.raises(key_files.KeyFetchError):
+        key_files.ramfs_mount_argvs("Darwin")
+
+
+@pytest.mark.asyncio
+async def test_on_freebsd_keys_are_piped_onto_a_mounted_ramfs(monkeypatch):
+    monkeypatch.setattr(key_files, "SYSTEM", "FreeBSD")
+    calls, fed = [], []
+    mounted = [False]
+
+    async def run(argv, input_data=None):
+        calls.append(list(argv))
+        if input_data is not None:
+            fed.append(input_data)
+        if argv == ["mount"]:
+            return 0, FREEBSD_MOUNT if mounted[0] else "", ""
+        if argv[:1] == ["mount"]:
+            mounted[0] = True
+        return 0, "", ""
+
+    paths = await key_files.install([SECRET, SECRET], RID, run, lambda a: a)
+    assert paths == [f"{key_files.BSD_KEY_DIR}/{RID}-0.key",
+                     f"{key_files.BSD_KEY_DIR}/{RID}-1.key"]  # fmt: skip
+    assert ["mkdir", "-p", "-m", "0755", key_files.BSD_KEY_DIR] in calls
+    assert ["chmod", "600", paths[0]] in calls and ["tee", paths[1]] in calls
+    assert fed == [SECRET, SECRET]  # through stdin ...
+    assert all(SECRET not in " ".join(c) for c in calls)  # ... never argv
+    calls.clear()
+    await key_files.install([SECRET], RID, run, lambda a: a)
+    assert not [c for c in calls if c[:1] in (["mkdir"], ["mount"]) and c != ["mount"]]
+
+
+@pytest.mark.asyncio
+async def test_a_failed_bsd_install_removes_what_was_written(monkeypatch):
+    monkeypatch.setattr(key_files, "SYSTEM", "FreeBSD")
+    calls = []
+
+    async def run(argv, input_data=None):
+        calls.append(list(argv))
+        if argv == ["mount"]:
+            return 0, FREEBSD_MOUNT, ""
+        failing = argv[:1] == ["tee"] and argv[1].endswith("-1.key")
+        return (1, "", "denied") if failing else (0, "", "")
+
+    with pytest.raises(key_files.KeyFetchError):
+        await key_files.install([SECRET, SECRET], RID, run, lambda a: a)
+    assert calls[-1] == ["rm", "-f", "--", f"{key_files.BSD_KEY_DIR}/{RID}-0.key"]

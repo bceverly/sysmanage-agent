@@ -211,14 +211,19 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         return ["sudo", "-n"] + list(argv)
 
     @staticmethod
-    async def _run(argv: List[str]) -> Tuple[int, str, str]:
+    async def _run(
+        argv: List[str], input_data: Optional[str] = None
+    ) -> Tuple[int, str, str]:
         proc = await asyncio.create_subprocess_exec(
             *argv,
+            stdin=asyncio.subprocess.PIPE if input_data is not None else None,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             cwd="/",
         )
-        out, err = await proc.communicate()
+        out, err = await proc.communicate(
+            input_data.encode("utf-8") if input_data is not None else None
+        )
         return (
             proc.returncode,
             (out or b"").decode("utf-8", "replace"),

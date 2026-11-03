@@ -23,6 +23,7 @@ Nothing here logs a key; messages name the run at most.
 """
 
 import os
+import platform
 import posixpath
 import re
 import tempfile
@@ -31,6 +32,12 @@ from typing import Any, Dict, Iterable, List, Optional
 from src.i18n import _
 
 KEY_DIR = "/run/sysmanage-agent/backup-keys"
+# The BSDs have no /run and no tmpfs mounted by default (FreeBSD's /var/run
+# is on ZFS): the agent mounts a small RAM filesystem of its own here, so a
+# key still never reaches a disk (lab, freebsd as the storage host signing,
+# 2026-11-03 -- "No tmpfs to stage the key on").
+BSD_KEY_DIR = "/var/run/sysmanage-agent/backup-keys"
+SYSTEM = platform.system()
 # tmpfs, so the key never reaches a disk: stage() makes a 0600 file there
 # with mkstemp (O_EXCL, random name), so no other user can plant the path.
 _STAGE_DIRS = ("/dev/shm", "/run/shm")  # NOSONAR  # nosec B108
@@ -45,8 +52,12 @@ class KeyFetchError(Exception):
     """The run's keys could not be had; the message says why (never a key)."""
 
 
+def key_dir() -> str:
+    return KEY_DIR if SYSTEM == "Linux" else BSD_KEY_DIR
+
+
 def key_path(run_id: str, index: int) -> str:
-    return posixpath.join(KEY_DIR, f"{run_id}-{index}.key")
+    return posixpath.join(key_dir(), f"{run_id}-{index}.key")
 
 
 def check_keys(answer: Any) -> List[str]:
@@ -90,7 +101,7 @@ def stale(names: Iterable[str], keep: Iterable[str]) -> List[str]:
 
 
 def key_path_of(name: str) -> str:
-    return posixpath.join(KEY_DIR, name)
+    return posixpath.join(key_dir(), name)
 
 
 async def fetch(agent: Any, run_id: str, session_factory=None) -> List[str]:
@@ -139,10 +150,75 @@ async def _detail(response) -> str:
     return str(detail)[:200] if detail else "no reason given"
 
 
+def ramfs_mount_argvs(system: str = "") -> List[List[str]]:
+    """The commands that make ``BSD_KEY_DIR`` a root-owned RAM filesystem."""
+    system = system or SYSTEM
+    target = BSD_KEY_DIR
+    make = ["mkdir", "-p", "-m", "0755", target]
+    if system == "FreeBSD":
+        return [
+            make,
+            ["mount", "-t", "tmpfs", "-o", "mode=0755,size=8m", "tmpfs", target],
+        ]
+    if system == "NetBSD":
+        return [make, ["mount_tmpfs", "-m", "0755", "-s", "8M", "tmpfs", target]]
+    if system == "OpenBSD":  # no tmpfs since 6.0: a memory file system
+        return [make, ["mount_mfs", "-s", "16384", "swap", target],
+                ["chmod", "0755", target]]  # fmt: skip
+    raise KeyFetchError(
+        _("This operating system has no RAM file system for backup keys")
+    )
+
+
+def ramfs_mounted(mount_output: str) -> bool:
+    """Is ``BSD_KEY_DIR`` a tmpfs / mfs mount, per ``mount`` (no arguments)?"""
+    for line in mount_output.splitlines():
+        if f" on {BSD_KEY_DIR} " in line + " " and ("tmpfs" in line or "mfs" in line):
+            return True
+    return False
+
+
+async def _ensure_ramfs(run, privileged) -> None:
+    code, out, _err = await run(["mount"])
+    if code == 0 and ramfs_mounted(out):
+        return
+    for argv in ramfs_mount_argvs():
+        code, _out, err = await run(privileged(argv))
+        if code != 0:
+            raise KeyFetchError(
+                _("Could not prepare a RAM file system for the backup key: %s")
+                % (err or code)
+            )
+
+
+async def _install_bsd(keys: List[str], run_id: str, run, privileged) -> List[str]:
+    """Each key piped (stdin, never argv) into a root 0600 file on the RAM
+    filesystem: no tmpfs to stage on, and the agent may not write there."""
+    await _ensure_ramfs(run, privileged)
+    paths: List[str] = []
+    try:
+        for index, key in enumerate(keys):
+            dest = key_path(run_id, index)
+            code, _out, err = await run(privileged(["tee", dest]), input_data=key)
+            if code == 0:
+                paths.append(dest)
+                code, _out, err = await run(privileged(["chmod", "600", dest]))
+            if code != 0:
+                raise KeyFetchError(
+                    _("Could not install the backup key: %s") % (err or code)
+                )
+    except BaseException:
+        await remove(paths, run, privileged)
+        raise
+    return paths
+
+
 async def install(keys: List[str], run_id: str, run, privileged) -> List[str]:
     """Install ``keys`` for ``run_id``; their paths.  ``run`` / ``privileged``
     are the agent's own subprocess helpers.  A failure removes what was
     installed and raises KeyFetchError."""
+    if SYSTEM != "Linux":
+        return await _install_bsd(keys, run_id, run, privileged)
     paths: List[str] = []
     try:
         for index, key in enumerate(keys):
@@ -176,7 +252,7 @@ async def remove(paths: List[str], run, privileged) -> None:
 async def sweep(inflight: Dict[str, Any], run, privileged, listdir=os.listdir) -> None:
     """At agent start: remove key files no running job owns."""
     try:
-        names = listdir(KEY_DIR)
+        names = listdir(key_dir())
     except OSError:
         return
     owned = [p for record in inflight.values() if isinstance(record, dict)
