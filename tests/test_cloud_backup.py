@@ -116,7 +116,7 @@ def _job(tmp_path, action="download", **extra):
         "run_id": str(uuid.uuid4()), "action": action, "apple_id": "a@example.com",
         "library": "PrimarySync", "dir_name": "icloud-0000abcd",
         "storage_path": str(tmp_path), "directory": str(directory),
-        "session_dir": str(session), "auto_delete": False,
+        "session_dir": str(session),
         "until_found": 50 if action == "download" else None,
     }  # fmt: skip
     job.update(extra)
@@ -193,7 +193,7 @@ def test_a_download_counts_files_and_the_password_only_goes_on_stdin(fake, tmp_p
     assert PASSWORD not in json.dumps(outcome)
     assert PASSWORD not in json.dumps(server.progress)
     assert "--until-found" in seen["argv"] and "50" in seen["argv"]
-    for absent in ("--auto-delete", "--keep-icloud-recent-days", "webui", "--password"):
+    for absent in (*layout.NEVER, "webui", "--password"):
         assert absent not in seen["argv"]
 
 
@@ -331,16 +331,38 @@ def test_an_account_job_is_checked_and_placed(tmp_path):
     params = {
         "run_id": str(uuid.uuid4()), "action": "download", "apple_id": "a@example.com",
         "library": "PrimarySync", "dir_name": "icloud-0000abcd",
-        "storage_path": "/srv/backups/restate", "until_found": 50, "auto_delete": True,
+        "storage_path": "/srv/backups/restate", "until_found": 50,
     }  # fmt: skip
     job = layout.account_job(params, str(tmp_path), _read)
     assert job["directory"] == "/srv/backups/restate/cloud-photos/icloud-0000abcd"
     assert job["session_dir"].startswith(str(tmp_path))  # never on the storage
-    assert "--auto-delete" in layout.argv("/x/icloudpd", job)
     for key, bad in (("dir_name", "../etc"), ("apple_id", "x; rm"),
                      ("library", "-rf"), ("until_found", 0), ("action", "shell")):  # fmt: skip
         with pytest.raises(layout.LayoutError):
             layout.account_job(dict(params, **{key: bad}), str(tmp_path), _read)
+
+
+def test_nothing_that_deletes_ever_reaches_icloudpd(tmp_path):
+    # An older server still sends auto_delete; it is ignored, not obeyed.
+    _policies(tmp_path, "/srv/backups/restate")
+    for action in layout.ACTIONS:
+        params = {
+            "run_id": str(uuid.uuid4()), "action": action, "apple_id": "a@example.com",
+            "library": "PrimarySync", "dir_name": "icloud-0000abcd",
+            "storage_path": "/srv/backups/restate", "until_found": 50,
+            "auto_delete": True,
+        }  # fmt: skip
+        line = layout.argv(
+            "/x/icloudpd", layout.account_job(params, str(tmp_path), _read)
+        )
+        assert not set(line) & set(layout.NEVER), action
+
+
+def test_argv_refuses_a_deleting_option():
+    with pytest.raises(layout.LayoutError):
+        layout.argv(
+            "/x/icloudpd", dict(_job_dict(), action="download", library="--auto-delete")
+        )
 
 
 def test_a_reconcile_is_a_full_pass():
@@ -350,7 +372,7 @@ def test_a_reconcile_is_a_full_pass():
 
 def _job_dict():
     return {"apple_id": "a@example.com", "session_dir": "/s", "directory": "/d",
-            "library": "PrimarySync", "auto_delete": False, "until_found": 50}  # fmt: skip
+            "library": "PrimarySync", "until_found": 50}  # fmt: skip
 
 
 # --- the tool --------------------------------------------------------------------------

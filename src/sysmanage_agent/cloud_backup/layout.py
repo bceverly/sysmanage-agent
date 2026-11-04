@@ -151,7 +151,6 @@ def account_job(
         "storage_path": storage,
         "directory": account_dir(storage, name),
         "session_dir": session_dir(state_dir, name),
-        "auto_delete": parameters.get("auto_delete") is True,
         "until_found": None,
     }
     if action == "download":
@@ -159,11 +158,20 @@ def account_job(
     return job
 
 
+# Every icloudpd 1.32.3 option that deletes anything: --auto-delete removes
+# local files whose photo is in iCloud's "Recently Deleted", and the other two
+# delete photos from iCloud itself.  Cloud backup is one-way -- iCloud to the
+# storage host, nothing ever deleted on either side -- so none of them is ever
+# passed, whatever the server sends (an older server could send auto_delete).
+# Check this list again whenever tool.VERSION changes.
+NEVER = ("--auto-delete", "--delete-after-download", "--keep-icloud-recent-days")
+
+
 def argv(executable: str, job: Dict[str, Any]) -> list:
     """The icloudpd command line.  Never a password: icloudpd asks for it
     (``--password-provider console``) and the runner answers on its stdin.
-    Never the web UI (no listener), never a keyring, never
-    ``--keep-icloud-recent-days``."""
+    Never the web UI (no listener), never a keyring, and never an option in
+    ``NEVER``: nothing here deletes, in iCloud or on the storage."""
     line = [
         executable,
         "--password-provider", "console",
@@ -188,6 +196,6 @@ def argv(executable: str, job: Dict[str, Any]) -> list:
     ]  # fmt: skip
     if action == "download" and job["until_found"]:
         line += ["--until-found", str(job["until_found"])]
-    if job["auto_delete"]:
-        line.append("--auto-delete")
+    if any(option in line for option in NEVER):
+        raise LayoutError("an icloudpd option that deletes was refused")
     return line
