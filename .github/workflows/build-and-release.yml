@@ -683,7 +683,11 @@ jobs:
   # macOS .pkg Package Build
   build-macos:
     name: Build macOS .pkg Package
-    runs-on: macos-latest
+    # Pinned to macos-15, not macos-latest (2026-11-04): macos-latest (the
+    # macos-26 arm64 pool) went short of capacity and jobs sat 15 minutes
+    # then were cancelled with "not acquired by Runner of type hosted".
+    # The Pro+ engine builds already run on macos-15.
+    runs-on: macos-15
     timeout-minutes: 60
     needs: wait-for-tests
 

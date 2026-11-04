@@ -365,6 +365,13 @@ def test_argv_refuses_a_deleting_option():
         )
 
 
+def test_transfers_keep_originals_and_edited_versions():
+    for action in ("download", "reconcile"):
+        line = layout.argv("/x/icloudpd", dict(_job_dict(), action=action))
+        sizes = [line[i + 1] for i, arg in enumerate(line) if arg == "--size"]
+        assert sizes == ["original", "adjusted"], action
+
+
 def test_a_reconcile_is_a_full_pass():
     job = dict(_job_dict(), action="reconcile", until_found=None)
     assert "--until-found" not in layout.argv("/x/icloudpd", job)

@@ -190,6 +190,11 @@ def argv(executable: str, job: Dict[str, Any]) -> list:
         "--directory", job["directory"],
         "--library", job["library"],
         "--folder-structure", FOLDER_STRUCTURE,
+        # The original always, and Photos' edited version beside it for a photo
+        # that was edited (icloudpd writes it only then); without it a crop or
+        # an adjustment made in Photos would not be in the backup.
+        "--size", "original",
+        "--size", "adjusted",
         "--xmp-sidecar",
         "--keep-unicode-in-filenames",
         "--live-photo-mov-filename-policy", "suffix",
