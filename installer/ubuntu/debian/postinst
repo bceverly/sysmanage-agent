@@ -68,23 +68,30 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 		systemctl "$action" sysmanage-agent.service >/dev/null 2>&1 || true
 	fi
 
-	echo ""
-	echo "=========================================="
-	echo "SysManage Agent installation complete!"
-	echo "=========================================="
-	echo ""
-	echo "Next steps:"
-	echo "  1. sudo vim /etc/sysmanage-agent.yaml and set:"
-	echo "       server.url                 your SysManage server, e.g. https://sysmanage.yourcompany.com"
-	echo "       security.enrollment_token  (multi-tenant servers; TOP-LEVEL security section)"
-	echo "  2. sudo systemctl restart sysmanage-agent"
-	echo "  3. sudo systemctl status sysmanage-agent"
-	echo "     Until server.url is set the agent does not start: status shows"
-	echo "     'status=78/CONFIG' and the log says what to edit."
-	echo "  4. Approve the host on the server's Hosts page."
-	echo ""
-	echo "Log files are located in: /var/log/sysmanage-agent/"
-	echo ""
+	# The setup steps are for a fresh install only: an upgrade ($2 is the
+	# old version) keeps its /etc/sysmanage-agent.yaml, and telling the
+	# operator to set server.url again only alarms them.
+	if [ -n "$2" ]; then
+		echo "SysManage Agent upgraded from $2; its configuration is unchanged."
+	else
+		echo ""
+		echo "=========================================="
+		echo "SysManage Agent installation complete!"
+		echo "=========================================="
+		echo ""
+		echo "Next steps:"
+		echo "  1. sudo vim /etc/sysmanage-agent.yaml and set:"
+		echo "       server.url                 your SysManage server, e.g. https://sysmanage.yourcompany.com"
+		echo "       security.enrollment_token  (multi-tenant servers; TOP-LEVEL security section)"
+		echo "  2. sudo systemctl restart sysmanage-agent"
+		echo "  3. sudo systemctl status sysmanage-agent"
+		echo "     Until server.url is set the agent does not start: status shows"
+		echo "     'status=78/CONFIG' and the log says what to edit."
+		echo "  4. Approve the host on the server's Hosts page."
+		echo ""
+		echo "Log files are located in: /var/log/sysmanage-agent/"
+		echo ""
+	fi
 fi
 
 #DEBHELPER#

@@ -205,23 +205,30 @@ if [ $1 -eq 1 ]; then
     systemctl start sysmanage-agent.service >/dev/null 2>&1 || true
 fi
 
-echo ""
-echo "=========================================="
-echo "SysManage Agent installation complete!"
-echo "=========================================="
-echo ""
-echo "Next steps:"
-echo "  1. sudo vim /etc/sysmanage-agent.yaml and set:"
-echo "       server.url                 your SysManage server, e.g. https://sysmanage.yourcompany.com"
-echo "       security.enrollment_token  (multi-tenant servers; TOP-LEVEL security section)"
-echo "  2. sudo systemctl restart sysmanage-agent"
-echo "  3. sudo systemctl status sysmanage-agent"
-echo "     Until server.url is set the agent does not start: status shows"
-echo "     'status=78/CONFIG' and the log says what to edit."
-echo "  4. Approve the host on the server's Hosts page."
-echo ""
-echo "Log files are located in: /var/log/sysmanage-agent/"
-echo ""
+# The setup steps are for a fresh install only ($1 is 1; an upgrade is 2
+# or more): an upgrade keeps its /etc/sysmanage-agent.yaml, and telling
+# the operator to set server.url again only alarms them.
+if [ "$1" -eq 1 ]; then
+    echo ""
+    echo "=========================================="
+    echo "SysManage Agent installation complete!"
+    echo "=========================================="
+    echo ""
+    echo "Next steps:"
+    echo "  1. sudo vim /etc/sysmanage-agent.yaml and set:"
+    echo "       server.url                 your SysManage server, e.g. https://sysmanage.yourcompany.com"
+    echo "       security.enrollment_token  (multi-tenant servers; TOP-LEVEL security section)"
+    echo "  2. sudo systemctl restart sysmanage-agent"
+    echo "  3. sudo systemctl status sysmanage-agent"
+    echo "     Until server.url is set the agent does not start: status shows"
+    echo "     'status=78/CONFIG' and the log says what to edit."
+    echo "  4. Approve the host on the server's Hosts page."
+    echo ""
+    echo "Log files are located in: /var/log/sysmanage-agent/"
+    echo ""
+else
+    echo "SysManage Agent upgraded; its configuration is unchanged."
+fi
 
 %preun
 %systemd_preun sysmanage-agent.service
