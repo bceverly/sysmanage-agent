@@ -2144,6 +2144,17 @@ jobs:
           set -euo pipefail
           ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           s3() { aws s3 "$@" --endpoint-url "$ENDPOINT" --region auto; }
+          # A sync that still lost files after its retries is run again; each
+          # pass copies only what the bucket (or the stage) is still missing.
+          s3sync() {
+            local pass
+            for pass in 1 2 3; do
+              s3 sync "$@" && return 0
+              echo "R2 sync pass $pass was incomplete; trying again in $((pass * 30))s"
+              sleep $((pass * 30))
+            done
+            return 1
+          }
           # R2 rejected a multipart upload from the aws-cli on Ubuntu 26.04 runners
           # (InvalidPart, agent 3.12.0.21, 2026-10-31): newer aws-cli can pick the CRT
           # transfer client, whose parts R2 does not accept.  The classic client, and
@@ -2152,8 +2163,13 @@ jobs:
           aws configure set default.s3.preferred_transfer_client classic
           aws configure set default.s3.multipart_threshold 512MB
           # The classic client moves 10 files at a time by default; the flatpak
-          # OSTree store alone is thousands of small objects.
-          aws configure set default.s3.max_concurrent_requests 64
+          # OSTree store alone is thousands of small objects.  Not 64: at 64, R2
+          # answered with 503 "Reduce your concurrent request rate" (agent
+          # 3.12.1.1, 2026-11-04).  Adaptive retries back off on a 503 and slow
+          # the client down, instead of three quick tries and a lost file.
+          aws configure set default.s3.max_concurrent_requests 16
+          aws configure set default.retry_mode adaptive
+          aws configure set default.max_attempts 10
           WORK="$GITHUB_WORKSPACE/r2-stage"
           mkdir -p "$WORK"
           cd "$WORK"
@@ -2161,14 +2177,16 @@ jobs:
           # Pull the subtrees whose indexes we regenerate (apt pool, the rpm
           # repos, and the flatpak OSTree store) so dpkg-scanpackages /
           # createrepo_c --update / the flatpak rsync see every existing version.
-          # Direct-download dirs (mac/win/bsd/alpine) need no pull.  ``|| true``
-          # tolerates an empty subtree on the very first publish.
+          # Direct-download dirs (mac/win/bsd/alpine) need no pull.  No ``|| true``
+          # (there was one until 2026-11-04): a pull that lost files to an R2 503
+          # carried on, and an index rebuilt from it would leave out the versions
+          # it missed.  An empty prefix syncs cleanly, so a first publish is fine.
           mkdir -p repo/agent/deb repo/agent/rpm repo/flatpak repo/objects repo/refs
-          s3 sync "s3://${R2_BUCKET}/agent/deb/" repo/agent/deb/ --only-show-errors || true
-          s3 sync "s3://${R2_BUCKET}/agent/rpm/" repo/agent/rpm/ --only-show-errors || true
-          s3 sync "s3://${R2_BUCKET}/flatpak/"   repo/flatpak/   --only-show-errors || true
-          s3 sync "s3://${R2_BUCKET}/objects/"   repo/objects/   --only-show-errors || true
-          s3 sync "s3://${R2_BUCKET}/refs/"      repo/refs/      --only-show-errors || true
+          s3sync "s3://${R2_BUCKET}/agent/deb/" repo/agent/deb/ --only-show-errors
+          s3sync "s3://${R2_BUCKET}/agent/rpm/" repo/agent/rpm/ --only-show-errors
+          s3sync "s3://${R2_BUCKET}/flatpak/"   repo/flatpak/   --only-show-errors
+          s3sync "s3://${R2_BUCKET}/objects/"   repo/objects/   --only-show-errors
+          s3sync "s3://${R2_BUCKET}/refs/"      repo/refs/      --only-show-errors
           s3 cp   "s3://${R2_BUCKET}/summary"    repo/summary    2>/dev/null || true
           # The OSTree repo's own config: without it flatpak build-sign / build-update-repo
           # cannot open the repo ("openat(config): No such file", 3.11.0.5 release).
@@ -2501,15 +2519,15 @@ jobs:
           # Scoped to pool/ ON PURPOSE.  dists/** MUST stay uncached: those files
           # are rewritten every release, and a stale Release is exactly the
           # 2026-08-07 outage ("File has unexpected size").
-          s3 sync repo/ "s3://${R2_BUCKET}/" --only-show-errors \
+          s3sync repo/ "s3://${R2_BUCKET}/" --only-show-errors \
             --exclude "*" --include "*/pool/*" \
             --cache-control "public, max-age=31536000, immutable"
 
-          s3 sync repo/ "s3://${R2_BUCKET}/" --only-show-errors \
+          s3sync repo/ "s3://${R2_BUCKET}/" --only-show-errors \
             --exclude "*/dists/*/Release" \
             --exclude "*/dists/*/Release.gpg" \
             --exclude "*/dists/*/InRelease"
-          s3 sync repo/ "s3://${R2_BUCKET}/" --only-show-errors
+          s3sync repo/ "s3://${R2_BUCKET}/" --only-show-errors
 
           # PROVE the packages landed.  Symmetric with the server workflow's
           # guard, and added for the same reason: the `cp` lines into the pool
