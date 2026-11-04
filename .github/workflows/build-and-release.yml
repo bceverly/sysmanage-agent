@@ -3106,8 +3106,14 @@ jobs:
 
   # riscv64 wheels for the Launchpad upload: see riscv64-wheels.yml.  A
   # failure there costs only the riscv64 build, never the amd64/arm64 upload.
+  #
+  # Both this and deploy-launchpad wait for build-ubuntu (the .deb that
+  # proves the source package builds), not for `release`: release waits for
+  # every platform, and on 2026-11-04 GitHub's hosted macOS runners had no
+  # capacity, so a Mac job that never started held back every PPA upload.
+  # Neither job uses anything the release job makes.
   build-riscv64-wheels:
-    needs: [release]
+    needs: [build-ubuntu]
     if: startsWith(github.ref, 'refs/tags/')
     uses: ./.github/workflows/riscv64-wheels.yml
 
@@ -3117,9 +3123,9 @@ jobs:
     runs-on: ubuntu-22.04
     # Up to 3 upload rounds, each waiting up to 15 min for Launchpad to accept.
     timeout-minutes: 90
-    needs: [release, build-riscv64-wheels]
+    needs: [build-ubuntu, build-riscv64-wheels]
     # Runs even when a riscv64 wheel build failed: that only costs riscv64.
-    if: startsWith(github.ref, 'refs/tags/') && !cancelled() && needs.release.result == 'success'
+    if: startsWith(github.ref, 'refs/tags/') && !cancelled() && needs.build-ubuntu.result == 'success'
     strategy:
       matrix:
         include:
