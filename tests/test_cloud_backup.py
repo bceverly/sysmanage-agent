@@ -287,6 +287,16 @@ def test_a_web_access_problem_says_what_to_turn_on():
     assert "Access iCloud Data on the Web" in outcome.message
 
 
+def test_apples_refusal_is_named_so_the_server_waits_it_out():
+    outcome = runner.Outcome()
+    outcome.exit_code = 1
+    outcome.tail.append(
+        "2026-11-04 17:08:31 INFO     Apple iCloud is temporary refusing to serve icloudpd"
+    )
+    runner.judge(outcome, "reconcile")
+    assert (outcome.status, outcome.reason) == (runner.FAILED, "apple_busy")
+
+
 # --- layout -------------------------------------------------------------------------
 
 

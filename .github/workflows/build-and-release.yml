@@ -3144,7 +3144,9 @@ jobs:
     name: Deploy to Launchpad PPA (${{ matrix.release_name }})
     runs-on: ubuntu-22.04
     # Up to 3 upload rounds, each waiting up to 15 min for Launchpad to accept.
-    timeout-minutes: 90
+    # Three uploads, waiting 30, 45 and 60 minutes for Launchpad to accept
+    # each (deploy-launchpad's upload step), plus the build.
+    timeout-minutes: 180
     needs: [build-ubuntu, build-riscv64-wheels]
     # Runs even when a riscv64 wheel build failed: that only costs riscv64.
     if: startsWith(github.ref, 'refs/tags/') && !cancelled() && needs.build-ubuntu.result == 'success'
@@ -3454,24 +3456,40 @@ jobs:
           # for the source to appear in the PPA (any status: Pending counts),
           # and upload again if it does not -- a rejected upload never
           # entered the archive, so the same version may be sent again.
+          #
+          # Launchpad's upload queue can take longer than any fixed wait
+          # (3.12.1.4 noble, 2026-11-04: accepted after the job had given up,
+          # so the job failed and two duplicate uploads were rejected).  The
+          # queue is not readable without signing in, so "still queued" and
+          # "rejected" look the same from here: check before every upload,
+          # so a version already accepted is never sent again, and wait
+          # longer each round (30, 45, then 60 minutes).
           lp_version="${VERSION}+ppa1~${RELEASE}1"
           lp_api="https://api.launchpad.net/devel/~bceverly/+archive/ubuntu/sysmanage-agent"
           accepted() {
             # "+" must be %2B in the query, or Launchpad reads a space.
-            curl -fsS "${lp_api}?ws.op=getPublishedSources&source_name=sysmanage-agent&version=${lp_version//+/%2B}&exact_match=true" \
+            # --retry: the API drops connections now and then, and one
+            # dropped check must not count as "not accepted".
+            curl -fsS --retry 3 --retry-all-errors --retry-delay 5 \
+              "${lp_api}?ws.op=getPublishedSources&source_name=sysmanage-agent&version=${lp_version//+/%2B}&exact_match=true" \
               | grep -q "\"source_package_version\": \"${lp_version}\""
           }
           for round in 1 2 3; do
+            if accepted; then
+              echo "SUCCESS! Launchpad has accepted $lp_version for $RELEASE (nothing to upload)"
+              exit 0
+            fi
             upload
-            echo "Uploaded (round $round); waiting for Launchpad to accept $lp_version..."
-            for _ in $(seq 1 20); do
+            minutes=$(( 15 + 15 * round ))
+            echo "Uploaded (round $round); waiting up to ${minutes} minutes for Launchpad to accept $lp_version..."
+            for _ in $(seq 1 $(( minutes * 60 / 45 ))); do
               sleep 45
               if accepted; then
                 echo "SUCCESS! Launchpad accepted $lp_version for $RELEASE"
                 exit 0
               fi
             done
-            echo "::warning::Launchpad has not accepted $lp_version after 15 minutes (round $round): it was rejected or dropped; check the uploader's email. Uploading again."
+            echo "::warning::Launchpad has not accepted $lp_version after ${minutes} minutes (round $round): still queued, or rejected (check the uploader's email)."
           done
           echo "::error::Launchpad did not accept $lp_version for $RELEASE after 3 uploads. Its rejection email to the uploader names the cause."
           exit 1

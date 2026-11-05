@@ -78,6 +78,9 @@ WEB_ACCESS_MARKERS = (
     "ZONE_NOT_FOUND",
     "PyiCloudServiceNotActivatedException",
 )
+# Apple answered 503: it limits how fast one account downloads.  The server
+# waits it out and tries again by itself (cloud_backup_tick, "apple_busy").
+APPLE_BUSY_MARKERS = ("Apple iCloud is temporary refusing to serve icloudpd",)
 
 
 class Outcome:
@@ -203,6 +206,13 @@ def judge(outcome: Outcome, action: str) -> None:
             "iCloud data is not reachable from the web for this account. With "
             'Advanced Data Protection on, turn on "Access iCloud Data on the '
             'Web" on the iPhone (Settings, your name, iCloud), then try again.',
+        )
+    elif any(marker in text for marker in APPLE_BUSY_MARKERS):
+        outcome.stop(
+            FAILED,
+            "apple_busy",
+            "Apple is limiting downloads for this account. Nothing is lost: "
+            "the download is tried again after a cooldown.",
         )
     else:
         outcome.stop(FAILED, "tool_failed",
