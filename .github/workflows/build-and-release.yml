@@ -2340,8 +2340,28 @@ jobs:
           # summary).  None was ever generated, so `flatpak remote-add` against
           # repo.sysmanage.org could not work.  Sign the app commit with the
           # archive signing subkey and regenerate the summary.
+          #
+          # apt-get update FIRST, and never fatal (3.12.1.5, 2026-11-05):
+          # this install ran on the runner image's package lists with no
+          # update, the lists had gone stale, apt exited 100 with its output
+          # sent to /dev/null, and `set -e` killed the whole publish before
+          # a single deb, rpm or BSD package reached R2.
+          FP_FAILED=""
           if [ -d repo/refs/heads/app ] && [ -f repo/config ]; then
-            sudo apt-get install -y -qq flatpak >/dev/null 2>&1
+            FP_APT_OK=""
+            for attempt in 1 2 3; do
+              if sudo apt-get update -qq && sudo apt-get install -y -qq flatpak; then
+                FP_APT_OK=1; break
+              fi
+              echo "apt could not install flatpak (attempt $attempt); retrying in $((attempt * 20))s"
+              sleep $((attempt * 20))
+            done
+            if [ -z "$FP_APT_OK" ]; then
+              echo "::warning::flatpak could not be installed; the Flatpak remote is not updated this release"
+              FP_FAILED=1
+            fi
+          fi
+          if [ -z "$FP_FAILED" ] && [ -d repo/refs/heads/app ] && [ -f repo/config ]; then
             FP_SIGN=""
             if [ -n "${APT_SIGNING_KEY:-}" ]; then
               FP_GNUPG="$(mktemp -d)"; chmod 700 "$FP_GNUPG"
