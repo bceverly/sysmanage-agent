@@ -10,8 +10,8 @@ Handles package installation, uninstallation, and related operations.
 import asyncio
 import json
 import logging
+import os
 import socket
-import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Tuple
 
@@ -22,8 +22,18 @@ from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations import package_installation_helpers
 from src.sysmanage_agent.operations.package_name_guard import package_name_problem
 
-_DEBIAN_FRONTEND_ENV = "DEBIAN_FRONTEND=noninteractive"
-_DEBCONF_SEEN_ENV = "DEBCONF_NONINTERACTIVE_SEEN=true"
+# apt runs non-interactively.  These travel in the ENVIRONMENT, kept across
+# sudo by the sudoers ``env_keep`` line, not as ``sudo VAR=value`` arguments:
+# sudo refuses those unless the rule carries SETENV, so every install from
+# the Install dialog failed on Ubuntu with "sudo: sorry, you are not allowed
+# to set the following environment variables" (found on a fresh Ubuntu
+# 24.04 install, 2026-11-05).  A host with an older sudoers file just drops
+# the variables -- apt has no terminal and stays non-interactive anyway.
+_APT_ENV = {"DEBIAN_FRONTEND": "noninteractive", "DEBCONF_NONINTERACTIVE_SEEN": "true"}
+
+
+def _apt_env() -> Dict[str, str]:
+    return {**os.environ, **_APT_ENV}
 
 
 def _create_uninstall_record(
@@ -502,20 +512,17 @@ class PackageOperations:
             # all sudo versions (Linux, macOS, BSDs)
             update_process = await asyncio.create_subprocess_exec(
                 "sudo",
-                _DEBIAN_FRONTEND_ENV,
-                _DEBCONF_SEEN_ENV,
                 "apt-get",
                 "update",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=_apt_env(),
             )
             await update_process.communicate()
 
             # Install all packages in a single command
             install_cmd = [
                 "sudo",
-                _DEBIAN_FRONTEND_ENV,
-                _DEBCONF_SEEN_ENV,
                 "apt-get",
                 "install",
                 "-y",
@@ -524,6 +531,7 @@ class PackageOperations:
                 *install_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=_apt_env(),
             )
 
             stdout, stderr = await install_process.communicate()
@@ -561,8 +569,6 @@ class PackageOperations:
             # Uninstall all packages in a single command (autoremove to clean up dependencies)
             uninstall_cmd = [
                 "sudo",
-                _DEBIAN_FRONTEND_ENV,
-                _DEBCONF_SEEN_ENV,
                 "apt-get",
                 "remove",
                 "--autoremove",
@@ -572,6 +578,7 @@ class PackageOperations:
                 *uninstall_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=_apt_env(),
             )
 
             stdout, stderr = await uninstall_process.communicate()
@@ -612,17 +619,22 @@ class PackageOperations:
             except Exception:
                 hostname = socket.gethostname()
 
-            completion_message = {
-                "message_type": "installation_complete",
-                "message_id": str(uuid.uuid4()),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+            # The payload goes in "data", like every other message: the server
+            # queues message.data only, so these fields sent at the top level
+            # never reached the handler ("installation_complete ... missing
+            # request_id"), and every install from the Install dialog stayed
+            # "in progress" forever (found 2026-11-05).
+            data = {
                 "request_id": request_id,
                 "success": success,
                 "result_log": result_log,
                 "hostname": hostname,
             }
             if host_approval and host_approval.host_id:
-                completion_message["host_id"] = str(host_approval.host_id)
+                data["host_id"] = str(host_approval.host_id)
+            completion_message = self.agent_instance.create_message(
+                "installation_complete", data
+            )
 
             queued = await self.agent_instance.send_message(completion_message)
             if queued:
@@ -659,10 +671,8 @@ class PackageOperations:
             # Get hostname with fallback
             hostname = system_info.get("hostname") or socket.gethostname()
 
-            update_message = {
-                "message_type": "package_installation_status",
-                "message_id": str(uuid.uuid4()),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+            # Payload in "data", as for installation_complete above.
+            data = {
                 "installation_id": installation_id,
                 "status": status,
                 "package_name": package_name,
@@ -672,15 +682,18 @@ class PackageOperations:
 
             # Add optional fields
             if error_message:
-                update_message["error_message"] = error_message
+                data["error_message"] = error_message
             if installed_version:
-                update_message["installed_version"] = installed_version
+                data["installed_version"] = installed_version
             if installation_log:
-                update_message["installation_log"] = installation_log
+                data["installation_log"] = installation_log
 
             # Add host identification
             if host_approval and host_approval.host_id:
-                update_message["host_id"] = str(host_approval.host_id)
+                data["host_id"] = str(host_approval.host_id)
+            update_message = self.agent_instance.create_message(
+                "package_installation_status", data
+            )
 
             # Send the status update message
             await self.agent_instance.send_message(update_message)

@@ -9,6 +9,12 @@
 # is the default behavior now and the directive is rejected as an
 # unknown setting on Ubuntu 26.04+, openSUSE Tumbleweed, etc.)
 
+# apt and do-release-upgrade run non-interactively: the agent sets these two
+# in its environment and sudo keeps them (only these -- not SETENV, which
+# would let the caller set any variable).  ``sudo DEBIAN_FRONTEND=... apt-get``
+# was refused outright without SETENV (2026-11-05).
+Defaults:sysmanage-agent env_keep += "DEBIAN_FRONTEND DEBCONF_NONINTERACTIVE_SEEN"
+
 # Package Management (APT/DPKG)
 #
 # Grant the bare apt / apt-get binaries rather than scoping to

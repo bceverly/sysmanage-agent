@@ -46,117 +46,133 @@ SysManage Agent is a headless Python application designed to be installed on rem
 
 ### Supported Platforms
 
-- 🐧 **Linux**: Ubuntu, Debian, CentOS, RHEL, Fedora, Rocky, AlmaLinux, Oracle Linux
-- 🪟 **Windows**: 10, 11, Server 2019/2022
+- 🐧 **Linux**: Ubuntu 22.04/24.04/26.04 LTS, Debian 12+, RHEL, Rocky Linux, AlmaLinux, Oracle Linux and CentOS Stream 9 and 10, Fedora, Amazon Linux 2023, openSUSE Tumbleweed, SLES 15, Arch Linux, Alpine Linux 3.21/3.22
+- 🪟 **Windows**: x64 and ARM64
 - 🍎 **macOS**: Intel and Apple Silicon
-- 🔒 **FreeBSD**: Latest stable versions
-- 🛡️ **OpenBSD**: Latest stable versions
-- 🚩 **NetBSD**: Latest stable versions
+- 🔒 **FreeBSD**: amd64
+- 🛡️ **OpenBSD**: 7.9 and 8.0
+- 🚩 **NetBSD**
 
 ## Installation
 
-### Package Repositories (Recommended)
+Install the agent from a signed native package. The full per-platform
+instructions are at
+[sysmanage.org/docs/agent/installation.html](https://sysmanage.org/docs/agent/installation.html);
+the common cases are below. SysManage does not publish container images.
 
-> Packages and the apt/rpm repositories are hosted on **Cloudflare R2** at
-> `https://repo.sysmanage.org` (Ubuntu/Debian are also on the Launchpad PPA and
-> Fedora/RHEL on COPR). The repo moved off GitHub Pages, which caps published
-> artifacts at 1 GB.
-
-#### Ubuntu/Debian - APT Repository
+### Ubuntu - Launchpad PPA (Recommended)
 
 ```bash
-# Add the repository
-echo "deb [trusted=yes] https://repo.sysmanage.org/agent/deb stable main" | \
-  sudo tee /etc/apt/sources.list.d/sysmanage.list
-
-# Update and install
+sudo add-apt-repository ppa:bceverly/sysmanage-agent
 sudo apt update
 sudo apt install sysmanage-agent
+```
 
-# Configure
-sudo vim /etc/sysmanage-agent.yaml
+### Debian - SysManage APT Repository
+
+```bash
+# Install the archive signing key and check its fingerprint:
+#   896E ED43 9F5E 9BB1 FCA6 69A5 E033 E691 377F 0AE3
+sudo install -d -m 0755 /usr/share/keyrings
+curl -fsSL https://repo.sysmanage.org/agent/sysmanage-archive-keyring.gpg \
+  | sudo tee /usr/share/keyrings/sysmanage-archive-keyring.gpg > /dev/null
+gpg --show-keys /usr/share/keyrings/sysmanage-archive-keyring.gpg
+
+# Add the repository, verified against that key
+echo "deb [signed-by=/usr/share/keyrings/sysmanage-archive-keyring.gpg] https://repo.sysmanage.org/agent/deb stable main" \
+  | sudo tee /etc/apt/sources.list.d/sysmanage-agent.list
+
+sudo apt update
+sudo apt install sysmanage-agent
+```
+
+### RHEL Family, Fedora, Amazon Linux - Fedora Copr
+
+RHEL, Rocky Linux, AlmaLinux, Oracle Linux and CentOS Stream 9 and 10, Fedora
+43 and Amazon Linux 2023 (x86_64 and aarch64). Release 8 of the RHEL family is
+not supported: the agent needs Python 3.9 or newer.
+
+```bash
+sudo dnf install epel-release      # RHEL family only; skip on Fedora and Amazon Linux
+sudo dnf copr enable bceverly/sysmanage-agent
+sudo dnf install sysmanage-agent
+```
+
+EL9 hosts that cannot reach Copr can use the signed DNF repository on the mirror:
+
+```bash
+sudo tee /etc/yum.repos.d/sysmanage-agent.repo << 'EOF'
+[sysmanage-agent]
+name=SysManage Agent
+baseurl=https://repo.sysmanage.org/agent/rpm/el9/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://repo.sysmanage.org/agent/rpm/RPM-GPG-KEY-sysmanage
+EOF
+sudo dnf install sysmanage-agent
+```
+
+### openSUSE Tumbleweed, SLES 15 - Signed RPM Repositories
+
+```bash
+sudo rpm --import https://repo.sysmanage.org/agent/rpm/RPM-GPG-KEY-sysmanage
+sudo zypper addrepo https://repo.sysmanage.org/agent/rpm/opensuse-tumbleweed/x86_64 sysmanage-agent   # Tumbleweed
+# sudo zypper addrepo https://repo.sysmanage.org/agent/rpm/sles/15/x86_64 sysmanage-agent            # SLES 15
+sudo zypper refresh
+sudo zypper install sysmanage-agent
+```
+
+### Other Platforms
+
+- **Arch Linux**: `yay -S sysmanage-agent` (AUR)
+- **macOS**: `brew install bceverly/tap/sysmanage-agent`
+- **Windows**: `winget install --id sysmanage.sysmanage-agent --exact` (x64), or
+  the `.exe` bundle for x64 and ARM64 from the mirror
+- **Alpine Linux, FreeBSD, OpenBSD, NetBSD**: packages from
+  `https://repo.sysmanage.org/agent/<platform>/`. These downloads are **not
+  signed**; each has a `.sha256` next to it. Check it before installing, as the
+  installation guide shows.
+
+### Point the Agent at Your Server
+
+Edit `/etc/sysmanage-agent.yaml` (`C:\ProgramData\SysManage\sysmanage-agent.yaml`
+on Windows), set `server.url`, and restart the agent. The agent needs outbound
+port 443 to the server and nothing else. Then approve the host on the server's
+Hosts page.
+
+```yaml
+server:
+  url: "https://sysmanage.example.com"
+  verify_ssl: true
+```
+
+```bash
 sudo systemctl restart sysmanage-agent
 ```
 
-**Supported:** Ubuntu 22.04+, Debian 11+
-
-#### RHEL/CentOS/Fedora/Rocky/AlmaLinux/Oracle Linux - YUM/DNF Repository
-
-**EL9 (RHEL 9, Rocky 9, AlmaLinux 9, Oracle Linux 9, CentOS Stream 9):**
-```bash
-sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
-[sysmanage]
-name=SysManage Agent Repository
-baseurl=https://repo.sysmanage.org/agent/rpm/el9/x86_64
-enabled=1
-gpgcheck=0
-EOF
-
-sudo dnf install sysmanage-agent
-```
-
-**EL8 (RHEL 8, Rocky 8, AlmaLinux 8, Oracle Linux 8):**
-```bash
-# Install Python 3.11 first
-sudo dnf module install python311
-
-sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
-[sysmanage]
-name=SysManage Agent Repository
-baseurl=https://repo.sysmanage.org/agent/rpm/el8/x86_64
-enabled=1
-gpgcheck=0
-EOF
-
-sudo dnf install sysmanage-agent
-```
-
-**Fedora 38+:**
-```bash
-sudo tee /etc/yum.repos.d/sysmanage.repo << EOF
-[sysmanage]
-name=SysManage Agent Repository
-baseurl=https://repo.sysmanage.org/agent/rpm/fedora/39/x86_64
-enabled=1
-gpgcheck=0
-EOF
-
-sudo dnf install sysmanage-agent
-```
-
-### Direct Downloads
-
-Download packages from [GitHub Releases](https://github.com/bceverly/sysmanage-agent/releases)
-
 ## Prerequisites
 
-- **Python**: 3.9-3.14 (tested across the full range in CI; 3.9 retained for macOS system Python)
-- **Network**: Outbound HTTPS access to SysManage Server
-- **Privileges**: Administrative rights for system management tasks (optional)
+- **Packages**: nothing to install first; each package brings what the agent needs
+- **Network**: Outbound HTTPS (port 443) to the SysManage server
+- **Privileges**: root or administrator rights to install the package
 
-**📖 For detailed platform-specific installation instructions, visit [sysmanage.org/docs/agent/installation.html](https://sysmanage.org/docs/agent/installation.html)**
+## Building from Source (Development)
 
-## Quick Start
+For working on the agent itself. You need Python 3.9 through 3.14 (tested
+across the full range in CI; 3.9 retained for macOS system Python) with its
+development headers, a C compiler, and `make` (`gmake` on the BSDs).
 
 ```bash
-# 1. Clone and setup
 git clone https://github.com/bceverly/sysmanage-agent.git
 cd sysmanage-agent
-
-# 2. Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-# Note: On BSD systems (FreeBSD, OpenBSD, NetBSD), use: . .venv/bin/activate
-# Windows users: .venv\Scripts\activate
-
-# 3. Install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# 4. Start the agent
-gmake start                    # Standard agent
-# gmake start-privileged       # Privileged agent (for package management)
+make install-dev
+cp installer/ubuntu/sysmanage-agent.yaml.example sysmanage-agent.yaml   # then set server.url
+make start                     # gmake on the BSDs
+# make start-privileged        # Privileged agent (for package management)
 ```
+
+A source checkout reads `sysmanage-agent.yaml` in the project directory when
+`/etc/sysmanage-agent.yaml` does not exist.
 
 ## Configuration
 

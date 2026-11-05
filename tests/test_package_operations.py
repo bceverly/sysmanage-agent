@@ -16,12 +16,23 @@ import pytest
 from src.sysmanage_agent.operations.package_operations import PackageOperations
 
 
+def _envelope(message_type, data=None):
+    """What agent.create_message builds: the payload under "data"."""
+    return {
+        "message_type": message_type,
+        "message_id": "m-1",
+        "timestamp": "t",
+        "data": dict(data or {}),
+    }
+
+
 class TestPackageOperations:
     """Test cases for PackageOperations class."""
 
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_agent = Mock()
+        self.mock_agent.create_message = _envelope
         self.mock_agent.hostname = "test-host"
         self.mock_agent.platform = "Linux"
         self.mock_agent.ipv4 = "192.168.1.100"
@@ -92,8 +103,8 @@ class TestPackageOperations:
             # Verify status update messages were sent
             assert self.mock_agent.send_message.call_count == 2
             calls = self.mock_agent.send_message.call_args_list
-            assert calls[0][0][0]["status"] == "installing"
-            assert calls[1][0][0]["status"] == "completed"
+            assert calls[0][0][0]["data"]["status"] == "installing"
+            assert calls[1][0][0]["data"]["status"] == "completed"
 
     @pytest.mark.asyncio
     async def test_install_package_success_string_result(self):
@@ -146,7 +157,7 @@ class TestPackageOperations:
             assert result["error"] == "Package not found in repository"
             assert self.mock_agent.send_message.call_count == 2
             calls = self.mock_agent.send_message.call_args_list
-            assert calls[1][0][0]["status"] == "failed"
+            assert calls[1][0][0]["data"]["status"] == "failed"
 
     @pytest.mark.asyncio
     async def test_install_package_failure_string_result_with_error(self):
@@ -229,7 +240,7 @@ class TestPackageOperations:
             assert "Installation error" in result["error"]
             assert self.mock_agent.send_message.call_count == 2
             calls = self.mock_agent.send_message.call_args_list
-            assert calls[1][0][0]["status"] == "failed"
+            assert calls[1][0][0]["data"]["status"] == "failed"
 
     @pytest.mark.asyncio
     async def test_install_package_without_installation_id(self):

@@ -277,7 +277,9 @@ class SystemControl:
         # Static (version-independent) upgrade commands.
         command = {
             "do-release-upgrade": (
-                "sudo DEBIAN_FRONTEND=noninteractive "
+                # The variable goes BEFORE sudo and crosses it by the sudoers
+                # env_keep line; ``sudo VAR=value`` is refused without SETENV.
+                "DEBIAN_FRONTEND=noninteractive sudo "
                 "do-release-upgrade -f DistUpgradeViewNonInteractive"
             ),
             "zypper-dup": "sudo zypper --non-interactive --gpg-auto-import-keys dup",

@@ -19,12 +19,23 @@ import pytest
 from src.sysmanage_agent.operations.package_operations import PackageOperations
 
 
+def _envelope(message_type, data=None):
+    """What agent.create_message builds: the payload under "data"."""
+    return {
+        "message_type": message_type,
+        "message_id": "m-1",
+        "timestamp": "t",
+        "data": dict(data or {}),
+    }
+
+
 class TestPackageOperationsInternals:
     """Test cases for PackageOperations internal helper methods."""
 
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_agent = Mock()
+        self.mock_agent.create_message = _envelope
         self.mock_agent.hostname = "test-host"
         self.mock_agent.platform = "Linux"
         self.mock_agent.ipv4 = "192.168.1.100"
@@ -298,11 +309,11 @@ class TestPackageOperationsInternals:
         self.mock_agent.send_message.assert_called_once()
         sent = self.mock_agent.send_message.call_args[0][0]
         assert sent["message_type"] == "installation_complete"
-        assert sent["request_id"] == "req-123"
-        assert sent["success"] is True
-        assert sent["result_log"] == "All packages installed"
-        assert sent["host_id"] == "12345"
-        assert sent["hostname"] == "test-host"
+        assert sent["data"]["request_id"] == "req-123"
+        assert sent["data"]["success"] is True
+        assert sent["data"]["result_log"] == "All packages installed"
+        assert sent["data"]["host_id"] == "12345"
+        assert sent["data"]["hostname"] == "test-host"
 
     @pytest.mark.asyncio
     async def test_send_installation_completion_queue_returns_falsy(self):
@@ -341,12 +352,12 @@ class TestPackageOperationsInternals:
         call_args = self.mock_agent.send_message.call_args[0][0]
 
         assert call_args["message_type"] == "package_installation_status"
-        assert call_args["installation_id"] == "install-123"
-        assert call_args["status"] == "installing"
-        assert call_args["package_name"] == "vim"
-        assert call_args["requested_by"] == "admin"
-        assert call_args["hostname"] == "test-host"
-        assert call_args["host_id"] == "12345"
+        assert call_args["data"]["installation_id"] == "install-123"
+        assert call_args["data"]["status"] == "installing"
+        assert call_args["data"]["package_name"] == "vim"
+        assert call_args["data"]["requested_by"] == "admin"
+        assert call_args["data"]["hostname"] == "test-host"
+        assert call_args["data"]["host_id"] == "12345"
 
     @pytest.mark.asyncio
     async def test_send_installation_status_update_completed(self):
@@ -363,9 +374,9 @@ class TestPackageOperationsInternals:
 
         call_args = self.mock_agent.send_message.call_args[0][0]
 
-        assert call_args["status"] == "completed"
-        assert call_args["installed_version"] == "7.68.0"
-        assert call_args["installation_log"] == "Successfully installed curl"
+        assert call_args["data"]["status"] == "completed"
+        assert call_args["data"]["installed_version"] == "7.68.0"
+        assert call_args["data"]["installation_log"] == "Successfully installed curl"
         assert "error_message" not in call_args
 
     @pytest.mark.asyncio
@@ -383,8 +394,8 @@ class TestPackageOperationsInternals:
 
         call_args = self.mock_agent.send_message.call_args[0][0]
 
-        assert call_args["status"] == "failed"
-        assert call_args["error_message"] == "Package not found"
+        assert call_args["data"]["status"] == "failed"
+        assert call_args["data"]["error_message"] == "Package not found"
         assert "installed_version" not in call_args
         assert "installation_log" not in call_args
 

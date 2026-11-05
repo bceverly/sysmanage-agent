@@ -134,8 +134,10 @@ def group_packages_by_manager(
     for package in valid_packages:
         package_manager = package.get("package_manager", "auto")
         if package_manager == "auto":
-            # Auto-detect package manager (assume apt for now)
-            package_manager = "apt"
+            # The host's own manager.  This used to "assume apt for now", so
+            # the Install dialog (which sends "auto") ran apt-get on FreeBSD,
+            # macOS and Windows and failed every time (found 2026-11-05).
+            package_manager = _host_package_manager()
 
         if package_manager not in package_groups:
             package_groups[package_manager] = []
@@ -195,6 +197,13 @@ async def install_apt_packages(  # pylint: disable=unused-argument
             installation_log.append(f"✗ {package_name} failed: {error_msg}")
 
     return success_packages, failed_packages, installation_log
+
+
+def _host_package_manager() -> str:
+    """The package manager UpdateDetector would choose for "auto" here."""
+    detector = UpdateDetector()
+    # pylint: disable-next=protected-access
+    return detector._detect_best_package_manager() or "auto"
 
 
 def install_non_apt_packages(

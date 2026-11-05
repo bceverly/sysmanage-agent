@@ -65,11 +65,13 @@ Requires(preun): systemd
 Requires(postun): systemd
 # Optional: KVM host tooling -- required when this agent manages KVM
 # child hosts via the SysManage server's Pro+ virtualization_engine.
-# Recommends rather than Requires so non-virt hosts don't pull libvirt.
-Recommends:     genisoimage
-Recommends:     qemu-tools
-Recommends:     virt-install
-Recommends:     libvirt-client
+# Suggests, not Recommends (2026-11-05): dnf and zypper install Recommends
+# by default, so every managed host got the virtualization toolchain.  Only
+# hosts that run VMs need these; install them there.
+Suggests:       genisoimage
+Suggests:       qemu-tools
+Suggests:       virt-install
+Suggests:       libvirt-client
 
 %description
 The SysManage agent provides comprehensive system management capabilities

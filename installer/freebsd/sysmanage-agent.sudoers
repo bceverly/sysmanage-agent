@@ -9,11 +9,22 @@
 # file is only consulted under the non-root deployment.
 
 # Package Management (pkg).
+#
+# Both paths: /usr/sbin/pkg is only the bootstrap stub; once pkg is set up
+# the real binary is /usr/local/sbin/pkg, which comes first in sudo's
+# secure_path -- so "sudo pkg install ..." resolved there, matched no rule,
+# and sudo asked for a password (found on a fresh FreeBSD 14.5 host,
+# 2026-11-05).
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg update
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg install *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg delete *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg upgrade *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg autoremove
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg update
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg install *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg delete *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg upgrade *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg autoremove
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).
 # rsync is the snapshot + restore workhorse -- without it, ``snapshot``
@@ -126,6 +137,7 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate ^run /etc/restate/jo
 # agent downloaded into its own state dir and checked against the release's
 # SHA256SUMS -- only a restate package, only from exactly there.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg ^add -f /var/db/sysmanage-agent/equip/restate-[0-9]+(\.[0-9]+){3}-freebsd-[0-9]+\.[0-9]+-amd64\.pkg$
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg ^add -f /var/db/sysmanage-agent/equip/restate-[0-9]+(\.[0-9]+){3}-freebsd-[0-9]+\.[0-9]+-amd64\.pkg$
 # "Prepare storage for this host" (Phase 24, started by an administrator from
 # the Backups page): the repository becomes its own ZFS dataset, exported to
 # that one host's address only with every client mapped to the backup service

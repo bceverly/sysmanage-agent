@@ -23,7 +23,7 @@ Depends: ${misc:Depends}, ${shlibs:Depends},
  adduser,
  systemd,
  sudo
-Recommends: genisoimage | mkisofs | xorriso,
+Suggests: genisoimage | mkisofs | xorriso,
  qemu-utils,
  virtinst,
  libvirt-clients

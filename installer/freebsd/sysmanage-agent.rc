@@ -36,13 +36,21 @@ load_rc_config ${name}
 # These are the variables main.py and src/database/init.py actually honor;
 # without SYSMANAGE_DB_PATH the SQLite database resolves to the process
 # working directory.
+# rc.subr starts the agent with the base system's PATH (/sbin:/bin:/usr/sbin:
+# /usr/bin), so sudo -- which pkg installs in /usr/local/bin -- was "No such
+# file or directory" and every package install failed (2026-11-05).
+export PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"
 export SYSMANAGE_CONFIG="${sysmanage_agent_config}"
 export SYSMANAGE_DB_PATH="${sysmanage_agent_dbpath}"
 export SYSMANAGE_LOG_DIR="${sysmanage_agent_logdir}"
 
-# Use daemon to run in background
+# Use daemon to run in background.  -P, not -p: rc.subr checks the pidfile's
+# process against ${command} (/usr/sbin/daemon), so the pidfile must hold the
+# supervisor's pid.  With -p it held the agent's (python3.12), "status" said
+# "not running" while the agent ran, and "stop" could not stop it (found on a
+# fresh FreeBSD 14.5 install, 2026-11-05).
 command="/usr/sbin/daemon"
-command_args="-f -p ${sysmanage_agent_pidfile} /usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"
+command_args="-f -P ${sysmanage_agent_pidfile} /usr/local/lib/sysmanage-agent/sysmanage-agent-wrapper.sh"
 pidfile="${sysmanage_agent_pidfile}"
 
 # FreeBSD rc.subr will handle user switching

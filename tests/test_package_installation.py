@@ -23,6 +23,16 @@ from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations.system_operations import SystemOperations
 
 
+def _envelope(message_type, data=None):
+    """What agent.create_message builds: the payload under "data"."""
+    return {
+        "message_type": message_type,
+        "message_id": "m-1",
+        "timestamp": "t",
+        "data": dict(data or {}),
+    }
+
+
 class TestPackageInstallation:
     """Test cases for package installation functionality"""
 
@@ -30,6 +40,7 @@ class TestPackageInstallation:
     def mock_agent(self):
         """Create a mock agent instance"""
         agent = Mock()
+        agent.create_message = _envelope
         agent.hostname = "test-agent.example.com"
         agent.get_host_approval_from_db = Mock(return_value=Mock(host_id=1))
         agent.registration = Mock()
@@ -78,16 +89,16 @@ class TestPackageInstallation:
             # Check "installing" status message
             installing_call = mock_agent.send_message.call_args_list[0][0][0]
             assert installing_call["message_type"] == "package_installation_status"
-            assert installing_call["status"] == "installing"
-            assert installing_call["installation_id"] == "test-uuid-123"
-            assert installing_call["package_name"] == "vim"
+            assert installing_call["data"]["status"] == "installing"
+            assert installing_call["data"]["installation_id"] == "test-uuid-123"
+            assert installing_call["data"]["package_name"] == "vim"
 
             # Check "completed" status message
             completed_call = mock_agent.send_message.call_args_list[1][0][0]
             assert completed_call["message_type"] == "package_installation_status"
-            assert completed_call["status"] == "completed"
-            assert completed_call["installation_id"] == "test-uuid-123"
-            assert completed_call["installed_version"] == "1.0.0"
+            assert completed_call["data"]["status"] == "completed"
+            assert completed_call["data"]["installation_id"] == "test-uuid-123"
+            assert completed_call["data"]["installed_version"] == "1.0.0"
 
     @pytest.mark.asyncio
     async def test_install_package_failure(self, system_operations, mock_agent):
@@ -115,12 +126,12 @@ class TestPackageInstallation:
 
             # Check "installing" status message
             installing_call = mock_agent.send_message.call_args_list[0][0][0]
-            assert installing_call["status"] == "installing"
+            assert installing_call["data"]["status"] == "installing"
 
             # Check "failed" status message
             failed_call = mock_agent.send_message.call_args_list[1][0][0]
-            assert failed_call["status"] == "failed"
-            assert "Package not found" in failed_call["error_message"]
+            assert failed_call["data"]["status"] == "failed"
+            assert "Package not found" in failed_call["data"]["error_message"]
 
     @pytest.mark.asyncio
     async def test_install_package_missing_name(self, system_operations):
@@ -159,9 +170,9 @@ class TestPackageInstallation:
 
             # Check completed status message includes installation log
             completed_call = mock_agent.send_message.call_args_list[1][0][0]
-            assert completed_call["status"] == "completed"
+            assert completed_call["data"]["status"] == "completed"
             assert (
-                completed_call["installation_log"]
+                completed_call["data"]["installation_log"]
                 == "Package vim installed successfully"
             )
 
@@ -188,9 +199,10 @@ class TestPackageInstallation:
 
             # Check failed status message
             failed_call = mock_agent.send_message.call_args_list[1][0][0]
-            assert failed_call["status"] == "failed"
+            assert failed_call["data"]["status"] == "failed"
             assert (
-                "Error: failed to install package vim" in failed_call["error_message"]
+                "Error: failed to install package vim"
+                in failed_call["data"]["error_message"]
             )
 
     @pytest.mark.asyncio
@@ -236,12 +248,12 @@ class TestPackageInstallation:
         call_args = mock_agent.send_message.call_args[0][0]
 
         assert call_args["message_type"] == "package_installation_status"
-        assert call_args["installation_id"] == "test-status-update"
-        assert call_args["status"] == "installing"
-        assert call_args["package_name"] == "test-package"
-        assert call_args["requested_by"] == "test-user"
-        assert call_args["host_id"] == "1"
-        assert call_args["hostname"] == "test-agent.example.com"
+        assert call_args["data"]["installation_id"] == "test-status-update"
+        assert call_args["data"]["status"] == "installing"
+        assert call_args["data"]["package_name"] == "test-package"
+        assert call_args["data"]["requested_by"] == "test-user"
+        assert call_args["data"]["host_id"] == "1"
+        assert call_args["data"]["hostname"] == "test-agent.example.com"
 
     @pytest.mark.asyncio
     async def test_send_installation_status_update_with_optional_fields(
@@ -260,10 +272,10 @@ class TestPackageInstallation:
 
         call_args = mock_agent.send_message.call_args[0][0]
 
-        assert call_args["status"] == "completed"
-        assert call_args["installed_version"] == "2.1.0"
+        assert call_args["data"]["status"] == "completed"
+        assert call_args["data"]["installed_version"] == "2.1.0"
         assert (
-            call_args["installation_log"]
+            call_args["data"]["installation_log"]
             == "Package installed successfully with dependencies"
         )
 
@@ -284,8 +296,8 @@ class TestPackageInstallation:
 
         call_args = mock_agent.send_message.call_args[0][0]
 
-        assert call_args["status"] == "failed"
-        assert call_args["error_message"] == "Package repository not available"
+        assert call_args["data"]["status"] == "failed"
+        assert call_args["data"]["error_message"] == "Package repository not available"
         assert "installed_version" not in call_args
         assert "installation_log" not in call_args
 
@@ -381,7 +393,9 @@ class TestPackageInstallation:
             status_calls = [
                 call[0][0] for call in mock_agent.send_message.call_args_list
             ]
-            assert status_calls[0]["status"] == "installing"
-            assert status_calls[1]["status"] == "completed"
-            assert status_calls[1]["installed_version"] == "8.2.0"
-            assert status_calls[1]["installation_log"] == str(mock_install.return_value)
+            assert status_calls[0]["data"]["status"] == "installing"
+            assert status_calls[1]["data"]["status"] == "completed"
+            assert status_calls[1]["data"]["installed_version"] == "8.2.0"
+            assert status_calls[1]["data"]["installation_log"] == str(
+                mock_install.return_value
+            )
