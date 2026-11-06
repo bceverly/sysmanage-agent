@@ -23,6 +23,13 @@ from src.sysmanage_agent.operations.package_installation_helpers import (
     validate_packages,
 )
 
+# "auto" resolves to the host's own package manager, so pin it: these tests
+# describe an apt host and must not depend on the OS running them.
+APT_HOST = patch(
+    "src.sysmanage_agent.operations.package_installation_helpers._host_package_manager",
+    return_value="apt",
+)
+
 
 class TestCreateInstallationTrackingRecord:
     """Test cases for create_installation_tracking_record function."""
@@ -338,8 +345,9 @@ class TestGroupPackagesByManager:
         assert len(groups["dnf"]) == 1
         assert len(groups["zypper"]) == 1
 
-    def test_group_auto_converts_to_apt(self):
-        """Test that auto package manager converts to apt."""
+    @APT_HOST
+    def test_group_auto_converts_to_apt(self, _host):
+        """On an apt host, auto resolves to apt."""
         packages = [
             {"package_name": "vim", "package_manager": "auto"},
             {"package_name": "curl", "package_manager": "auto"},
@@ -351,8 +359,9 @@ class TestGroupPackagesByManager:
         assert "apt" in groups
         assert len(groups["apt"]) == 2
 
-    def test_group_missing_manager_defaults_to_apt(self):
-        """Test that missing package_manager defaults to apt via auto."""
+    @APT_HOST
+    def test_group_missing_manager_defaults_to_apt(self, _host):
+        """A missing package_manager means auto: apt on an apt host."""
         packages = [
             {"package_name": "vim"},  # No package_manager
             {"package_name": "curl", "package_manager": "apt"},
@@ -687,7 +696,8 @@ class TestIntegration:
         """Set up test fixtures."""
         self.logger = logging.getLogger("test")
 
-    def test_full_validation_and_grouping_workflow(self):
+    @APT_HOST
+    def test_full_validation_and_grouping_workflow(self, _host):
         """Test complete workflow of validation and grouping."""
         packages = [
             {"package_name": "vim", "package_manager": "apt"},
