@@ -168,5 +168,8 @@ def test_system_info_says_the_agent_waits_for_confirmation():
         registration=SimpleNamespace(get_system_info=lambda: {"hostname": "h"}),
         _logging_overrides=None,
     )
-    handler.create_message = lambda kind, data: {"message_type": kind, "data": data}
+    handler.create_message = lambda kind, data=None: {
+        "message_type": kind,
+        "data": data,
+    }
     assert handler.create_system_info_message()["data"][delivery.FLAG] == 1
