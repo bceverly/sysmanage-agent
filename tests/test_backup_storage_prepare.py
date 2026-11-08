@@ -190,6 +190,20 @@ def test_an_unreadable_repository_is_never_assumed_empty():
     assert refused.value.code == "unreadable"
 
 
+def test_a_plain_repository_it_cannot_read_is_re_prepared_not_refused():
+    """The server-loss drill (2026-11-06): the rebuilt server came back at a
+    new address, and the storage agent -- which made the repository
+    root:restate 0770 -- refused to move its export because it could not list
+    it.  A plain repository only has to exist; the export is rewritten."""
+
+    def denied(path):
+        raise PermissionError(path)
+
+    again = _plan("Linux", "ext4", listdir=denied)
+    assert again["kind"] == p.PLAIN and again["commands"] == []
+    assert again["export_file"][1].startswith(REPO + " ")
+
+
 def test_a_missing_account_is_refused(monkeypatch):
     def gone(_name):
         raise KeyError(_name)

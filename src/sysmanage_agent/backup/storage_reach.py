@@ -11,6 +11,15 @@ tries to open a TCP connection to that port, briefly, and closes it.  No
 NFS is spoken and nothing is mounted.  A host with no network path there
 (production, 2026-10-30: the server's own cloud droplet and the home NAS)
 is then not offered backups, rather than failing every night.
+
+Behind NAT (25.8): a host on a private network behind another reaches port
+2049 fine, but the storage host sees its traffic come from the gateway and
+refuses the mount (its export names the host's own address).  So the answer
+also carries this end of the connection (``local_address``/``local_port``),
+and when the server asks (``hold_seconds``) the connection is kept open that
+long, while the storage host's agent lists who it sees on port 2049
+(backup/nfs_peers.py): the server finds this connection there by its source
+port and compares the address the storage host sees.
 """
 
 import asyncio
@@ -23,6 +32,11 @@ from src.sysmanage_agent.backup import restate_probe
 
 NFS_PORT = 2049
 CONNECT_SECONDS = 5.0
+# How long the connection may be held open for the storage side to look.
+MAX_HOLD_SECONDS = 120
+# Held connections, kept referenced until they close (a bare task can be
+# collected mid-run).
+_HELD: set = set()
 # A host name as DNS allows it: letters, digits and hyphens per label.
 _HOST_NAME = re.compile(
     r"^(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
@@ -76,12 +90,46 @@ async def check(
         return _answer(address, False, "timeout")
     except OSError as error:
         return _answer(address, False, (error.strerror or str(error))[:200])
+    answer = _answer(address, True, None)
+    local = _local_end(writer)
+    if local is not None:
+        answer["local_address"], answer["local_port"] = local
+    hold = _hold_seconds(parameters)
+    if hold:
+        task = asyncio.ensure_future(_close(writer, hold))
+        _HELD.add(task)
+        task.add_done_callback(_HELD.discard)
+    else:
+        await _close(writer, 0)
+    return answer
+
+
+def _hold_seconds(parameters: Dict[str, Any]) -> int:
+    value = (parameters or {}).get("hold_seconds")
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        return 0
+    return min(value, MAX_HOLD_SECONDS)
+
+
+def _local_end(writer) -> Optional[tuple]:
+    """``(address, port)`` of this end of the connection, or None."""
+    try:
+        name = writer.get_extra_info("sockname")
+    except AttributeError:
+        return None
+    if isinstance(name, tuple) and len(name) >= 2 and isinstance(name[1], int):
+        return str(name[0]), name[1]
+    return None
+
+
+async def _close(writer, after: float) -> None:
+    if after:
+        await asyncio.sleep(after)
     writer.close()
     try:
         await writer.wait_closed()
     except OSError:
         pass  # connected is what was asked; how it closed does not matter
-    return _answer(address, True, None)
 
 
 def _answer(address: str, reachable: bool, error: Optional[str]) -> Dict[str, Any]:

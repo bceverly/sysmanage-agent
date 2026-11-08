@@ -299,10 +299,6 @@ class RegistrationDelegator:
         """Get authentication token for WebSocket connection."""
         return await self.registration_manager.get_auth_token()
 
-    async def fetch_certificates(self, host_id: str) -> bool:
-        """Fetch certificates from server after approval."""
-        return await self.registration_manager.fetch_certificates(host_id)
-
     async def ensure_certificates(self) -> bool:
         """Ensure agent has valid certificates for mTLS."""
         return await self.registration_manager.ensure_certificates()
@@ -439,6 +435,14 @@ class MiscDelegator:
         from src.sysmanage_agent.backup import storage_reach  # noqa: PLC0415
 
         return await storage_reach.check(parameters)
+
+    async def list_nfs_peers(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Who this storage host sees on its NFS port (25.8): the server finds
+        a host's held reach-check connection there; backup/nfs_peers.py."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.backup import nfs_peers  # noqa: PLC0415
+
+        return nfs_peers.peers()
 
     def _cloud_backup(self):
         """The iCloud Photos commands (24.12), made on first use."""

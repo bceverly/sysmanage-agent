@@ -19,6 +19,7 @@ from src.i18n import _
 from src.sysmanage_agent.backup import host_mount
 from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import repository_choice
+from src.sysmanage_agent.backup import self_backup
 
 MOUNTS_FILE = "mounts.json"
 
@@ -46,7 +47,12 @@ class BackupMountMixin:
     @staticmethod
     def _mounts() -> Dict[str, str]:
         """The HOST's mount table (what restate's unit sees), not this
-        process's private namespace -- see backup/host_mount.py."""
+        process's private namespace -- see backup/host_mount.py.  Off Linux
+        (25.8) there is no /proc: ``mount -p`` on FreeBSD, ``mount`` on
+        macOS."""
+        system = platform.system()
+        if system != "Linux":
+            return self_backup.mount_types(system)
         text = _read_text(host_mount.HOST_MOUNTINFO)
         if text is None:
             text = _read_text(host_mount.SELF_MOUNTINFO)
@@ -103,7 +109,7 @@ class BackupMountMixin:
         systemd = host_mount.systemd_running()
         for argv in (
             ["mkdir", "-p", where],
-            host_mount.mount_argv(source, where, systemd),
+            host_mount.mount_argv(source, where, systemd, platform.system()),
         ):
             code, _out, err = await self._run(self._privileged(argv))
             if code != 0:

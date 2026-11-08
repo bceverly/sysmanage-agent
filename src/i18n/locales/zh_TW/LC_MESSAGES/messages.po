@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 07:51-0500\n"
+"POT-Creation-Date: 2026-11-06 11:48-0500\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,40 +50,215 @@ msgstr "初始化資料庫失敗：%s"
 msgid "Corrupt UUID in database: %s"
 msgstr "數據庫中腐爛的 UUID：%s"
 
-#: src/database/queue_manager.py:337
+#: src/database/queue_manager.py:370
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "訊息 %s 在 %d 次嘗試後永久失敗：%s"
 
-#: src/database/queue_manager.py:532
+#: src/database/queue_manager.py:565
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "反序列化訊息 %s 失敗：%s"
 
-#: src/database/queue_manager.py:599
+#: src/database/queue_manager.py:632
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr "訊息 %s (類型: %s) 超過最大重試次數，標記為失敗"
 
-#: src/security/certificate_store.py:68
+#: src/security/certificate_store.py:142
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  無法存取 {config_dir}，回退到 {fallback_dir}"
 
-#: src/sysmanage_agent/backup/host_mount.py:147
+#: src/security/client_tls.py:90
+#, python-format
+msgid "This host's certificate expired on %s; requesting a new one"
+msgstr "此主機的憑證已於 %s 過期；正在請求新憑證"
+
+#: src/security/client_tls.py:101
+#, python-format
+msgid "This host's certificate could not be loaded and is not presented: %s"
+msgstr "無法載入此主機的憑證，因此不會出示：%s"
+
+#: src/security/client_tls.py:114
+msgid ""
+"server.tls_inspection is true: the server's TLS certificate is not pinned on"
+" this host. A TLS-inspecting proxy also removes this host's client "
+"certificate, so the server must accept this host without one."
+msgstr ""
+"server.tls_inspection 為 true：此主機不固定伺服器的 TLS 憑證。執行 TLS "
+"檢查的代理伺服器也會移除此主機的用戶端憑證，因此伺服器必須在沒有憑證的情況下接受此主機。"
+
+#: src/security/pin_reset.py:33
+msgid "Forget the server identity this agent has pinned."
+msgstr "忘記此代理已固定的伺服器身分。"
+
+#: src/security/pin_reset.py:38
+msgid "also remove this host's certificate, its key and the CA"
+msgstr "同時刪除此主機的憑證、其金鑰和 CA"
+
+#: src/security/pin_reset.py:46
+#, python-format
+msgid "Removed the server pins and this host's certificate from %s"
+msgstr "已從 %s 刪除伺服器固定資訊和此主機的憑證"
+
+#: src/security/pin_reset.py:50
+#, python-format
+msgid "Removed the server pins: %s"
+msgstr "已刪除伺服器固定資訊：%s"
+
+#: src/security/pin_reset.py:52
+#, python-format
+msgid "No server pins to remove: %s"
+msgstr "沒有可刪除的伺服器固定資訊：%s"
+
+#: src/security/pin_reset.py:54
+#, python-format
+msgid "Could not remove the files: %s"
+msgstr "無法刪除檔案：%s"
+
+#: src/security/pin_reset.py:56
+msgid "Restart the agent; it pins the server again on its next connection."
+msgstr "請重新啟動代理；它會在下次連線時重新固定伺服器。"
+
+#: src/security/server_identity.py:95
+#, python-format
+msgid "The server identity request failed: HTTP %s"
+msgstr "伺服器身分請求失敗：HTTP %s"
+
+#: src/security/server_identity.py:101 src/security/server_pinning.py:160
+#: src/security/server_pinning.py:164 src/security/server_pinning.py:169
+#: src/security/server_pinning.py:173 src/security/server_pinning.py:245
+msgid "The server identity response is incomplete"
+msgstr "伺服器身分回應不完整"
+
+#: src/security/server_identity.py:124
+msgid "The server cannot state its TLS identity yet; pinning will be retried"
+msgstr "伺服器尚無法聲明其 TLS 身分；將重試固定"
+
+#: src/security/server_identity.py:129
+#, python-format
+msgid "Could not pin this server's identity: %s. Pinning will be retried."
+msgstr "無法固定此伺服器的身分：%s。將重試固定。"
+
+#: src/security/server_identity.py:134
+msgid "Pinned this server's identity; its TLS certificate is now checked"
+msgstr "已固定此伺服器的身分；現在會檢查其 TLS 憑證"
+
+#: src/security/server_identity.py:150
+msgid ""
+"The server's TLS certificate changed, but the server cannot state its TLS "
+"identity right now; keeping the current pins and trying again later"
+msgstr "伺服器的 TLS 憑證已變更，但伺服器目前無法聲明其 TLS 身分；保留目前的固定資訊，稍後重試"
+
+#: src/security/server_identity.py:159
+#, python-format
+msgid ""
+"The server's TLS certificate changed and the change could not be verified "
+"(%s). The likely cause is a proxy, or another server, presenting a different"
+" certificate. If this server really was replaced, re-pin deliberately: "
+"delete %s or run the agent's reset command, then restart the agent."
+msgstr ""
+"伺服器的 TLS "
+"憑證已變更，且無法驗證此變更（%s）。可能的原因是代理伺服器或另一台伺服器出示了不同的憑證。如果此伺服器確實已被更換，請刻意重新固定：刪除 %s "
+"或執行代理的重設指令，然後重新啟動代理。"
+
+#: src/security/server_identity.py:172
+msgid ""
+"The server's TLS certificate changed; the new one is signed by this server's"
+" identity and is now trusted"
+msgstr "伺服器的 TLS 憑證已變更；新憑證由此伺服器的身分簽署，現已受信任"
+
+#: src/security/server_identity.py:200
+#, python-format
+msgid "Could not re-pin this server's identity: %s"
+msgstr "無法重新固定此伺服器的身分：%s"
+
+#: src/security/server_pinning.py:94
+#, python-format
+msgid ""
+"The server presented a TLS certificate this agent has not pinned (SPKI "
+"SHA-256 %s). The connection was refused. The agent is checking whether the "
+"server has signed the new certificate."
+msgstr "伺服器出示了此代理未固定的 TLS 憑證（SPKI SHA-256 %s）。連線已被拒絕。代理正在檢查伺服器是否已簽署新憑證。"
+
+#: src/security/server_pinning.py:143 src/security/server_pinning.py:151
+msgid "The server identity statement has no valid expiry"
+msgstr "伺服器身分聲明沒有有效的到期時間"
+
+#: src/security/server_pinning.py:183
+msgid "The server's identity certificate was not issued by the pinned CA"
+msgstr "伺服器的身分憑證不是由已固定的 CA 簽發的"
+
+#: src/security/server_pinning.py:187
+msgid "The server's identity certificate is outside its validity period"
+msgstr "伺服器的身分憑證不在其有效期內"
+
+#: src/security/server_pinning.py:200
+msgid "The server's identity certificate uses an unsupported key type"
+msgstr "伺服器的身分憑證使用了不受支援的金鑰類型"
+
+#: src/security/server_pinning.py:204
+msgid ""
+"The server identity statement is not signed by its identity certificate"
+msgstr "伺服器身分聲明未由其身分憑證簽署"
+
+#: src/security/server_pinning.py:213 src/security/server_pinning.py:216
+#: src/security/server_pinning.py:221
+msgid "The server identity statement is not readable"
+msgstr "伺服器身分聲明無法讀取"
+
+#: src/security/server_pinning.py:218
+msgid "The server identity statement has expired"
+msgstr "伺服器身分聲明已過期"
+
+#: src/security/server_pinning.py:255
+msgid "The server's CA is not the CA this agent has pinned"
+msgstr "伺服器的 CA 不是此代理已固定的 CA"
+
+#: src/security/server_pinning.py:262
+msgid ""
+"The certificate on this connection is not one the server's signed statement "
+"lists"
+msgstr "此連線上的憑證不在伺服器簽署聲明所列的憑證中"
+
+#: src/sysmanage_agent/backup/host_mount.py:167
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr "%(where)s 處的備份儲存幾乎已滿（剩餘 %(free)d MB）。"
 
-#: src/sysmanage_agent/backup/host_mount.py:153
+#: src/sysmanage_agent/backup/host_mount.py:173
 #, python-format
 msgid "The backup storage at %(where)s cannot take new files: %(error)s"
 msgstr "%(where)s 處的備份儲存無法寫入新檔案：%(error)s"
 
-#: src/sysmanage_agent/backup/host_mount.py:173
+#: src/sysmanage_agent/backup/host_mount.py:193
 #, python-format
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "%(where)s 處的備份儲存上鎖定無法運作：%(error)s"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:83
+msgid "restate is not installed on this host."
+msgstr "此主機上未安裝restate。"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:117
+msgid "That backup job is already running."
+msgstr "該備份作業已在執行中。"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:139
+msgid "The backup job could not be started."
+msgstr "無法啟動備份作業。"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:227
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
+"%(unit)s on this host"
+msgstr "restate 在寫入結果之前已停止（結束代碼 %(code)s）；請在此主機上查看 journalctl -u %(unit)s"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:271
+msgid "Could not queue the backup report"
+msgstr "無法將備份報告加入佇列"
 
 #: src/sysmanage_agent/backup/key_files.py:67
 msgid "The server sent no usable keys"
@@ -138,7 +313,7 @@ msgstr "此 restate 無法解密加密的存放庫；請升級 restate。"
 msgid "A signing run needs its key"
 msgstr "簽章執行需要其金鑰"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:28
+#: src/sysmanage_agent/backup/mount_mixin.py:29
 msgid ""
 "This host has no NFS client, so it cannot mount its backup storage. Click "
 "Equip for backup, or install it (nfs-common on Debian and Ubuntu, nfs-utils "
@@ -147,32 +322,57 @@ msgstr ""
 "此主機沒有 NFS 用戶端，因此無法掛載其備份儲存空間。請按一下「準備備份」，或安裝用戶端（Debian 和 Ubuntu 上為 nfs-"
 "common，RHEL 和 Fedora 上為 nfs-utils）。"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:95
+#: src/sysmanage_agent/backup/mount_mixin.py:101
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
 "where to mount it from yet."
 msgstr "備份儲存未掛載在 %(where)s，而且伺服器尚未傳送掛載來源。"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:110
+#: src/sysmanage_agent/backup/mount_mixin.py:116
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr "無法將備份儲存 %(source)s 掛載到 %(where)s：%(error)s"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:118
+#: src/sysmanage_agent/backup/mount_mixin.py:124
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "掛載後，備份儲存仍未掛載在 %(where)s。"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:135
+#: src/sysmanage_agent/backup/mount_mixin.py:141
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "%s 處的備份儲存沒有回應。"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:160
+#: src/sysmanage_agent/backup/mount_mixin.py:166
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "無法卸載 %s 處的備份儲存：%s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:86
+#, python-format
+msgid "Could not list the sealed snapshots: %s"
+msgstr "無法列出封存快照：%s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:101
+#, python-format
+msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
+msgstr "無法刪除舊的封存快照 %(name)s：%(error)s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:176
+#, python-format
+msgid "%(dataset)s is not mounted at %(path)s on this host"
+msgstr "%(dataset)s 未掛載在此主機的 %(path)s 上"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:213
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr "無法為原則 %s 準備備份儲存：%s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "無法執行儲存稽核：%s"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:122
 #, python-format
@@ -398,7 +598,7 @@ msgstr "讀取 syslog-ng 配置時發生錯誤：%s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:49
 #: src/sysmanage_agent/collection/hardware_collection.py:88
-#: src/sysmanage_agent/operations/system_control.py:346
+#: src/sysmanage_agent/operations/system_control.py:348
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
@@ -725,43 +925,41 @@ msgstr "不支援的操作系統：%s"
 msgid "Failed to collect available packages: %s"
 msgstr "收集可用套件失敗：%s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:257
-msgid "winget not found in any common location"
-msgstr "在任何常見位置都找不到 winget"
-
-#: src/sysmanage_agent/collection/package_collector_base.py:334
-#: src/sysmanage_agent/collection/package_collector_base.py:357
-#: src/sysmanage_agent/collection/package_collector_base.py:386
+#: src/sysmanage_agent/collection/package_collector_base.py:41
 #, python-format
 msgid "Failed to store packages for %s: %s"
 msgstr "為 %s 存儲套件失敗：%s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:416
+#: src/sysmanage_agent/collection/package_collector_base.py:258
+msgid "winget not found in any common location"
+msgstr "在任何常見位置都找不到 winget"
+
+#: src/sysmanage_agent/collection/package_collector_base.py:417
 #, python-format
 msgid "Failed to get packages for %s: %s"
 msgstr "取得 %s 的套件失敗：%s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:440
+#: src/sysmanage_agent/collection/package_collector_base.py:441
 #, python-format
 msgid "Failed to get all packages: %s"
 msgstr "無法取得所有套件：%s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:453
+#: src/sysmanage_agent/collection/package_collector_base.py:454
 #, python-format
 msgid "Failed to get package managers: %s"
 msgstr "無法取得套件管理器：%s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:489
+#: src/sysmanage_agent/collection/package_collector_base.py:490
 #, python-format
 msgid "Failed to get packages for transmission: %s"
 msgstr "無法取得傳輸套件：%s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:518
+#: src/sysmanage_agent/collection/package_collector_base.py:519
 #, python-format
 msgid "Failed to read sent package snapshot: %s"
 msgstr "無法讀取已發送的包快照：%s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:558
+#: src/sysmanage_agent/collection/package_collector_base.py:559
 #, python-format
 msgid "Failed to store sent package snapshot: %s"
 msgstr "無法存儲已發送的包快照：%s"
@@ -1069,8 +1267,8 @@ msgid "Failed to detect available updates: %s"
 msgstr "無法檢測可用更新：%s"
 
 #: src/sysmanage_agent/collection/update_detection.py:189
-#: src/sysmanage_agent/operations/package_installation_helpers.py:252
-#: src/sysmanage_agent/operations/package_operations.py:243
+#: src/sysmanage_agent/operations/package_installation_helpers.py:261
+#: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
 msgid "Failed to install package %s: %s"
 msgstr "安裝套件 %s 失敗：%s"
@@ -1836,53 +2034,53 @@ msgstr "輪詢失敗（%s）；將在 %d 秒後重試"
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "重新測試此網路是否現在允許 WebSocket 連接"
 
-#: src/sysmanage_agent/communication/message_handler.py:208
+#: src/sysmanage_agent/communication/message_handler.py:214
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "將消息加入佇列失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:246
+#: src/sysmanage_agent/communication/message_handler.py:252
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "將命令確認消息加入佇列失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:254
+#: src/sysmanage_agent/communication/message_handler.py:260
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "將 %s 的命令確認放入隊列時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:293
+#: src/sysmanage_agent/communication/message_handler.py:299
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "伺服器錯誤 [%s]：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:346
+#: src/sysmanage_agent/communication/message_handler.py:352
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "無法解析消息時間戳以檢查過期：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:399
-#: src/sysmanage_agent/communication/message_handler.py:739
+#: src/sysmanage_agent/communication/message_handler.py:405
+#: src/sysmanage_agent/communication/message_handler.py:752
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr "主機註冊正在等待批准。將繼續定期嘗試。"
 
-#: src/sysmanage_agent/communication/message_handler.py:406
+#: src/sysmanage_agent/communication/message_handler.py:416
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "伺服器報告消息中缺少主機名。這是一個錯誤。"
 
-#: src/sysmanage_agent/communication/message_handler.py:409
+#: src/sysmanage_agent/communication/message_handler.py:419
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "伺服器無法將消息加入隊列：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:430
+#: src/sysmanage_agent/communication/message_handler.py:440
 #, python-format
 msgid ""
 "This host's registration was refused; asking the server again in %d seconds."
 msgstr "此主機的註冊遭到拒絕；將在 %d 秒後再次詢問伺服器。"
 
-#: src/sysmanage_agent/communication/message_handler.py:468
+#: src/sysmanage_agent/communication/message_handler.py:478
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -1892,133 +2090,149 @@ msgstr ""
 "伺服器報告主機未註冊 (第 %(n)d/%(limit)d 次警告) -- 重新連接而不丟棄 "
 "host_id，以便伺服器可以從其租戶索引中重新解析此主機；如果問題持續將重新註冊。"
 
-#: src/sysmanage_agent/communication/message_handler.py:481
+#: src/sysmanage_agent/communication/message_handler.py:491
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr "主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 host_id 並重新註冊。"
 
-#: src/sysmanage_agent/communication/message_handler.py:492
+#: src/sysmanage_agent/communication/message_handler.py:502
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "清除存儲的 host_id 時出錯：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:548
+#: src/sysmanage_agent/communication/message_handler.py:558
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "廣播 %s：存貨刷新失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:558
+#: src/sysmanage_agent/communication/message_handler.py:568
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "廣播 %s：未知操作 '%s' -- 忽略"
 
-#: src/sysmanage_agent/communication/message_handler.py:661
+#: src/sysmanage_agent/communication/message_handler.py:671
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "收到無效的 JSON： %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:663
+#: src/sysmanage_agent/communication/message_handler.py:673
 #, python-format
 msgid "Error processing message: %s"
 msgstr "處理消息時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:676
+#: src/sysmanage_agent/communication/message_handler.py:686
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: 訊息接收器錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:694
+#: src/sysmanage_agent/communication/message_handler.py:704
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr "消息接收器：WebSocket 由於並發斷開而清除；退出接收循環以允許重新連接"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:762
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "未知消息類型：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:832
+#: src/sysmanage_agent/communication/message_handler.py:845
 msgid "Heartbeat failed, connection may be lost"
 msgstr "心跳失敗，連接可能已斷開"
 
-#: src/sysmanage_agent/communication/message_handler.py:841
+#: src/sysmanage_agent/communication/message_handler.py:854
 #, python-format
 msgid "Message sender error: %s"
 msgstr "訊息發送者錯誤: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:857
+#: src/sysmanage_agent/communication/message_handler.py:870
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "關閉消息處理程序時出錯：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:137
+#: src/sysmanage_agent/communication/message_handler_queue.py:139
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "從 queue_outbound_message 建立任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:203
+#: src/sysmanage_agent/communication/message_handler_queue.py:205
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "進口隊列處理器中發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:228
+#: src/sysmanage_agent/communication/message_handler_queue.py:230
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "快速佇列處理器發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:237
+#: src/sysmanage_agent/communication/message_handler_queue.py:239
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "無法標記進站訊息 %s 為處理中"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:267
+#: src/sysmanage_agent/communication/message_handler_queue.py:269
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "處理進來的消息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:283
+#: src/sysmanage_agent/communication/message_handler_queue.py:285
 msgid "Cannot send message: not connected to server"
 msgstr "無法傳送訊息：未連線至伺服器"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:296
+#: src/sysmanage_agent/communication/message_handler_queue.py:298
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "直接傳送消息失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:355
+#: src/sysmanage_agent/communication/message_handler_queue.py:359
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "隊列處理器中發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:397
+#: src/sysmanage_agent/communication/message_handler_queue.py:407
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "處理佇列訊息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:423
+#: src/sysmanage_agent/communication/message_handler_queue.py:425
+#, python-format
+msgid "The server did not confirm %d message(s); sending them again"
+msgstr "伺服器未確認 %d 則訊息；正在重新傳送"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:429
+#: src/sysmanage_agent/communication/message_handler_queue.py:468
+#, python-format
+msgid "Error requeuing unconfirmed messages: %s"
+msgstr "將未確認的訊息重新加入佇列時發生錯誤：%s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:438
+#, python-format
+msgid "The server refused message %s; it will not be sent again"
+msgstr "伺服器拒絕了訊息 %s；不會再次傳送"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:479
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "恢復卡住的消息時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:454
+#: src/sysmanage_agent/communication/message_handler_queue.py:510
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "建立出站佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:472
+#: src/sysmanage_agent/communication/message_handler_queue.py:528
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "建立快速佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:490
+#: src/sysmanage_agent/communication/message_handler_queue.py:546
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "建立進階佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:581
+#: src/sysmanage_agent/communication/message_handler_queue.py:637
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "錯誤修剪已完成的隊列消息：%s"
@@ -2074,80 +2288,80 @@ msgstr "套件收集排程器錯誤：%s"
 msgid "Failed to build capability report: %s"
 msgstr "建立能力報告失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:464
+#: src/sysmanage_agent/core/agent_utils.py:469
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:506
+#: src/sysmanage_agent/core/agent_utils.py:511
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:518
+#: src/sysmanage_agent/core/agent_utils.py:523
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:582
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "無法將腳本執行結果排隊：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:596
+#: src/sysmanage_agent/core/agent_utils.py:601
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "檢查執行 UUID 時出錯：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:610
+#: src/sysmanage_agent/core/agent_utils.py:615
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:625
+#: src/sysmanage_agent/core/agent_utils.py:630
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:655
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存儲執行 UUID 時發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:715
+#: src/sysmanage_agent/core/agent_utils.py:720
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:762
+#: src/sysmanage_agent/core/agent_utils.py:767
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:768
+#: src/sysmanage_agent/core/agent_utils.py:773
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:853
+#: src/sysmanage_agent/core/agent_utils.py:858
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:863
+#: src/sysmanage_agent/core/agent_utils.py:868
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:907
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:945
+#: src/sysmanage_agent/core/agent_utils.py:950
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:955
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
@@ -2303,81 +2517,37 @@ msgstr "收集代理日誌時發生錯誤：%s"
 msgid "Error collecting error logs: %s"
 msgstr "收集錯誤日誌時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:283
+#: src/sysmanage_agent/operations/backup_operations.py:164
+msgid "A Mac can only be a backed-up host, not a backup storage host."
+msgstr "Mac 只能作為受備份主機，不能作為備份儲存主機。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:165
+msgid "This platform cannot take that backup role."
+msgstr "此平台無法擔任該備份角色。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:309
 msgid "That backup action is not configured on this host."
 msgstr "此主機上未設定該備份操作。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:291
+#: src/sysmanage_agent/operations/backup_operations.py:317
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate在此主機上不可用：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:314
-msgid "This platform can only be a backup storage host."
-msgstr "此平台只能作為備份儲存主機。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:320
+#: src/sysmanage_agent/operations/backup_operations.py:350
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "無法安裝備份作業：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:382
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支援：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:466
+#: src/sysmanage_agent/operations/backup_operations.py:498
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 無法將 %s 作為工作執行；請升級 restate。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:564
-msgid "restate is not installed on this host."
-msgstr "此主機上未安裝restate。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:597
-msgid "That backup job is already running."
-msgstr "該備份作業已在執行中。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:619
-msgid "The backup job could not be started."
-msgstr "無法啟動備份作業。"
-
-#: src/sysmanage_agent/operations/backup_operations.py:674
-#, python-format
-msgid "Could not list the sealed snapshots: %s"
-msgstr "無法列出封存快照：%s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:689
-#, python-format
-msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
-msgstr "無法刪除舊的封存快照 %(name)s：%(error)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:764
-#, python-format
-msgid "%(dataset)s is not mounted at %(path)s on this host"
-msgstr "%(dataset)s 未掛載在此主機的 %(path)s 上"
-
-#: src/sysmanage_agent/operations/backup_operations.py:799
-#, python-format
-msgid "Could not prepare backup storage for policy %s: %s"
-msgstr "無法為原則 %s 準備備份儲存：%s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:917
-#, python-format
-msgid ""
-"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
-"%(unit)s on this host"
-msgstr "restate 在寫入結果之前已停止（結束代碼 %(code)s）；請在此主機上查看 journalctl -u %(unit)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:943
-#, python-format
-msgid "The storage audit could not run: %s"
-msgstr "無法執行儲存稽核：%s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:974
-msgid "Could not queue the backup report"
-msgstr "無法將備份報告加入佇列"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:74
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:118
@@ -2939,12 +3109,12 @@ msgid "Failed to update installation tracking record: %s"
 msgstr "更新安裝跟蹤記錄失敗：%s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:108
-#: src/sysmanage_agent/operations/package_operations.py:60
+#: src/sysmanage_agent/operations/package_operations.py:70
 msgid "Skipping package with no name"
 msgstr "跳過沒有名稱的套件"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:109
-#: src/sysmanage_agent/operations/package_operations.py:61
+#: src/sysmanage_agent/operations/package_operations.py:71
 msgid "No package name"
 msgstr "無套件名稱"
 
@@ -3052,103 +3222,103 @@ msgid "Scoop installed successfully"
 msgstr "Scoop 安裝成功"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/package_operations.py:127
+#: src/sysmanage_agent/operations/package_operations.py:137
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
 msgstr "%s 套件管理員未實作解除安裝"
 
-#: src/sysmanage_agent/operations/package_operations.py:160
+#: src/sysmanage_agent/operations/package_operations.py:170
 #, python-format
 msgid "Failed to update uninstall tracking record: %s"
 msgstr "更新卸載跟蹤記錄失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:179
+#: src/sysmanage_agent/operations/package_operations.py:189
 msgid "No package name specified"
 msgstr "未指定套件名稱"
 
-#: src/sysmanage_agent/operations/package_operations.py:275
-#: src/sysmanage_agent/operations/package_operations.py:383
+#: src/sysmanage_agent/operations/package_operations.py:285
+#: src/sysmanage_agent/operations/package_operations.py:393
 msgid "No request_id specified"
 msgstr "未指定 request_id"
 
-#: src/sysmanage_agent/operations/package_operations.py:280
+#: src/sysmanage_agent/operations/package_operations.py:290
 msgid "No packages specified for installation"
 msgstr "未指定要安裝的套件"
 
-#: src/sysmanage_agent/operations/package_operations.py:359
+#: src/sysmanage_agent/operations/package_operations.py:369
 #, python-format
 msgid "Failed to send installation completion to server: %s"
 msgstr "傳送安裝完成信息到伺服器失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:388
+#: src/sysmanage_agent/operations/package_operations.py:398
 msgid "No packages specified for uninstallation"
 msgstr "未指定要解除安裝的套件"
 
-#: src/sysmanage_agent/operations/package_operations.py:485
+#: src/sysmanage_agent/operations/package_operations.py:495
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "傳送卸載完成信息到伺服器失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:494
+#: src/sysmanage_agent/operations/package_operations.py:504
 msgid "No packages to install"
 msgstr "無需安裝的套件"
 
-#: src/sysmanage_agent/operations/package_operations.py:540
+#: src/sysmanage_agent/operations/package_operations.py:548
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get 安裝失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:545
+#: src/sysmanage_agent/operations/package_operations.py:553
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "使用 apt-get 安裝包時失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:548
+#: src/sysmanage_agent/operations/package_operations.py:556
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "apt-get install 期間發生例外：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:555
+#: src/sysmanage_agent/operations/package_operations.py:563
 msgid "No packages to uninstall"
 msgstr "無需卸載的套件"
 
-#: src/sysmanage_agent/operations/package_operations.py:586
+#: src/sysmanage_agent/operations/package_operations.py:593
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove 失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:591
+#: src/sysmanage_agent/operations/package_operations.py:598
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "無法使用 apt-get 卸載包：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:594
+#: src/sysmanage_agent/operations/package_operations.py:601
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "apt-get remove 期間發生例外：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:635
+#: src/sysmanage_agent/operations/package_operations.py:647
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr "將安裝完成請求加入佇列失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:640
+#: src/sysmanage_agent/operations/package_operations.py:652
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "安裝完成排隊錯誤：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:696
+#: src/sysmanage_agent/operations/package_operations.py:709
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "傳送套件安裝狀態更新失敗：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:769
+#: src/sysmanage_agent/operations/package_operations.py:782
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "執行套件更新時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/package_operations.py:778
+#: src/sysmanage_agent/operations/package_operations.py:791
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3324,52 +3494,52 @@ msgstr "系統將在 1 分鐘後關閉"
 msgid "Failed to shutdown system: %s"
 msgstr "關閉系統失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:291
+#: src/sysmanage_agent/operations/system_control.py:293
 msgid "dnf-system-upgrade requires a target version"
 msgstr "dnf-system-upgrade 需要指定目標版本"
 
-#: src/sysmanage_agent/operations/system_control.py:304
+#: src/sysmanage_agent/operations/system_control.py:306
 msgid "freebsd-update requires a target version"
 msgstr "freebsd-update 需要指定目標版本"
 
-#: src/sysmanage_agent/operations/system_control.py:315
+#: src/sysmanage_agent/operations/system_control.py:317
 #, python-format
 msgid "Unknown release-upgrade method: %s"
 msgstr "未知的版本升級方法：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:337
+#: src/sysmanage_agent/operations/system_control.py:339
 msgid "Agent update not yet supported on Windows"
 msgstr "尚不支援在 Windows 上更新代理"
 
-#: src/sysmanage_agent/operations/system_control.py:342
+#: src/sysmanage_agent/operations/system_control.py:344
 msgid "Agent update not yet supported on macOS"
 msgstr "尚不支援在 macOS 上更新代理"
 
-#: src/sysmanage_agent/operations/system_control.py:349
+#: src/sysmanage_agent/operations/system_control.py:351
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "更新代理失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:388
+#: src/sysmanage_agent/operations/system_control.py:390
 msgid "Cannot detect Linux distribution"
 msgstr "無法偵測 Linux 發行版"
 
-#: src/sysmanage_agent/operations/system_control.py:407
+#: src/sysmanage_agent/operations/system_control.py:409
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "不支援的 Linux 發行版：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:414
-#: src/sysmanage_agent/operations/system_control.py:425
+#: src/sysmanage_agent/operations/system_control.py:416
+#: src/sysmanage_agent/operations/system_control.py:427
 msgid "Agent updated successfully"
 msgstr "代理更新成功"
 
-#: src/sysmanage_agent/operations/system_control.py:446
+#: src/sysmanage_agent/operations/system_control.py:448
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "傳送防毒狀態更新失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:497
+#: src/sysmanage_agent/operations/system_control.py:499
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "傳送商業防毒狀態更新失敗：%s"
@@ -3715,83 +3885,121 @@ msgstr "來自未知來源的無效 JSON 公告"
 msgid "Error listening for announcements: %s"
 msgstr "監聽公告期間發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:100
-msgid "Host not yet approved for certificate retrieval"
-msgstr "主機尚未批准證書檢索"
-
-#: src/sysmanage_agent/registration/registration_manager.py:104
+#: src/sysmanage_agent/registration/host_certificate.py:164
 #, python-format
-msgid "Failed to fetch certificates: HTTP %s"
-msgstr "獲取證書時失敗：HTTP %s"
+msgid ""
+"The server refused this host's certificate as not valid for this host (%s). "
+"The agent does not replace it on its own; an administrator should check this"
+" host on the server."
+msgstr "伺服器拒絕了此主機的憑證，認為它對此主機無效（%s）。代理不會自行更換它；管理員應在伺服器上檢查此主機。"
 
-#: src/sysmanage_agent/registration/registration_manager.py:109
+#: src/sysmanage_agent/registration/host_certificate.py:174
 #, python-format
-msgid "Error fetching certificates: %s"
-msgstr "取得憑證時發生錯誤：%s"
+msgid ""
+"The server requires a certificate from this host and refused the connection "
+"without one (%s); requesting a certificate now."
+msgstr "伺服器要求此主機提供憑證，並拒絕了沒有憑證的連線（%s）；現在正在請求憑證。"
 
-#: src/sysmanage_agent/registration/registration_manager.py:145
+#: src/sysmanage_agent/registration/host_certificate.py:182
 #, python-format
-msgid "Failed to get server fingerprint: %s"
-msgstr "無法取得伺服器指紋：%s"
+msgid ""
+"The server refused this host's certificate because it has expired (%s); "
+"requesting a new certificate now."
+msgstr "伺服器拒絕了此主機的憑證，因為它已過期（%s）；現在正在請求新憑證。"
 
-#: src/sysmanage_agent/registration/registration_manager.py:156
-msgid "Certificate-based authentication requires manual host approval"
-msgstr "憑證基於的身份驗證需要手動主機批准"
+#: src/sysmanage_agent/registration/host_certificate.py:196
+#, python-format
+msgid "Certificate check failed: %s"
+msgstr "憑證檢查失敗：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:159
-msgid "Please approve this host in the SysManage web interface"
-msgstr "請在 SysManage 網頁介面中批准此主機"
+#: src/sysmanage_agent/registration/host_certificate.py:267
+msgid "The server's certificate response is not usable"
+msgstr "伺服器的憑證回應無法使用"
 
-#: src/sysmanage_agent/registration/registration_manager.py:263
+#: src/sysmanage_agent/registration/host_certificate.py:272
+msgid "The server issued a certificate for a different key"
+msgstr "伺服器為另一個金鑰簽發了憑證"
+
+#: src/sysmanage_agent/registration/host_certificate.py:279
+msgid ""
+"The new host certificate was issued by a CA other than the pinned one. A "
+"changed server TLS certificate will not be accepted until the pins are reset"
+" deliberately."
+msgstr "新的主機憑證由已固定 CA 以外的 CA 簽發。在刻意重設固定資訊之前，不會接受已變更的伺服器 TLS 憑證。"
+
+#: src/sysmanage_agent/registration/host_certificate.py:288
+#, python-format
+msgid "This host's certificate was issued; it is valid until %s"
+msgstr "已簽發此主機的憑證；有效期至 %s"
+
+#: src/sysmanage_agent/registration/host_certificate.py:303
+#, python-format
+msgid "No certificate yet: this host is not approved (%s)"
+msgstr "尚無憑證：此主機未獲核准（%s）"
+
+#: src/sysmanage_agent/registration/host_certificate.py:308
+#, python-format
+msgid ""
+"The server says this host's certificate is still current but did not receive"
+" it (%s). Something between the agent and the server may be removing it; the"
+" agent keeps the certificate and asks again later."
+msgstr "伺服器表示此主機的憑證仍然有效，但未收到該憑證（%s）。代理與伺服器之間可能有東西正在移除它；代理會保留該憑證，稍後再次請求。"
+
+#: src/sysmanage_agent/registration/host_certificate.py:317
+#, python-format
+msgid "The server did not issue a certificate: HTTP %s, %s"
+msgstr "伺服器未簽發憑證：HTTP %s, %s"
+
+#: src/sysmanage_agent/registration/registration_manager.py:184
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "處理註冊成功通知時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:301
+#: src/sysmanage_agent/registration/registration_manager.py:225
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "處理主機批准通知時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:322
-#: src/sysmanage_agent/registration/registration_manager.py:597
+#: src/sysmanage_agent/registration/registration_manager.py:246
+#: src/sysmanage_agent/registration/registration_manager.py:521
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "清除主機批准記錄時出錯：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:340
+#: src/sysmanage_agent/registration/registration_manager.py:264
 msgid "Error retrieving stored credentials"
 msgstr "擷取已儲存憑證時發生錯誤"
 
-#: src/sysmanage_agent/registration/registration_manager.py:396
+#: src/sysmanage_agent/registration/registration_manager.py:320
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "在資料庫中儲存主機批准時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:434
+#: src/sysmanage_agent/registration/registration_manager.py:358
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "獲取已存儲的 host_id 時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:493
+#: src/sysmanage_agent/registration/registration_manager.py:417
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "同步擷取已儲存 host_id 時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:545
+#: src/sysmanage_agent/registration/registration_manager.py:469
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "獲取主機批准時發生錯誤：%s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:599
+#: src/sysmanage_agent/registration/registration_manager.py:523
 msgid "Continuing despite cleanup error..."
 msgstr "儘管出現清理錯誤，仍繼續進行……"
 
-#: src/sysmanage_agent/registration/registration_manager.py:620
+#: src/sysmanage_agent/registration/registration_manager.py:544
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr "在 host_approval 表中找到%d個損壞條目，正在清理..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:634
+#: src/sysmanage_agent/registration/registration_manager.py:558
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "資料庫清理期間發生錯誤：%s"
@@ -3808,6 +4016,30 @@ msgstr "WSL 狀態檢查超時"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "檢查 WSL 支持時出錯：%s"
+
+#~ msgid "This platform can only be a backup storage host."
+#~ msgstr "此平台只能作為備份儲存主機。"
+
+#~ msgid "Host not yet approved for certificate retrieval"
+#~ msgstr "主機尚未批准證書檢索"
+
+#, python-format
+#~ msgid "Failed to fetch certificates: HTTP %s"
+#~ msgstr "獲取證書時失敗：HTTP %s"
+
+#, python-format
+#~ msgid "Error fetching certificates: %s"
+#~ msgstr "取得憑證時發生錯誤：%s"
+
+#, python-format
+#~ msgid "Failed to get server fingerprint: %s"
+#~ msgstr "無法取得伺服器指紋：%s"
+
+#~ msgid "Certificate-based authentication requires manual host approval"
+#~ msgstr "憑證基於的身份驗證需要手動主機批准"
+
+#~ msgid "Please approve this host in the SysManage web interface"
+#~ msgstr "請在 SysManage 網頁介面中批准此主機"
 
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"

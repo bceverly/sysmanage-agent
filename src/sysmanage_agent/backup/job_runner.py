@@ -15,40 +15,77 @@
   locked", which a reused pid cannot fake.  daemon forwards SIGTERM to the
   child, so stopping the run stops restate.
 
-On FreeBSD the command line is still never built from server data: it is the
-job file's fixed path (``<policy uuid>.<action>.conf``, both validated), and
-the sudoers rule for it is a regular expression that admits nothing else.
+* Linux without systemd (Alpine, OpenRC) and macOS (25.8): neither systemd
+  nor daemon(8), so the agent starts the run through ``backup/detach.py``,
+  which does what ``daemon -f -p`` does -- detached, its pidfile locked until
+  restate exits, SIGTERM passed on -- and is watched the same way.
+
+Off systemd the command line is still never built from server data: it is
+the job file's fixed path (``<policy uuid>.<action>.conf``, both validated),
+and the sudoers rule for it is a regular expression that admits nothing else.
+
+OpenBSD and NetBSD are not driven: their NFS clients speak NFSv2 and v3
+only, and a host's repository is an NFSv4 export.  They back up once
+restate-proxy (ROADMAP 25.5) carries backups over HTTPS instead.
 """
 
 import os
 import posixpath
-from typing import List, Optional
+import sys
+from typing import List, Optional, Tuple
 
 SYSTEMD = "systemd"
 DAEMON = "daemon"
+DETACH = "detach"
 DAEMON_PATH = "/usr/sbin/daemon"
+DETACH_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "detach.py")
 
-# Which runner drives restate on each platform.system().  Anything else is
-# not driven (yet), and the backup capability reports wrong_platform.
-RUNNERS = {"Linux": SYSTEMD, "FreeBSD": DAEMON}
+# Which runner drives restate on each platform.system() (Linux: systemd when
+# it is PID 1, else DETACH).  Anything else is not driven, and the backup
+# capability reports wrong_platform.
+RUNNERS = {"FreeBSD": DAEMON, "Darwin": DETACH}
 
-# The roles each runner may drive.  A FreeBSD host is a storage host only:
-# the host role checks its NFS mount through /proc/self/mountinfo, which the
-# BSDs do not have.
-# ``self`` (24.13): a storage host backing up its own OS -- on FreeBSD too,
-# through daemon(8) like its storage jobs.
-ROLES = {SYSTEMD: ("host", "storage", "self"), DAEMON: ("storage", "self")}
+# The roles each runner may drive.  ``self`` (24.13): a storage host backing
+# up its own OS.  Every runner drives all three; a platform may take fewer
+# (PLATFORM_ROLES): macOS is never a storage host (no ZFS or btrfs to
+# prepare, no NFS server set up for it).
+ALL_ROLES = ("host", "storage", "self")
+ROLES = {SYSTEMD: ALL_ROLES, DAEMON: ALL_ROLES, DETACH: ALL_ROLES}
+PLATFORM_ROLES = {"Darwin": ("host",)}
+NO_NFSV4 = ("OpenBSD", "NetBSD")
 
 LOG_TAIL_BYTES = 2000
 
 
-def runner_for(system: Optional[str]) -> Optional[str]:
-    """The runner for ``platform.system()``, or None when it is not driven."""
+def systemd_running(isdir=os.path.isdir) -> bool:
+    """systemd is PID 1 (sd_booted's test)."""
+    return isdir("/run/systemd/system")
+
+
+def runner_for(system: Optional[str], systemd=None) -> Optional[str]:
+    """The runner for ``platform.system()``, or None when it is not driven.
+    ``systemd``: whether systemd is PID 1 (looked up when not given)."""
+    if system == "Linux":
+        if systemd is None:
+            systemd = systemd_running()
+        return SYSTEMD if systemd else DETACH
     return RUNNERS.get(system or "")
 
 
+def roles_for(system: Optional[str], runner: Optional[str]) -> Tuple[str, ...]:
+    """The roles this platform's runner may drive."""
+    roles = ROLES.get(runner or "", ())
+    allowed = PLATFORM_ROLES.get(system or "")
+    return tuple(role for role in roles if allowed is None or role in allowed)
+
+
+def detached(runner: Optional[str]) -> bool:
+    """Watched through a locked pidfile (daemon(8) or detach.py), not systemd."""
+    return runner in (DAEMON, DETACH)
+
+
 def run_dir(state_dir: str) -> str:
-    """Where daemon(8) keeps each run's pidfile and output."""
+    """Where daemon(8) and detach.py keep each run's pidfile and output."""
     return posixpath.join(state_dir, "backup", "run")
 
 
@@ -71,6 +108,28 @@ def daemon_argv(
     return [DAEMON_PATH, "-f", "-p", pid_path, "-o", log_path] + privileged(
         [restate, "run", job_file]
     )
+
+
+def detach_argv(
+    restate: str, job_file: str, pid_path: str, log_path: str, privileged
+) -> List[str]:
+    """``python3 -I detach.py PIDFILE LOG -- [sudo -n] RESTATE run JOBFILE``.
+
+    The agent's own interpreter, isolated (-I: no environment, no user site,
+    not the agent's directory on the path); detach.py runs as the agent and
+    only restate is elevated, as under daemon(8).
+    """
+    return [sys.executable, "-I", DETACH_SCRIPT, pid_path, log_path, "--"] + privileged(
+        [restate, "run", job_file]
+    )
+
+
+def start_argv(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    runner: str, restate: str, job_file: str, pid_path: str, log_path: str, privileged
+) -> List[str]:
+    """The command that starts one detached run on ``runner``."""
+    build = daemon_argv if runner == DAEMON else detach_argv
+    return build(restate, job_file, pid_path, log_path, privileged)
 
 
 def pidfile_locked(path: str) -> bool:

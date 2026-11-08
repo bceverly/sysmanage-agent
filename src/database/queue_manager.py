@@ -278,6 +278,39 @@ class MessageQueueManager:
             logger.debug("Delivered and removed message from queue: %s", message_id)
             return True
 
+    def mark_sent(self, message_id: str) -> bool:
+        """Written to the server; kept until it confirms storing it."""
+        with self.get_session() as session:
+            message = (
+                session.query(MessageQueue).filter_by(message_id=message_id).first()
+            )
+            if not message or message.status != QueueStatus.IN_PROGRESS.value:
+                return False
+            message.status = QueueStatus.SENT.value
+            return True
+
+    def requeue_unconfirmed(self, message_ids=None, keep=()) -> int:
+        """Back to pending, to be sent again: ``message_ids``, or every sent
+        row except ``keep`` (those still waiting on this connection).  The
+        retry count is left alone -- waiting out a server outage is not a
+        failed attempt, and nothing waiting for confirmation expires."""
+        with self.get_session() as session:
+            query = session.query(MessageQueue).filter(
+                MessageQueue.status == QueueStatus.SENT.value
+            )
+            if message_ids is not None:
+                if not message_ids:
+                    return 0
+                query = query.filter(MessageQueue.message_id.in_(list(message_ids)))
+            count = 0
+            for message in query.all():
+                if message.message_id in keep:
+                    continue
+                message.status = QueueStatus.PENDING.value
+                message.started_at = None
+                count += 1
+            return count
+
     def mark_failed(
         self, message_id: str, error_message: str = None, retry: bool = True
     ) -> bool:

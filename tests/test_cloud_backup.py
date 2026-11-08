@@ -297,6 +297,36 @@ def test_apples_refusal_is_named_so_the_server_waits_it_out():
     assert (outcome.status, outcome.reason) == (runner.FAILED, "apple_busy")
 
 
+def test_apples_refusal_counts_even_when_icloudpd_exits_0():
+    """nas, 2026-11-06: 16,445 downloaded, then Apple's refusal, exit 0."""
+    outcome = runner.Outcome()
+    for line in (
+        "2026-11-06 02:51:24 INFO     Downloaded /srv/x/2015/10/17/DSC_0706.JPG",
+        "2026-11-06 02:51:45 INFO     Apple iCloud is temporary refusing to serve icloudpd",
+    ):
+        runner.classify_line(outcome, line, "reconcile", lambda text: text)
+    outcome.tail.clear()  # scrolled out of the kept tail: the flag still counts
+    outcome.failed = 148
+    outcome.exit_code = 0
+    runner.judge(outcome, "reconcile")
+    assert (outcome.status, outcome.reason) == (runner.FAILED, "apple_busy")
+    assert outcome.downloaded == 1
+
+
+def test_a_lost_connection_to_icloud_counts_even_when_icloudpd_exits_0():
+    """Production, 2026-11-06 13:52 UTC: stopped in June 2015, exit 0."""
+    outcome = runner.Outcome()
+    runner.classify_line(
+        outcome,
+        "2026-11-06 13:52:01 INFO     Cannot connect to Apple iCloud service",
+        "reconcile",
+        lambda text: text,
+    )
+    outcome.exit_code = 0
+    runner.judge(outcome, "reconcile")
+    assert (outcome.status, outcome.reason) == (runner.FAILED, "apple_busy")
+
+
 # --- layout -------------------------------------------------------------------------
 
 

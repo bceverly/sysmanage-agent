@@ -4,13 +4,14 @@
 
 """
 Tests for agent certificate store functionality.
+
+Enrollment-specific storage (modes, atomic replace, renewal timing, pins) is
+covered in tests/test_host_certificate.py.
 """
 
-import hashlib
 import os
 import platform
 import shutil
-import stat
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -18,13 +19,31 @@ from pathlib import Path
 import pytest
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
+from src.security import certificate_store
 from src.security.certificate_store import CertificateStore
+from tests.mtls_support import Pki, key_pem, pem
 
 
-class TestCertificateStore:  # pylint: disable=too-many-public-methods
+def _self_signed(not_before, not_after):
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "test-cert")])
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(not_before)
+        .not_valid_after(not_after)
+        .sign(key, hashes.SHA256())
+    )
+    return cert, key
+
+
+class TestCertificateStore:
     """Test certificate store functionality."""
 
     # pylint: disable=attribute-defined-outside-init
@@ -38,341 +57,104 @@ class TestCertificateStore:  # pylint: disable=too-many-public-methods
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
+    def _write(self, not_before, not_after):
+        cert, key = _self_signed(not_before, not_after)
+        self.cert_store.client_cert_path.write_bytes(
+            cert.public_bytes(serialization.Encoding.PEM)
+        )
+        self.cert_store.client_key_path.write_bytes(key_pem(key))
+        return cert
+
     def test_certificate_store_initialization(self):
         """Test certificate store initialization."""
         assert self.cert_store.config_dir == Path(self.temp_dir)
         assert self.cert_store.config_dir.exists()
-
-        # Check file paths are set correctly
         assert self.cert_store.client_cert_path == Path(self.temp_dir) / "client.crt"
         assert self.cert_store.client_key_path == Path(self.temp_dir) / "client.key"
         assert self.cert_store.ca_cert_path == Path(self.temp_dir) / "ca.crt"
-        assert (
-            self.cert_store.server_fingerprint_path
-            == Path(self.temp_dir) / "server.fingerprint"
-        )
+        assert self.cert_store.pins_path == Path(self.temp_dir) / "server_pins.json"
 
-    def test_store_certificates(self):
-        """Test storing certificate data."""
-        cert_data = {
-            "certificate": "-----BEGIN CERTIFICATE-----\nCLIENT_CERT_DATA\n-----END CERTIFICATE-----",
-            "private_key": "-----BEGIN PRIVATE KEY-----\nPRIVATE_KEY_DATA\n-----END PRIVATE KEY-----",
-            "ca_certificate": "-----BEGIN CERTIFICATE-----\nCA_CERT_DATA\n-----END CERTIFICATE-----",
-            "server_fingerprint": "ABCD1234567890ABCD1234567890ABCD1234567890ABCD1234567890ABCD1234",
-        }
-
-        self.cert_store.store_certificates(cert_data)
-
-        # Check all files were created
-        assert self.cert_store.client_cert_path.exists()
-        assert self.cert_store.client_key_path.exists()
-        assert self.cert_store.ca_cert_path.exists()
-        assert self.cert_store.server_fingerprint_path.exists()
-
-        # Check file contents
-        assert self.cert_store.client_cert_path.read_text() == cert_data["certificate"]
-        assert self.cert_store.client_key_path.read_text() == cert_data["private_key"]
-        assert self.cert_store.ca_cert_path.read_text() == cert_data["ca_certificate"]
-        assert (
-            self.cert_store.server_fingerprint_path.read_text()
-            == cert_data["server_fingerprint"]
-        )
-
-    def test_store_certificates_file_permissions(self):
-        """Test that stored certificates have correct file permissions."""
-        cert_data = {
-            "certificate": "CLIENT_CERT",
-            "private_key": "PRIVATE_KEY",
-            "ca_certificate": "CA_CERT",
-            "server_fingerprint": "FINGERPRINT",
-        }
-
-        self.cert_store.store_certificates(cert_data)
-
-        if platform.system() == "Windows":
-            # On Windows, just verify files exist and are readable
-            # Windows doesn't use Unix-style permissions, but we can verify files were created
-            assert self.cert_store.client_key_path.exists()
-            assert self.cert_store.client_cert_path.exists()
-            assert self.cert_store.ca_cert_path.exists()
-            assert self.cert_store.server_fingerprint_path.exists()
-
-            # Verify we can read the files
-            assert self.cert_store.client_key_path.read_text() == "PRIVATE_KEY"
-            assert self.cert_store.client_cert_path.read_text() == "CLIENT_CERT"
-            assert self.cert_store.ca_cert_path.read_text() == "CA_CERT"
-            assert self.cert_store.server_fingerprint_path.read_text() == "FINGERPRINT"
-        else:
-            # Unix-like systems - check actual permissions
-            # Client private key should be 0600 (owner read/write only)
-            key_perms = oct(self.cert_store.client_key_path.stat().st_mode)[-3:]
-            assert key_perms == "600"
-
-            # Other files should be 0644 (world readable)
-            cert_perms = oct(self.cert_store.client_cert_path.stat().st_mode)[-3:]
-            assert cert_perms == "644"
-
-            ca_perms = oct(self.cert_store.ca_cert_path.stat().st_mode)[-3:]
-            assert ca_perms == "644"
-
-            fingerprint_perms = oct(
-                self.cert_store.server_fingerprint_path.stat().st_mode
-            )[-3:]
-            assert fingerprint_perms == "644"
-
-    def test_load_certificates_success(self):
-        """Test successful certificate loading."""
-        # Create test certificate files
-        self.cert_store.client_cert_path.write_text("CLIENT_CERT")
-        self.cert_store.client_key_path.write_text("CLIENT_KEY")
-        self.cert_store.ca_cert_path.write_text("CA_CERT")
+    def test_store_issued_and_load_certificates(self):
+        """store_issued writes all three files; load_certificates finds them."""
+        pki = Pki()
+        cert, key = pki.issue("host")
+        self.cert_store.store_issued(pem(cert), key_pem(key), pem(pki.cert))
 
         result = self.cert_store.load_certificates()
-
-        assert result is not None
-        assert len(result) == 3
-        assert result[0] == str(self.cert_store.client_cert_path)
-        assert result[1] == str(self.cert_store.client_key_path)
-        assert result[2] == str(self.cert_store.ca_cert_path)
+        assert result == (
+            str(self.cert_store.client_cert_path),
+            str(self.cert_store.client_key_path),
+            str(self.cert_store.ca_cert_path),
+        )
+        assert self.cert_store.client_cert_path.read_text() == pem(cert)
+        assert self.cert_store.client_key_path.read_bytes() == key_pem(key)
+        assert self.cert_store.ca_cert_path.read_text() == pem(pki.cert)
 
     def test_load_certificates_missing_files(self):
         """Test certificate loading when files are missing."""
-        # Only create some files
         self.cert_store.client_cert_path.write_text("CLIENT_CERT")
-        # Missing client key and CA cert
-
-        result = self.cert_store.load_certificates()
-        assert result is None
-
-    def test_get_server_fingerprint_success(self):
-        """Test successful server fingerprint retrieval."""
-        fingerprint = "ABCD1234567890ABCD1234567890ABCD1234567890ABCD1234567890ABCD1234"
-        self.cert_store.server_fingerprint_path.write_text(fingerprint)
-
-        result = self.cert_store.get_server_fingerprint()
-        assert result == fingerprint
-
-    def test_get_server_fingerprint_missing(self):
-        """Test server fingerprint retrieval when file missing."""
-        result = self.cert_store.get_server_fingerprint()
-        assert result is None
-
-    def test_validate_server_certificate_success(self):
-        """Test successful server certificate validation."""
-        # Create a test certificate DER data
-        test_cert_der = b"test_certificate_data"
-        expected_fingerprint = hashlib.sha256(test_cert_der).hexdigest().upper()
-
-        # Store the fingerprint
-        self.cert_store.server_fingerprint_path.write_text(expected_fingerprint)
-
-        result = self.cert_store.validate_server_certificate(test_cert_der)
-        assert result is True
-
-    def test_validate_server_certificate_mismatch(self):
-        """Test server certificate validation with fingerprint mismatch."""
-        # Store a different fingerprint
-        self.cert_store.server_fingerprint_path.write_text("DIFFERENT_FINGERPRINT")
-
-        test_cert_der = b"test_certificate_data"
-        result = self.cert_store.validate_server_certificate(test_cert_der)
-        assert result is False
-
-    def test_validate_server_certificate_no_stored_fingerprint(self):
-        """Test server certificate validation when no fingerprint stored."""
-        test_cert_der = b"test_certificate_data"
-        result = self.cert_store.validate_server_certificate(test_cert_der)
-        assert result is False
-
-    def create_test_certificate(self, valid_days=365):
-        """Helper method to create a test certificate."""
-        # Generate private key
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-
-        # Create certificate
-        subject = issuer = x509.Name(
-            [x509.NameAttribute(NameOID.COMMON_NAME, "test-cert")]
-        )
-
-        now = datetime.now(timezone.utc)
-        cert = (
-            x509.CertificateBuilder()
-            .subject_name(subject)
-            .issuer_name(issuer)
-            .public_key(private_key.public_key())
-            .serial_number(x509.random_serial_number())
-            .not_valid_before(now)
-            .not_valid_after(now + timedelta(days=valid_days))
-            .sign(private_key, hashes.SHA256())
-        )
-
-        return cert
+        assert self.cert_store.load_certificates() is None
 
     def test_is_certificate_valid_success(self):
-        """Test certificate validity check for valid certificate."""
-        # Create valid certificate
-        cert = self.create_test_certificate(valid_days=30)
-        cert_pem = cert.public_bytes(serialization.Encoding.PEM)
-
-        # Store certificate
-        self.cert_store.client_cert_path.write_bytes(cert_pem)
-
-        result = self.cert_store.is_certificate_valid()
-        assert result is True
+        now = datetime.now(timezone.utc)
+        self._write(now - timedelta(minutes=1), now + timedelta(days=30))
+        assert self.cert_store.is_certificate_valid() is True
 
     def test_is_certificate_valid_expired(self):
-        """Test certificate validity check for expired certificate."""
-        # Create expired certificate - use past valid dates
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-
-        subject = issuer = x509.Name(
-            [x509.NameAttribute(NameOID.COMMON_NAME, "test-cert")]
-        )
-
         now = datetime.now(timezone.utc)
-        cert = (
-            x509.CertificateBuilder()
-            .subject_name(subject)
-            .issuer_name(issuer)
-            .public_key(private_key.public_key())
-            .serial_number(x509.random_serial_number())
-            .not_valid_before(now - timedelta(days=2))  # Valid 2 days ago
-            .not_valid_after(now - timedelta(days=1))  # Expired 1 day ago
-            .sign(private_key, hashes.SHA256())
-        )
+        self._write(now - timedelta(days=2), now - timedelta(days=1))
+        assert self.cert_store.is_certificate_valid() is False
 
-        cert_pem = cert.public_bytes(serialization.Encoding.PEM)
-
-        # Store certificate
-        self.cert_store.client_cert_path.write_bytes(cert_pem)
-
-        result = self.cert_store.is_certificate_valid()
-        assert result is False
-
-    def test_is_certificate_valid_not_yet_valid(self):
-        """Test certificate validity check for not-yet-valid certificate."""
-        # Create certificate that's valid starting tomorrow
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-
-        subject = issuer = x509.Name(
-            [x509.NameAttribute(NameOID.COMMON_NAME, "test-cert")]
-        )
-
+    def test_is_certificate_valid_future(self):
         now = datetime.now(timezone.utc)
-        cert = (
-            x509.CertificateBuilder()
-            .subject_name(subject)
-            .issuer_name(issuer)
-            .public_key(private_key.public_key())
-            .serial_number(x509.random_serial_number())
-            .not_valid_before(now + timedelta(days=1))  # Valid starting tomorrow
-            .not_valid_after(now + timedelta(days=365))
-            .sign(private_key, hashes.SHA256())
-        )
+        self._write(now + timedelta(days=1), now + timedelta(days=2))
+        assert self.cert_store.is_certificate_valid() is False
 
-        cert_pem = cert.public_bytes(serialization.Encoding.PEM)
-        self.cert_store.client_cert_path.write_bytes(cert_pem)
+    def test_is_certificate_valid_no_file(self):
+        assert self.cert_store.is_certificate_valid() is False
 
-        result = self.cert_store.is_certificate_valid()
-        assert result is False
-
-    def test_is_certificate_valid_missing_file(self):
-        """Test certificate validity check when certificate file missing."""
-        result = self.cert_store.is_certificate_valid()
-        assert result is False
-
-    def test_is_certificate_valid_invalid_format(self):
-        """Test certificate validity check with invalid certificate format."""
-        # Store invalid certificate data
+    def test_is_certificate_valid_invalid_cert(self):
         self.cert_store.client_cert_path.write_text("INVALID_CERTIFICATE_DATA")
-
-        result = self.cert_store.is_certificate_valid()
-        assert result is False
+        assert self.cert_store.is_certificate_valid() is False
 
     def test_clear_certificates(self):
-        """Test clearing all stored certificates."""
-        # Create test files
-        self.cert_store.client_cert_path.write_text("CLIENT_CERT")
-        self.cert_store.client_key_path.write_text("CLIENT_KEY")
-        self.cert_store.ca_cert_path.write_text("CA_CERT")
-        self.cert_store.server_fingerprint_path.write_text("FINGERPRINT")
-
-        # Verify files exist
-        assert self.cert_store.client_cert_path.exists()
-        assert self.cert_store.client_key_path.exists()
-        assert self.cert_store.ca_cert_path.exists()
-        assert self.cert_store.server_fingerprint_path.exists()
-
-        # Clear certificates
+        """Clearing removes the certificate, key, CA and pins."""
+        for path in (
+            self.cert_store.client_cert_path,
+            self.cert_store.client_key_path,
+            self.cert_store.ca_cert_path,
+            self.cert_store.pins_path,
+        ):
+            path.write_text("X")
         self.cert_store.clear_certificates()
+        assert not list(Path(self.temp_dir).iterdir())
 
-        # Verify files are gone
-        assert not self.cert_store.client_cert_path.exists()
-        assert not self.cert_store.client_key_path.exists()
-        assert not self.cert_store.ca_cert_path.exists()
-        assert not self.cert_store.server_fingerprint_path.exists()
-
-    def test_clear_certificates_partial_files(self):
-        """Test clearing certificates when only some files exist."""
-        # Only create some files
+    def test_clear_certificates_partial(self):
+        """Clearing works when only some files exist."""
         self.cert_store.client_cert_path.write_text("CLIENT_CERT")
-        self.cert_store.server_fingerprint_path.write_text("FINGERPRINT")
-
-        # Should not raise error when clearing
         self.cert_store.clear_certificates()
-
-        # Should have removed existing files
         assert not self.cert_store.client_cert_path.exists()
-        assert not self.cert_store.server_fingerprint_path.exists()
 
-    def test_has_certificates_success(self):
-        """Test has_certificates when all certificates are valid."""
-        # Create valid certificate
-        cert = self.create_test_certificate(valid_days=30)
-        cert_pem = cert.public_bytes(serialization.Encoding.PEM)
+    def test_has_certificates_valid_pair(self):
+        now = datetime.now(timezone.utc)
+        self._write(now - timedelta(minutes=1), now + timedelta(days=30))
+        assert self.cert_store.has_certificates() is True
 
-        # Store all required files
-        self.cert_store.client_cert_path.write_bytes(cert_pem)
-        self.cert_store.client_key_path.write_text("CLIENT_KEY")
-        self.cert_store.ca_cert_path.write_text("CA_CERT")
-        self.cert_store.server_fingerprint_path.write_text("FINGERPRINT")
-
-        result = self.cert_store.has_certificates()
-        assert result is True
-
-    def test_has_certificates_missing_files(self):
-        """Test has_certificates when files are missing."""
-        # Only create some files
-        self.cert_store.client_cert_path.write_text("CLIENT_CERT")
-        # Missing other files
-
-        result = self.cert_store.has_certificates()
-        assert result is False
+    def test_has_certificates_missing_key(self):
+        now = datetime.now(timezone.utc)
+        self._write(now - timedelta(minutes=1), now + timedelta(days=30))
+        self.cert_store.client_key_path.unlink()
+        assert self.cert_store.has_certificates() is False
 
     def test_has_certificates_invalid_cert(self):
-        """Test has_certificates when certificate is invalid."""
-        # Store invalid certificate
         self.cert_store.client_cert_path.write_text("INVALID_CERT")
         self.cert_store.client_key_path.write_text("CLIENT_KEY")
-        self.cert_store.ca_cert_path.write_text("CA_CERT")
-        self.cert_store.server_fingerprint_path.write_text("FINGERPRINT")
+        assert self.cert_store.has_certificates() is False
 
-        result = self.cert_store.has_certificates()
-        assert result is False
-
-    def test_has_certificates_no_fingerprint(self):
-        """Test has_certificates when server fingerprint is missing."""
-        # Create valid certificate but no fingerprint
-        cert = self.create_test_certificate(valid_days=30)
-        cert_pem = cert.public_bytes(serialization.Encoding.PEM)
-
-        self.cert_store.client_cert_path.write_bytes(cert_pem)
-        self.cert_store.client_key_path.write_text("CLIENT_KEY")
-        self.cert_store.ca_cert_path.write_text("CA_CERT")
-        # No fingerprint file
-
-        result = self.cert_store.has_certificates()
-        assert result is False
+    def test_has_certificates_expired(self):
+        now = datetime.now(timezone.utc)
+        self._write(now - timedelta(days=2), now - timedelta(days=1))
+        assert self.cert_store.has_certificates() is False
 
 
 class TestCertificateStoreError:
@@ -380,24 +162,17 @@ class TestCertificateStoreError:
 
     def test_certificate_store_directory_creation_failure(self):
         """Test handling of directory creation failure with fallback."""
-        # Try to create certificate store in invalid location
-        # The certificate store should either raise an exception or successfully
-        # create a fallback directory
         if platform.system() == "Windows":
-            # On Windows, use an invalid path like NUL device or invalid characters
             invalid_paths = [
                 "NUL\\invalid",  # NUL is a reserved device name
                 "CON\\test",  # CON is a reserved device name
                 "C:\\*invalid*",  # Invalid characters in path
                 "\\\\?\\C:\\<>:|invalid",  # Invalid characters
             ]
-            # Try each invalid path - at least one should either fail or use fallback
             result = False
             for invalid_path in invalid_paths:
                 try:
                     cert_store = CertificateStore(invalid_path)
-                    # If it succeeded, it should have fallen back to a different directory
-                    # The fallback directory should not be the invalid path
                     if str(cert_store.config_dir) != invalid_path:
                         result = True
                         break
@@ -408,156 +183,54 @@ class TestCertificateStoreError:
                 result
             ), "Expected at least one invalid Windows path to fail or use fallback"
         else:
-            # Unix-like systems - use /dev/null which is a file, not a directory
-            # This should either raise an exception or fall back to a valid directory
+            # /dev/null is a file, not a directory
             try:
                 cert_store = CertificateStore("/dev/null/invalid")
-                # If no exception, verify it fell back to a different directory
                 assert str(cert_store.config_dir) != "/dev/null/invalid"
                 assert cert_store.config_dir.exists()
             except Exception:
-                # Also acceptable - the certificate store couldn't be created
                 pass
 
-    def test_certificate_store_permission_errors(self):
-        """Test handling of permission errors during file operations."""
+    @pytest.mark.skipif(os.name == "nt", reason="POSIX directory modes")
+    def test_store_issued_into_read_only_directory_raises(self):
+        """A store that cannot write says so instead of half-writing."""
         temp_dir = tempfile.mkdtemp()
         try:
             cert_store = CertificateStore(temp_dir)
-
-            if platform.system() == "Windows":
-                # On Windows, create files and then make them read-only
-                cert_data = {
-                    "certificate": "CERT",
-                    "private_key": "KEY",
-                    "ca_certificate": "CA",
-                    "server_fingerprint": "FINGERPRINT",
-                }
-
-                # First store certificates normally
-                cert_store.store_certificates(cert_data)
-
-                # Now make one of the files read-only
-                cert_store.client_key_path.chmod(
-                    stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
-                )
-
-                # Try to store certificates again - should fail on the read-only file
+            read_only_dir = Path(temp_dir) / "readonly"
+            read_only_dir.mkdir()
+            os.chmod(read_only_dir, 0o555)  # nosec B103
+            cert_store.client_cert_path = read_only_dir / "client.crt"
+            cert_store.client_key_path = read_only_dir / "client.key"
+            cert_store.ca_cert_path = read_only_dir / "ca.crt"
+            if os.geteuid() != 0:  # root writes anyway
                 with pytest.raises(PermissionError):
-                    cert_store.store_certificates(cert_data)
-
-                # Clean up - restore write permissions
-                cert_store.client_key_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
-            else:
-                # Unix-like systems - use chmod to create read-only directory
-                read_only_dir = Path(temp_dir) / "readonly"
-                read_only_dir.mkdir()
-                os.chmod(read_only_dir, 0o555)  # Read and execute only  # nosec B103
-
-                cert_data = {
-                    "certificate": "CERT",
-                    "private_key": "KEY",
-                    "ca_certificate": "CA",
-                    "server_fingerprint": "FINGERPRINT",
-                }
-
-                # Override paths to point to read-only directory
-                cert_store.client_cert_path = read_only_dir / "client.crt"
-                cert_store.client_key_path = read_only_dir / "client.key"
-                cert_store.ca_cert_path = read_only_dir / "ca.crt"
-                cert_store.server_fingerprint_path = (
-                    read_only_dir / "server.fingerprint"
-                )
-
-                # Should raise PermissionError
-                with pytest.raises(PermissionError):
-                    cert_store.store_certificates(cert_data)
-
-                # Clean up -- restore owner-only rwx so rmtree can
-                # traverse the test fixture dir.  0o700 satisfies
-                # semgrep's "no widely-permissive chmod" rule while
-                # remaining traversable; 0o644 would block rmtree.
-                # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
-                os.chmod(read_only_dir, 0o700)  # nosec B103
-
+                    cert_store.store_issued("CERT", b"KEY", "CA")
+            # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
+            os.chmod(read_only_dir, 0o700)  # nosec B103
         finally:
-            # Clean up
             shutil.rmtree(temp_dir)
 
 
 class TestCertificateStoreIntegration:
     """Integration tests for certificate store."""
 
-    # pylint: disable=attribute-defined-outside-init
-    def setup_method(self):
-        """Set up test environment."""
-        self.temp_dir = tempfile.mkdtemp()
-        self.cert_store = CertificateStore(self.temp_dir)
+    def test_certificate_store_persistence(self, tmp_path):
+        """What one instance stores, another instance of the directory reads."""
+        pki = Pki()
+        cert, key = pki.issue("host")
+        CertificateStore(str(tmp_path)).store_issued(
+            pem(cert), key_pem(key), pem(pki.cert)
+        )
+        CertificateStore(str(tmp_path)).save_pins(pki.sha256, ["a" * 64])
 
-    def teardown_method(self):
-        """Clean up test environment."""
-        if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
+        second = CertificateStore(str(tmp_path))
+        assert second.has_certificates()
+        assert second.load_client_certificate() == cert
+        assert second.load_pins()["ca_sha256"] == pki.sha256
 
-    def test_complete_certificate_workflow(self):
-        """Test complete certificate storage and validation workflow."""
-        # 1. Store certificates
-        cert_data = {
-            "certificate": "-----BEGIN CERTIFICATE-----\nCLIENT_CERT_DATA\n-----END CERTIFICATE-----",
-            "private_key": "-----BEGIN PRIVATE KEY-----\nPRIVATE_KEY_DATA\n-----END PRIVATE KEY-----",
-            "ca_certificate": "-----BEGIN CERTIFICATE-----\nCA_CERT_DATA\n-----END CERTIFICATE-----",
-            "server_fingerprint": "ABCD1234567890ABCD1234567890ABCD1234567890ABCD1234567890ABCD1234",
-        }
-
-        self.cert_store.store_certificates(cert_data)
-
-        # 2. Verify certificates can be loaded
-        cert_paths = self.cert_store.load_certificates()
-        assert cert_paths is not None
-        assert len(cert_paths) == 3
-
-        # 3. Verify server fingerprint retrieval
-        fingerprint = self.cert_store.get_server_fingerprint()
-        assert fingerprint == cert_data["server_fingerprint"]
-
-        # 4. Test server certificate validation
-        test_cert_der = b"test_certificate_data"
-        expected_fingerprint = hashlib.sha256(test_cert_der).hexdigest().upper()
-
-        # Update fingerprint to match test data
-        self.cert_store.server_fingerprint_path.write_text(expected_fingerprint)
-        result = self.cert_store.validate_server_certificate(test_cert_der)
-        assert result is True
-
-        # 5. Clear all certificates
-        self.cert_store.clear_certificates()
-
-        # 6. Verify everything is cleaned up
-        assert not self.cert_store.has_certificates()
-        assert self.cert_store.load_certificates() is None
-        assert self.cert_store.get_server_fingerprint() is None
-
-    def test_certificate_store_persistence(self):
-        """Test that certificate store persists across instances."""
-        # Create first certificate store instance
-        cert_store1 = CertificateStore(self.temp_dir)
-
-        cert_data = {
-            "certificate": "PERSISTENT_CERT",
-            "private_key": "PERSISTENT_KEY",
-            "ca_certificate": "PERSISTENT_CA",
-            "server_fingerprint": "PERSISTENT_FINGERPRINT",
-        }
-
-        cert_store1.store_certificates(cert_data)
-
-        # Create second certificate store instance
-        cert_store2 = CertificateStore(self.temp_dir)
-
-        # Verify data persists
-        assert cert_store2.load_certificates() is not None
-        assert cert_store2.get_server_fingerprint() == "PERSISTENT_FINGERPRINT"
-
-        # Verify file contents are correct
-        assert cert_store2.client_cert_path.read_text() == "PERSISTENT_CERT"
-        assert cert_store2.ca_cert_path.read_text() == "PERSISTENT_CA"
+    def test_default_store_is_one_object(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("SYSMANAGE_CONFIG_DIR", str(tmp_path))
+        first = certificate_store.default_store()
+        assert first is certificate_store.default_store()
+        assert first.config_dir == tmp_path

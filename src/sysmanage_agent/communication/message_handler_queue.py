@@ -22,6 +22,7 @@ from typing import Any, Dict
 
 from src.database.models import Priority, QueueDirection
 from src.i18n import _
+from src.sysmanage_agent.communication import delivery_confirmation as delivery
 from src.sysmanage_agent.communication import send_on_change
 
 # Commands short, self-contained and urgent enough to run BESIDE a long one.
@@ -30,7 +31,8 @@ from src.sysmanage_agent.communication import send_on_change
 # held a clock resync until the server gave up on it.  These are queued
 # URGENT and run by the express lane as well; only add a command that is
 # quick and safe to run concurrently with any other.
-EXPRESS_COMMANDS = frozenset({"resync_clock", "check_backup_storage"})
+# list_nfs_peers (25.8) answers while a host holds its connection open.
+EXPRESS_COMMANDS = frozenset({"resync_clock", "check_backup_storage", "list_nfs_peers"})
 
 
 def is_express(message: Dict[str, Any]) -> bool:
@@ -329,6 +331,8 @@ class MessageHandlerQueueMixin:
                 if time.monotonic() >= next_prune:
                     self._prune_completed_messages()
                     next_prune = time.monotonic() + self.QUEUE_PRUNE_INTERVAL_SECONDS
+                if self.delivery.due_for_check():
+                    self._resend_unconfirmed()
 
                 # Get pending messages ordered by priority
                 messages = self.queue_manager.dequeue_messages(
@@ -375,6 +379,12 @@ class MessageHandlerQueueMixin:
             success = await self.send_message_direct(message_data)
 
             if success:
+                # Kept until the server confirms storing it, when it does.
+                if self.delivery.sent(
+                    message_data.get("message_id"), message.message_id
+                ):
+                    self.queue_manager.mark_sent(message.message_id)
+                    return False
                 self.queue_manager.mark_completed(message.message_id)
                 self.logger.info(
                     "Successfully sent queued message: %s",
@@ -400,6 +410,40 @@ class MessageHandlerQueueMixin:
             )
             return False
 
+    def _resend_unconfirmed(self) -> None:
+        """Sent but not confirmed in time (the server could not store them,
+        or its answer was lost): pending again.  Also catches rows left
+        ``sent`` that this connection is not waiting on."""
+        try:
+            late = self.delivery.overdue()
+            count = self.queue_manager.requeue_unconfirmed(late) if late else 0
+            count += self.queue_manager.requeue_unconfirmed(
+                keep=set(self.delivery.tracked())
+            )
+            if count:
+                self.logger.warning(
+                    _("The server did not confirm %d message(s); sending them again"),
+                    count,
+                )
+        except Exception as error:
+            self.logger.error(_("Error requeuing unconfirmed messages: %s"), error)
+
+    def delivery_confirmed(self, data: Dict[str, Any]) -> None:
+        """``message_stored``: the server has the message (or never will)."""
+        body = data.get("data") if isinstance(data.get("data"), dict) else data
+        wire_id = body.get("message_id")
+        for queue_id in self.delivery.confirmed(wire_id):
+            if body.get("status") == delivery.REJECTED:
+                self.logger.warning(
+                    _("The server refused message %s; it will not be sent again"),
+                    wire_id,
+                )
+                self.queue_manager.mark_failed(
+                    queue_id, "refused by the server", retry=False
+                )
+            else:
+                self.queue_manager.mark_completed(queue_id)
+
     async def on_connection_established(  # NOSONAR - async required by caller interface
         self,
     ):
@@ -410,6 +454,18 @@ class MessageHandlerQueueMixin:
         Note: async is required because callers await this method.
         """
         self.logger.info("Connection established, starting queue processing")
+
+        # Nothing sent on an earlier connection will be confirmed on this one.
+        self.delivery.reset()
+        try:
+            resent = self.queue_manager.requeue_unconfirmed()
+            if resent:
+                self.logger.info(
+                    "Sending %d message(s) again: the server never confirmed them",
+                    resent,
+                )
+        except Exception as error:
+            self.logger.error(_("Error requeuing unconfirmed messages: %s"), error)
 
         # Recover any messages stuck in 'in_progress' state from previous crash/disconnect
         try:

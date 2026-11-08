@@ -35,6 +35,15 @@ server:
   # wrong answer: it accepts ANY certificate, from anyone.
   # ca_bundle: "/etc/ssl/certs/corporate-root.pem"
 
+  # Set this to true ONLY when such a TLS-inspecting proxy sits between this
+  # host and the server.  Once this host has its own certificate, the agent
+  # pins the server's TLS certificate (see SECURITY.md); an inspecting proxy
+  # presents a different one, so pinning would refuse every connection.
+  # true turns pinning off, logged once as a warning.  The proxy also removes
+  # this host's client certificate, so the server must accept this host
+  # without one ("optional" mutual-TLS mode, never "enforced").
+  # tls_inspection: false
+
   # Outbound HTTP proxy, if you have one.  Normally you do not need this: the
   # agent already honors HTTPS_PROXY / HTTP_PROXY / NO_PROXY from the
   # environment.  Set it explicitly for hosts where that environment does not

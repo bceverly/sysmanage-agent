@@ -62,12 +62,17 @@ def _prune_policy():
 
 
 def test_runners_by_platform():
-    assert job_runner.runner_for("Linux") == job_runner.SYSTEMD
+    assert job_runner.runner_for("Linux", systemd=True) == job_runner.SYSTEMD
+    assert job_runner.runner_for("Linux", systemd=False) == job_runner.DETACH
     assert job_runner.runner_for("FreeBSD") == job_runner.DAEMON
-    for system in ("OpenBSD", "NetBSD", "Darwin", "Windows", "", None):
+    assert job_runner.runner_for("Darwin") == job_runner.DETACH
+    for system in ("OpenBSD", "NetBSD", "Windows", "", None):
         assert job_runner.runner_for(system) is None
-    # A FreeBSD storage host may also back up its own OS (24.13).
-    assert job_runner.ROLES[job_runner.DAEMON] == ("storage", "self")
+    # 25.8: FreeBSD backs up as a host too; a Mac only as a host.
+    assert job_runner.roles_for("FreeBSD", job_runner.DAEMON) == job_runner.ALL_ROLES
+    assert job_runner.roles_for("Linux", job_runner.DETACH) == job_runner.ALL_ROLES
+    assert job_runner.roles_for("Darwin", job_runner.DETACH) == ("host",)
+    assert job_runner.roles_for("OpenBSD", None) == ()
 
 
 def test_a_pidfile_is_running_only_while_locked(tmp_path):
@@ -113,9 +118,12 @@ def test_daemon_argv_elevates_only_restate():
 
 
 @pytest.mark.asyncio
-async def test_a_freebsd_host_cannot_take_the_host_role(bsd):
-    answer = await bsd.backup_configure(_host_policy())
+async def test_a_mac_cannot_be_a_storage_host(bsd, monkeypatch):
+    bsd.runner = job_runner.DETACH
+    monkeypatch.setattr(ops_module.platform, "system", lambda: "Darwin")
+    answer = await bsd.backup_configure(_prune_policy())
     assert answer["success"] is False and answer["reason"] == "wrong_platform"
+    assert "Mac" in answer["error"]
     assert not bsd.fake.ran("install")
 
 

@@ -15,7 +15,7 @@ Targets:
 - _is_stale_error_message (no timestamp / no last-reg / stale / fresh / parse-error)
 - _handle_server_error (each branch of the error_code switch)
 - _handle_host_not_registered (clears state + sets re-register flag)
-- _create_ssl_context (with certs / without certs / verify-ssl off)
+- _create_ssl_context (delegates to ServerEndpoint.ssl_context)
 """
 
 # pylint: disable=protected-access
@@ -247,47 +247,24 @@ class TestHandleHostNotRegistered:
 
 
 class TestCreateSslContext:
-    def test_with_client_certs_loads_them(self):
-        agent = _agent()
-        agent.cert_store = MagicMock()
-        agent.cert_store.load_certificates.return_value = (
-            "/c/client.pem",
-            "/c/key.pem",
-            "/c/ca.pem",
-        )
-        agent.config = MagicMock()
-        with patch("main.ssl.create_default_context") as ctx_factory:
-            ctx = MagicMock()
-            ctx_factory.return_value = ctx
-            agent._create_ssl_context()
-        ctx.load_cert_chain.assert_called_once_with("/c/client.pem", "/c/key.pem")
-        ctx.load_verify_locations.assert_called_once_with("/c/ca.pem")
-        assert ctx.check_hostname is True
+    """The WebSocket uses the one shared context builder (ROADMAP 25.10)."""
 
-    def test_no_certs_with_verify_off_disables_verification(self):
+    def test_delegates_to_the_endpoint_with_the_agent_store(self):
         agent = _agent()
         agent.cert_store = MagicMock()
-        agent.cert_store.load_certificates.return_value = None
         agent.config = MagicMock()
-        agent.config.should_verify_ssl.return_value = False
-        with patch("main.ssl.create_default_context") as ctx_factory:
-            ctx = MagicMock()
-            ctx_factory.return_value = ctx
-            agent._create_ssl_context()
-        assert ctx.check_hostname is False
+        with patch("main.ServerEndpoint") as endpoint_cls:
+            endpoint_cls.return_value.ssl_context.return_value = "ctx"
+            assert agent._create_ssl_context() == "ctx"
+        endpoint_cls.assert_called_once_with(agent.config, agent.cert_store)
 
-    def test_no_certs_with_verify_on_keeps_default(self):
+    def test_plain_transport_has_no_context(self):
         agent = _agent()
         agent.cert_store = MagicMock()
-        agent.cert_store.load_certificates.return_value = None
         agent.config = MagicMock()
-        agent.config.should_verify_ssl.return_value = True
-        with patch("main.ssl.create_default_context") as ctx_factory:
-            ctx = MagicMock()
-            ctx_factory.return_value = ctx
-            result = agent._create_ssl_context()
-        # Returns the context; no explicit override of check_hostname/verify_mode.
-        assert result is ctx
+        with patch("main.ServerEndpoint") as endpoint_cls:
+            endpoint_cls.return_value.ssl_context.return_value = None
+            assert agent._create_ssl_context() is None
 
 
 # ---------------------------------------------------------------------------

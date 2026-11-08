@@ -19,7 +19,9 @@ import websockets
 
 from src.database.queue_manager import MessageQueueManager
 from src.i18n import _
+from src.security import client_tls
 from src.sysmanage_agent.collection import public_ip_fetcher
+from src.sysmanage_agent.communication import delivery_confirmation as delivery
 from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.communication import receive_pump
 from src.sysmanage_agent.communication.clock_probe import ClockProbe
@@ -69,6 +71,8 @@ class MessageHandler(MessageHandlerQueueMixin):
         self.agent = agent_instance
         self.logger = logging.getLogger(__name__)
         self.queue_manager = MessageQueueManager()
+        # Sent messages kept until the server confirms them (2026-11-06).
+        self.delivery = delivery.Awaiting()
         # The agent's half of the server's clock-offset measurement (23.3).
         self.clock_probe = ClockProbe()
 
@@ -166,6 +170,8 @@ class MessageHandler(MessageHandlerQueueMixin):
         system_info["logging_config_digest"] = config_digest(
             getattr(self.agent, "_logging_overrides", None)
         )
+        # This agent keeps each message until the server confirms storing it.
+        system_info[delivery.FLAG] = delivery.SUPPORTED
         return self.create_message("system_info", system_info)
 
     def create_heartbeat_message(self):
@@ -401,6 +407,10 @@ class MessageHandler(MessageHandlerQueueMixin):
             )
         elif error_code == "host_credential_required":
             self._retry_after_refusal()
+        elif error_code in client_tls.REFUSAL_CODES:
+            # mTLS refusal of system_info: logged, and for required/expired
+            # a certificate is requested (registration/host_certificate.py).
+            client_tls.notify_refusal(error_code, error_message)
         elif error_code == "missing_hostname":
             self.logger.error(
                 _("Server reports missing hostname in message. This is a bug.")
@@ -728,7 +738,10 @@ class MessageHandler(MessageHandlerQueueMixin):
         elif message_type == "host_approved":
             await self.agent.handle_host_approval(data)
         elif message_type == "registration_success":
+            self.delivery.server_says(data)
             await self.agent.handle_registration_success(data)
+        elif message_type == delivery.MESSAGE_TYPE:
+            self.delivery_confirmed(data)
         elif message_type == "registration_pending":
             # The server's answer to system_info while this host awaits
             # approval -- expected, not an unknown message (it was logged as

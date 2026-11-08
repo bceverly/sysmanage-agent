@@ -6,9 +6,11 @@
 
 The answer has three outcomes, each a reason code the server understands:
 
-* not Linux or FreeBSD          -> ``wrong_platform`` (Linux runs jobs
-  through a systemd unit, FreeBSD -- a storage host -- under daemon(8); see
-  ``job_runner``; restate's other BSD and macOS builds are not driven yet)
+* OpenBSD or NetBSD             -> ``no_nfsv4_client`` (their NFS clients
+  speak v2 and v3 only; a host's repository is an NFSv4 export)
+* any other unknown platform    -> ``wrong_platform`` (Linux runs jobs
+  through a systemd unit, or detach.py without systemd; FreeBSD under
+  daemon(8); macOS through detach.py -- see ``job_runner``)
 * no ``restate`` executable     -> ``missing_tool`` (install it)
 * restate present but too old   -> ``tool_outdated`` (upgrade it): on Linux
   the ``restate-job@.service`` unit is missing; or ``restate features
@@ -36,6 +38,9 @@ REASON_MISSING_TOOL = "missing_tool"
 REASON_WRONG_PLATFORM = "wrong_platform"
 REASON_TOOL_OUTDATED = "tool_outdated"
 REASON_MISSING_NFS_CLIENT = "missing_nfs_client"
+# OpenBSD and NetBSD (25.8): NFSv2 and v3 clients only, and a host's
+# repository is an NFSv4 export -- nothing on the host can fix it.
+REASON_NO_NFSV4_CLIENT = "no_nfsv4_client"
 
 PROBE_TIMEOUT_SECONDS = 10
 
@@ -84,7 +89,10 @@ def forget() -> None:
 # Where restate installs when it is not on the service PATH: FreeBSD's rc
 # PATH is /sbin:/bin:/usr/sbin:/usr/bin, and a port or ``gmake install``
 # puts restate in /usr/local/sbin.
-FALLBACK_PATHS = ("/usr/sbin/restate", "/usr/local/sbin/restate")
+# The last two: Homebrew's formula on Apple silicon and on Intel Macs (the
+# macOS agent's PATH does not include Homebrew's sbin).
+FALLBACK_PATHS = ("/usr/sbin/restate", "/usr/local/sbin/restate",
+                  "/opt/homebrew/sbin/restate")  # fmt: skip
 
 
 def locate(
@@ -106,9 +114,13 @@ def unavailable_reason(
     unit_exists: Callable = os.path.exists,
     exists: Callable = os.path.exists,
     nfs_exists: Callable = os.path.exists,
+    systemd: Optional[bool] = None,
 ) -> Optional[str]:
-    """Why this host cannot run backups, or None when it can."""
-    runner = job_runner.runner_for(system)
+    """Why this host cannot run backups, or None when it can.  ``systemd``:
+    whether systemd is PID 1 on Linux (looked up when not given)."""
+    if system in job_runner.NO_NFSV4:
+        return REASON_NO_NFSV4_CLIENT
+    runner = job_runner.runner_for(system, systemd)
     if runner is None:
         return REASON_WRONG_PLATFORM
     executable = locate(lookup, exists)
@@ -118,8 +130,6 @@ def unavailable_reason(
         return REASON_TOOL_OUTDATED
     if not contract.features_usable(features(executable, ask)):
         return REASON_TOOL_OUTDATED
-    if runner == job_runner.SYSTEMD and host_mount.nfs_client_missing(
-        "Linux", nfs_exists
-    ):
+    if system == "Linux" and host_mount.nfs_client_missing("Linux", nfs_exists):
         return REASON_MISSING_NFS_CLIENT
     return None

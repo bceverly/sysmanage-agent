@@ -359,7 +359,8 @@ def test_inapplicable_groups_never_make_a_host_limited():
         ("Linux", ["alpine"], _LINUX_VIRT_TOOLS | _POSIX_CFG_TOOLS),
         ("FreeBSD", [], _FREEBSD_TOOLS | _POSIX_CFG_TOOLS),
         ("OpenBSD", [], _POSIX_CFG_TOOLS),
-        ("Darwin", [], _POSIX_CFG_TOOLS),
+        # 25.8: a Mac backs up too, so a fully equipped one has restate.
+        ("Darwin", [], _POSIX_CFG_TOOLS | {"restate"}),
         ("Windows", [], _WINDOWS_CFG_TOOLS),
     ):
         report = _report_for(system, distro, tools)

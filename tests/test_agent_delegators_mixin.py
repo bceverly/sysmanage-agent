@@ -190,7 +190,6 @@ class TestAgentDelegatorMixin:
 
         # RegistrationDelegator methods
         assert hasattr(delegator, "get_auth_token")
-        assert hasattr(delegator, "fetch_certificates")
         assert hasattr(delegator, "ensure_certificates")
         assert hasattr(delegator, "handle_host_approval")
         assert hasattr(delegator, "clear_host_approval")

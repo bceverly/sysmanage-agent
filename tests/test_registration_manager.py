@@ -69,234 +69,34 @@ class TestAuthToken:
             await reg_manager.get_auth_token()
 
 
-class TestFetchCertificates:
-    """Test certificate fetching functionality."""
-
-    @pytest.mark.asyncio
-    async def test_fetch_certificates_success(self, agent, mock_db_manager):
-        """Test successful certificate fetching."""
-        _ = mock_db_manager
-        reg_manager = RegistrationManager(agent)
-        host_id = str(uuid.uuid4())
-
-        # Mock auth token
-        reg_manager.get_auth_token = AsyncMock(return_value="test-token")
-
-        # Mock certificate data
-        cert_data = {
-            "certificate": "-----BEGIN CERTIFICATE-----\nCERT_DATA\n-----END CERTIFICATE-----",
-            "private_key": "-----BEGIN PRIVATE KEY-----\nKEY_DATA\n-----END PRIVATE KEY-----",
-            "ca_certificate": "-----BEGIN CERTIFICATE-----\nCA_DATA\n-----END CERTIFICATE-----",
-            "server_fingerprint": "ABC123",
-        }
-
-        # Mock aiohttp session
-        mock_response = AsyncMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(return_value=cert_data)
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(return_value=mock_response)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        # Mock cert_store
-        agent.cert_store.store_certificates = Mock()
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch("aiohttp.TCPConnector"):
-                result = await reg_manager.fetch_certificates(host_id)
-
-        assert result is True
-        agent.cert_store.store_certificates.assert_called_once_with(cert_data)
-
-    @pytest.mark.asyncio
-    async def test_fetch_certificates_not_approved(self, agent, mock_db_manager):
-        """Test certificate fetching when host not approved."""
-        _ = mock_db_manager
-        reg_manager = RegistrationManager(agent)
-        host_id = str(uuid.uuid4())
-
-        reg_manager.get_auth_token = AsyncMock(return_value="test-token")
-
-        # Mock 403 response
-        mock_response = AsyncMock()
-        mock_response.status = 403
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(return_value=mock_response)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch("aiohttp.TCPConnector"):
-                result = await reg_manager.fetch_certificates(host_id)
-
-        assert result is False
-
-    @pytest.mark.asyncio
-    async def test_fetch_certificates_http_error(self, agent, mock_db_manager):
-        """Test certificate fetching with HTTP error."""
-        _ = mock_db_manager
-        reg_manager = RegistrationManager(agent)
-        host_id = str(uuid.uuid4())
-
-        reg_manager.get_auth_token = AsyncMock(return_value="test-token")
-
-        # Mock 500 response
-        mock_response = AsyncMock()
-        mock_response.status = 500
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(return_value=mock_response)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch("aiohttp.TCPConnector"):
-                result = await reg_manager.fetch_certificates(host_id)
-
-        assert result is False
-
-    @pytest.mark.asyncio
-    async def test_fetch_certificates_network_error(self, agent, mock_db_manager):
-        """Test certificate fetching with network error."""
-        _ = mock_db_manager
-        reg_manager = RegistrationManager(agent)
-        host_id = str(uuid.uuid4())
-
-        reg_manager.get_auth_token = AsyncMock(return_value="test-token")
-
-        # Mock network error
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(side_effect=aiohttp.ClientError("Network error"))
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch("aiohttp.TCPConnector"):
-                result = await reg_manager.fetch_certificates(host_id)
-
-        assert result is False
-
-    @pytest.mark.asyncio
-    async def test_fetch_certificates_with_ssl(self, agent, mock_db_manager):
-        """Test certificate fetching with SSL enabled."""
-        _ = mock_db_manager
-        reg_manager = RegistrationManager(agent)
-        host_id = str(uuid.uuid4())
-
-        # Configure SSL
-        agent.config.get_server_config = Mock(
-            return_value={
-                "hostname": "secure.example.com",
-                "port": 8443,
-                "use_https": True,
-            }
-        )
-        agent.config.should_verify_ssl = Mock(return_value=False)
-
-        reg_manager.get_auth_token = AsyncMock(return_value="test-token")
-
-        cert_data = {
-            "certificate": "CERT",
-            "private_key": "KEY",
-            "ca_certificate": "CA",
-        }
-
-        mock_response = AsyncMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(return_value=cert_data)
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
-
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(return_value=mock_response)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        agent.cert_store.store_certificates = Mock()
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch("aiohttp.TCPConnector") as mock_connector:
-                with patch("ssl.create_default_context") as mock_ssl_context:
-                    result = await reg_manager.fetch_certificates(host_id)
-
-        assert result is True
-        mock_ssl_context.assert_called_once()
-
-
 class TestEnsureCertificates:
-    """Test certificate validation and retrieval."""
+    """ensure_certificates runs the certificate manager's check (25.10)."""
 
     @pytest.mark.asyncio
-    async def test_ensure_certificates_already_valid(self, agent, mock_db_manager):
-        """Test ensure_certificates when valid certificates exist."""
+    async def test_ensure_certificates_runs_the_check(self, agent, mock_db_manager):
         _ = mock_db_manager
         reg_manager = RegistrationManager(agent)
-
+        reg_manager.certificates.check = AsyncMock(return_value=False)
         agent.cert_store.has_certificates = Mock(return_value=True)
 
-        result = await reg_manager.ensure_certificates()
-
-        assert result is True
-        agent.cert_store.has_certificates.assert_called_once()
+        assert await reg_manager.ensure_certificates() is True
+        reg_manager.certificates.check.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_ensure_certificates_no_certificates(self, agent, mock_db_manager):
-        """Test ensure_certificates when no certificates exist."""
+    async def test_ensure_certificates_without_a_certificate(
+        self, agent, mock_db_manager
+    ):
         _ = mock_db_manager
         reg_manager = RegistrationManager(agent)
-
+        reg_manager.certificates.check = AsyncMock(return_value=False)
         agent.cert_store.has_certificates = Mock(return_value=False)
-        agent.registration.get_system_info = Mock(
-            return_value={"hostname": "test-host"}
-        )
 
-        # Mock fingerprint retrieval - will fail and return False
-        mock_response = AsyncMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={"fingerprint": "ABC123"})
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
+        assert await reg_manager.ensure_certificates() is False
 
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(return_value=mock_response)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch("aiohttp.TCPConnector"):
-                result = await reg_manager.ensure_certificates()
-
-        # Should return False as manual approval is required
-        assert result is False
-
-    @pytest.mark.asyncio
-    async def test_ensure_certificates_fingerprint_error(self, agent, mock_db_manager):
-        """Test ensure_certificates when fingerprint retrieval fails."""
+    def test_no_user_jwt_certificate_fetch_remains(self, agent, mock_db_manager):
+        """The old fetch called a user-JWT endpoint and was never used."""
         _ = mock_db_manager
-        reg_manager = RegistrationManager(agent)
-
-        agent.cert_store.has_certificates = Mock(return_value=False)
-
-        # Mock network error for fingerprint retrieval
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(side_effect=Exception("Network error"))
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
-        with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch("aiohttp.TCPConnector"):
-                result = await reg_manager.ensure_certificates()
-
-        assert result is False
+        assert not hasattr(RegistrationManager(agent), "fetch_certificates")
 
 
 class TestRegistrationSuccess:

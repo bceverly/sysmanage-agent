@@ -22,7 +22,7 @@ def _fresh():
 
 
 def _reason(found="/usr/sbin/restate", unit=True, system="Linux", fallback=None,
-            nfs=True):  # fmt: skip
+            nfs=True, systemd=True):  # fmt: skip
     return probe.unavailable_reason(
         lambda name: found if name == "restate" else None,
         system,
@@ -30,13 +30,31 @@ def _reason(found="/usr/sbin/restate", unit=True, system="Linux", fallback=None,
         unit_exists=lambda path: unit,
         exists=lambda path: path == fallback,
         nfs_exists=lambda path: nfs and path == "/sbin/mount.nfs4",
+        systemd=systemd,
     )
 
 
 def test_backup_is_not_applicable_where_no_runner_drives_it(monkeypatch):
     monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
-    for system in ("Darwin", "Windows", "OpenBSD", "NetBSD", None):
+    for system in ("Windows", "SunOS", None):
         assert _reason(system=system) == probe.REASON_WRONG_PLATFORM
+
+
+def test_openbsd_and_netbsd_are_told_they_have_no_nfsv4_client(monkeypatch):
+    """25.8: their NFS clients speak v2 and v3; the repository is NFSv4."""
+    monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
+    for system in ("OpenBSD", "NetBSD"):
+        assert _reason(system=system) == probe.REASON_NO_NFSV4_CLIENT
+
+
+def test_macos_and_alpine_need_no_systemd_unit(monkeypatch):
+    """25.8: detach.py runs restate there."""
+    monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
+    assert _reason(system="Darwin", unit=False) is None
+    assert _reason(system="Linux", unit=False, systemd=False) is None
+    # Linux without systemd still needs its NFS client.
+    assert (_reason(system="Linux", unit=False, systemd=False, nfs=False)
+            == probe.REASON_MISSING_NFS_CLIENT)  # fmt: skip
 
 
 def test_freebsd_needs_no_systemd_unit(monkeypatch):

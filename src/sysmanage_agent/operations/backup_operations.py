@@ -52,6 +52,7 @@ from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import storage_prepare
 from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_probe
+from src.sysmanage_agent.backup import self_backup
 from src.sysmanage_agent.backup import signing
 
 DEFAULT_STATE_DIR = "/var/lib/sysmanage-agent"
@@ -155,6 +156,13 @@ def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
             target,
         ]
     return None
+
+
+def _wrong_platform(role: str) -> str:
+    """Why this platform cannot take ``role``."""
+    if platform.system() == "Darwin" and role != "host":
+        return _("A Mac can only be a backed-up host, not a backup storage host.")
+    return _("This platform cannot take that backup role.")
 
 
 def _allowed_actions(policy: Optional[Dict[str, Any]]) -> List[str]:
@@ -270,7 +278,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         mode).
         """
         owner = ["-o", "0", "-g", "0"]
-        if self.runner != job_runner.DAEMON:
+        if self.runner != job_runner.DAEMON and platform.system() == "Linux":
             return [["install", "-D", "-m", "644"] + owner + ["--", staged, dest]]
         argvs = []
         directory = posixpath.dirname(dest)
@@ -325,12 +333,16 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 or _read_text(host_mount.SELF_MOUNTINFO)
                 or "",
                 zfs_mounts=lambda: storage_fs.zfs_mount_points(_read_text),
+                mount_table=(
+                    None
+                    if platform.system() == "Linux"
+                    else lambda: self_backup.mount_types(platform.system())
+                ),
             )
-            if policy["role"] not in job_runner.ROLES.get(self.runner, ()):
-                return self._refusal(
-                    "wrong_platform",
-                    _("This platform can only be a backup storage host."),
-                )
+            if policy["role"] not in job_runner.roles_for(
+                platform.system(), self.runner
+            ):
+                return self._refusal("wrong_platform", _wrong_platform(policy["role"]))
             return await self._apply_policy(policy)
         except validation.PolicyError as error:
             return self._refusal("invalid_policy", str(error))

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 07:51-0500\n"
+"POT-Creation-Date: 2026-11-06 11:48-0500\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,45 +50,248 @@ msgstr "Falha ao inicializar o banco de dados: %s"
 msgid "Corrupt UUID in database: %s"
 msgstr "UUID corrompido no banco de dados: %s"
 
-#: src/database/queue_manager.py:337
+#: src/database/queue_manager.py:370
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "Mensagem %s falhou permanentemente após %d tentativas: %s"
 
-#: src/database/queue_manager.py:532
+#: src/database/queue_manager.py:565
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "Falha ao desserializar mensagem %s: %s"
 
-#: src/database/queue_manager.py:599
+#: src/database/queue_manager.py:632
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
 "Mensagem %s (tipo: %s) excedeu o máximo de tentativas, marcada como falha"
 
-#: src/security/certificate_store.py:68
+#: src/security/certificate_store.py:142
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  Não é possível acessar {config_dir}, recorrendo a {fallback_dir}"
 
-#: src/sysmanage_agent/backup/host_mount.py:147
+#: src/security/client_tls.py:90
+#, python-format
+msgid "This host's certificate expired on %s; requesting a new one"
+msgstr "O certificado deste host expirou em %s; solicitando um novo"
+
+#: src/security/client_tls.py:101
+#, python-format
+msgid "This host's certificate could not be loaded and is not presented: %s"
+msgstr ""
+"Não foi possível carregar o certificado deste host, e ele não é apresentado:"
+" %s"
+
+#: src/security/client_tls.py:114
+msgid ""
+"server.tls_inspection is true: the server's TLS certificate is not pinned on"
+" this host. A TLS-inspecting proxy also removes this host's client "
+"certificate, so the server must accept this host without one."
+msgstr ""
+"server.tls_inspection é true: o certificado TLS do servidor não é fixado "
+"neste host. Um proxy que inspeciona TLS também remove o certificado de "
+"cliente deste host, então o servidor deve aceitar este host sem ele."
+
+#: src/security/pin_reset.py:33
+msgid "Forget the server identity this agent has pinned."
+msgstr "Esquecer a identidade do servidor que este agente fixou."
+
+#: src/security/pin_reset.py:38
+msgid "also remove this host's certificate, its key and the CA"
+msgstr "remover também o certificado deste host, sua chave e a CA"
+
+#: src/security/pin_reset.py:46
+#, python-format
+msgid "Removed the server pins and this host's certificate from %s"
+msgstr "Os pins do servidor e o certificado deste host foram removidos de %s"
+
+#: src/security/pin_reset.py:50
+#, python-format
+msgid "Removed the server pins: %s"
+msgstr "Pins do servidor removidos: %s"
+
+#: src/security/pin_reset.py:52
+#, python-format
+msgid "No server pins to remove: %s"
+msgstr "Não há pins do servidor para remover: %s"
+
+#: src/security/pin_reset.py:54
+#, python-format
+msgid "Could not remove the files: %s"
+msgstr "Não foi possível remover os arquivos: %s"
+
+#: src/security/pin_reset.py:56
+msgid "Restart the agent; it pins the server again on its next connection."
+msgstr ""
+"Reinicie o agente; ele fixará o servidor novamente na próxima conexão."
+
+#: src/security/server_identity.py:95
+#, python-format
+msgid "The server identity request failed: HTTP %s"
+msgstr "A solicitação da identidade do servidor falhou: HTTP %s"
+
+#: src/security/server_identity.py:101 src/security/server_pinning.py:160
+#: src/security/server_pinning.py:164 src/security/server_pinning.py:169
+#: src/security/server_pinning.py:173 src/security/server_pinning.py:245
+msgid "The server identity response is incomplete"
+msgstr "A resposta de identidade do servidor está incompleta"
+
+#: src/security/server_identity.py:124
+msgid "The server cannot state its TLS identity yet; pinning will be retried"
+msgstr ""
+"O servidor ainda não consegue declarar sua identidade TLS; a fixação será "
+"tentada novamente"
+
+#: src/security/server_identity.py:129
+#, python-format
+msgid "Could not pin this server's identity: %s. Pinning will be retried."
+msgstr ""
+"Não foi possível fixar a identidade deste servidor: %s. A fixação será "
+"tentada novamente."
+
+#: src/security/server_identity.py:134
+msgid "Pinned this server's identity; its TLS certificate is now checked"
+msgstr ""
+"A identidade deste servidor foi fixada; seu certificado TLS agora é "
+"verificado"
+
+#: src/security/server_identity.py:150
+msgid ""
+"The server's TLS certificate changed, but the server cannot state its TLS "
+"identity right now; keeping the current pins and trying again later"
+msgstr ""
+"O certificado TLS do servidor mudou, mas o servidor não consegue declarar "
+"sua identidade TLS agora; os pins atuais são mantidos e uma nova tentativa "
+"será feita mais tarde"
+
+#: src/security/server_identity.py:159
+#, python-format
+msgid ""
+"The server's TLS certificate changed and the change could not be verified "
+"(%s). The likely cause is a proxy, or another server, presenting a different"
+" certificate. If this server really was replaced, re-pin deliberately: "
+"delete %s or run the agent's reset command, then restart the agent."
+msgstr ""
+"O certificado TLS do servidor mudou e a mudança não pôde ser verificada "
+"(%s). A causa provável é um proxy, ou outro servidor, apresentando um "
+"certificado diferente. Se este servidor realmente foi substituído, fixe-o "
+"novamente de forma deliberada: exclua %s ou execute o comando de redefinição"
+" do agente e, em seguida, reinicie o agente."
+
+#: src/security/server_identity.py:172
+msgid ""
+"The server's TLS certificate changed; the new one is signed by this server's"
+" identity and is now trusted"
+msgstr ""
+"O certificado TLS do servidor mudou; o novo está assinado pela identidade "
+"deste servidor e agora é confiável"
+
+#: src/security/server_identity.py:200
+#, python-format
+msgid "Could not re-pin this server's identity: %s"
+msgstr "Não foi possível fixar novamente a identidade deste servidor: %s"
+
+#: src/security/server_pinning.py:94
+#, python-format
+msgid ""
+"The server presented a TLS certificate this agent has not pinned (SPKI "
+"SHA-256 %s). The connection was refused. The agent is checking whether the "
+"server has signed the new certificate."
+msgstr ""
+"O servidor apresentou um certificado TLS que este agente não fixou (SPKI "
+"SHA-256 %s). A conexão foi recusada. O agente está verificando se o servidor"
+" assinou o novo certificado."
+
+#: src/security/server_pinning.py:143 src/security/server_pinning.py:151
+msgid "The server identity statement has no valid expiry"
+msgstr "A declaração de identidade do servidor não tem uma expiração válida"
+
+#: src/security/server_pinning.py:183
+msgid "The server's identity certificate was not issued by the pinned CA"
+msgstr ""
+"O certificado de identidade do servidor não foi emitido pela CA fixada"
+
+#: src/security/server_pinning.py:187
+msgid "The server's identity certificate is outside its validity period"
+msgstr ""
+"O certificado de identidade do servidor está fora do período de validade"
+
+#: src/security/server_pinning.py:200
+msgid "The server's identity certificate uses an unsupported key type"
+msgstr ""
+"O certificado de identidade do servidor usa um tipo de chave não suportado"
+
+#: src/security/server_pinning.py:204
+msgid ""
+"The server identity statement is not signed by its identity certificate"
+msgstr ""
+"A declaração de identidade do servidor não está assinada pelo seu "
+"certificado de identidade"
+
+#: src/security/server_pinning.py:213 src/security/server_pinning.py:216
+#: src/security/server_pinning.py:221
+msgid "The server identity statement is not readable"
+msgstr "A declaração de identidade do servidor não é legível"
+
+#: src/security/server_pinning.py:218
+msgid "The server identity statement has expired"
+msgstr "A declaração de identidade do servidor expirou"
+
+#: src/security/server_pinning.py:255
+msgid "The server's CA is not the CA this agent has pinned"
+msgstr "A CA do servidor não é a CA que este agente fixou"
+
+#: src/security/server_pinning.py:262
+msgid ""
+"The certificate on this connection is not one the server's signed statement "
+"lists"
+msgstr ""
+"O certificado desta conexão não consta na declaração assinada do servidor"
+
+#: src/sysmanage_agent/backup/host_mount.py:167
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr ""
 "O armazenamento de backup em %(where)s está quase cheio (%(free)d MB "
 "livres)."
 
-#: src/sysmanage_agent/backup/host_mount.py:153
+#: src/sysmanage_agent/backup/host_mount.py:173
 #, python-format
 msgid "The backup storage at %(where)s cannot take new files: %(error)s"
 msgstr ""
 "O armazenamento de backup em %(where)s não aceita novos arquivos: %(error)s"
 
-#: src/sysmanage_agent/backup/host_mount.py:173
+#: src/sysmanage_agent/backup/host_mount.py:193
 #, python-format
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr ""
 "O bloqueio não funciona no armazenamento de backup em %(where)s: %(error)s"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:83
+msgid "restate is not installed on this host."
+msgstr "restate não está instalado neste host."
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:117
+msgid "That backup job is already running."
+msgstr "Essa tarefa de backup já está em execução."
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:139
+msgid "The backup job could not be started."
+msgstr "A tarefa de backup não pôde ser iniciada."
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:227
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
+"%(unit)s on this host"
+msgstr ""
+"o restate parou (saída %(code)s) antes de gravar um resultado; consulte "
+"journalctl -u %(unit)s neste host"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:271
+msgid "Could not queue the backup report"
+msgstr "Não foi possível colocar o relatório de backup na fila"
 
 #: src/sysmanage_agent/backup/key_files.py:67
 msgid "The server sent no usable keys"
@@ -149,7 +352,7 @@ msgstr ""
 msgid "A signing run needs its key"
 msgstr "Uma execução de assinatura precisa da sua chave"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:28
+#: src/sysmanage_agent/backup/mount_mixin.py:29
 msgid ""
 "This host has no NFS client, so it cannot mount its backup storage. Click "
 "Equip for backup, or install it (nfs-common on Debian and Ubuntu, nfs-utils "
@@ -159,7 +362,7 @@ msgstr ""
 "de backup. Clique em \"Preparar para backup\" ou instale-o (nfs-common no "
 "Debian e Ubuntu, nfs-utils no RHEL e Fedora)."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:95
+#: src/sysmanage_agent/backup/mount_mixin.py:101
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -168,28 +371,54 @@ msgstr ""
 "O armazenamento de backup não está montado em %(where)s, e o servidor ainda "
 "não informou de onde montá-lo."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:110
+#: src/sysmanage_agent/backup/mount_mixin.py:116
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "Não foi possível montar o armazenamento de backup %(source)s em %(where)s: "
 "%(error)s"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:118
+#: src/sysmanage_agent/backup/mount_mixin.py:124
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr ""
 "O armazenamento de backup não está montado em %(where)s após a montagem."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:135
+#: src/sysmanage_agent/backup/mount_mixin.py:141
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "O armazenamento de backup em %s não respondeu."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:160
+#: src/sysmanage_agent/backup/mount_mixin.py:166
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Não foi possível desmontar o armazenamento de backup em %s: %s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:86
+#, python-format
+msgid "Could not list the sealed snapshots: %s"
+msgstr "Não foi possível listar os snapshots selados: %s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:101
+#, python-format
+msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
+msgstr "Não foi possível remover o snapshot selado antigo %(name)s: %(error)s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:176
+#, python-format
+msgid "%(dataset)s is not mounted at %(path)s on this host"
+msgstr "%(dataset)s não está montado em %(path)s neste host"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:213
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr ""
+"Não foi possível preparar o armazenamento de backup para a política %s: %s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "Não foi possível executar a auditoria do armazenamento: %s"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:122
 #, python-format
@@ -435,7 +664,7 @@ msgstr "Erro ao ler configuração syslog-ng: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:49
 #: src/sysmanage_agent/collection/hardware_collection.py:88
-#: src/sysmanage_agent/operations/system_control.py:346
+#: src/sysmanage_agent/operations/system_control.py:348
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
@@ -764,43 +993,41 @@ msgstr "Sistema operacional não suportado: %s"
 msgid "Failed to collect available packages: %s"
 msgstr "Falha ao coletar pacotes disponíveis: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:257
-msgid "winget not found in any common location"
-msgstr "winget não encontrado em nenhum local comum"
-
-#: src/sysmanage_agent/collection/package_collector_base.py:334
-#: src/sysmanage_agent/collection/package_collector_base.py:357
-#: src/sysmanage_agent/collection/package_collector_base.py:386
+#: src/sysmanage_agent/collection/package_collector_base.py:41
 #, python-format
 msgid "Failed to store packages for %s: %s"
 msgstr "Falha ao armazenar pacotes para %s: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:416
+#: src/sysmanage_agent/collection/package_collector_base.py:258
+msgid "winget not found in any common location"
+msgstr "winget não encontrado em nenhum local comum"
+
+#: src/sysmanage_agent/collection/package_collector_base.py:417
 #, python-format
 msgid "Failed to get packages for %s: %s"
 msgstr "Falha ao obter pacotes para %s: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:440
+#: src/sysmanage_agent/collection/package_collector_base.py:441
 #, python-format
 msgid "Failed to get all packages: %s"
 msgstr "Falha ao obter todos os pacotes: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:453
+#: src/sysmanage_agent/collection/package_collector_base.py:454
 #, python-format
 msgid "Failed to get package managers: %s"
 msgstr "Falha ao obter gerenciadores de pacotes: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:489
+#: src/sysmanage_agent/collection/package_collector_base.py:490
 #, python-format
 msgid "Failed to get packages for transmission: %s"
 msgstr "Falha ao obter pacotes para transmissão: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:518
+#: src/sysmanage_agent/collection/package_collector_base.py:519
 #, python-format
 msgid "Failed to read sent package snapshot: %s"
 msgstr "Falha ao ler o snapshot do pacote enviado: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:558
+#: src/sysmanage_agent/collection/package_collector_base.py:559
 #, python-format
 msgid "Failed to store sent package snapshot: %s"
 msgstr "Falha ao armazenar o snapshot do pacote enviado: %s"
@@ -1112,8 +1339,8 @@ msgid "Failed to detect available updates: %s"
 msgstr "Falha ao detectar atualizações disponíveis: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:189
-#: src/sysmanage_agent/operations/package_installation_helpers.py:252
-#: src/sysmanage_agent/operations/package_operations.py:243
+#: src/sysmanage_agent/operations/package_installation_helpers.py:261
+#: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
 msgid "Failed to install package %s: %s"
 msgstr "Falha ao instalar pacote %s: %s"
@@ -1891,51 +2118,51 @@ msgstr "Falha na poll (%s); tentando novamente em %ds"
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "Testando novamente se esta rede agora permite conexões WebSocket"
 
-#: src/sysmanage_agent/communication/message_handler.py:208
+#: src/sysmanage_agent/communication/message_handler.py:214
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "Falha ao enfileirar mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:246
+#: src/sysmanage_agent/communication/message_handler.py:252
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "Falha ao enfileirar confirmação de comando para a mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:254
+#: src/sysmanage_agent/communication/message_handler.py:260
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "Erro na fila de comando de reconhecimento para %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:293
+#: src/sysmanage_agent/communication/message_handler.py:299
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "Erro no servidor [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:346
+#: src/sysmanage_agent/communication/message_handler.py:352
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr ""
 "Impossível analisar a marca de tempo da mensagem para verificacao de "
 "obsolescencia: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:399
-#: src/sysmanage_agent/communication/message_handler.py:739
+#: src/sysmanage_agent/communication/message_handler.py:405
+#: src/sysmanage_agent/communication/message_handler.py:752
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Registro do host está pendente de aprovação. Continuará tentando "
 "periodicamente."
 
-#: src/sysmanage_agent/communication/message_handler.py:406
+#: src/sysmanage_agent/communication/message_handler.py:416
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "O servidor relata falta de nome do host na mensagem. Isso é um erro."
 
-#: src/sysmanage_agent/communication/message_handler.py:409
+#: src/sysmanage_agent/communication/message_handler.py:419
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "Servidor não conseguiu enfileirar mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:430
+#: src/sysmanage_agent/communication/message_handler.py:440
 #, python-format
 msgid ""
 "This host's registration was refused; asking the server again in %d seconds."
@@ -1943,7 +2170,7 @@ msgstr ""
 "O registro deste host foi recusado; o servidor será consultado novamente em "
 "%d segundos."
 
-#: src/sysmanage_agent/communication/message_handler.py:468
+#: src/sysmanage_agent/communication/message_handler.py:478
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -1955,7 +2182,7 @@ msgstr ""
 "novamente este host a partir do seu index de locatário; re-cadastraremos "
 "apenas se persistir."
 
-#: src/sysmanage_agent/communication/message_handler.py:481
+#: src/sysmanage_agent/communication/message_handler.py:491
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -1964,37 +2191,37 @@ msgstr ""
 "host_não_cadastrado persistiu (%(n)d strikes) -- tratando esta máquina como "
 "genuinamente ausente; limpando o host_id armazenado e recadastrando"
 
-#: src/sysmanage_agent/communication/message_handler.py:492
+#: src/sysmanage_agent/communication/message_handler.py:502
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Erro ao limpar armazenamento de host_id: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:548
+#: src/sysmanage_agent/communication/message_handler.py:558
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "Transmissão %s: falha na atualização do inventário: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:558
+#: src/sysmanage_agent/communication/message_handler.py:568
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Transmissão %s: ação desconhecida '%s' - ignorada"
 
-#: src/sysmanage_agent/communication/message_handler.py:661
+#: src/sysmanage_agent/communication/message_handler.py:671
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "JSON inválido recebido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:663
+#: src/sysmanage_agent/communication/message_handler.py:673
 #, python-format
 msgid "Error processing message: %s"
 msgstr "Erro ao processar mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:676
+#: src/sysmanage_agent/communication/message_handler.py:686
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: Erro do receptor de mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:694
+#: src/sysmanage_agent/communication/message_handler.py:704
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -2002,90 +2229,107 @@ msgstr ""
 "Receptor de mensagens: websocket limpo por desconexão concorrente; saindo do"
 " loop de recepção para permitir reconexão"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:762
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Tipo de mensagem desconhecido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:832
+#: src/sysmanage_agent/communication/message_handler.py:845
 msgid "Heartbeat failed, connection may be lost"
 msgstr "Batida do coração falhou, a conexão pode ter sido perdida"
 
-#: src/sysmanage_agent/communication/message_handler.py:841
+#: src/sysmanage_agent/communication/message_handler.py:854
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Erro do remetente da mensagem: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:857
+#: src/sysmanage_agent/communication/message_handler.py:870
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Erro ao fechar manipulador de mensagens: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:137
+#: src/sysmanage_agent/communication/message_handler_queue.py:139
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Falha ao criar tarefa a partir de queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:203
+#: src/sysmanage_agent/communication/message_handler_queue.py:205
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Erro no processador da fila de entrada: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:228
+#: src/sysmanage_agent/communication/message_handler_queue.py:230
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "Erro no processador da fila expressa: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:237
+#: src/sysmanage_agent/communication/message_handler_queue.py:239
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Mensagem marcada como processando: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:267
+#: src/sysmanage_agent/communication/message_handler_queue.py:269
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Erro ao processar mensagem de entrada %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:283
+#: src/sysmanage_agent/communication/message_handler_queue.py:285
 msgid "Cannot send message: not connected to server"
 msgstr "Não é possível enviar mensagem: não conectado ao servidor"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:296
+#: src/sysmanage_agent/communication/message_handler_queue.py:298
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Falha ao enviar mensagem diretamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:355
+#: src/sysmanage_agent/communication/message_handler_queue.py:359
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Erro no processador da fila: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:397
+#: src/sysmanage_agent/communication/message_handler_queue.py:407
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Erro ao processar mensagem em fila %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:423
+#: src/sysmanage_agent/communication/message_handler_queue.py:425
+#, python-format
+msgid "The server did not confirm %d message(s); sending them again"
+msgstr ""
+"O servidor não confirmou %d mensagem(ns); elas serão enviadas novamente"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:429
+#: src/sysmanage_agent/communication/message_handler_queue.py:468
+#, python-format
+msgid "Error requeuing unconfirmed messages: %s"
+msgstr "Erro ao recolocar na fila as mensagens não confirmadas: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:438
+#, python-format
+msgid "The server refused message %s; it will not be sent again"
+msgstr "O servidor recusou a mensagem %s; ela não será enviada novamente"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:479
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Erro ao recuperar mensagens travadas: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:454
+#: src/sysmanage_agent/communication/message_handler_queue.py:510
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Falha ao criar tarefa de processamento da fila outbound: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:472
+#: src/sysmanage_agent/communication/message_handler_queue.py:528
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "Falha ao criar a tarefa de processamento da fila expressa: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:490
+#: src/sysmanage_agent/communication/message_handler_queue.py:546
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Falha ao criar tarefa de processamento da fila inbound: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:581
+#: src/sysmanage_agent/communication/message_handler_queue.py:637
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "Erro ao recortar mensagens da fila concluída: %s"
@@ -2143,80 +2387,80 @@ msgstr "Erro do agendador de coleta de pacotes: %s"
 msgid "Failed to build capability report: %s"
 msgstr "Falha ao construir relatório de capacidade: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:464
+#: src/sysmanage_agent/core/agent_utils.py:469
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID de execução de script %s já processado, ignorando duplicado"
 
-#: src/sysmanage_agent/core/agent_utils.py:506
+#: src/sysmanage_agent/core/agent_utils.py:511
 msgid "Generic command missing nested command_type"
 msgstr "Comando genérico sem command_type aninhado"
 
-#: src/sysmanage_agent/core/agent_utils.py:518
+#: src/sysmanage_agent/core/agent_utils.py:523
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Tipo de comando desconhecido: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:582
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Falha ao colocar em fila o resultado da execução do script: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:596
+#: src/sysmanage_agent/core/agent_utils.py:601
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Erro ao verificar UUID de execução: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:610
+#: src/sysmanage_agent/core/agent_utils.py:615
 msgid "No execution UUID provided, cannot track"
 msgstr "Nenhum UUID de execução fornecido, não é possível rastrear"
 
-#: src/sysmanage_agent/core/agent_utils.py:625
+#: src/sysmanage_agent/core/agent_utils.py:630
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "UUID de execução %s já existe no banco de dados"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:655
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Erro ao armazenar UUID de execução: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:715
+#: src/sysmanage_agent/core/agent_utils.py:720
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Erro no manipulador de controlo de serviços: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:762
+#: src/sysmanage_agent/core/agent_utils.py:767
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Tempo limite excedido no controlo de serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:768
+#: src/sysmanage_agent/core/agent_utils.py:773
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Erro de controlo de serviço para %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:853
+#: src/sysmanage_agent/core/agent_utils.py:858
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Falha ao %s o serviço %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:863
+#: src/sysmanage_agent/core/agent_utils.py:868
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Falha ao atualizar funções após controlo de serviço: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:907
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Erro no manipulador de estado de serviços: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:945
+#: src/sysmanage_agent/core/agent_utils.py:950
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Tempo limite excedido ao consultar o estado do serviço %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:955
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Erro de estado do serviço para %s: %s"
@@ -2377,85 +2621,40 @@ msgstr "Erro ao coletar logs do agente: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Erro ao coletar logs de erro: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:283
+#: src/sysmanage_agent/operations/backup_operations.py:164
+msgid "A Mac can only be a backed-up host, not a backup storage host."
+msgstr ""
+"Um Mac só pode ser um host com backup, não um host de armazenamento de "
+"backups."
+
+#: src/sysmanage_agent/operations/backup_operations.py:165
+msgid "This platform cannot take that backup role."
+msgstr "Esta plataforma não pode assumir essa função de backup."
+
+#: src/sysmanage_agent/operations/backup_operations.py:309
 msgid "That backup action is not configured on this host."
 msgstr "Essa ação de backup não está configurada neste host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:291
+#: src/sysmanage_agent/operations/backup_operations.py:317
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate não é utilizável neste host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:314
-msgid "This platform can only be a backup storage host."
-msgstr "Esta plataforma só pode ser um host de armazenamento de backups."
-
-#: src/sysmanage_agent/operations/backup_operations.py:320
+#: src/sysmanage_agent/operations/backup_operations.py:350
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Não foi possível instalar as tarefas de backup: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:382
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Esta versão do restate não suporta: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:466
+#: src/sysmanage_agent/operations/backup_operations.py:498
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr ""
 "Este restate não consegue executar %s como tarefa; atualize o restate."
-
-#: src/sysmanage_agent/operations/backup_operations.py:564
-msgid "restate is not installed on this host."
-msgstr "restate não está instalado neste host."
-
-#: src/sysmanage_agent/operations/backup_operations.py:597
-msgid "That backup job is already running."
-msgstr "Essa tarefa de backup já está em execução."
-
-#: src/sysmanage_agent/operations/backup_operations.py:619
-msgid "The backup job could not be started."
-msgstr "A tarefa de backup não pôde ser iniciada."
-
-#: src/sysmanage_agent/operations/backup_operations.py:674
-#, python-format
-msgid "Could not list the sealed snapshots: %s"
-msgstr "Não foi possível listar os snapshots selados: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:689
-#, python-format
-msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
-msgstr "Não foi possível remover o snapshot selado antigo %(name)s: %(error)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:764
-#, python-format
-msgid "%(dataset)s is not mounted at %(path)s on this host"
-msgstr "%(dataset)s não está montado em %(path)s neste host"
-
-#: src/sysmanage_agent/operations/backup_operations.py:799
-#, python-format
-msgid "Could not prepare backup storage for policy %s: %s"
-msgstr ""
-"Não foi possível preparar o armazenamento de backup para a política %s: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:917
-#, python-format
-msgid ""
-"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
-"%(unit)s on this host"
-msgstr ""
-"o restate parou (saída %(code)s) antes de gravar um resultado; consulte "
-"journalctl -u %(unit)s neste host"
-
-#: src/sysmanage_agent/operations/backup_operations.py:943
-#, python-format
-msgid "The storage audit could not run: %s"
-msgstr "Não foi possível executar a auditoria do armazenamento: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:974
-msgid "Could not queue the backup report"
-msgstr "Não foi possível colocar o relatório de backup na fila"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:74
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:118
@@ -3025,12 +3224,12 @@ msgid "Failed to update installation tracking record: %s"
 msgstr "Falha ao atualizar registro de acompanhamento da instalação: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:108
-#: src/sysmanage_agent/operations/package_operations.py:60
+#: src/sysmanage_agent/operations/package_operations.py:70
 msgid "Skipping package with no name"
 msgstr "Ignorando pacote sem nome"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:109
-#: src/sysmanage_agent/operations/package_operations.py:61
+#: src/sysmanage_agent/operations/package_operations.py:71
 msgid "No package name"
 msgstr "Nenhum nome de pacote"
 
@@ -3139,103 +3338,103 @@ msgid "Scoop installed successfully"
 msgstr "Scoop instalado com sucesso"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/package_operations.py:127
+#: src/sysmanage_agent/operations/package_operations.py:137
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
 msgstr "Desinstalação não implementada para gerenciador de pacotes %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:160
+#: src/sysmanage_agent/operations/package_operations.py:170
 #, python-format
 msgid "Failed to update uninstall tracking record: %s"
 msgstr "Falha ao atualizar registro de acompanhamento da desinstalação: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:179
+#: src/sysmanage_agent/operations/package_operations.py:189
 msgid "No package name specified"
 msgstr "Nenhum nome de pacote especificado"
 
-#: src/sysmanage_agent/operations/package_operations.py:275
-#: src/sysmanage_agent/operations/package_operations.py:383
+#: src/sysmanage_agent/operations/package_operations.py:285
+#: src/sysmanage_agent/operations/package_operations.py:393
 msgid "No request_id specified"
 msgstr "Nenhum request_id especificado"
 
-#: src/sysmanage_agent/operations/package_operations.py:280
+#: src/sysmanage_agent/operations/package_operations.py:290
 msgid "No packages specified for installation"
 msgstr "Nenhum pacote especificado para instalação"
 
-#: src/sysmanage_agent/operations/package_operations.py:359
+#: src/sysmanage_agent/operations/package_operations.py:369
 #, python-format
 msgid "Failed to send installation completion to server: %s"
 msgstr "Falha ao enviar conclusão da instalação para o servidor: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:388
+#: src/sysmanage_agent/operations/package_operations.py:398
 msgid "No packages specified for uninstallation"
 msgstr "Nenhum pacote especificado para desinstalação"
 
-#: src/sysmanage_agent/operations/package_operations.py:485
+#: src/sysmanage_agent/operations/package_operations.py:495
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "Falha ao enviar conclusão da desinstalação para o servidor: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:494
+#: src/sysmanage_agent/operations/package_operations.py:504
 msgid "No packages to install"
 msgstr "Nenhum pacote para instalar"
 
-#: src/sysmanage_agent/operations/package_operations.py:540
+#: src/sysmanage_agent/operations/package_operations.py:548
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get install falhou: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:545
+#: src/sysmanage_agent/operations/package_operations.py:553
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "Falha ao instalar pacotes com apt-get: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:548
+#: src/sysmanage_agent/operations/package_operations.py:556
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "Exceção durante apt-get install: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:555
+#: src/sysmanage_agent/operations/package_operations.py:563
 msgid "No packages to uninstall"
 msgstr "Nenhum pacote para desinstalar"
 
-#: src/sysmanage_agent/operations/package_operations.py:586
+#: src/sysmanage_agent/operations/package_operations.py:593
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove falhou: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:591
+#: src/sysmanage_agent/operations/package_operations.py:598
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "Falha ao desinstalar pacotes com apt-get: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:594
+#: src/sysmanage_agent/operations/package_operations.py:601
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "Exceção durante apt-get remove: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:635
+#: src/sysmanage_agent/operations/package_operations.py:647
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr "Falha ao enfileirar conclusão da instalação para solicitação %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:640
+#: src/sysmanage_agent/operations/package_operations.py:652
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "Erro na fila de instalação concluída: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:696
+#: src/sysmanage_agent/operations/package_operations.py:709
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "Falha ao enviar atualização de status do pacote instalado: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:769
+#: src/sysmanage_agent/operations/package_operations.py:782
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "Erro ao executar atualização de pacote: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:778
+#: src/sysmanage_agent/operations/package_operations.py:791
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3413,52 +3612,52 @@ msgstr "Desligamento do sistema agendado em 1 minuto"
 msgid "Failed to shutdown system: %s"
 msgstr "Falha ao desligar o sistema: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:291
+#: src/sysmanage_agent/operations/system_control.py:293
 msgid "dnf-system-upgrade requires a target version"
 msgstr "dnf-system-upgrade requer uma versão alvo"
 
-#: src/sysmanage_agent/operations/system_control.py:304
+#: src/sysmanage_agent/operations/system_control.py:306
 msgid "freebsd-update requires a target version"
 msgstr "freebsd-update requer uma versão alvo"
 
-#: src/sysmanage_agent/operations/system_control.py:315
+#: src/sysmanage_agent/operations/system_control.py:317
 #, python-format
 msgid "Unknown release-upgrade method: %s"
 msgstr "Método de release-upgrade desconhecido: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:337
+#: src/sysmanage_agent/operations/system_control.py:339
 msgid "Agent update not yet supported on Windows"
 msgstr "Atualização do agente ainda não suportada no Windows"
 
-#: src/sysmanage_agent/operations/system_control.py:342
+#: src/sysmanage_agent/operations/system_control.py:344
 msgid "Agent update not yet supported on macOS"
 msgstr "Atualização do agente ainda não suportada no macOS"
 
-#: src/sysmanage_agent/operations/system_control.py:349
+#: src/sysmanage_agent/operations/system_control.py:351
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "Falha ao atualizar o agente: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:388
+#: src/sysmanage_agent/operations/system_control.py:390
 msgid "Cannot detect Linux distribution"
 msgstr "Não é possível detectar a distribuição Linux"
 
-#: src/sysmanage_agent/operations/system_control.py:407
+#: src/sysmanage_agent/operations/system_control.py:409
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "Distribuição Linux não suportada: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:414
-#: src/sysmanage_agent/operations/system_control.py:425
+#: src/sysmanage_agent/operations/system_control.py:416
+#: src/sysmanage_agent/operations/system_control.py:427
 msgid "Agent updated successfully"
 msgstr "Agente atualizado com sucesso"
 
-#: src/sysmanage_agent/operations/system_control.py:446
+#: src/sysmanage_agent/operations/system_control.py:448
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "Falha ao enviar atualização de status do antivírus: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:497
+#: src/sysmanage_agent/operations/system_control.py:499
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "Falha ao enviar atualização de status comercial do antivírus: %s"
@@ -3804,84 +4003,135 @@ msgstr "Anúncio JSON inválido de origem desconhecida"
 msgid "Error listening for announcements: %s"
 msgstr "Erro ouvindo anúnncios: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:100
-msgid "Host not yet approved for certificate retrieval"
-msgstr "Host não aprovado ainda para recuperação de certificado"
-
-#: src/sysmanage_agent/registration/registration_manager.py:104
+#: src/sysmanage_agent/registration/host_certificate.py:164
 #, python-format
-msgid "Failed to fetch certificates: HTTP %s"
-msgstr "Falha ao recuperar certificados: HTTP %s"
+msgid ""
+"The server refused this host's certificate as not valid for this host (%s). "
+"The agent does not replace it on its own; an administrator should check this"
+" host on the server."
+msgstr ""
+"O servidor recusou o certificado deste host por não ser válido para este "
+"host (%s). O agente não o substitui por conta própria; um administrador deve"
+" verificar este host no servidor."
 
-#: src/sysmanage_agent/registration/registration_manager.py:109
+#: src/sysmanage_agent/registration/host_certificate.py:174
 #, python-format
-msgid "Error fetching certificates: %s"
-msgstr "Erro ao buscar certificados: %s"
+msgid ""
+"The server requires a certificate from this host and refused the connection "
+"without one (%s); requesting a certificate now."
+msgstr ""
+"O servidor exige um certificado deste host e recusou a conexão sem um (%s); "
+"solicitando um certificado agora."
 
-#: src/sysmanage_agent/registration/registration_manager.py:145
+#: src/sysmanage_agent/registration/host_certificate.py:182
 #, python-format
-msgid "Failed to get server fingerprint: %s"
-msgstr "Falha ao obter impressáo digital do servidor: %s"
+msgid ""
+"The server refused this host's certificate because it has expired (%s); "
+"requesting a new certificate now."
+msgstr ""
+"O servidor recusou o certificado deste host porque ele expirou (%s); "
+"solicitando um novo certificado agora."
 
-#: src/sysmanage_agent/registration/registration_manager.py:156
-msgid "Certificate-based authentication requires manual host approval"
-msgstr "A autenticação baseada em certificado requer aprovação manual do host"
+#: src/sysmanage_agent/registration/host_certificate.py:196
+#, python-format
+msgid "Certificate check failed: %s"
+msgstr "Falha na verificação do certificado: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:159
-msgid "Please approve this host in the SysManage web interface"
-msgstr "Por favor, aprove este host na interface web do SysManage"
+#: src/sysmanage_agent/registration/host_certificate.py:267
+msgid "The server's certificate response is not usable"
+msgstr "A resposta de certificado do servidor não pode ser usada"
 
-#: src/sysmanage_agent/registration/registration_manager.py:263
+#: src/sysmanage_agent/registration/host_certificate.py:272
+msgid "The server issued a certificate for a different key"
+msgstr "O servidor emitiu um certificado para uma chave diferente"
+
+#: src/sysmanage_agent/registration/host_certificate.py:279
+msgid ""
+"The new host certificate was issued by a CA other than the pinned one. A "
+"changed server TLS certificate will not be accepted until the pins are reset"
+" deliberately."
+msgstr ""
+"O novo certificado do host foi emitido por uma CA diferente da fixada. Um "
+"certificado TLS do servidor alterado não será aceito até que os pins sejam "
+"redefinidos deliberadamente."
+
+#: src/sysmanage_agent/registration/host_certificate.py:288
+#, python-format
+msgid "This host's certificate was issued; it is valid until %s"
+msgstr "O certificado deste host foi emitido; é válido até %s"
+
+#: src/sysmanage_agent/registration/host_certificate.py:303
+#, python-format
+msgid "No certificate yet: this host is not approved (%s)"
+msgstr "Ainda sem certificado: este host não está aprovado (%s)"
+
+#: src/sysmanage_agent/registration/host_certificate.py:308
+#, python-format
+msgid ""
+"The server says this host's certificate is still current but did not receive"
+" it (%s). Something between the agent and the server may be removing it; the"
+" agent keeps the certificate and asks again later."
+msgstr ""
+"O servidor informa que o certificado deste host ainda é válido, mas não o "
+"recebeu (%s). Algo entre o agente e o servidor pode estar removendo-o; o "
+"agente mantém o certificado e tentará novamente mais tarde."
+
+#: src/sysmanage_agent/registration/host_certificate.py:317
+#, python-format
+msgid "The server did not issue a certificate: HTTP %s, %s"
+msgstr "O servidor não emitiu um certificado: HTTP %s, %s"
+
+#: src/sysmanage_agent/registration/registration_manager.py:184
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "Erro ao processar notificação de sucesso de registro: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:301
+#: src/sysmanage_agent/registration/registration_manager.py:225
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "Erro ao processar notificação de aprovação do host: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:322
-#: src/sysmanage_agent/registration/registration_manager.py:597
+#: src/sysmanage_agent/registration/registration_manager.py:246
+#: src/sysmanage_agent/registration/registration_manager.py:521
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "Erro ao limpar registros de aprovação do host: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:340
+#: src/sysmanage_agent/registration/registration_manager.py:264
 msgid "Error retrieving stored credentials"
 msgstr "Erro ao recuperar credenciais armazenadas"
 
-#: src/sysmanage_agent/registration/registration_manager.py:396
+#: src/sysmanage_agent/registration/registration_manager.py:320
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "Erro ao armazenar aprovação de host no banco de dados: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:434
+#: src/sysmanage_agent/registration/registration_manager.py:358
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "Erro ao recuperar stored host_id: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:493
+#: src/sysmanage_agent/registration/registration_manager.py:417
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "Erro ao recuperar host_id armazenado sincronamente: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:545
+#: src/sysmanage_agent/registration/registration_manager.py:469
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "Erro ao recuperar aprovação do host: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:599
+#: src/sysmanage_agent/registration/registration_manager.py:523
 msgid "Continuing despite cleanup error..."
 msgstr "Continuando apesar do erro de limpeza..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:620
+#: src/sysmanage_agent/registration/registration_manager.py:544
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr ""
 "Encontrados %d registros corrompidos na tabela host_approval, limpando..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:634
+#: src/sysmanage_agent/registration/registration_manager.py:558
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "Erro durante a limpeza do banco de dados: %s"
@@ -3898,6 +4148,30 @@ msgstr "Verificação do status do WSL falhou por tempo excedido"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Erro ao verificar suporte WSL: %s"
+
+#~ msgid "This platform can only be a backup storage host."
+#~ msgstr "Esta plataforma só pode ser um host de armazenamento de backups."
+
+#~ msgid "Host not yet approved for certificate retrieval"
+#~ msgstr "Host não aprovado ainda para recuperação de certificado"
+
+#, python-format
+#~ msgid "Failed to fetch certificates: HTTP %s"
+#~ msgstr "Falha ao recuperar certificados: HTTP %s"
+
+#, python-format
+#~ msgid "Error fetching certificates: %s"
+#~ msgstr "Erro ao buscar certificados: %s"
+
+#, python-format
+#~ msgid "Failed to get server fingerprint: %s"
+#~ msgstr "Falha ao obter impressáo digital do servidor: %s"
+
+#~ msgid "Certificate-based authentication requires manual host approval"
+#~ msgstr "A autenticação baseada em certificado requer aprovação manual do host"
+
+#~ msgid "Please approve this host in the SysManage web interface"
+#~ msgstr "Por favor, aprove este host na interface web do SysManage"
 
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"

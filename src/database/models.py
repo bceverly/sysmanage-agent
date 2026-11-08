@@ -75,6 +75,9 @@ class QueueStatus(str, Enum):
 
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
+    # Written to the server, waiting for its message_stored (delivery
+    # confirmation, communication/delivery_confirmation.py).
+    SENT = "sent"
     COMPLETED = "completed"
     FAILED = "failed"
 

@@ -65,7 +65,7 @@ class BackupJobLifecycleMixin:
     def _new_record(self, policy_id: str, action: str) -> Dict[str, Any]:
         record = {"policy_id": policy_id, "action": action,
                   "started_at": _ops()._now(), "started": time.time()}  # fmt: skip
-        if self.runner == job_runner.DAEMON:
+        if job_runner.detached(self.runner):
             name = contract.job_name(policy_id, action)
             record["pidfile"] = job_runner.pidfile(self.state_dir, name)
             record["log"] = job_runner.logfile(self.state_dir, name)
@@ -82,7 +82,8 @@ class BackupJobLifecycleMixin:
         if not restate:
             return 1, _("restate is not installed on this host.")
         os.makedirs(job_runner.run_dir(self.state_dir), mode=0o700, exist_ok=True)
-        argv = job_runner.daemon_argv(
+        argv = job_runner.start_argv(
+            self.runner,
             restate,
             contract.job_path(record["policy_id"], record["action"]),
             record["pidfile"],

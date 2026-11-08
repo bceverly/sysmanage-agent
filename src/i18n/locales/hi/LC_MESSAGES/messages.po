@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 07:51-0500\n"
+"POT-Creation-Date: 2026-11-06 11:48-0500\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -50,41 +50,234 @@ msgstr "डेटाबेस का संचालन विफल हो ग�
 msgid "Corrupt UUID in database: %s"
 msgstr "Database में corrupt UUID: %s"
 
-#: src/database/queue_manager.py:337
+#: src/database/queue_manager.py:370
 #, python-format
 msgid "Message %s permanently failed after %d attempts: %s"
 msgstr "संदेश %s स्थायी रूप से %d प्रयासों के बाद विफल: %s"
 
-#: src/database/queue_manager.py:532
+#: src/database/queue_manager.py:565
 #, python-format
 msgid "Failed to deserialize message %s: %s"
 msgstr "संदेश %s को डिसीरियलाइज़ करने में विफल: %s"
 
-#: src/database/queue_manager.py:599
+#: src/database/queue_manager.py:632
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
 "संदेश %s (प्रकार: %s) अधिकतम पुनः प्रयास से अधिक, विफल के रूप में चिह्नित"
 
-#: src/security/certificate_store.py:68
+#: src/security/certificate_store.py:142
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  {config_dir} तक पहुँच नहीं, {fallback_dir} पर वापस"
 
-#: src/sysmanage_agent/backup/host_mount.py:147
+#: src/security/client_tls.py:90
+#, python-format
+msgid "This host's certificate expired on %s; requesting a new one"
+msgstr ""
+"इस होस्ट का प्रमाणपत्र %s को समाप्त हो गया; नया प्रमाणपत्र मांगा जा रहा है"
+
+#: src/security/client_tls.py:101
+#, python-format
+msgid "This host's certificate could not be loaded and is not presented: %s"
+msgstr "इस होस्ट का प्रमाणपत्र लोड नहीं हो सका और प्रस्तुत नहीं किया जाता: %s"
+
+#: src/security/client_tls.py:114
+msgid ""
+"server.tls_inspection is true: the server's TLS certificate is not pinned on"
+" this host. A TLS-inspecting proxy also removes this host's client "
+"certificate, so the server must accept this host without one."
+msgstr ""
+"server.tls_inspection true है: इस होस्ट पर सर्वर का TLS प्रमाणपत्र पिन नहीं "
+"किया जाता। TLS की जाँच करने वाला प्रॉक्सी इस होस्ट का क्लाइंट प्रमाणपत्र भी "
+"हटा देता है, इसलिए सर्वर को इस होस्ट को उसके बिना स्वीकार करना होगा।"
+
+#: src/security/pin_reset.py:33
+msgid "Forget the server identity this agent has pinned."
+msgstr "इस एजेंट द्वारा पिन की गई सर्वर पहचान को भूल जाएँ।"
+
+#: src/security/pin_reset.py:38
+msgid "also remove this host's certificate, its key and the CA"
+msgstr "इस होस्ट का प्रमाणपत्र, उसकी कुंजी और CA भी हटाएँ"
+
+#: src/security/pin_reset.py:46
+#, python-format
+msgid "Removed the server pins and this host's certificate from %s"
+msgstr "सर्वर पिन और इस होस्ट का प्रमाणपत्र %s से हटा दिए गए"
+
+#: src/security/pin_reset.py:50
+#, python-format
+msgid "Removed the server pins: %s"
+msgstr "सर्वर पिन हटा दिए गए: %s"
+
+#: src/security/pin_reset.py:52
+#, python-format
+msgid "No server pins to remove: %s"
+msgstr "हटाने के लिए कोई सर्वर पिन नहीं: %s"
+
+#: src/security/pin_reset.py:54
+#, python-format
+msgid "Could not remove the files: %s"
+msgstr "फ़ाइलें हटाई नहीं जा सकीं: %s"
+
+#: src/security/pin_reset.py:56
+msgid "Restart the agent; it pins the server again on its next connection."
+msgstr ""
+"एजेंट को पुनः आरंभ करें; यह अगले कनेक्शन पर सर्वर को फिर से पिन करेगा।"
+
+#: src/security/server_identity.py:95
+#, python-format
+msgid "The server identity request failed: HTTP %s"
+msgstr "सर्वर पहचान अनुरोध विफल हुआ: HTTP %s"
+
+#: src/security/server_identity.py:101 src/security/server_pinning.py:160
+#: src/security/server_pinning.py:164 src/security/server_pinning.py:169
+#: src/security/server_pinning.py:173 src/security/server_pinning.py:245
+msgid "The server identity response is incomplete"
+msgstr "सर्वर पहचान का उत्तर अधूरा है"
+
+#: src/security/server_identity.py:124
+msgid "The server cannot state its TLS identity yet; pinning will be retried"
+msgstr ""
+"सर्वर अभी अपनी TLS पहचान नहीं बता सकता; पिन करने का फिर से प्रयास किया जाएगा"
+
+#: src/security/server_identity.py:129
+#, python-format
+msgid "Could not pin this server's identity: %s. Pinning will be retried."
+msgstr ""
+"इस सर्वर की पहचान पिन नहीं की जा सकी: %s। पिन करने का फिर से प्रयास किया "
+"जाएगा।"
+
+#: src/security/server_identity.py:134
+msgid "Pinned this server's identity; its TLS certificate is now checked"
+msgstr ""
+"इस सर्वर की पहचान पिन कर दी गई; अब इसके TLS प्रमाणपत्र की जाँच होती है"
+
+#: src/security/server_identity.py:150
+msgid ""
+"The server's TLS certificate changed, but the server cannot state its TLS "
+"identity right now; keeping the current pins and trying again later"
+msgstr ""
+"सर्वर का TLS प्रमाणपत्र बदल गया, लेकिन सर्वर अभी अपनी TLS पहचान नहीं बता "
+"सकता; मौजूदा पिन बनाए रखे जा रहे हैं और बाद में फिर से प्रयास किया जाएगा"
+
+#: src/security/server_identity.py:159
+#, python-format
+msgid ""
+"The server's TLS certificate changed and the change could not be verified "
+"(%s). The likely cause is a proxy, or another server, presenting a different"
+" certificate. If this server really was replaced, re-pin deliberately: "
+"delete %s or run the agent's reset command, then restart the agent."
+msgstr ""
+"सर्वर का TLS प्रमाणपत्र बदल गया और इस बदलाव का सत्यापन नहीं हो सका (%s)। "
+"संभावित कारण कोई प्रॉक्सी या दूसरा सर्वर है जो अलग प्रमाणपत्र प्रस्तुत कर "
+"रहा है। यदि यह सर्वर सचमुच बदला गया है, तो जानबूझकर फिर से पिन करें: %s "
+"हटाएँ या एजेंट का रीसेट कमांड चलाएँ, फिर एजेंट को पुनः आरंभ करें।"
+
+#: src/security/server_identity.py:172
+msgid ""
+"The server's TLS certificate changed; the new one is signed by this server's"
+" identity and is now trusted"
+msgstr ""
+"सर्वर का TLS प्रमाणपत्र बदल गया; नया प्रमाणपत्र इस सर्वर की पहचान द्वारा "
+"हस्ताक्षरित है और अब विश्वसनीय है"
+
+#: src/security/server_identity.py:200
+#, python-format
+msgid "Could not re-pin this server's identity: %s"
+msgstr "इस सर्वर की पहचान फिर से पिन नहीं की जा सकी: %s"
+
+#: src/security/server_pinning.py:94
+#, python-format
+msgid ""
+"The server presented a TLS certificate this agent has not pinned (SPKI "
+"SHA-256 %s). The connection was refused. The agent is checking whether the "
+"server has signed the new certificate."
+msgstr ""
+"सर्वर ने ऐसा TLS प्रमाणपत्र प्रस्तुत किया जिसे इस एजेंट ने पिन नहीं किया है "
+"(SPKI SHA-256 %s)। कनेक्शन अस्वीकार कर दिया गया। एजेंट जाँच रहा है कि क्या "
+"सर्वर ने नए प्रमाणपत्र पर हस्ताक्षर किए हैं।"
+
+#: src/security/server_pinning.py:143 src/security/server_pinning.py:151
+msgid "The server identity statement has no valid expiry"
+msgstr "सर्वर पहचान विवरण में कोई मान्य समाप्ति समय नहीं है"
+
+#: src/security/server_pinning.py:183
+msgid "The server's identity certificate was not issued by the pinned CA"
+msgstr "सर्वर का पहचान प्रमाणपत्र पिन किए गए CA द्वारा जारी नहीं किया गया था"
+
+#: src/security/server_pinning.py:187
+msgid "The server's identity certificate is outside its validity period"
+msgstr "सर्वर का पहचान प्रमाणपत्र अपनी वैधता अवधि से बाहर है"
+
+#: src/security/server_pinning.py:200
+msgid "The server's identity certificate uses an unsupported key type"
+msgstr "सर्वर का पहचान प्रमाणपत्र असमर्थित कुंजी प्रकार का उपयोग करता है"
+
+#: src/security/server_pinning.py:204
+msgid ""
+"The server identity statement is not signed by its identity certificate"
+msgstr "सर्वर पहचान विवरण उसके पहचान प्रमाणपत्र द्वारा हस्ताक्षरित नहीं है"
+
+#: src/security/server_pinning.py:213 src/security/server_pinning.py:216
+#: src/security/server_pinning.py:221
+msgid "The server identity statement is not readable"
+msgstr "सर्वर पहचान विवरण पढ़ा नहीं जा सकता"
+
+#: src/security/server_pinning.py:218
+msgid "The server identity statement has expired"
+msgstr "सर्वर पहचान विवरण की अवधि समाप्त हो गई है"
+
+#: src/security/server_pinning.py:255
+msgid "The server's CA is not the CA this agent has pinned"
+msgstr "सर्वर का CA वह CA नहीं है जिसे इस एजेंट ने पिन किया है"
+
+#: src/security/server_pinning.py:262
+msgid ""
+"The certificate on this connection is not one the server's signed statement "
+"lists"
+msgstr ""
+"इस कनेक्शन का प्रमाणपत्र सर्वर के हस्ताक्षरित विवरण में सूचीबद्ध नहीं है"
+
+#: src/sysmanage_agent/backup/host_mount.py:167
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr "%(where)s पर बैकअप स्टोरेज लगभग भर गया है (%(free)d MB खाली)।"
 
-#: src/sysmanage_agent/backup/host_mount.py:153
+#: src/sysmanage_agent/backup/host_mount.py:173
 #, python-format
 msgid "The backup storage at %(where)s cannot take new files: %(error)s"
 msgstr "%(where)s पर बैकअप स्टोरेज नई फ़ाइलें नहीं ले सकता: %(error)s"
 
-#: src/sysmanage_agent/backup/host_mount.py:173
+#: src/sysmanage_agent/backup/host_mount.py:193
 #, python-format
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "%(where)s पर बैकअप स्टोरेज में लॉकिंग काम नहीं करती: %(error)s"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:83
+msgid "restate is not installed on this host."
+msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:117
+msgid "That backup job is already running."
+msgstr "यह बैकअप जॉब पहले से चल रहा है।"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:139
+msgid "The backup job could not be started."
+msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:227
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
+"%(unit)s on this host"
+msgstr ""
+"restate परिणाम लिखने से पहले रुक गया (निकास कोड %(code)s); इस होस्ट पर "
+"journalctl -u %(unit)s देखें"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:271
+msgid "Could not queue the backup report"
+msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 
 #: src/sysmanage_agent/backup/key_files.py:67
 msgid "The server sent no usable keys"
@@ -143,7 +336,7 @@ msgstr ""
 msgid "A signing run needs its key"
 msgstr "हस्ताक्षर रन को उसकी कुंजी चाहिए"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:28
+#: src/sysmanage_agent/backup/mount_mixin.py:29
 msgid ""
 "This host has no NFS client, so it cannot mount its backup storage. Click "
 "Equip for backup, or install it (nfs-common on Debian and Ubuntu, nfs-utils "
@@ -153,7 +346,7 @@ msgstr ""
 "कर सकता। \"बैकअप के लिए तैयार करें\" पर क्लिक करें, या इसे इंस्टॉल करें "
 "(Debian और Ubuntu पर nfs-common, RHEL और Fedora पर nfs-utils)।"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:95
+#: src/sysmanage_agent/backup/mount_mixin.py:101
 #, python-format
 msgid ""
 "The backup storage is not mounted at %(where)s, and the server has not sent "
@@ -162,26 +355,51 @@ msgstr ""
 "बैकअप स्टोरेज %(where)s पर माउंट नहीं है, और सर्वर ने अभी तक यह नहीं भेजा है"
 " कि इसे कहाँ से माउंट करना है।"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:110
+#: src/sysmanage_agent/backup/mount_mixin.py:116
 #, python-format
 msgid "Could not mount the backup storage %(source)s at %(where)s: %(error)s"
 msgstr ""
 "बैकअप स्टोरेज %(source)s को %(where)s पर माउंट नहीं किया जा सका: %(error)s"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:118
+#: src/sysmanage_agent/backup/mount_mixin.py:124
 #, python-format
 msgid "The backup storage is not mounted at %(where)s after mounting it."
 msgstr "माउंट करने के बाद भी बैकअप स्टोरेज %(where)s पर माउंट नहीं है।"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:135
+#: src/sysmanage_agent/backup/mount_mixin.py:141
 #, python-format
 msgid "The backup storage at %s did not answer."
 msgstr "%s पर बैकअप स्टोरेज ने जवाब नहीं दिया।"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:160
+#: src/sysmanage_agent/backup/mount_mixin.py:166
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "%s पर बैकअप स्टोरेज को अनमाउंट नहीं किया जा सका: %s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:86
+#, python-format
+msgid "Could not list the sealed snapshots: %s"
+msgstr "सील किए गए स्नैपशॉट की सूची नहीं बन सकी: %s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:101
+#, python-format
+msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
+msgstr "पुराना सील किया गया स्नैपशॉट %(name)s हटाया नहीं जा सका: %(error)s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:176
+#, python-format
+msgid "%(dataset)s is not mounted at %(path)s on this host"
+msgstr "%(dataset)s इस होस्ट पर %(path)s पर माउंट नहीं है"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:213
+#, python-format
+msgid "Could not prepare backup storage for policy %s: %s"
+msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
+#, python-format
+msgid "The storage audit could not run: %s"
+msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:122
 #, python-format
@@ -427,7 +645,7 @@ msgstr "syslog-ng config पढ़ने में त्रुटि: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:49
 #: src/sysmanage_agent/collection/hardware_collection.py:88
-#: src/sysmanage_agent/operations/system_control.py:346
+#: src/sysmanage_agent/operations/system_control.py:348
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
@@ -757,43 +975,41 @@ msgstr "समर्थित नहीं है कि प्रणाली: 
 msgid "Failed to collect available packages: %s"
 msgstr "उपलब्ध पैकेज एकत्र करने में विफल हो गए: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:257
-msgid "winget not found in any common location"
-msgstr "winget किसी भी सामान्य स्थान पर नहीं मिला"
-
-#: src/sysmanage_agent/collection/package_collector_base.py:334
-#: src/sysmanage_agent/collection/package_collector_base.py:357
-#: src/sysmanage_agent/collection/package_collector_base.py:386
+#: src/sysmanage_agent/collection/package_collector_base.py:41
 #, python-format
 msgid "Failed to store packages for %s: %s"
 msgstr "पैकेज लिस्ट %s के लिए संग्रहण में विफलता: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:416
+#: src/sysmanage_agent/collection/package_collector_base.py:258
+msgid "winget not found in any common location"
+msgstr "winget किसी भी सामान्य स्थान पर नहीं मिला"
+
+#: src/sysmanage_agent/collection/package_collector_base.py:417
 #, python-format
 msgid "Failed to get packages for %s: %s"
 msgstr "%s के लिए पैकेज प्राप्त करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:440
+#: src/sysmanage_agent/collection/package_collector_base.py:441
 #, python-format
 msgid "Failed to get all packages: %s"
 msgstr "सभी पैकेजज़ की जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:453
+#: src/sysmanage_agent/collection/package_collector_base.py:454
 #, python-format
 msgid "Failed to get package managers: %s"
 msgstr "पैकेज मैनेजरज़ की जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:489
+#: src/sysmanage_agent/collection/package_collector_base.py:490
 #, python-format
 msgid "Failed to get packages for transmission: %s"
 msgstr "प्रसारण के लिए पैकेजज़ की जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:518
+#: src/sysmanage_agent/collection/package_collector_base.py:519
 #, python-format
 msgid "Failed to read sent package snapshot: %s"
 msgstr "भेजे गए पैकेज संपीड़ित छवि को पढ़ने में विफल: %s"
 
-#: src/sysmanage_agent/collection/package_collector_base.py:558
+#: src/sysmanage_agent/collection/package_collector_base.py:559
 #, python-format
 msgid "Failed to store sent package snapshot: %s"
 msgstr "भेजे गए पैकेज संपीड़ित छवि को स्टोर करने में विफल: %s"
@@ -1105,8 +1321,8 @@ msgid "Failed to detect available updates: %s"
 msgstr "उपलब्ध अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
 #: src/sysmanage_agent/collection/update_detection.py:189
-#: src/sysmanage_agent/operations/package_installation_helpers.py:252
-#: src/sysmanage_agent/operations/package_operations.py:243
+#: src/sysmanage_agent/operations/package_installation_helpers.py:261
+#: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
 msgid "Failed to install package %s: %s"
 msgstr "पैकेज %s इंस्टॉल करने में विफल: %s"
@@ -1883,48 +2099,48 @@ msgstr ""
 "इस नेटवर्क की अब WebSocket कनेक्शंस इजाजत दिए जा रहे हैं कि यह पुन: परीक्षण "
 "किया जाए"
 
-#: src/sysmanage_agent/communication/message_handler.py:208
+#: src/sysmanage_agent/communication/message_handler.py:214
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "मैसेज क्यू में डालने में विफल रहा: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:246
+#: src/sysmanage_agent/communication/message_handler.py:252
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "कमांड की पहचान के लिए संदेश को क्यू में विफल रहा: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:254
+#: src/sysmanage_agent/communication/message_handler.py:260
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "%s के लिए कमान्ड अक्सरेफीकेशन कोई क्वी संयोजित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:293
+#: src/sysmanage_agent/communication/message_handler.py:299
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "सर्वर त्रुटि [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:346
+#: src/sysmanage_agent/communication/message_handler.py:352
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "स्टेल चेक के लिए संदेश टाइमस्टॉप को पढ़ने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:399
-#: src/sysmanage_agent/communication/message_handler.py:739
+#: src/sysmanage_agent/communication/message_handler.py:405
+#: src/sysmanage_agent/communication/message_handler.py:752
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "होस्ट रजिस्ट्रेशन की पांडूज परवानगी मंजूरी है। अवधि-अवधि प्रयास करते रहेंगे।"
 
-#: src/sysmanage_agent/communication/message_handler.py:406
+#: src/sysmanage_agent/communication/message_handler.py:416
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "सर्वर के संदेश में नामकरण (hostname) अज्ञात है. यह एक बग है।"
 
-#: src/sysmanage_agent/communication/message_handler.py:409
+#: src/sysmanage_agent/communication/message_handler.py:419
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "सर्वर ने संदेश को पंजीकरण करने में विफल रहा: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:430
+#: src/sysmanage_agent/communication/message_handler.py:440
 #, python-format
 msgid ""
 "This host's registration was refused; asking the server again in %d seconds."
@@ -1932,7 +2148,7 @@ msgstr ""
 "इस होस्ट का पंजीकरण अस्वीकार कर दिया गया; %d सेकंड में सर्वर से फिर पूछा "
 "जाएगा।"
 
-#: src/sysmanage_agent/communication/message_handler.py:468
+#: src/sysmanage_agent/communication/message_handler.py:478
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -1943,7 +2159,7 @@ msgstr ""
 "आइडी को डिसार्ड न करके पुनः संलग्न करने की कोशिश कर रहा है; अगर यह जारी रहता"
 " है, तब ही पुनः रजिस्टर करेंगे;"
 
-#: src/sysmanage_agent/communication/message_handler.py:481
+#: src/sysmanage_agent/communication/message_handler.py:491
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -1952,37 +2168,37 @@ msgstr ""
 "host_not_registered जारी (%(n)d स्ट्राइक) -- इस होस्ट को वास्तव में गया "
 "समझते हैं; संचित host_id को स्पष्ट कर देते हैं और पुनः रजिस्टर करते हैं।"
 
-#: src/sysmanage_agent/communication/message_handler.py:492
+#: src/sysmanage_agent/communication/message_handler.py:502
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "संग्रहीत होस्ट_आईडी को साफ़ करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:548
+#: src/sysmanage_agent/communication/message_handler.py:558
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "प्रसारण %s: इन्वेंटरी रीफ़्रेश विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:558
+#: src/sysmanage_agent/communication/message_handler.py:568
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "ब्रॉडकास्ट %s: अज्ञात कार्रवाई '%s' -- नजरअंदाज किया गया"
 
-#: src/sysmanage_agent/communication/message_handler.py:661
+#: src/sysmanage_agent/communication/message_handler.py:671
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "अमान्य JSON प्राप्त: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:663
+#: src/sysmanage_agent/communication/message_handler.py:673
 #, python-format
 msgid "Error processing message: %s"
 msgstr "मैसेज प्रोसेसिंग में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:676
+#: src/sysmanage_agent/communication/message_handler.py:686
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: संदेश प्रतिवर्धक त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:694
+#: src/sysmanage_agent/communication/message_handler.py:704
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -1990,90 +2206,106 @@ msgstr ""
 "संदेश प्रतिवर्धक: websocket concurrent disconnect के द्वारा स्पष्ट हो गया; "
 "receive loop को exit करने के लिए आवश्यकता है reconnect"
 
-#: src/sysmanage_agent/communication/message_handler.py:749
+#: src/sysmanage_agent/communication/message_handler.py:762
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "अज्ञात संदेश प्रकार: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:832
+#: src/sysmanage_agent/communication/message_handler.py:845
 msgid "Heartbeat failed, connection may be lost"
 msgstr "हैर्टबीट विफल हो गया, कनेक्शन खो चुका हो सकता है"
 
-#: src/sysmanage_agent/communication/message_handler.py:841
+#: src/sysmanage_agent/communication/message_handler.py:854
 #, python-format
 msgid "Message sender error: %s"
 msgstr "मेसेज सेंडर त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:857
+#: src/sysmanage_agent/communication/message_handler.py:870
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "मैसेज हैंडलर को बंद करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:137
+#: src/sysmanage_agent/communication/message_handler_queue.py:139
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "queue_outbound_message से कार्य निर्माण में विफल हो गया: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:203
+#: src/sysmanage_agent/communication/message_handler_queue.py:205
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "इनबाउंड क्यू प्रोसेसर में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:228
+#: src/sysmanage_agent/communication/message_handler_queue.py:230
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "एक्सप्रेस क्यू प्रोसेसर में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:237
+#: src/sysmanage_agent/communication/message_handler_queue.py:239
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "इनबाउंड मैसेज %s को प्रोसेसिंग के रूप में मार्क नहीं किया जा सकता"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:267
+#: src/sysmanage_agent/communication/message_handler_queue.py:269
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "आयात संदेश %s प्रक्रिया करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:283
+#: src/sysmanage_agent/communication/message_handler_queue.py:285
 msgid "Cannot send message: not connected to server"
 msgstr "संदेश नहीं भेज सकते: सर्वर से कनेक्ट नहीं"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:296
+#: src/sysmanage_agent/communication/message_handler_queue.py:298
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "सीधे संदेश को भेजने में विफल होगया: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:355
+#: src/sysmanage_agent/communication/message_handler_queue.py:359
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "क्वी स्ट्रोक प्रोसेसर में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:397
+#: src/sysmanage_agent/communication/message_handler_queue.py:407
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "क्यू संदेश %s को प्रोसेस करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:423
+#: src/sysmanage_agent/communication/message_handler_queue.py:425
+#, python-format
+msgid "The server did not confirm %d message(s); sending them again"
+msgstr "सर्वर ने %d संदेशों की पुष्टि नहीं की; उन्हें फिर से भेजा जा रहा है"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:429
+#: src/sysmanage_agent/communication/message_handler_queue.py:468
+#, python-format
+msgid "Error requeuing unconfirmed messages: %s"
+msgstr "अपुष्ट संदेशों को फिर से कतार में डालने में त्रुटि: %s"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:438
+#, python-format
+msgid "The server refused message %s; it will not be sent again"
+msgstr "सर्वर ने संदेश %s अस्वीकार कर दिया; इसे फिर से नहीं भेजा जाएगा"
+
+#: src/sysmanage_agent/communication/message_handler_queue.py:479
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "स्टिक मैसेज को रिकवर करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:454
+#: src/sysmanage_agent/communication/message_handler_queue.py:510
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "[outbound queue processing task को बनाने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:472
+#: src/sysmanage_agent/communication/message_handler_queue.py:528
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "एक्सप्रेस क्यू प्रोसेसिंग कार्य बनाने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:490
+#: src/sysmanage_agent/communication/message_handler_queue.py:546
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "इनबाउंड क्यू प्रोसेसिंग कार्य बनाने में विफल: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:581
+#: src/sysmanage_agent/communication/message_handler_queue.py:637
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "क्वेयू संदेशों का प्रूनिंग पूर्ण हुआ: %s"
@@ -2131,81 +2363,81 @@ msgstr "पैकेज संग्रह शेड्यूलर त्रु
 msgid "Failed to build capability report: %s"
 msgstr "क्षमता रिपोर्ट बनाने में विफल हुए: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:464
+#: src/sysmanage_agent/core/agent_utils.py:469
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "स्क्रिप्ट निष्पादन UUID %s पहले से प्रसंस्कृत, डुप्लिकेट छोड़ा जा रहा है"
 
-#: src/sysmanage_agent/core/agent_utils.py:506
+#: src/sysmanage_agent/core/agent_utils.py:511
 msgid "Generic command missing nested command_type"
 msgstr "जेनेरिक कमांड में नेस्टेड command_type गायब"
 
-#: src/sysmanage_agent/core/agent_utils.py:518
+#: src/sysmanage_agent/core/agent_utils.py:523
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "अज्ञात कमांड प्रकार: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:577
+#: src/sysmanage_agent/core/agent_utils.py:582
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "स्क्रिप्ट एक्ज़ीक्यूशन परिणाम को क्यू में फेल हुआ: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:596
+#: src/sysmanage_agent/core/agent_utils.py:601
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "प्रोग्रेशियन UUID की जाँच में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:610
+#: src/sysmanage_agent/core/agent_utils.py:615
 msgid "No execution UUID provided, cannot track"
 msgstr "कोई निष्पादन UUID प्रदान नहीं किया गया, ट्रैक नहीं कर सकते"
 
-#: src/sysmanage_agent/core/agent_utils.py:625
+#: src/sysmanage_agent/core/agent_utils.py:630
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "निष्पादन UUID %s डेटाबेस में पहले से मौजूद है"
 
-#: src/sysmanage_agent/core/agent_utils.py:650
+#: src/sysmanage_agent/core/agent_utils.py:655
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "अद्यतन पहचान UUID संग्रहित करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:715
+#: src/sysmanage_agent/core/agent_utils.py:720
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "सेवा नियंत्रण हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:762
+#: src/sysmanage_agent/core/agent_utils.py:767
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:768
+#: src/sysmanage_agent/core/agent_utils.py:773
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s के लिए सेवा नियंत्रण त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:853
+#: src/sysmanage_agent/core/agent_utils.py:858
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "सेवा %s पर %s विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:863
+#: src/sysmanage_agent/core/agent_utils.py:868
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "सेवा नियंत्रण के बाद भूमिकाएँ अद्यतन करने में विफल: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:902
+#: src/sysmanage_agent/core/agent_utils.py:907
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "सेवा स्थिति हैंडलर में त्रुटि: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:945
+#: src/sysmanage_agent/core/agent_utils.py:950
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s के लिए सेवा स्थिति समय समाप्त: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:955
+#: src/sysmanage_agent/core/agent_utils.py:960
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s के लिए सेवा स्थिति त्रुटि: %s"
@@ -2368,83 +2600,38 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:283
+#: src/sysmanage_agent/operations/backup_operations.py:164
+msgid "A Mac can only be a backed-up host, not a backup storage host."
+msgstr ""
+"Mac केवल बैकअप लिया जाने वाला होस्ट हो सकता है, बैकअप स्टोरेज होस्ट नहीं।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:165
+msgid "This platform cannot take that backup role."
+msgstr "यह प्लेटफ़ॉर्म बैकअप की वह भूमिका नहीं निभा सकता।"
+
+#: src/sysmanage_agent/operations/backup_operations.py:309
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:291
+#: src/sysmanage_agent/operations/backup_operations.py:317
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:314
-msgid "This platform can only be a backup storage host."
-msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
-
-#: src/sysmanage_agent/operations/backup_operations.py:320
+#: src/sysmanage_agent/operations/backup_operations.py:350
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:352
+#: src/sysmanage_agent/operations/backup_operations.py:382
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:466
+#: src/sysmanage_agent/operations/backup_operations.py:498
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "यह restate %s को जॉब के रूप में नहीं चला सकता; restate अपग्रेड करें।"
-
-#: src/sysmanage_agent/operations/backup_operations.py:564
-msgid "restate is not installed on this host."
-msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
-
-#: src/sysmanage_agent/operations/backup_operations.py:597
-msgid "That backup job is already running."
-msgstr "यह बैकअप जॉब पहले से चल रहा है।"
-
-#: src/sysmanage_agent/operations/backup_operations.py:619
-msgid "The backup job could not be started."
-msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
-
-#: src/sysmanage_agent/operations/backup_operations.py:674
-#, python-format
-msgid "Could not list the sealed snapshots: %s"
-msgstr "सील किए गए स्नैपशॉट की सूची नहीं बन सकी: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:689
-#, python-format
-msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
-msgstr "पुराना सील किया गया स्नैपशॉट %(name)s हटाया नहीं जा सका: %(error)s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:764
-#, python-format
-msgid "%(dataset)s is not mounted at %(path)s on this host"
-msgstr "%(dataset)s इस होस्ट पर %(path)s पर माउंट नहीं है"
-
-#: src/sysmanage_agent/operations/backup_operations.py:799
-#, python-format
-msgid "Could not prepare backup storage for policy %s: %s"
-msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:917
-#, python-format
-msgid ""
-"restate stopped (exit %(code)s) before writing a result; see journalctl -u "
-"%(unit)s on this host"
-msgstr ""
-"restate परिणाम लिखने से पहले रुक गया (निकास कोड %(code)s); इस होस्ट पर "
-"journalctl -u %(unit)s देखें"
-
-#: src/sysmanage_agent/operations/backup_operations.py:943
-#, python-format
-msgid "The storage audit could not run: %s"
-msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:974
-msgid "Could not queue the backup report"
-msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:74
 #: src/sysmanage_agent/operations/bsd_macos_repository_operations.py:118
@@ -3016,12 +3203,12 @@ msgid "Failed to update installation tracking record: %s"
 msgstr "इनस्टॉलेशन प्रक्रिया की निगरानी रिकॉर्ड को अद्ययन करने में विफलता: %s"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:108
-#: src/sysmanage_agent/operations/package_operations.py:60
+#: src/sysmanage_agent/operations/package_operations.py:70
 msgid "Skipping package with no name"
 msgstr "पैकेज को छोड़ रहा है जिसका कोई नाम नहीं है"
 
 #: src/sysmanage_agent/operations/package_installation_helpers.py:109
-#: src/sysmanage_agent/operations/package_operations.py:61
+#: src/sysmanage_agent/operations/package_operations.py:71
 msgid "No package name"
 msgstr "कोई पैकेज नाम नहीं"
 
@@ -3130,104 +3317,104 @@ msgid "Scoop installed successfully"
 msgstr "Scoop सफलतापूर्वक इनस्टॉल हुआ"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/package_operations.py:127
+#: src/sysmanage_agent/operations/package_operations.py:137
 #, python-format
 msgid "Uninstall not implemented for %s package manager"
 msgstr "%s पैकेज मैनेजर के लिए अनइंस्टॉल लागू नहीं"
 
-#: src/sysmanage_agent/operations/package_operations.py:160
+#: src/sysmanage_agent/operations/package_operations.py:170
 #, python-format
 msgid "Failed to update uninstall tracking record: %s"
 msgstr "इनस्टॉलेशन प्रक्रिया की निगरानी रिकॉर्ड को अद्ययन करने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:179
+#: src/sysmanage_agent/operations/package_operations.py:189
 msgid "No package name specified"
 msgstr "कोई पैकेज नाम निर्दिष्ट नहीं"
 
-#: src/sysmanage_agent/operations/package_operations.py:275
-#: src/sysmanage_agent/operations/package_operations.py:383
+#: src/sysmanage_agent/operations/package_operations.py:285
+#: src/sysmanage_agent/operations/package_operations.py:393
 msgid "No request_id specified"
 msgstr "कोई request_id निर्दिष्ट नहीं"
 
-#: src/sysmanage_agent/operations/package_operations.py:280
+#: src/sysmanage_agent/operations/package_operations.py:290
 msgid "No packages specified for installation"
 msgstr "इंस्टॉलेशन के लिए कोई पैकेज निर्दिष्ट नहीं"
 
-#: src/sysmanage_agent/operations/package_operations.py:359
+#: src/sysmanage_agent/operations/package_operations.py:369
 #, python-format
 msgid "Failed to send installation completion to server: %s"
 msgstr "इनस्टॉलेशन पूर्णता को सर्वर को भेजने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:388
+#: src/sysmanage_agent/operations/package_operations.py:398
 msgid "No packages specified for uninstallation"
 msgstr "अनइंस्टॉलेशन के लिए कोई पैकेज निर्दिष्ट नहीं"
 
-#: src/sysmanage_agent/operations/package_operations.py:485
+#: src/sysmanage_agent/operations/package_operations.py:495
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "इनस्टॉलेशन पूर्णता को सर्वर को भेजने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:494
+#: src/sysmanage_agent/operations/package_operations.py:504
 msgid "No packages to install"
 msgstr "इनस्टॉल करने के लिए कोई पैकेज नहीं है"
 
-#: src/sysmanage_agent/operations/package_operations.py:540
+#: src/sysmanage_agent/operations/package_operations.py:548
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get install विफल: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:545
+#: src/sysmanage_agent/operations/package_operations.py:553
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "apt-get से पैकेजज़ इनस्टॉल करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:548
+#: src/sysmanage_agent/operations/package_operations.py:556
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "apt-get install के दौरान अपवाद: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:555
+#: src/sysmanage_agent/operations/package_operations.py:563
 msgid "No packages to uninstall"
 msgstr "उनइनस्टॉल करने के लिए कोई पैकेज नहीं है"
 
-#: src/sysmanage_agent/operations/package_operations.py:586
+#: src/sysmanage_agent/operations/package_operations.py:593
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove विफल: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:591
+#: src/sysmanage_agent/operations/package_operations.py:598
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "apt-get का उपयोग करके पैकेजों को अनइंस्टॉल करने में विफल रहा: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:594
+#: src/sysmanage_agent/operations/package_operations.py:601
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "apt-get remove के दौरान अपवाद: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:635
+#: src/sysmanage_agent/operations/package_operations.py:647
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr ""
 "अनुरोध %s के लिए इंस्टॉलेशन पूर्ण होने की सूचना कतार में डालने में विफल"
 
-#: src/sysmanage_agent/operations/package_operations.py:640
+#: src/sysmanage_agent/operations/package_operations.py:652
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "स्थापना पूर्णता कतार में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:696
+#: src/sysmanage_agent/operations/package_operations.py:709
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "पैकेज इनस्टॉलेशन स्थिति अद्ययन को भेजने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:769
+#: src/sysmanage_agent/operations/package_operations.py:782
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "पैकेज अद्यतन चलाने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:778
+#: src/sysmanage_agent/operations/package_operations.py:791
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3406,52 +3593,52 @@ msgstr "सिस्टम शटडाउन 1 मिनट में निर
 msgid "Failed to shutdown system: %s"
 msgstr "सिस्टम को बंद करने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:291
+#: src/sysmanage_agent/operations/system_control.py:293
 msgid "dnf-system-upgrade requires a target version"
 msgstr "dnf-system-upgrade को लक्ष्य संस्करण आवश्यक है"
 
-#: src/sysmanage_agent/operations/system_control.py:304
+#: src/sysmanage_agent/operations/system_control.py:306
 msgid "freebsd-update requires a target version"
 msgstr "freebsd-update को लक्ष्य संस्करण आवश्यक है"
 
-#: src/sysmanage_agent/operations/system_control.py:315
+#: src/sysmanage_agent/operations/system_control.py:317
 #, python-format
 msgid "Unknown release-upgrade method: %s"
 msgstr "अज्ञात उत्पादन-अपग्रेड विधि: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:337
+#: src/sysmanage_agent/operations/system_control.py:339
 msgid "Agent update not yet supported on Windows"
 msgstr "एजेंट अपडेट अभी Windows पर समर्थित नहीं है"
 
-#: src/sysmanage_agent/operations/system_control.py:342
+#: src/sysmanage_agent/operations/system_control.py:344
 msgid "Agent update not yet supported on macOS"
 msgstr "एजेंट अपडेट अभी macOS पर समर्थित नहीं है"
 
-#: src/sysmanage_agent/operations/system_control.py:349
+#: src/sysmanage_agent/operations/system_control.py:351
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "एजेंट अपडेट विफल: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:388
+#: src/sysmanage_agent/operations/system_control.py:390
 msgid "Cannot detect Linux distribution"
 msgstr "Linux वितरण का पता नहीं लगाया जा सकता"
 
-#: src/sysmanage_agent/operations/system_control.py:407
+#: src/sysmanage_agent/operations/system_control.py:409
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "असमर्थित Linux वितरण: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:414
-#: src/sysmanage_agent/operations/system_control.py:425
+#: src/sysmanage_agent/operations/system_control.py:416
+#: src/sysmanage_agent/operations/system_control.py:427
 msgid "Agent updated successfully"
 msgstr "एजेंट सफलतापूर्वक अपडेट किया गया"
 
-#: src/sysmanage_agent/operations/system_control.py:446
+#: src/sysmanage_agent/operations/system_control.py:448
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "एंटीवायरस स्थिति अद्ययन को भेजने में विफल होगया: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:497
+#: src/sysmanage_agent/operations/system_control.py:499
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "कॉमर्शियल एंटीवायरस स्थिति अद्ययन को भेजने में विफलता: %s"
@@ -3797,79 +3984,129 @@ msgstr "अज्ञात स्रोत से अमान्य JSON घो
 msgid "Error listening for announcements: %s"
 msgstr "अन्नाउंसमेंट के लिए सुनने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:100
-msgid "Host not yet approved for certificate retrieval"
-msgstr "होस्ट की सर्टिफिकेट प्राप्त करने के लिए अभी तक पारदर्शित नहीं है"
-
-#: src/sysmanage_agent/registration/registration_manager.py:104
+#: src/sysmanage_agent/registration/host_certificate.py:164
 #, python-format
-msgid "Failed to fetch certificates: HTTP %s"
-msgstr "सर्टिफिकेट लोड करने में विफल: HTTP %s"
-
-#: src/sysmanage_agent/registration/registration_manager.py:109
-#, python-format
-msgid "Error fetching certificates: %s"
-msgstr "सर्टिफिकेट लॉड करने में त्रुटि: %s"
-
-#: src/sysmanage_agent/registration/registration_manager.py:145
-#, python-format
-msgid "Failed to get server fingerprint: %s"
-msgstr "सर्वर फिंगरप्रिंट प्राप्त विफल हो गई: %s"
-
-#: src/sysmanage_agent/registration/registration_manager.py:156
-msgid "Certificate-based authentication requires manual host approval"
+msgid ""
+"The server refused this host's certificate as not valid for this host (%s). "
+"The agent does not replace it on its own; an administrator should check this"
+" host on the server."
 msgstr ""
-"Certificate-based authentication के लिए मैनुअल host approval आवश्यक है"
+"सर्वर ने इस होस्ट के प्रमाणपत्र को इस होस्ट के लिए अमान्य मानकर अस्वीकार कर "
+"दिया (%s)। एजेंट इसे अपने आप नहीं बदलता; किसी प्रशासक को सर्वर पर इस होस्ट "
+"की जाँच करनी चाहिए।"
 
-#: src/sysmanage_agent/registration/registration_manager.py:159
-msgid "Please approve this host in the SysManage web interface"
-msgstr "कृपया SysManage web interface में इस host को approve करें"
+#: src/sysmanage_agent/registration/host_certificate.py:174
+#, python-format
+msgid ""
+"The server requires a certificate from this host and refused the connection "
+"without one (%s); requesting a certificate now."
+msgstr ""
+"सर्वर को इस होस्ट से प्रमाणपत्र चाहिए और उसने बिना प्रमाणपत्र वाला कनेक्शन "
+"अस्वीकार कर दिया (%s); अभी प्रमाणपत्र मांगा जा रहा है।"
 
-#: src/sysmanage_agent/registration/registration_manager.py:263
+#: src/sysmanage_agent/registration/host_certificate.py:182
+#, python-format
+msgid ""
+"The server refused this host's certificate because it has expired (%s); "
+"requesting a new certificate now."
+msgstr ""
+"सर्वर ने इस होस्ट के प्रमाणपत्र को अस्वीकार कर दिया क्योंकि उसकी अवधि समाप्त"
+" हो गई है (%s); अभी नया प्रमाणपत्र मांगा जा रहा है।"
+
+#: src/sysmanage_agent/registration/host_certificate.py:196
+#, python-format
+msgid "Certificate check failed: %s"
+msgstr "प्रमाणपत्र जाँच विफल हुई: %s"
+
+#: src/sysmanage_agent/registration/host_certificate.py:267
+msgid "The server's certificate response is not usable"
+msgstr "सर्वर का प्रमाणपत्र उत्तर उपयोग योग्य नहीं है"
+
+#: src/sysmanage_agent/registration/host_certificate.py:272
+msgid "The server issued a certificate for a different key"
+msgstr "सर्वर ने किसी दूसरी कुंजी के लिए प्रमाणपत्र जारी किया"
+
+#: src/sysmanage_agent/registration/host_certificate.py:279
+msgid ""
+"The new host certificate was issued by a CA other than the pinned one. A "
+"changed server TLS certificate will not be accepted until the pins are reset"
+" deliberately."
+msgstr ""
+"नया होस्ट प्रमाणपत्र पिन किए गए CA के बजाय किसी दूसरे CA ने जारी किया। जब तक"
+" पिन जानबूझकर रीसेट नहीं किए जाते, सर्वर का बदला हुआ TLS प्रमाणपत्र स्वीकार "
+"नहीं किया जाएगा।"
+
+#: src/sysmanage_agent/registration/host_certificate.py:288
+#, python-format
+msgid "This host's certificate was issued; it is valid until %s"
+msgstr "इस होस्ट का प्रमाणपत्र जारी कर दिया गया; यह %s तक मान्य है"
+
+#: src/sysmanage_agent/registration/host_certificate.py:303
+#, python-format
+msgid "No certificate yet: this host is not approved (%s)"
+msgstr "अभी कोई प्रमाणपत्र नहीं: इस होस्ट को स्वीकृति नहीं मिली है (%s)"
+
+#: src/sysmanage_agent/registration/host_certificate.py:308
+#, python-format
+msgid ""
+"The server says this host's certificate is still current but did not receive"
+" it (%s). Something between the agent and the server may be removing it; the"
+" agent keeps the certificate and asks again later."
+msgstr ""
+"सर्वर बताता है कि इस होस्ट का प्रमाणपत्र अभी भी मान्य है, लेकिन उसे वह "
+"प्राप्त नहीं हुआ (%s)। एजेंट और सर्वर के बीच कुछ उसे हटा रहा हो सकता है; "
+"एजेंट प्रमाणपत्र रखता है और बाद में फिर से अनुरोध करेगा।"
+
+#: src/sysmanage_agent/registration/host_certificate.py:317
+#, python-format
+msgid "The server did not issue a certificate: HTTP %s, %s"
+msgstr "सर्वर ने प्रमाणपत्र जारी नहीं किया: HTTP %s, %s"
+
+#: src/sysmanage_agent/registration/registration_manager.py:184
 #, python-format
 msgid "Error processing registration success notification: %s"
 msgstr "पंजीकरण सफलता अधिसूचना के प्रसंस्करण में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:301
+#: src/sysmanage_agent/registration/registration_manager.py:225
 #, python-format
 msgid "Error processing host approval notification: %s"
 msgstr "होस्ट स्वीकृति संदेश प्रक्रिया करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:322
-#: src/sysmanage_agent/registration/registration_manager.py:597
+#: src/sysmanage_agent/registration/registration_manager.py:246
+#: src/sysmanage_agent/registration/registration_manager.py:521
 #, python-format
 msgid "Error clearing host approval records: %s"
 msgstr "होस्ट अनुमोदन रिकॉर्ड साफ़ करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:340
+#: src/sysmanage_agent/registration/registration_manager.py:264
 msgid "Error retrieving stored credentials"
 msgstr "संग्रहीत क्रेडेंशियल पुनर्प्राप्त करने में त्रुटि"
 
-#: src/sysmanage_agent/registration/registration_manager.py:396
+#: src/sysmanage_agent/registration/registration_manager.py:320
 #, python-format
 msgid "Error storing host approval in database: %s"
 msgstr "डेटाबेस में होस्ट स्वीकृति संग्रहीत करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:434
+#: src/sysmanage_agent/registration/registration_manager.py:358
 #, python-format
 msgid "Error retrieving stored host_id: %s"
 msgstr "संग्रहित होस्ट ID खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:493
+#: src/sysmanage_agent/registration/registration_manager.py:417
 #, python-format
 msgid "Error retrieving stored host_id synchronously: %s"
 msgstr "संग्रहीत host_id को सिंक्रोनस रूप से पुनर्प्राप्त करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:545
+#: src/sysmanage_agent/registration/registration_manager.py:469
 #, python-format
 msgid "Error retrieving host approval: %s"
 msgstr "होस्ट स्वीकृति खोज करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/registration/registration_manager.py:599
+#: src/sysmanage_agent/registration/registration_manager.py:523
 msgid "Continuing despite cleanup error..."
 msgstr "क्लीनअप त्रुटि के बावजूद जारी..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:620
+#: src/sysmanage_agent/registration/registration_manager.py:544
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr ""
@@ -3880,7 +4117,7 @@ msgstr ""
 "\\u092a\\u092f\\u0932\\u094b, \\u0915\\u094d\\u0936\\u0948 "
 "\\u0938\\u0947\\u0924\\u094d\\u092f\\u0940..."
 
-#: src/sysmanage_agent/registration/registration_manager.py:634
+#: src/sysmanage_agent/registration/registration_manager.py:558
 #, python-format
 msgid "Error during database cleanup: %s"
 msgstr "डेटाबेस सफाई के दौरान त्रुटि: %s"
@@ -3897,6 +4134,31 @@ msgstr "WSL स्थिति जाँच में समयबाहुल�
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL समर्थन की जाँच में त्रुटि: %s"
+
+#~ msgid "This platform can only be a backup storage host."
+#~ msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"
+
+#~ msgid "Host not yet approved for certificate retrieval"
+#~ msgstr "होस्ट की सर्टिफिकेट प्राप्त करने के लिए अभी तक पारदर्शित नहीं है"
+
+#, python-format
+#~ msgid "Failed to fetch certificates: HTTP %s"
+#~ msgstr "सर्टिफिकेट लोड करने में विफल: HTTP %s"
+
+#, python-format
+#~ msgid "Error fetching certificates: %s"
+#~ msgstr "सर्टिफिकेट लॉड करने में त्रुटि: %s"
+
+#, python-format
+#~ msgid "Failed to get server fingerprint: %s"
+#~ msgstr "सर्वर फिंगरप्रिंट प्राप्त विफल हो गई: %s"
+
+#~ msgid "Certificate-based authentication requires manual host approval"
+#~ msgstr ""
+#~ "Certificate-based authentication के लिए मैनुअल host approval आवश्यक है"
+
+#~ msgid "Please approve this host in the SysManage web interface"
+#~ msgstr "कृपया SysManage web interface में इस host को approve करें"
 
 #, python-format
 #~ msgid "Error collecting/sending time status: %s"

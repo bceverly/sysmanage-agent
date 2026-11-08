@@ -649,19 +649,6 @@ class TestRegistrationDelegator:
         delegator.registration_manager.get_auth_token.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_fetch_certificates(self, delegator):
-        """Test fetch_certificates delegation."""
-        delegator.registration_manager.fetch_certificates = AsyncMock(return_value=True)
-        host_id = "test-host-id"
-
-        result = await delegator.fetch_certificates(host_id)
-
-        assert result is True
-        delegator.registration_manager.fetch_certificates.assert_called_once_with(
-            host_id
-        )
-
-    @pytest.mark.asyncio
     async def test_ensure_certificates(self, delegator):
         """Test ensure_certificates delegation."""
         delegator.registration_manager.ensure_certificates = AsyncMock(

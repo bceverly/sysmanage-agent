@@ -65,13 +65,16 @@ class AgentLifecycleMixin:
             self.logger.warning("Failed to start public-IP refresh service: %s", error)
 
     def _log_certificate_status(self):
-        """Say which authentication the agent will actually be using."""
+        """Say whether this host has a certificate, and start keeping it current.
+
+        Called from ``run()`` on the event loop.  The certificate manager
+        checks at once and then every 24 hours; it requests a certificate
+        only for an approved host (ROADMAP 25.10).
+        """
         if self.cert_store.has_certificates():
-            self.logger.info(
-                "Valid certificates found - secure authentication available"
-            )
+            self.logger.info("Host certificate found - presented on every connection")
         else:
-            self.logger.info("No certificates found - using token-based authentication")
             self.logger.info(
-                "For enhanced security, approve this host to enable certificate-based auth"
+                "No host certificate yet - one is requested once this host is approved"
             )
+        self.registration_manager.certificates.start()

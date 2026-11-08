@@ -34,8 +34,14 @@ from src.i18n import _
 from src.sysmanage_agent.backup.job_validation import NFS_TYPES
 
 # Hard (never silently lose a write), TCP, NFSv4 only; no setuid or device
-# files from the storage host.
+# files from the storage host.  The same in each platform's own words (25.8):
+# FreeBSD's mount_nfs names the version ``nfsv4`` and has no ``nodev`` (device
+# files exist only on devfs); macOS adds ``resvport``, a source port below
+# 1024, which Linux's nfsd requires by default ("secure") and macOS does not
+# use unless asked.
 MOUNT_OPTIONS = "vers=4,proto=tcp,hard,nosuid,nodev"
+FREEBSD_MOUNT_OPTIONS = "nfsv4,tcp,hard,nosuid"
+DARWIN_MOUNT_OPTIONS = "vers=4,tcp,hard,nosuid,nodev,resvport"
 
 
 def device(source: Dict[str, str]) -> str:
@@ -75,10 +81,24 @@ def systemd_running(isdir=os.path.isdir) -> bool:
     return isdir("/run/systemd/system")
 
 
-def mount_argv(source: Dict[str, str], where: str, systemd: bool = False) -> List[str]:
+def mount_argv(
+    source: Dict[str, str], where: str, systemd: bool = False, system: str = "Linux"
+) -> List[str]:
     """The exact mount command (run with sudo).  With systemd, systemd mounts
     it (a transient mount unit), so it exists in the host's namespace -- not
     in the agent's private one -- and the command waits until it is mounted."""
+    if system == "FreeBSD":
+        return [
+            "mount",
+            "-t",
+            "nfs",
+            "-o",
+            FREEBSD_MOUNT_OPTIONS,
+            device(source),
+            where,
+        ]
+    if system == "Darwin":
+        return ["mount", "-t", "nfs", "-o", DARWIN_MOUNT_OPTIONS, device(source), where]
     if systemd:
         return ["systemd-mount", "--no-ask-password", "--collect", "--type=nfs4",
                 f"--options={MOUNT_OPTIONS}", device(source), where]  # fmt: skip

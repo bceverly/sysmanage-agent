@@ -78,8 +78,11 @@ class ServerEndpoint:
     server is a failure mode nobody would think to look for.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, cert_store=None):
         self._config = config
+        # The agent's certificate store; None means "the agent's default one"
+        # (see _cert_store).  Tests and the certificate manager pass theirs.
+        self._cert_store = cert_store
 
     # -- resolution ---------------------------------------------------------
 
@@ -177,8 +180,26 @@ class ServerEndpoint:
 
     # -- transport security -------------------------------------------------
 
-    def ssl_context(self) -> Optional[ssl.SSLContext]:
+    def _store(self):
+        if self._cert_store is None:
+            # Lazy: keeps this module importable (and cheap) where nothing
+            # ever opens a TLS connection.
+            from src.security.certificate_store import (  # noqa: PLC0415
+                default_store,
+            )
+
+            self._cert_store = default_store()
+        return self._cert_store
+
+    def ssl_context(self, pin: bool = True) -> Optional[ssl.SSLContext]:
         """SSL context for this endpoint, or None for plain HTTP.
+
+        The ONE context builder for the server: every REST call and the
+        WebSocket use it.  On top of the cases below it presents this host's
+        certificate when an unexpired one is stored, adds the SysManage CA to
+        the trust, and -- unless ``pin`` is False (the re-pin fetch) or
+        ``server.tls_inspection`` is true -- refuses a server certificate
+        that is not pinned.  See src/security/client_tls.py.
 
         Three cases, in the order an operator meets them:
 
@@ -222,7 +243,9 @@ class ServerEndpoint:
             context.check_hostname = False  # NOSONAR
             context.verify_mode = ssl.CERT_NONE  # NOSONAR
 
-        return context
+        from src.security import client_tls  # noqa: PLC0415
+
+        return client_tls.apply(context, self, self._store(), server, pin=pin)
 
     def session_kwargs(self) -> Dict[str, Any]:
         """Keyword arguments for an ``aiohttp.ClientSession`` talking to the server.
@@ -239,9 +262,14 @@ class ServerEndpoint:
         """
         import aiohttp  # noqa: PLC0415 - keeps this module importable without aiohttp
 
+        from src.security import client_tls  # noqa: PLC0415
+
         return {
             "connector": aiohttp.TCPConnector(ssl=self.ssl_context()),
             "trust_env": True,
+            # A 403 naming a certificate problem starts a renewal, whichever
+            # caller made the request.
+            "trace_configs": [client_tls.refusal_trace_config()],
         }
 
     def proxy(self) -> Optional[str]:

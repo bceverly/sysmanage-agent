@@ -7,19 +7,21 @@
 Written at configure, and checked again before every capture or estimate:
 a share mounted (or an automount added) between configure and the next
 capture is left out of that capture too.  Only the host role walks the
-host's files, so only it gets one.  Linux only: the host role runs only
-under systemd (job_runner.ROLES).
+host's files, so only it gets one.  Off Linux (25.8: FreeBSD and macOS
+hosts) the mount table is ``mount -p`` or ``mount`` instead of mountinfo.
 """
 
 import asyncio
 import logging
 import os
+import platform
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_validation
 from src.sysmanage_agent.backup import network_mounts
 from src.sysmanage_agent.backup import restate_contract as contract
+from src.sysmanage_agent.backup import self_backup
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +35,17 @@ class NetworkRulesMixin:
     async def _found_network_mounts(
         self, policy: Dict[str, Any]
     ) -> network_mounts.Found:
-        text = await asyncio.get_running_loop().run_in_executor(
-            None, network_mounts.read_host_mountinfo
-        )
+        system = platform.system()
+        loop = asyncio.get_running_loop()
+        text, table = "", None
+        if system == "Linux":
+            text = await loop.run_in_executor(None, network_mounts.read_host_mountinfo)
+        else:
+            table = await loop.run_in_executor(None, self_backup.mount_types, system)
         capture = (policy.get("jobs") or {}).get("capture") or {}
         return network_mounts.scan(
             text,
+            table=table,
             repository_mount=policy.get("mount_point"),
             keep_paths=capture.get("keep_paths") or policy.get("keep_paths") or [],
         )

@@ -184,6 +184,9 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     # Its own group: asked before restate is installed, and on every agent
     # that could back up.
     "backup_reach": ("check_backup_storage",),
+    # 25.8: who the storage host sees on its NFS port, so a host behind NAT
+    # is told so (its reach-check connection, found by its source port).
+    "backup_peers": ("list_nfs_peers",),
     # 24.12 iCloud Photos to local, on the backup storage host.  Enabling
     # (and forgetting an account) wherever icloudpd can be installed; runs
     # once Enable has installed it -- a missing tool is the host's to fix.

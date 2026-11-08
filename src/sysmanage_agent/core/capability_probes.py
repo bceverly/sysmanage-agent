@@ -44,6 +44,7 @@ from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
 
 from src.sysmanage_agent.backup import equip as backup_equip
 from src.sysmanage_agent.backup import restate_probe
+from src.sysmanage_agent.backup import nfs_peers
 from src.sysmanage_agent.backup import storage_reach
 from src.sysmanage_agent.cloud_backup import tool as cloud_tool
 from src.sysmanage_agent.collection import malware_scan
@@ -68,7 +69,11 @@ REASON_BUILD_EXCLUDED = "build_excluded"
 #
 # REASON_MISSING_TOOL is deliberately NOT here: a missing `virsh` on Linux is a
 # real gap the operator can close by installing it.
-INAPPLICABLE_REASONS = frozenset({REASON_WRONG_PLATFORM})
+# REASON_NO_NFSV4_CLIENT (25.8): OpenBSD and NetBSD back up nowhere yet -- the
+# repository is an NFSv4 export and their clients speak v2 and v3 -- which no
+# operator can fix on the host; it names why rather than a bare wrong_platform.
+REASON_NO_NFSV4_CLIENT = "no_nfsv4_client"
+INAPPLICABLE_REASONS = frozenset({REASON_WRONG_PLATFORM, REASON_NO_NFSV4_CLIENT})
 
 
 # command -> ((executable, ...), reason)
@@ -173,6 +178,8 @@ _REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
     "equip_backup": backup_equip.unavailable_reason,
     # A TCP connection: every agent but Windows' (no backups there).
     "check_backup_storage": storage_reach.unavailable_reason,
+    # 25.8: where a storage host can run (Linux, FreeBSD): no privilege.
+    "list_nfs_peers": nfs_peers.unavailable_reason,
     # 24.12: where icloudpd can be installed; runs once it has been.
     "cloud_backup_enable": cloud_tool.enable_unavailable_reason,
     "cloud_backup_remove": cloud_tool.enable_unavailable_reason,

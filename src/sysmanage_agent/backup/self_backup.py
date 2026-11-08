@@ -26,6 +26,7 @@ as the network-mount rules) and refreshed before each capture.
 """
 
 import posixpath
+import re
 import subprocess  # nosec B404 - fixed argv, no shell
 from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple
 
@@ -77,18 +78,40 @@ def bsd_mounts(mount_p: str) -> List[Mount]:
     return found
 
 
+# macOS ``mount``: ``SOURCE on POINT (TYPE, option, ...)`` -- it has no -p.
+_DARWIN_LINE = re.compile(
+    r"^(?P<source>.*?) on (?P<point>.*) \((?P<fstype>[^,()]+)[,)]"
+)
+
+
+def darwin_mounts(mount_out: str) -> List[Mount]:
+    """macOS ``mount`` output."""
+    found = []
+    for line in (mount_out or "").splitlines():
+        match = _DARWIN_LINE.match(line)
+        if match:
+            found.append(Mount(match["point"], match["fstype"], match["source"]))
+    return found
+
+
 def read_mounts(system: str) -> List[Mount]:
     """This machine's mounts: the host's mountinfo on Linux, ``mount -p`` on
-    the BSDs (which have no /proc)."""
+    the BSDs (which have no /proc), ``mount`` on macOS."""
     if system == "Linux":
         return linux_mounts(network_mounts.read_host_mountinfo())
+    argv = ["mount"] if system == "Darwin" else ["mount", "-p"]
     try:
         out = subprocess.run(  # nosec B603 B607 - fixed argv
-            ["mount", "-p"], capture_output=True, text=True, timeout=30, check=False
+            argv, capture_output=True, text=True, timeout=30, check=False
         )
     except (OSError, subprocess.SubprocessError):
         return []
-    return bsd_mounts(out.stdout)
+    return darwin_mounts(out.stdout) if system == "Darwin" else bsd_mounts(out.stdout)
+
+
+def mount_types(system: str) -> Dict[str, str]:
+    """``{mount point: filesystem type}`` on any platform."""
+    return {posixpath.normpath(m.point): m.fstype for m in read_mounts(system)}
 
 
 def _under(path: str, root: str) -> bool:

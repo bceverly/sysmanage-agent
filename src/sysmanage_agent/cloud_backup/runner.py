@@ -80,7 +80,12 @@ WEB_ACCESS_MARKERS = (
 )
 # Apple answered 503: it limits how fast one account downloads.  The server
 # waits it out and tries again by itself (cloud_backup_tick, "apple_busy").
-APPLE_BUSY_MARKERS = ("Apple iCloud is temporary refusing to serve icloudpd",)
+# "Cannot connect" is the connection to iCloud lost partway, also logged with
+# exit 0 (production, 2026-11-06 13:52 UTC): retried the same way.
+APPLE_BUSY_MARKERS = (
+    "Apple iCloud is temporary refusing to serve icloudpd",
+    "Cannot connect to Apple iCloud service",
+)
 
 
 class Outcome:
@@ -102,6 +107,7 @@ class Outcome:
         # line must not scroll out before it is judged.
         self.sign_in_refused = False
         self.web_access_off = False
+        self.apple_busy = False
         self.started = time.monotonic()
 
     def stop(self, status: str, reason: str, message: str) -> None:
@@ -157,6 +163,7 @@ def classify_line(outcome: Outcome, line: str, action: str, scrub) -> None:
         if level != "DEBUG":
             outcome.sign_in_refused |= any(m in message for m in SIGN_IN_MARKERS)
             outcome.web_access_off |= any(m in message for m in WEB_ACCESS_MARKERS)
+            outcome.apple_busy |= any(m in message for m in APPLE_BUSY_MARKERS)
         if level != "DEBUG":
             outcome.tail.append(line)
         return
@@ -180,6 +187,18 @@ def judge(outcome: Outcome, action: str) -> None:
     authentication is required" on its way."""
     if outcome.status is not None:
         return
+    text = "\n".join(outcome.tail)
+    if outcome.apple_busy or any(marker in text for marker in APPLE_BUSY_MARKERS):
+        # Before the exit: icloudpd 1.32.3 can log Apple's refusal and still
+        # exit 0, and judged on the exit, nas's first full pass (2026-11-06)
+        # was recorded as complete at about half the library.
+        outcome.stop(
+            FAILED,
+            "apple_busy",
+            "Apple is limiting downloads for this account. Nothing is lost: "
+            "the download is tried again after a cooldown.",
+        )
+        return
     if outcome.exit_code == 0:
         if action == "connect" and not outcome.authenticated:
             outcome.stop(FAILED, "no_confirmation",
@@ -191,7 +210,6 @@ def judge(outcome: Outcome, action: str) -> None:
         else:
             outcome.stop(OK, None, None)
         return
-    text = "\n".join(outcome.tail)
     if outcome.sign_in_refused or any(marker in text for marker in SIGN_IN_MARKERS):
         outcome.stop(
             NEEDS_SIGN_IN,
@@ -206,13 +224,6 @@ def judge(outcome: Outcome, action: str) -> None:
             "iCloud data is not reachable from the web for this account. With "
             'Advanced Data Protection on, turn on "Access iCloud Data on the '
             'Web" on the iPhone (Settings, your name, iCloud), then try again.',
-        )
-    elif any(marker in text for marker in APPLE_BUSY_MARKERS):
-        outcome.stop(
-            FAILED,
-            "apple_busy",
-            "Apple is limiting downloads for this account. Nothing is lost: "
-            "the download is tried again after a cooldown.",
         )
     else:
         outcome.stop(FAILED, "tool_failed",

@@ -11,7 +11,6 @@ SysManage server using WebSockets with concurrent send/receive operations.
 import asyncio
 import logging
 import os
-import ssl
 import sys
 import time
 import uuid
@@ -26,7 +25,7 @@ from src.database.base import get_database_manager  # pylint: disable=unused-imp
 from src.database.init import initialize_database
 from src.database.models import HostApproval  # pylint: disable=unused-import
 from src.i18n import _, set_language
-from src.security.certificate_store import CertificateStore
+from src.security.certificate_store import default_store
 from src.sysmanage_agent.collection.antivirus_collection import AntivirusCollector
 from src.sysmanage_agent.collection.certificate_collection import CertificateCollector
 from src.sysmanage_agent.collection.role_detection import RoleDetector
@@ -165,10 +164,8 @@ class SysManageAgent(
         # Initialize registration handler
         self.registration = ClientRegistration(self.config)
 
-        # Initialize certificate store
-        # Use SYSMANAGE_CONFIG_DIR if set (for snap confinement), otherwise use default
-        config_dir = os.environ.get("SYSMANAGE_CONFIG_DIR")
-        self.cert_store = CertificateStore(config_dir=config_dir)
+        # The one certificate store (SYSMANAGE_CONFIG_DIR picks its directory)
+        self.cert_store = default_store()
 
         # Initialize utility classes
         self.update_checker_util = UpdateChecker(self, self.logger)
@@ -666,33 +663,10 @@ class SysManageAgent(
         self.running = False
 
     def _create_ssl_context(self):
-        """Create SSL context for the WebSocket connection.
-
-        Deliberately NOT folded into ServerEndpoint.ssl_context(): this path can
-        upgrade to mutual TLS with a client certificate, which the plain REST
-        calls never do.  It starts from the shared context so ``ca_bundle`` is
-        honored here too -- an estate behind a TLS-inspecting proxy needs the
-        WebSocket to trust that CA just as much as the REST calls do.
-        """
-        ssl_context = ServerEndpoint(self.config).ssl_context()
-        if ssl_context is None:  # plaintext transport, nothing to configure
-            return None
-
-        cert_paths = self.cert_store.load_certificates()
-        if cert_paths:
-            client_cert_path, client_key_path, ca_cert_path = cert_paths
-            ssl_context.load_cert_chain(client_cert_path, client_key_path)
-            ssl_context.load_verify_locations(ca_cert_path)
-            ssl_context.check_hostname = True
-            ssl_context.verify_mode = ssl.CERT_REQUIRED
-            self.logger.info("Using mutual TLS with client certificates")
-        elif not self.config.should_verify_ssl():
-            ssl_context.check_hostname = False  # NOSONAR - intentionally configurable
-            ssl_context.verify_mode = (
-                ssl.CERT_NONE
-            )  # NOSONAR - intentionally configurable
-
-        return ssl_context
+        """SSL context for the WebSocket: the SAME one every REST call uses
+        (client certificate, SysManage CA, ca_bundle, server pinning -- see
+        ServerEndpoint.ssl_context), so the two can never disagree."""
+        return ServerEndpoint(self.config, self.cert_store).ssl_context()
 
     async def _autostart_child_hosts(self):
         """Background task to auto-start child host VMs after connection."""

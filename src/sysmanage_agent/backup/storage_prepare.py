@@ -335,8 +335,24 @@ def _btrfs_steps(
     return {"kind": BTRFS, "commands": [], "exists": True}
 
 
+def _exists(path: str, listdir: Callable) -> bool:
+    """A plain repository needs only to exist: one the agent cannot read is
+    there (it made it ``root:<account>`` 0770), and re-preparing it -- the host
+    moved to a new address -- only rewrites its export.  The server-loss
+    drill (2026-11-06) was refused here once the server came back elsewhere."""
+    try:
+        listdir(path)
+    except FileNotFoundError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        _empty(path, listdir)  # says why, as before
+    return True
+
+
 def _plain_steps(repository: str, listdir: Callable) -> Dict[str, Any]:
-    if _empty(repository, listdir) is None:
+    if not _exists(repository, listdir):
         return {"kind": PLAIN, "exists": False,
                 "commands": [["mkdir", "-m", "700", repository]]}  # fmt: skip
     return {"kind": PLAIN, "commands": [], "exists": True}

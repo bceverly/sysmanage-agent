@@ -23,6 +23,7 @@ The rules, in short:
 """
 
 import ipaddress
+import platform
 import posixpath
 import re
 import uuid
@@ -46,6 +47,9 @@ CAPTURING_ROLES = ("host", SELF)
 
 # Where repositories and their mounts may live.
 BACKUP_ROOTS = ("/srv", "/mnt", "/media", "/var/backups")
+# macOS (25.8): none of those can be made -- the system volume is read-only --
+# and mounts belong under /Volumes, where the server puts a Mac's mount point.
+DARWIN_HOST_ROOTS = BACKUP_ROOTS + ("/Volumes",)
 # A storage host may also keep its repositories at the mount point of a ZFS
 # dataset of its own (ZFS mounts a pool at /<pool> by default, so a ZFS NAS
 # has /tank/backups, not /srv/backups) -- but never a system tree: a
@@ -389,16 +393,23 @@ def check_target(
     isdir: Callable[[str], bool] = posixpath.isdir,
     managed: bool = False,
     zfs_mounts: Callable[[], Any] = lambda: (),
+    mount_table: Optional[Callable[[], Dict[str, str]]] = None,
+    system: Optional[str] = None,
 ) -> Tuple[str, str]:
-    """``(mount_point, repository)`` for the target, both real paths."""
+    """``(mount_point, repository)`` for the target, both real paths.
+    ``mount_table``: ``{point: type}`` where there is no mountinfo (off
+    Linux); ``system``: platform.system(), looked up when not given."""
     if not isinstance(target, dict):
         raise PolicyError("target must be an object")
     if role in ("storage", SELF):
         mount_point = storage_mount_point(target.get("mount_point"), zfs_mounts)
     else:
-        mount_point = confined_path(
-            target.get("mount_point"), BACKUP_ROOTS, "mount_point"
+        roots = (
+            DARWIN_HOST_ROOTS
+            if (system or platform.system()) == "Darwin"
+            else BACKUP_ROOTS
         )
+        mount_point = confined_path(target.get("mount_point"), roots, "mount_point")
     repo_dir = target.get("repo_dir")
     if not isinstance(repo_dir, str) or not _REPO_DIR.match(repo_dir):
         raise PolicyError("repo_dir must be a single directory name")
@@ -406,7 +417,7 @@ def check_target(
         # The share at the mount point, or -- one export per host -- the
         # host's own repository mounted at <mount_point>/<repo_dir>.
         # (managed: the agent mounts that export itself while a job runs.)
-        mounts = mount_types(mountinfo())
+        mounts = mount_table() if mount_table else mount_types(mountinfo())
         own = posixpath.join(mount_point, repo_dir)
         if (
             mounts.get(mount_point) not in NFS_TYPES

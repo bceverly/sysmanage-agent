@@ -38,6 +38,8 @@ NETWORK_TYPES = frozenset(
         "fuse.sshfs", "fuse.rclone", "fuse.s3fs", "fuse.gcsfuse",
         "fuse.glusterfs", "fuse.ceph", "fuse.davfs2", "fuse.goofys",
         "fuse.cephfs", "fuse.juicefs", "fuse.lizardfs", "fuse.moosefs",
+        # macOS's own names for AFP and WebDAV shares (25.8).
+        "afpfs", "webdav",
     }
 )  # fmt: skip
 # An automount trigger: opening it mounts whatever is behind it.
@@ -111,16 +113,19 @@ def scan(
     *,
     repository_mount: Optional[str] = None,
     keep_paths: Iterable[str] = (),
+    table: Optional[Dict[str, str]] = None,
 ) -> Found:
     """The host's network and automount points to leave out, sorted.
 
     Never the backup repository's own mount (``repository_mount``, the
     target's mount point the agent mounts the storage under), nothing under
     the kernel's virtual trees, and nothing an operator opted into.
+    ``table``: ``{point: type}`` instead of mountinfo, off Linux (25.8).
     """
     keep = list(keep_paths)
     found = Found()
-    for point, fstype in sorted(mount_types(mountinfo or "").items()):
+    mounts = table if table is not None else mount_types(mountinfo or "")
+    for point, fstype in sorted(mounts.items()):
         if fstype not in NETWORK_TYPES and fstype != AUTOFS:
             continue
         point = posixpath.normpath(point)

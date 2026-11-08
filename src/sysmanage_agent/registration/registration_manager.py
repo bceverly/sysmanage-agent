@@ -15,7 +15,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-import aiohttp
 from sqlalchemy import text
 
 from src.database import run_ledger
@@ -25,7 +24,7 @@ from src.database.models import HostApproval
 from src.i18n import _
 from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.core import schedule_jitter
-from src.sysmanage_agent.core.server_endpoint import ServerEndpoint
+from src.sysmanage_agent.registration.host_certificate import HostCertificateManager
 
 # ONE definition of "corrupt", shared by the count and the delete below.
 #
@@ -67,98 +66,17 @@ class RegistrationManager:
         self.config = agent_instance.config
         # The running initial-inventory send (see _start_initial_data_updates).
         self._initial_data_task: Optional[asyncio.Task] = None
+        # This host's TLS client certificate (ROADMAP 25.10).
+        self.certificates = HostCertificateManager(agent_instance)
 
     async def get_auth_token(self) -> str:
         """Get authentication token for WebSocket connection."""
         return await self.agent.auth_helper.get_auth_token()
 
-    async def fetch_certificates(self, host_id: str) -> bool:
-        """Fetch certificates from server after approval."""
-        try:
-            # Certificates are an authenticated endpoint, hence the /api prefix.
-            endpoint = ServerEndpoint(self.config)
-            cert_url = endpoint.rest_url(f"/api/certificates/client/{host_id}")
-
-            # Get authentication token
-            auth_token = await self.get_auth_token()
-
-            async with aiohttp.ClientSession(**endpoint.session_kwargs()) as session:
-                headers = {"Authorization": f"Bearer {auth_token}"}
-
-                async with session.get(
-                    cert_url, headers=headers, proxy=endpoint.proxy()
-                ) as response:
-                    if response.status == 200:
-                        cert_data = await response.json()
-                        self.agent.cert_store.store_certificates(cert_data)
-                        self.logger.info(
-                            "Certificates retrieved and stored successfully"
-                        )
-                        return True
-                    if response.status == 403:
-                        self.logger.warning(
-                            _("Host not yet approved for certificate retrieval")
-                        )
-                        return False
-                    self.logger.error(
-                        _("Failed to fetch certificates: HTTP %s"), response.status
-                    )
-                    return False
-
-        except Exception as error:
-            self.logger.error(_("Error fetching certificates: %s"), error)
-            return False
-
     async def ensure_certificates(self) -> bool:
-        """Ensure agent has valid certificates for mTLS."""
-        # Check if we already have valid certificates
-        if self.agent.cert_store.has_certificates():
-            self.logger.debug("Valid certificates already available")
-            return True
-
-        # If no certificates, we need to check if host is approved and fetch them
-        self.logger.info(
-            "No valid certificates found, checking host approval status..."
-        )
-
-        # Get server fingerprint first for security validation
-        try:
-            endpoint = ServerEndpoint(self.config)
-            fingerprint_url = endpoint.rest_url("/api/certificates/server-fingerprint")
-
-            async with aiohttp.ClientSession(
-                **endpoint.session_kwargs()
-            ) as session, session.get(
-                fingerprint_url, proxy=endpoint.proxy()
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    server_fingerprint = data.get("fingerprint")
-                    self.logger.info(
-                        "Retrieved server fingerprint for validation: %s",
-                        "***REDACTED***" if server_fingerprint else "None",
-                    )
-                    # We'll store it when we get the full cert data
-
-        except Exception as error:
-            self.logger.error(
-                _("Failed to get server fingerprint: %s"), type(error).__name__
-            )
-            return False
-
-        # Dead code removed: this fetched system_info purely to read a hostname
-        # that was never used.  It was masked until the URL-building duplication
-        # above was folded into ServerEndpoint -- pylint had been seeing the
-        # OTHER `hostname` (the one that built the URL) as the used one.
-        # For now, we'll try to fetch with a known host ID or wait for manual approval
-        # This would be improved with a more sophisticated approval checking mechanism
-        self.logger.warning(
-            _("Certificate-based authentication requires manual host approval")
-        )
-        self.logger.warning(
-            _("Please approve this host in the SysManage web interface")
-        )
-        return False
+        """Ensure agent has valid certificates for mTLS (requests one if due)."""
+        await self.certificates.check()
+        return self.agent.cert_store.has_certificates()
 
     def _start_initial_data_updates(self, window: float = 0.0) -> None:
         """Send the initial inventory in the BACKGROUND.
@@ -243,6 +161,9 @@ class RegistrationManager:
                 self._start_initial_data_updates(
                     message.get("initial_report_window_seconds", 0)
                 )
+                # Approved and connected: request or renew this host's
+                # certificate if due, and pin the server if not yet pinned.
+                self.certificates.kick()
 
             elif host_id or host_token:
                 self.logger.info(
@@ -288,6 +209,9 @@ class RegistrationManager:
             self.logger.info(
                 "Host approval information stored successfully. Host ID: %s", host_id
             )
+
+            if approval_status == "approved":
+                self.certificates.kick()
 
             # Re-send system_info so backend sets connection.host_id
             message = self.agent.create_system_info_message()

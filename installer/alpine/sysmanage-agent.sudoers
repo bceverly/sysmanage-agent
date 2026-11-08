@@ -102,3 +102,16 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/test, /bin/test
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/ln, /bin/ln
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/nginx, /usr/bin/nginx
+
+# Backups with restate (server ROADMAP 25.8): Alpine has no systemd, so the
+# agent starts restate itself, detached through backup/detach.py (which runs
+# as the agent; only restate is elevated): exactly
+# ``restate run /etc/restate/jobs.d/<policy uuid>.<action>.conf`` for the host
+# jobs (capture|estimate|snapshots|restore|list|status|diff) and, on an Alpine
+# storage host, its storage jobs.  A regular expression, not a wildcard: ``*``
+# would also match extra options such as ``--result PATH`` -- a root-owned
+# write anywhere.  restate itself refuses a job file that is not root's and in
+# a directory only root can change.  Needs sudo 1.9.10 or later (Alpine 3.20
+# ships 1.9.15).  The export is mounted and unmounted with the mount, umount
+# and mkdir grants above.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/restate ^run /etc/restate/jobs\.d/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(prune|check|copy|du|repack|protect|sign|signatures|capture|estimate|snapshots|restore|list|status|diff)\.conf$
