@@ -39,10 +39,12 @@ from src.sysmanage_agent.backup import job_builder
 from src.sysmanage_agent.backup import job_runner
 from src.sysmanage_agent.backup import job_validation as validation
 from src.sysmanage_agent.backup import key_files
+from src.sysmanage_agent.backup import proxy_access
 from src.sysmanage_agent.backup.job_lifecycle_mixin import BackupJobLifecycleMixin
 from src.sysmanage_agent.backup.keys_mixin import BackupKeysMixin
 from src.sysmanage_agent.backup.mount_mixin import BackupMountMixin
 from src.sysmanage_agent.backup.network_rules_mixin import NetworkRulesMixin
+from src.sysmanage_agent.backup.proxy_mixin import BackupProxyMixin
 from src.sysmanage_agent.backup.self_backup_mixin import SelfBackupMixin
 from src.sysmanage_agent.backup.storage_actions_mixin import (
     BackupStorageActionsMixin,
@@ -171,6 +173,13 @@ def _drop_hook_options(
     return []
 
 
+def _saved_proxy(proxy: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """What policies.json keeps of the proxy block: a CA only as a flag."""
+    if proxy is None:
+        return None
+    return {**proxy, "ca": True} if proxy.get("ca") else dict(proxy)
+
+
 def _wrong_platform(role: str) -> str:
     """Why this platform cannot take ``role``."""
     if platform.system() == "Darwin" and role != "host":
@@ -198,6 +207,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
     SelfBackupMixin,
     BackupJobLifecycleMixin,
     BackupStorageActionsMixin,
+    BackupProxyMixin,
 ):
     """The agent's half of Phase 24: the restate driver."""
 
@@ -269,12 +279,15 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             (err or b"").decode("utf-8", "replace").strip(),
         )
 
-    async def _install_root_file(self, content: str, dest: str) -> None:
-        """Write ``content`` to ``dest`` root-owned 0644 via ``sudo install``."""
+    async def _install_root_file(
+        self, content: str, dest: str, mode: str = "644"
+    ) -> None:
+        """Write ``content`` to ``dest`` root-owned (0644, or ``mode``: 600
+        for a proxy token) via ``sudo install``."""
         self._ensure_dirs()
         staged = _stage_file(content, self._backup_dir())
         try:
-            for argv in self._install_argvs(staged, dest):
+            for argv in self._install_argvs(staged, dest, mode):
                 code, _out, err = await self._run(self._privileged(argv))
                 if code != 0:
                     raise PermissionError(err or f"install exited {code}")
@@ -282,8 +295,11 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             if os.path.exists(staged):
                 os.unlink(staged)
 
-    def _install_argvs(self, staged: str, dest: str) -> List[List[str]]:
-        """``install`` a root-owned 0644 file, creating its directory.
+    def _install_argvs(
+        self, staged: str, dest: str, mode: str = "644"
+    ) -> List[List[str]]:
+        """``install`` a root-owned file (0644 unless ``mode``), creating its
+        directory.
 
         GNU install's ``-D`` creates the parents; FreeBSD's ``-D`` takes a
         DESTDIR instead, so there the directory is made first with its own
@@ -292,12 +308,12 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         """
         owner = ["-o", "0", "-g", "0"]
         if self.runner != job_runner.DAEMON and platform.system() == "Linux":
-            return [["install", "-D", "-m", "644"] + owner + ["--", staged, dest]]
+            return [["install", "-D", "-m", mode] + owner + ["--", staged, dest]]
         argvs = []
         directory = posixpath.dirname(dest)
         if not os.path.isdir(directory):
             argvs.append(["install", "-d", "-m", "755"] + owner + ["--", directory])
-        argvs.append(["install", "-m", "644"] + owner + ["--", staged, dest])
+        argvs.append(["install", "-m", mode] + owner + ["--", staged, dest])
         return argvs
 
     async def _remove_root_file(self, path: str) -> None:
@@ -407,6 +423,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
         removed = await self._remove_stale(policy_id, set(jobs))
+        proxy_state = await self._apply_proxy(policy, features)
         policies = self._load(POLICIES_FILE)
         policies[policy_id] = {
             "role": policy["role"],
@@ -422,6 +439,10 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             "network_rules": network_rules,
             "network_excluded": (network or {}).get("excluded") or [],
             "keep_paths": (policy["jobs"].get("capture") or {}).get("keep_paths") or [],
+            # restate-proxy (25.5): where reads go, and the hashes of this
+            # host's tokens (never a token); a CA is kept as a file, not here.
+            "proxy": _saved_proxy(policy.get("proxy")),
+            "proxy_tokens": proxy_state.get("proxy_tokens"),
         }
         self._save(POLICIES_FILE, policies)
         reply = {
@@ -432,6 +453,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             # The restate these job files were written for (the server shows
             # it, and re-sends the files when a later job reports another).
             "restate_version": features.get("version"),
+            **proxy_state,
         }
         return await self._configure_reply(
             policy, policies[policy_id], reply, network, self_points
@@ -519,19 +541,24 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 _("This restate cannot run %s as a job; upgrade restate.") % action,
             )
         keys: List[str] = []
+        remote = repository_choice.reads_remote(policy, params, self._features())
         try:
-            repository, _source, previous = repository_choice.choose(policy, params)
+            repository, _source, previous = repository_choice.choose(
+                policy, params, remote
+            )
             keys = await self._decrypt_keys(run_id, params)
             common = {"repository": repository, "decrypt_with": keys,
                       "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
             job = build(params, **common)
+            if remote:  # restate-proxy (25.5): the token file, CA or pin
+                job.update(proxy_access.job_keys(policy_id, policy["proxy"], previous))
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
         except (validation.PolicyError, key_files.KeyFetchError, OSError) as error:
             await key_files.remove(keys, self._run, self._privileged)
             return self._refusal(key_files.refusal_code(error), str(error))
-        return await self._start_job(run_id, policy_id, action, previous, keys)
+        return await self._start_job(run_id, policy_id, action, previous, keys, remote)
 
     async def backup_restore(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Restore from a snapshot into a staging directory, or into place
@@ -546,7 +573,10 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             policy = self._policy(policy_id)
             if not policy or policy.get("role") not in validation.CAPTURING_ROLES:
                 return self._not_configured()
-            repository, _source, previous = repository_choice.choose(policy, params)
+            remote = repository_choice.reads_remote(policy, params, self._features())
+            repository, _source, previous = repository_choice.choose(
+                policy, params, remote
+            )
             run_id = validation.check_uuid(params.get("run_id"), "run_id")
             keys = await self._decrypt_keys(run_id, params)
             job = job_builder.build_restore_job(
@@ -558,6 +588,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 decrypt_with=keys,
                 trusted_key=self._trusted_key(policy_id),
             )
+            if remote:  # restate-proxy (25.5): the token file, CA or pin
+                job.update(proxy_access.job_keys(policy_id, policy["proxy"], previous))
             if job["restore_root"] != "/":
                 os.makedirs(job["restore_root"], mode=0o700, exist_ok=True)
             await self._install_root_file(
@@ -568,5 +600,5 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             await key_files.remove(keys, self._run, self._privileged)
             return self._refusal(key_files.refusal_code(error), str(error))
         return await self._start_job(
-            run_id, policy_id, job_builder.RESTORE_ACTION, previous, keys
+            run_id, policy_id, job_builder.RESTORE_ACTION, previous, keys, remote
         )

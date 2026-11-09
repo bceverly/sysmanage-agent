@@ -66,6 +66,14 @@ def test_csr_is_well_formed_p256():
     assert isinstance(csr.signature_hash_algorithm, hashes.SHA256)
 
 
+def test_a_long_machine_name_is_cut_to_what_a_common_name_holds():
+    """GitHub's macOS runners have a 67-character name; X.509 allows 64."""
+    with patch("platform.node", return_value="m" * 80 + ".local"):
+        csr = x509.load_pem_x509_csr(build_csr(generate_key()).encode("ascii"))
+    names = csr.subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)
+    assert names[0].value == "m" * 64
+
+
 # -- storage ------------------------------------------------------------------
 
 

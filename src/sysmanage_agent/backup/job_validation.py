@@ -564,6 +564,10 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
     mount_point, repository = check_target(
         role, params.get("target"), mountinfo=mountinfo, managed=nfs is not None, **fs
     )
+    # pylint: disable-next=import-outside-toplevel  # it imports PolicyError
+    from src.sysmanage_agent.backup import proxy_access  # noqa: PLC0415
+
+    proxy = target.get("proxy") if isinstance(target, dict) else None
     return {
         "policy_id": policy_id,
         "role": role,
@@ -576,6 +580,13 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
             check_previous(target, mount_point, repository) if role == "host" else None
         ),
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
+        # restate-proxy (25.5): where a host reads its repository over HTTPS,
+        # or the grants a storage host writes for one host.
+        "proxy": (
+            proxy_access.check_host_proxy(proxy)
+            if role == "host"
+            else proxy_access.check_storage_proxy(proxy) if role == "storage" else None
+        ),
         "encrypt_key": check_key(params.get("encrypt_key")),
         # The snapshot signer's public key (Pro+ 24.6): restores check it,
         # and the storage side's ``signatures`` listing.

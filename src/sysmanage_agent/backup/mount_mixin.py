@@ -64,8 +64,8 @@ class BackupMountMixin:
         """Mount the run's export (the current repository's, or the one
         before it -- ``record``); None, or why it failed."""
         policy = self._policy(policy_id) or {}
-        if policy.get("role") != "host":
-            return None
+        if policy.get("role") != "host" or (record or {}).get("remote"):
+            return None  # through restate-proxy (25.5): nothing to mount
         where, source, _previous = repository_choice.for_record(policy, record or {})
         state = self._load(MOUNTS_FILE)
         entry = state.get(where)

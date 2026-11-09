@@ -95,21 +95,26 @@ class BackupJobLifecycleMixin:
 
     async def _start_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, run_id: str, policy_id: str, action: str, previous: bool = False,
-        keys: Optional[List[str]] = None,
+        keys: Optional[List[str]] = None, remote: bool = False,
     ) -> Dict[str, Any]:  # fmt: skip
-        """Start the job; a job that does not start leaves no key behind."""
-        answer = await self._launch_job(run_id, policy_id, action, previous, keys)
+        """Start the job; a job that does not start leaves no key behind.
+        ``remote``: it reads through restate-proxy, so nothing is mounted."""
+        answer = await self._launch_job(
+            run_id, policy_id, action, previous, keys, remote
+        )
         if not answer.get("success"):
             await key_files.remove(keys or [], self._run, self._privileged)
         return answer
 
     async def _launch_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, run_id: str, policy_id: str, action: str, previous: bool,
-        keys: Optional[List[str]],
+        keys: Optional[List[str]], remote: bool = False,
     ) -> Dict[str, Any]:  # fmt: skip
         record = self._new_record(policy_id, action)
         if previous:
             record["previous"] = True  # the repository before an encrypted one
+        if remote:
+            record["remote"] = True  # through restate-proxy: no mount
         if keys:
             record["key_files"] = list(keys)  # removed when the run ends
         if (await self._job_state(record))[0]:

@@ -56,11 +56,17 @@ def generate_key() -> ec.EllipticCurvePrivateKey:
     return ec.generate_private_key(ec.SECP256R1())
 
 
+# X.509 (RFC 5280 ub-common-name): the most a common name may hold.
+MAX_COMMON_NAME = 64
+
+
 def build_csr(key: ec.EllipticCurvePrivateKey) -> str:
     """PEM PKCS#10 request for ``key``.  The server ignores the subject (it
     sets CN = the host's fqdn, OU = the host id); the node name is there only
-    to make the request recognizable."""
-    name = platform.node() or "sysmanage-agent"
+    to make the request recognizable.  A common name is at most 64
+    characters (X.509), and a machine's name can be longer -- GitHub's macOS
+    runners have 67 -- so it is cut there."""
+    name = (platform.node() or "sysmanage-agent")[:MAX_COMMON_NAME]
     csr = (
         x509.CertificateSigningRequestBuilder()
         .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, name)]))

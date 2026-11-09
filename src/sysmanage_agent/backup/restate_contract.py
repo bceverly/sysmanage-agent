@@ -233,7 +233,22 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
         # policy keeps its PostgreSQL running (25.9).  Reported by this agent
         # only, so the server never sends the key to one that would refuse it.
         found.append("hook_option")
+    if reads_remote(features):
+        # Reads a repository through restate-proxy (restate 3.1.0.0, 25.5):
+        # the server then sends the proxy's address, and this agent makes
+        # its own token for it.
+        found.append(REMOTE_ABILITY)
     return found
+
+
+REMOTE_ABILITY = "remote_repository"
+
+
+def reads_remote(features: Optional[Dict[str, Any]]) -> bool:
+    """restate reads a repository at an https:// URL, with a token file."""
+    return bool((features or {}).get(REMOTE_ABILITY)) and supports(
+        features, "repository_token_file"
+    )
 
 
 def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
