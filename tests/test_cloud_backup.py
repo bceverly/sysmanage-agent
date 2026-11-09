@@ -16,6 +16,7 @@ import re
 import stat
 import sys
 import textwrap
+import threading
 import uuid
 from types import SimpleNamespace
 
@@ -37,7 +38,7 @@ SUDOERS = os.path.join(
 
 FAKE = textwrap.dedent(r'''
     #!PYTHON
-    """A stand-in for icloudpd 1.32.3's console prompts and log lines."""
+    """A stand-in for icloudpd 1.33.0's console prompts and log lines."""
     import json, os, sys, time
 
     def log(level, message):
@@ -85,6 +86,16 @@ FAKE = textwrap.dedent(r'''
         print("SharedSync-ABCDEF")
         sys.exit(0)
     directory = args[args.index("--directory") + 1]
+    if scenario.get("xmp_crash") and "--xmp-sidecar" in args:
+        log("DEBUG", "response:")
+        print("  {")
+        print("Traceback (most recent call last):")
+        print('  File "icloudpd/xmp_sidecar.py", line 108, in build_metadata')
+        print("zlib.error: Error -3 while decompressing data: invalid stored "
+              "block lengths")
+        print("[PYI-1:ERROR] Failed to execute script 'icloudpd' due to "
+              "unhandled exception!")
+        sys.exit(1)
     for index in range(scenario.get("new", 0)):
         path = os.path.join(directory, "2026", "11", "03", f"IMG_{index}.HEIC")
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -278,6 +289,39 @@ def test_the_password_server_refusing_fails_cleanly(fake, tmp_path):
     assert (outcome["status"], outcome["reason"]) == ("failed", "password_unavailable")
 
 
+def _classified(*lines):
+    outcome = runner.Outcome()
+    for line in lines:
+        runner.classify_line(outcome, line, "reconcile", lambda text: text)
+    return outcome
+
+
+def test_one_files_lost_connection_is_one_failed_file_not_apple_busy():
+    """icloudpd 1.33.0 skips the file and carries on; 1.32.3 ended the run."""
+    outcome = _classified(
+        "2026-11-08 10:00:00 ERROR    Could not connect to iCloud to download "
+        "/srv/x/IMG_1.HEIC: Cannot connect to Apple iCloud service",
+        "2026-11-08 10:00:09 ERROR    Could not download IMG_1.HEIC. Please try again later.",
+        "2026-11-08 10:00:10 INFO     Downloaded /srv/x/IMG_2.HEIC",
+    )
+    outcome.exit_code = 0
+    runner.judge(outcome, "reconcile")
+    assert (outcome.status, outcome.reason) == (runner.OK, "some_failed")
+    assert (outcome.failed, outcome.downloaded) == (1, 1)
+
+
+def test_a_listing_that_ended_early_is_no_full_pass():
+    """icloudpd 1.33.0 (#1390): the cut-short pass of 2026-11-06, said plainly."""
+    outcome = _classified(
+        "2026-11-08 10:00:00 ERROR    iCloud listed only 16445 of 31926 items in the "
+        "library; the listing ended early, so not everything was downloaded. Run "
+        "icloudpd again to download the rest",
+    )
+    outcome.exit_code = 1
+    runner.judge(outcome, "reconcile")
+    assert (outcome.status, outcome.reason) == (runner.FAILED, "listing_incomplete")
+
+
 def test_a_web_access_problem_says_what_to_turn_on():
     outcome = runner.Outcome()
     outcome.exit_code = 1
@@ -288,11 +332,10 @@ def test_a_web_access_problem_says_what_to_turn_on():
 
 
 def test_apples_refusal_is_named_so_the_server_waits_it_out():
-    outcome = runner.Outcome()
-    outcome.exit_code = 1
-    outcome.tail.append(
+    outcome = _classified(
         "2026-11-04 17:08:31 INFO     Apple iCloud is temporary refusing to serve icloudpd"
     )
+    outcome.exit_code = 1
     runner.judge(outcome, "reconcile")
     assert (outcome.status, outcome.reason) == (runner.FAILED, "apple_busy")
 
@@ -325,6 +368,263 @@ def test_a_lost_connection_to_icloud_counts_even_when_icloudpd_exits_0():
     outcome.exit_code = 0
     runner.judge(outcome, "reconcile")
     assert (outcome.status, outcome.reason) == (runner.FAILED, "apple_busy")
+
+
+def test_an_xmp_crash_keeps_its_traceback_and_is_named(fake, tmp_path):
+    """Production, 2026-11-08: icloudpd 1.32.3 crashed in xmp_sidecar.py after
+    a DEBUG line, and the kept output ended before the traceback."""
+    job = _job(tmp_path, action="reconcile", until_found=None)
+    _scenario(job, ask_password=False, xmp_crash=True)
+    result = _run(fake, job, _Server())
+    assert (result["status"], result["reason"]) == (runner.FAILED, "xmp_crashed")
+    assert "zlib.error" in result["detail"]
+    assert "Traceback (most recent call last):" in result["detail"]
+
+
+def _offline(*_args, **_kwargs):
+    raise tool.ToolError("download_failed", "offline")
+
+
+def _ops_with_storage(tmp_path, monkeypatch):
+    agent = _Agent()
+    ops = operations.CloudBackupOperations(agent, str(tmp_path))
+
+    async def make(_path, _storage):
+        return "dir"
+
+    monkeypatch.setattr(ops, "_make", make)
+    return agent, ops
+
+
+def test_an_older_icloudpd_is_upgraded_to_the_pin_before_a_run(
+    fake, tmp_path, monkeypatch
+):
+    """Enable installs once: without this an agent upgrade would leave nas on
+    1.32.3 for good."""
+    agent, ops = _ops_with_storage(tmp_path, monkeypatch)
+    installs = []
+
+    def install(*_args, **_kwargs):
+        installs.append(True)
+        return {"path": fake, "version": tool.VERSION, "method": "binary"}
+
+    monkeypatch.setattr(tool, "install", install)
+    job = _job(tmp_path, action="reconcile", until_found=None)
+    _scenario(job, ask_password=False, new=1)
+    asyncio.run(
+        ops._job(job, {"path": "/old/icloudpd", "version": "1.32.3"})
+    )  # pylint: disable=protected-access
+    assert installs == [True]
+    data = agent.sent[-1]["data"]
+    assert data["status"] == runner.OK and data["tool_version"] == tool.VERSION
+
+
+def test_no_upgrade_while_another_accounts_job_runs(fake, tmp_path, monkeypatch):
+    """The install removes the old icloudpd, which another run may be using."""
+    agent, ops = _ops_with_storage(tmp_path, monkeypatch)
+    monkeypatch.setattr(tool, "install", _offline)  # would fail the test if used
+    ops._busy.add("icloud-other")  # pylint: disable=protected-access
+    job = _job(tmp_path, action="reconcile", until_found=None)
+    _scenario(job, ask_password=False, new=1)
+    asyncio.run(
+        ops._job(job, {"path": fake, "version": "1.32.3"})
+    )  # pylint: disable=protected-access
+    assert agent.sent[-1]["data"]["tool_version"] == "1.32.3"
+
+
+def test_a_failed_upgrade_runs_the_installed_one(fake, tmp_path, monkeypatch):
+    agent, ops = _ops_with_storage(tmp_path, monkeypatch)
+    monkeypatch.setattr(tool, "install", _offline)
+    job = _job(tmp_path, action="reconcile", until_found=None)
+    _scenario(job, ask_password=False, new=1)
+    asyncio.run(
+        ops._job(job, {"path": fake, "version": "1.32.3"})
+    )  # pylint: disable=protected-access
+    data = agent.sent[-1]["data"]
+    assert data["status"] == runner.OK and data["tool_version"] == "1.32.3"
+
+
+def _installed_marker(tmp_path, path, version):
+    os.makedirs(tool.tool_dir(str(tmp_path)), exist_ok=True)
+    tool._marker(  # pylint: disable=protected-access
+        str(tmp_path), {"path": path, "version": version, "method": "binary"}
+    )
+
+
+def _upgrading_install(tmp_path, fake, installs):
+    def install(*_args, **_kwargs):
+        installs.append(True)
+        _installed_marker(tmp_path, fake, tool.VERSION)
+        return {"path": fake, "version": tool.VERSION, "method": "binary"}
+
+    return install
+
+
+def test_the_agent_upgrades_icloudpd_to_its_pin_as_it_starts(
+    fake, tmp_path, monkeypatch
+):
+    """Every package restarts the agent after installing it: a new release's
+    pin reaches the host then, not at its next idle download."""
+    _agent, ops = _ops_with_storage(tmp_path, monkeypatch)
+    _installed_marker(tmp_path, fake, "1.32.3")
+    installs = []
+    monkeypatch.setattr(tool, "install", _upgrading_install(tmp_path, fake, installs))
+
+    async def start():
+        ops.start_upgrade()
+        ops.start_upgrade()  # once only
+        await ops._startup  # pylint: disable=protected-access
+
+    asyncio.run(start())
+    assert installs == [True]
+
+
+def test_nothing_is_installed_as_the_agent_starts_where_enable_never_ran(
+    tmp_path, monkeypatch
+):
+    _agent, ops = _ops_with_storage(tmp_path, monkeypatch)
+    monkeypatch.setattr(tool, "install", _offline)  # would fail the test if used
+
+    async def start():
+        ops.start_upgrade()
+        await ops._startup  # pylint: disable=protected-access
+
+    asyncio.run(start())
+
+
+def test_a_failed_upgrade_as_the_agent_starts_does_not_stop_it(
+    fake, tmp_path, monkeypatch
+):
+    _agent, ops = _ops_with_storage(tmp_path, monkeypatch)
+    _installed_marker(tmp_path, fake, "1.32.3")
+
+    def broken(*_args, **_kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(tool, "install", broken)
+
+    async def start():
+        ops.start_upgrade()
+        await ops._startup  # pylint: disable=protected-access
+
+    asyncio.run(start())  # logged, not raised
+
+
+def test_a_job_waits_for_the_upgrade_the_agent_started_with(
+    fake, tmp_path, monkeypatch
+):
+    """The upgrade removes the old icloudpd: a job must not start it meanwhile."""
+    agent, ops = _ops_with_storage(tmp_path, monkeypatch)
+    _installed_marker(tmp_path, fake, "1.32.3")
+    installs = []
+    upgrade = _upgrading_install(tmp_path, fake, installs)
+    release = threading.Event()
+
+    def slow_install(*args, **kwargs):
+        release.wait(5)
+        return upgrade(*args, **kwargs)
+
+    monkeypatch.setattr(tool, "install", slow_install)
+    job = _job(tmp_path, action="reconcile", until_found=None)
+    _scenario(job, ask_password=False, new=1)
+
+    async def start_then_run():
+        ops.start_upgrade()
+        while "enable" not in ops._busy:  # pylint: disable=protected-access
+            await asyncio.sleep(0.01)  # the start-up install is under way
+        ops._busy.add(job["dir_name"])  # pylint: disable=protected-access
+        asyncio.get_running_loop().call_later(0.1, release.set)
+        await ops._job(  # pylint: disable=protected-access
+            job, {"path": "/old/icloudpd", "version": "1.32.3"}
+        )
+
+    asyncio.run(start_then_run())
+    assert installs == [True]
+    data = agent.sent[-1]["data"]
+    assert data["status"] == runner.OK and data["tool_version"] == tool.VERSION
+
+
+def test_the_agent_starts_the_upgrade_only_where_icloudpd_is_offered(monkeypatch):
+    # pylint: disable=import-outside-toplevel
+    from src.sysmanage_agent.core import agent_lifecycle
+
+    started = []
+    host = SimpleNamespace(
+        _cloud_backup=lambda: SimpleNamespace(
+            start_upgrade=lambda: started.append(True)
+        ),
+        logger=SimpleNamespace(info=noop, warning=noop, error=noop),
+    )
+
+    async def nothing(*_args):
+        return None
+
+    monkeypatch.setattr(agent_lifecycle, "reconcile_inflight_journal", nothing)
+    monkeypatch.setattr(agent_lifecycle, "public_ip_refresh_service", nothing)
+    for system, expected in (("Linux", [True]), ("Darwin", []), ("Windows", [])):
+        started.clear()
+        monkeypatch.setattr(tool.platform, "system", lambda value=system: value)
+
+        async def start():
+            await agent_lifecycle.AgentLifecycleMixin._start_background_services(
+                host
+            )  # pylint: disable=protected-access
+
+        asyncio.run(start())
+        assert started == expected, system
+
+
+def test_the_agents_own_python_is_used_only_where_icloudpd_supports_it(monkeypatch):
+    """1.33.0 needs Python 3.11 to 3.15."""
+    on_path = {"python3.12": "/usr/bin/python3.12"}
+    for version, expected in (((3, 10, 9), "/usr/bin/python3.12"),
+                              ((3, 11, 0), "/agent/python"),
+                              ((3, 15, 1), "/agent/python"),
+                              ((3, 16, 0), "/usr/bin/python3.12")):  # fmt: skip
+        monkeypatch.setattr(
+            tool,
+            "sys",
+            SimpleNamespace(version_info=version, executable="/agent/python"),
+        )
+        assert tool.find_python(on_path.get) == expected, version
+
+
+def test_an_xmp_crash_is_tried_again_without_sidecars(fake, tmp_path, monkeypatch):
+    agent = _Agent()
+    ops = operations.CloudBackupOperations(agent, str(tmp_path))
+
+    async def make(_path, _storage):
+        return "dir"
+
+    monkeypatch.setattr(ops, "_make", make)
+    job = _job(tmp_path, action="reconcile", until_found=None)
+    _scenario(job, ask_password=False, xmp_crash=True, new=2)
+    # A host whose upgrade to the pin failed still runs 1.32.3.
+    monkeypatch.setattr(tool, "install", _offline)
+    asyncio.run(
+        ops._job(job, {"path": fake, "version": "1.32.3"})
+    )  # pylint: disable=protected-access
+    assert "--xmp-sidecar" not in _seen(job)["argv"]
+    data = agent.sent[-1]["data"]
+    assert data["status"] == runner.OK and data["downloaded"] == 2
+    assert "without XMP sidecar" in data["message"]
+
+
+def test_an_xmp_crash_is_not_retried_for_a_fixed_icloudpd(fake, tmp_path, monkeypatch):
+    agent = _Agent()
+    ops = operations.CloudBackupOperations(agent, str(tmp_path))
+
+    async def make(_path, _storage):
+        return "dir"
+
+    monkeypatch.setattr(ops, "_make", make)
+    job = _job(tmp_path, action="reconcile", until_found=None)
+    _scenario(job, ask_password=False, xmp_crash=True)
+    asyncio.run(
+        ops._job(job, {"path": fake, "version": tool.VERSION})
+    )  # pylint: disable=protected-access
+    assert "--xmp-sidecar" in _seen(job)["argv"]
+    assert agent.sent[-1]["data"]["reason"] == "xmp_crashed"
 
 
 # --- layout -------------------------------------------------------------------------
@@ -412,6 +712,12 @@ def test_transfers_keep_originals_and_edited_versions():
         assert sizes == ["original", "adjusted"], action
 
 
+def test_sidecars_are_asked_for_unless_turned_off():
+    job = dict(_job_dict(), action="reconcile", until_found=None)
+    assert "--xmp-sidecar" in layout.argv("/x/icloudpd", job)
+    assert "--xmp-sidecar" not in layout.argv("/x/icloudpd", job, xmp=False)
+
+
 def test_a_reconcile_is_a_full_pass():
     job = dict(_job_dict(), action="reconcile", until_found=None)
     assert "--until-found" not in layout.argv("/x/icloudpd", job)
@@ -437,16 +743,16 @@ def test_the_install_method_by_platform():
 
 
 def test_a_binary_install_is_checked_against_its_pin(tmp_path, monkeypatch):
-    body = b"#!/bin/sh\necho version:1.32.3, commit sha:x\n"
+    body = f"#!/bin/sh\necho version:{tool.VERSION}, commit sha:x\n".encode()
     monkeypatch.setitem(tool.BINARIES, "x86_64",
                         ("icloudpd-test", hashlib.sha256(body).hexdigest()))  # fmt: skip
 
     def run(argv, _timeout):
-        return 0, "version:1.32.3, commit sha:2035bb1"
+        return 0, f"version:{tool.VERSION}, commit sha:2035bb1"
 
     found = tool.install(str(tmp_path), run, get=lambda _n: body,
                          system="Linux", machine="x86_64")  # fmt: skip
-    assert found["method"] == "binary" and found["version"] == "1.32.3"
+    assert found["method"] == "binary" and found["version"] == tool.VERSION
     assert stat.S_IMODE(os.stat(tool.tool_dir(str(tmp_path))).st_mode) == 0o700
     assert tool.installed(str(tmp_path), _read)["path"] == found["path"]
     with pytest.raises(tool.ToolError) as caught:
@@ -465,7 +771,7 @@ def test_a_venv_install_uses_the_pinned_wheel(tmp_path, monkeypatch):
     def run(argv, _timeout):
         calls.append(argv)
         if argv[1:] == ["--version"]:
-            return 0, "version:1.32.3,"
+            return 0, f"version:{tool.VERSION},"
         if argv[1:3] == ["-m", "venv"]:
             os.makedirs(os.path.join(argv[-1], "bin"), exist_ok=True)
             script = os.path.join(argv[-1], "bin", "icloudpd")

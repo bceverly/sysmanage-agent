@@ -93,6 +93,33 @@ async def test_configure_installs_root_owned_job_files(ops):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("has_it", [True, False], ids=["hook-option", "older"])
+async def test_hook_options_go_only_to_a_restate_that_has_them(
+    ops, monkeypatch, has_it
+):
+    """restate 3.0.0.0+ takes postgresql.stop=never; an older one runs the hook
+    on its own settings (stop-and-copy), which is still a backup."""
+    keys = FEATURES["job_keys"] + (["hook_option"] if has_it else [])
+    monkeypatch.setattr(
+        BackupOperations,
+        "_features",
+        staticmethod(lambda: {**FEATURES, "job_keys": keys}),
+    )
+    rendered = []
+    real = contract.render_job
+    monkeypatch.setattr(
+        contract, "render_job", lambda job: rendered.append(job) or real(job)
+    )
+    policy = _host_policy(
+        jobs={"capture": {"quiesce": True, "hook_option": ["postgresql.stop=never"]},
+              "snapshots": {}}
+    )  # fmt: skip
+    assert (await ops.backup_configure(policy))["success"]
+    capture = next(job for job in rendered if job["command"] == "capture")
+    assert capture.get("hook_option") == (["postgresql.stop=never"] if has_it else None)
+
+
+@pytest.mark.asyncio
 async def test_configure_installs_the_key_and_points_capture_at_it(ops, monkeypatch):
     rendered = []
     real = contract.render_job

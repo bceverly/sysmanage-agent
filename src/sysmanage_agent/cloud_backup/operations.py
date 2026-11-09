@@ -89,6 +89,7 @@ class CloudBackupOperations:
         self.state_dir = state_dir
         self._tasks: set = set()
         self._busy: set = set()
+        self._startup: Optional[asyncio.Future] = None
 
     # --- helpers -------------------------------------------------------------
 
@@ -323,13 +324,91 @@ class CloudBackupOperations:
         if job["dir_name"] in self._busy:
             return self._refusal("busy", "a job for this account is already running")
         self._busy.add(job["dir_name"])
-        self._spawn(self._job(job, found["path"]))
+        self._spawn(self._job(job, found))
         return {"success": True, "started": True, "run_id": job["run_id"]}
 
-    async def _job(self, job: Dict[str, Any], executable: str) -> None:
+    # --- the upgrade as the agent starts ---------------------------------------------
+
+    def start_upgrade(self) -> None:
+        """Called once as the agent starts, which every package does after it
+        installs or upgrades the agent: an icloudpd that is not this release's
+        pin is upgraded now, before any job runs, not at the next idle
+        download.  A job that arrives meanwhile waits for it."""
+        if self._startup is None:
+            self._startup = asyncio.ensure_future(self._upgrade_at_start())
+
+    async def _upgrade_at_start(self) -> None:
+        try:
+            found = await asyncio.to_thread(tool.installed, self.state_dir, _read_text)
+            if found is None or found.get("version") == tool.VERSION:
+                return  # never enabled here, or already on the pin
+            logger.info("icloudpd %s is not this agent's pin %s: upgrading it",
+                        found.get("version"), tool.VERSION)  # fmt: skip
+            await self._pinned(found, "")
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("Upgrading icloudpd as the agent started failed")
+
+    async def _after_startup(self, found: Dict[str, Any]) -> Dict[str, Any]:
+        """What is installed once the start-up upgrade is done: it removes the
+        old icloudpd, so a job must not start that one meanwhile."""
+        startup = self._startup
+        if startup is None or startup.done():
+            return found
+        await asyncio.shield(startup)
+        return (
+            await asyncio.to_thread(tool.installed, self.state_dir, _read_text) or found
+        )
+
+    async def _pinned(self, found: Dict[str, Any], dir_name: str) -> Dict[str, Any]:
+        """The installed icloudpd, upgraded to the pin first when it is another
+        version: Enable installs once, and an agent upgrade alone would leave
+        the old one running.  Only while no other account's job runs (the
+        install removes the old one, a venv included) and no Enable does; a
+        failed upgrade leaves the old one to run, with a warning."""
+        if found.get("version") == tool.VERSION or self._busy - {dir_name}:
+            return found
+        self._busy.add("enable")
+        try:
+            loop = asyncio.get_running_loop()
+            upgraded = await loop.run_in_executor(
+                None, tool.install, self.state_dir, _blocking_run
+            )
+            logger.info(
+                "icloudpd upgraded from %s to %s",
+                found.get("version"),
+                upgraded["version"],
+            )
+            return upgraded
+        except tool.ToolError as error:
+            logger.warning(
+                "icloudpd stays at %s: the upgrade to %s failed: %s",
+                found.get("version"), tool.VERSION, error,
+            )  # fmt: skip
+            return found
+        finally:
+            self._busy.discard("enable")
+
+    async def _icloudpd(
+        self, job: Dict[str, Any], executable: str, xmp: bool
+    ) -> Dict[str, Any]:
+        run_id = job["run_id"]
+        return await runner.run(
+            layout.argv(executable, job, xmp=xmp),
+            action=job["action"],
+            session_dir=job["session_dir"],
+            password=lambda: self._password(run_id),
+            code=lambda: self._code(run_id),
+            progress=lambda data: self._progress(run_id, data),
+            cwd=job["session_dir"],
+        )
+
+    async def _job(self, job: Dict[str, Any], found: Dict[str, Any]) -> None:
         run_id, action = job["run_id"], job["action"]
         result: Dict[str, Any]
         try:
+            found = await self._after_startup(found)
+            found = await self._pinned(found, job["dir_name"])
+            executable, version = found["path"], found.get("version")
             os.makedirs(self._sessions(), exist_ok=True)
             os.makedirs(job["session_dir"], mode=0o700, exist_ok=True)
             # Owner-only, also when it already existed: one account's session.
@@ -340,15 +419,24 @@ class CloudBackupOperations:
             if transfer:
                 await self._make(job["directory"], job["storage_path"])
                 before = await asyncio.to_thread(library_size, job["directory"])
-            result = await runner.run(
-                layout.argv(executable, job),
-                action=action,
-                session_dir=job["session_dir"],
-                password=lambda: self._password(run_id),
-                code=lambda: self._code(run_id),
-                progress=lambda data: self._progress(run_id, data),
-                cwd=job["session_dir"],
-            )
+            result = await self._icloudpd(job, executable, xmp=True)
+            if (
+                transfer
+                and result.get("reason") == "xmp_crashed"
+                and version in layout.XMP_RETRY_VERSIONS
+            ):
+                logger.warning(
+                    "Cloud backup run %s: icloudpd crashed writing an XMP "
+                    "sidecar; trying again without sidecars",
+                    run_id,
+                )
+                result = await self._icloudpd(job, executable, xmp=False)
+                if result.get("status") == runner.OK and not result.get("message"):
+                    result["message"] = (
+                        "Downloaded without XMP sidecar files: icloudpd "
+                        f"{version} crashed writing one"
+                    )
+            result["tool_version"] = version
             if transfer:
                 photos, size = await asyncio.to_thread(library_size, job["directory"])
                 result.update(photos_local=photos, bytes_local=size,

@@ -6,8 +6,9 @@
 
 The version and every checksum are pinned HERE: the server sends no URL,
 version or file name, only "enable".  Upgrading is a new agent release that
-changes the pin, followed by an operator pressing "Enable iCloud backup"
-again -- never automatic.
+changes the pin: the agent upgrades an installed icloudpd to its pin as it
+starts (every package restarts it after an install or upgrade) and again
+before a job when the pin is still not what is installed.
 
 * **Linux x86_64 and aarch64 (glibc)** -- the release's own executable for
   the processor, checked against its pinned SHA-256 before it is kept;
@@ -15,7 +16,7 @@ again -- never automatic.
   other Linux processors) -- a venv of its own, from the release's
   pure-Python wheel, checked against its pinned SHA-256 before ``pip``
   installs it.  The wheel pins its own dependencies exactly; ``pip`` takes
-  them from PyPI.  It needs Python 3.10 to 3.13 on the host;
+  them from PyPI.  It needs Python 3.11 to 3.15 on the host;
 * **macOS and Windows** -- not offered (``wrong_platform``).
 
 Both live in the agent's own state directory, owned by the agent's account:
@@ -34,7 +35,7 @@ import sys
 import urllib.request
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-VERSION = "1.32.3"
+VERSION = "1.33.0"
 RELEASE_URL = (
     "https://github.com/icloud-photos-downloader/icloud_photos_downloader"
     f"/releases/download/v{VERSION}/"
@@ -42,21 +43,22 @@ RELEASE_URL = (
 BINARIES = {
     "x86_64": (
         f"icloudpd-{VERSION}-linux-amd64",
-        "cbe4de08f715a9b524795eccd75f33a97661cd27fa7f0282c58611d760fce093",
+        "f874d74eb4d0debc4c8b8a17f439a4d57a2228e9844e471420b9a97fceb6d964",
     ),
     "aarch64": (
         f"icloudpd-{VERSION}-linux-arm64",
-        "b869453b8282f50c9e7e79d96d1a11f1f9d126e8017b395fa62fd04e1acd3031",
+        "dd913354bdc7f95a5cd10f4a2f2ca549d218b493fc9a2660806c9a76e1b4bd82",
     ),
 }
 WHEEL = (
     f"icloudpd-{VERSION}-py3-none-any.whl",
-    "47435bb6e221255d8db620b7e83b1a588b0794d7e41d32448ac9b6d141828357",
+    "3ff27038ebc17105a5c75a4202e938d4485d80880f8e88b1b4f299e9edc000b8",
 )
 BINARY, VENV = "binary", "venv"
 SUPPORTED_SYSTEMS = ("Linux", "FreeBSD", "OpenBSD", "NetBSD")
-# icloudpd 1.32.3's own Requires-Python.
-PYTHONS = ("python3.13", "python3.12", "python3.11", "python3.10")
+# icloudpd 1.33.0's own Requires-Python (>=3.11, <3.16).
+PYTHONS = ("python3.15", "python3.14", "python3.13", "python3.12", "python3.11")
+PYTHON_RANGE = ((3, 11), (3, 15))
 MAX_DOWNLOAD = 128 * 1024 * 1024
 DOWNLOAD_SECONDS = 300
 PIP_SECONDS = 900
@@ -139,7 +141,7 @@ def run_unavailable_reason(
 
 
 def parse_version(text: str) -> Optional[str]:
-    """``1.32.3`` from ``version:1.32.3, commit sha:...``."""
+    """``1.33.0`` from ``version:1.33.0, commit sha:...``."""
     match = _VERSION_LINE.search(text or "")
     return match.group(1).rstrip(",") if match else None
 
@@ -175,7 +177,7 @@ def _write(path: str, body: bytes, mode: int) -> None:
 def find_python(which: Callable[[str], Optional[str]] = shutil.which) -> Optional[str]:
     """A Python icloudpd supports: this agent's own when it is one, else
     the newest on PATH."""
-    if (3, 10) <= sys.version_info[:2] <= (3, 13):
+    if PYTHON_RANGE[0] <= sys.version_info[:2] <= PYTHON_RANGE[1]:
         return sys.executable
     for name in PYTHONS:
         found = which(name)
@@ -244,7 +246,7 @@ def install(
         if python is None:
             raise ToolError(
                 "no_python",
-                "icloudpd needs Python 3.10 to 3.13 on this host; install one "
+                "icloudpd needs Python 3.11 to 3.15 on this host; install one "
                 "(for example: pkg install python311), then enable again",
             )
         name, digest = WHEEL

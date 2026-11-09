@@ -158,16 +158,30 @@ def account_job(
     return job
 
 
-# Every icloudpd 1.32.3 option that deletes anything: --auto-delete removes
-# local files whose photo is in iCloud's "Recently Deleted", and the other two
-# delete photos from iCloud itself.  Cloud backup is one-way -- iCloud to the
-# storage host, nothing ever deleted on either side -- so none of them is ever
-# passed, whatever the server sends (an older server could send auto_delete).
+# Every icloudpd 1.33.0 option that deletes anything: --auto-delete removes
+# local files whose photo is in iCloud's "Recently Deleted", the next two
+# delete photos from iCloud itself, and the --prune-orphans pair (new in
+# 1.33.0) move local files whose photo left a shared library into a
+# quarantine.  Cloud backup is one-way -- iCloud to the storage host, nothing
+# ever deleted on either side -- so none of them is ever passed, whatever the
+# server sends (an older server could send auto_delete).
 # Check this list again whenever tool.VERSION changes.
-NEVER = ("--auto-delete", "--delete-after-download", "--keep-icloud-recent-days")
+NEVER = (
+    "--auto-delete",
+    "--delete-after-download",
+    "--keep-icloud-recent-days",
+    "--prune-orphans",
+    "--prune-orphans-adopt-existing",
+)
+# icloudpd versions that crash writing an XMP sidecar for a photo whose
+# metadata is corrupt: a run that crashed so is tried again without
+# --xmp-sidecar (operations._job).  1.33.0 leaves such a field out instead
+# (upstream #1056); 1.32.3 stays listed for a host whose upgrade to the pin
+# failed and still runs it.
+XMP_RETRY_VERSIONS = ("1.32.3",)
 
 
-def argv(executable: str, job: Dict[str, Any]) -> list:
+def argv(executable: str, job: Dict[str, Any], xmp: bool = True) -> list:
     """The icloudpd command line.  Never a password: icloudpd asks for it
     (``--password-provider console``) and the runner answers on its stdin.
     Never the web UI (no listener), never a keyring, and never an option in
@@ -195,10 +209,11 @@ def argv(executable: str, job: Dict[str, Any]) -> list:
         # an adjustment made in Photos would not be in the backup.
         "--size", "original",
         "--size", "adjusted",
-        "--xmp-sidecar",
         "--keep-unicode-in-filenames",
         "--live-photo-mov-filename-policy", "suffix",
     ]  # fmt: skip
+    if xmp:
+        line.append("--xmp-sidecar")
     if action == "download" and job["until_found"]:
         line += ["--until-found", str(job["until_found"])]
     if any(option in line for option in NEVER):

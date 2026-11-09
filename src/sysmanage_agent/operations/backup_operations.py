@@ -158,6 +158,19 @@ def seal_argv(seal: Dict[str, Any], run_id: str) -> Optional[List[str]]:
     return None
 
 
+def _drop_hook_options(
+    jobs: Dict[str, Dict[str, Any]], features: Dict[str, Any]
+) -> List[str]:
+    """An older restate has no ``hook_option``: its hooks then run on their
+    own files' settings (``postgresql.stop=never`` falls back to stopping the
+    cluster for the copy), which is a backup still, never a refused policy.
+    What was left out."""
+    capture = jobs.get("capture") or {}
+    if "hook_option" in capture and not contract.supports(features, "hook_option"):
+        return capture.pop("hook_option")
+    return []
+
+
 def _wrong_platform(role: str) -> str:
     """Why this platform cannot take ``role``."""
     if platform.system() == "Darwin" and role != "host":
@@ -373,6 +386,14 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         for action in contract.GATED_COMMANDS & set(jobs):
             if not contract.supports_command(features, action):
                 del jobs[action]  # this restate cannot run it: no job file
+        dropped = _drop_hook_options(jobs, features)
+        if dropped:
+            self.logger.warning(
+                "Backup policy %s: this restate has no hook_option; its hooks "
+                "run on their own settings: %s",
+                policy_id,
+                ", ".join(dropped),
+            )
         missing = contract.unsupported_keys(
             features, [key for job in jobs.values() for key in job]
         )

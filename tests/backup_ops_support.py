@@ -12,12 +12,14 @@ that records argv and answers from a script; no sudo, systemctl or zfs runs.
 
 import asyncio
 import os
+import platform
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from src.sysmanage_agent.backup import job_runner
+from src.sysmanage_agent.backup import key_files
 from src.sysmanage_agent.backup import network_mounts
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.operations import backup_operations as ops_module
@@ -81,9 +83,13 @@ def agent():
 
 @pytest.fixture
 def ops(agent, tmp_path, monkeypatch):
+    # These tests are the Linux (systemd) driver on every CI leg, macOS
+    # included: the runner, the storage role and the key directory all
+    # follow platform.system() (key_files reads it at import).  A test of
+    # another OS patches platform.system again after this.
+    monkeypatch.setattr(platform, "system", lambda: "Linux")
+    monkeypatch.setattr(key_files, "SYSTEM", "Linux")
     backup = BackupOperations(agent, state_dir=str(tmp_path))
-    # The runner comes from platform.system(); these tests are the Linux
-    # (systemd) driver on every CI leg, macOS included.
     backup.runner = job_runner.SYSTEMD
     fake = FakeRun()
     monkeypatch.setattr(backup, "_run", fake)

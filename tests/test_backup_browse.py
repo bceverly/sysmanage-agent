@@ -68,3 +68,5 @@ def test_abilities_come_only_from_what_restate_lists():
            "result_members": ["capture.cache", "diff.changes", "list"]}  # fmt: skip
     assert contract.host_abilities(new) == ["list", "status", "cache"]
     assert contract.host_abilities(None) == []
+    # The server sends hook_option only to an agent that reported it.
+    assert contract.host_abilities({"job_keys": ["hook_option"]}) == ["hook_option"]

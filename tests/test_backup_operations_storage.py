@@ -580,6 +580,9 @@ def test_the_mount_table_is_the_hosts_not_the_agents(monkeypatch):
         )
 
     monkeypatch.setattr("src.sysmanage_agent.backup.mount_mixin._read_text", fake_read)
+    # /proc is Linux's: on the macOS CI leg the table comes from mount(8).
+    monkeypatch.setattr("src.sysmanage_agent.backup.mount_mixin.platform.system",
+                        lambda: "Linux")  # fmt: skip
     assert ops_module.BackupMountMixin._mounts() == {"/mnt/b": "nfs4"}
     assert read == ["/proc/1/mountinfo"]
 

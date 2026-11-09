@@ -122,6 +122,21 @@ def test_a_storage_target_must_be_a_directory():
         ({"rules": ["/etc/restate/../shadow"]}, "plain path"),
         ({"quiesce_with": ["Nextcloud"]}, "a-z0-9"),
         ({"quiesce_with": ["a b"]}, "a-z0-9"),
+        ({"hook_option": "postgresql.stop=never"}, "list"),
+        ({"hook_option": ["stop=never"]}, "HOOK.KEY=VALUE"),
+        ({"hook_option": ["postgresql.stop=sometimes"]}, "value it does not take"),
+        ({"hook_option": ["postgresql.stop=never\n"]}, "HOOK.KEY=VALUE"),
+        ({"hook_option": ["postgresql.dump_dir=/etc"]}, "not one the agent passes"),
+        (
+            {"hook_option": ["openbao.token_file=/etc/shadow"]},
+            "not one the agent passes",
+        ),
+        ({"hook_option": ["openbao.unseal_unit=a;b"]}, "value it does not take"),
+        ({"hook_option": ["mysql.stop=never"]}, "not one the agent passes"),
+        (
+            {"hook_option": ["openbao.address=https://vault.example.com:8200"]},
+            "value it does not take",
+        ),
         ({"tmpdir": "/tmp"}, "outside"),
         ({"tmpdir": "/var/tmp/restate"}, "outside"),
     ],
@@ -129,6 +144,16 @@ def test_a_storage_target_must_be_a_directory():
 def test_hostile_capture_keys_are_refused(job, why):
     with pytest.raises(v.PolicyError, match=why):
         _check(_params(jobs={"capture": job}))
+
+
+def test_hook_options_for_the_servers_databases_are_passed():
+    options = [
+        "postgresql.stop=never",
+        "openbao.unseal_unit=sysmanage-openbao-init",
+        "openbao.address=http://127.0.0.1:8200",
+    ]
+    checked = v.check_job("host", "capture", {"hook_option": options})
+    assert checked["hook_option"] == options
 
 
 @pytest.mark.parametrize(

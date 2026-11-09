@@ -77,6 +77,7 @@ SERVER_KEYS = {
         "baseline_content",
         "quiesce",
         "quiesce_with",
+        "hook_option",
         "one_file_system",
         "tmpdir",
         "syslog",
@@ -127,6 +128,27 @@ MAX_COUNT = 10000
 MAX_LIST = 64
 
 _NAME = re.compile(r"^[a-z0-9_-]{1,64}$")
+# The hook settings the server may give for one capture (``hook_option``,
+# HOOK.KEY=VALUE), each value held to what that setting takes.  The hooks
+# run as root, so nothing that names a file or a command is accepted: only
+# these, which choose between the hook's own behaviors.
+_UNIT = r"[A-Za-z0-9@_.:-]{1,128}"
+HOOK_OPTIONS = {
+    "postgresql": {
+        "stop": r"always|never",
+        "dump": r"auto|always|never",
+        "dump_limit": r"[0-9]{1,15}[KMGT]?",
+    },
+    "openbao": {
+        "storage": r"auto|raft|file",
+        "unseal_unit": _UNIT,
+        "unseal_wait": r"[0-9]{1,5}",
+        # Where the hook asks whether it is unsealed: this host's own OpenBAO
+        # only, never another address.
+        "address": r"https?://(127\.0\.0\.1|localhost|\[::1\]):[0-9]{1,5}",
+    },
+}
+_HOOK_OPTION = re.compile(r"^([a-z0-9_-]{1,64})\.([a-z0-9_]{1,64})=(.*)\Z")
 _ACCOUNT = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$")
 _REPO_DIR = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$")
 _SNAPSHOT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9:._-]{0,127}$")
@@ -252,6 +274,8 @@ def _string_value(key: str, value: Any) -> Any:
         if not all(isinstance(n, str) and _NAME.match(n) for n in names):
             raise PolicyError("quiesce_with names must match [a-z0-9_-]+")
         return names
+    if key == "hook_option":
+        return [check_hook_option(item) for item in _list(key, value)]
     if key == "tmpdir":
         return confined_path(value, TMP_ROOTS, key)
     if key == "copy_to":
@@ -259,6 +283,21 @@ def _string_value(key: str, value: Any) -> Any:
     if key == "snapshot":
         return check_snapshot(value)
     raise PolicyError(f"unknown key {key}")
+
+
+def check_hook_option(item: Any) -> str:
+    """One ``HOOK.KEY=VALUE``: a known hook's known setting, its value one
+    that setting takes."""
+    match = _HOOK_OPTION.match(item) if isinstance(item, str) else None
+    if not match:
+        raise PolicyError("hook_option must be HOOK.KEY=VALUE")
+    hook, setting, value = match.groups()
+    allowed = HOOK_OPTIONS.get(hook, {}).get(setting)
+    if allowed is None:
+        raise PolicyError(f"hook_option {hook}.{setting} is not one the agent passes")
+    if not re.fullmatch(allowed, value):
+        raise PolicyError(f"hook_option {hook}.{setting} has a value it does not take")
+    return item
 
 
 def check_value(key: str, value: Any) -> Any:

@@ -85,7 +85,15 @@ INT_KEYS = frozenset(
     {"keep_last", "keep_daily", "keep_weekly", "keep_monthly", "keep_yearly"}
 )
 LIST_KEYS = frozenset(
-    {"rules", "quiesce_with", "include", "exclude", "trusted_key", "include_mount"}
+    {
+        "rules",
+        "quiesce_with",
+        "hook_option",
+        "include",
+        "exclude",
+        "trusted_key",
+        "include_mount",
+    }
 )
 SCALAR_KEYS = frozenset(
     {
@@ -169,7 +177,12 @@ def features_usable(features: Optional[Dict[str, Any]]) -> bool:
 # the policy (``tool_outdated``), never given a prune without the yearly rule.
 # ``include_mount`` (after 2.2.0.14): a network mount an operator's keep path
 # leads into, walked by a restate that otherwise skips network mounts.
-GATED_KEYS = frozenset({"create", "plan", "keep_yearly", "include_mount"})
+# ``hook_option`` (3.0.0.0): a hook's setting for one capture
+# (``postgresql.stop=never``); without it the hook runs on its own file's
+# settings, so the agent leaves it out for an older restate (backup_operations).
+GATED_KEYS = frozenset(
+    {"create", "plan", "keep_yearly", "include_mount", "hook_option"}
+)
 
 
 def supports(features: Optional[Dict[str, Any]], key: str) -> bool:
@@ -215,6 +228,11 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     if supports(features, "packages"):
         # A restore puts the snapshot's packages back first (Pro+ 24.6).
         found.append("packages")
+    if supports(features, "hook_option"):
+        # A hook's setting for one capture (restate 3.0.0.0): the server's own
+        # policy keeps its PostgreSQL running (25.9).  Reported by this agent
+        # only, so the server never sends the key to one that would refuse it.
+        found.append("hook_option")
     return found
 
 

@@ -81,11 +81,23 @@ WEB_ACCESS_MARKERS = (
 # Apple answered 503: it limits how fast one account downloads.  The server
 # waits it out and tries again by itself (cloud_backup_tick, "apple_busy").
 # "Cannot connect" is the connection to iCloud lost partway, also logged with
-# exit 0 (production, 2026-11-06 13:52 UTC): retried the same way.
+# exit 0 (production, 2026-11-06 13:52 UTC): retried the same way.  Only a
+# message that STARTS with one ended the run: icloudpd 1.33.0 also logs a
+# lost connection for one file ("Could not connect to iCloud to download X:
+# Cannot connect to Apple iCloud service"), skips that file and carries on.
 APPLE_BUSY_MARKERS = (
     "Apple iCloud is temporary refusing to serve icloudpd",
     "Cannot connect to Apple iCloud service",
 )
+# iCloud's listing ended before the count it reported (icloudpd 1.33.0,
+# upstream #1390; exit 1): not everything was seen, so this is no full pass.
+LISTING_SHORT = "iCloud listed only "
+# icloudpd's own crash.  Its traceback is kept even after a DEBUG line, and
+# a crash in xmp_sidecar.py (1.32.3 on a photo whose metadata Apple stored
+# corrupt, production 2026-11-08) is told apart: the run is tried again
+# without --xmp-sidecar (layout.XMP_RETRY_VERSIONS).
+_CRASH_START = ("Traceback (most recent call last)", "[PYI-")
+_XMP_FRAME = "icloudpd/xmp_sidecar.py"
 
 
 class Outcome:
@@ -108,6 +120,8 @@ class Outcome:
         self.sign_in_refused = False
         self.web_access_off = False
         self.apple_busy = False
+        self.listing_short = False
+        self.xmp_crashed = False
         self.started = time.monotonic()
 
     def stop(self, status: str, reason: str, message: str) -> None:
@@ -163,7 +177,8 @@ def classify_line(outcome: Outcome, line: str, action: str, scrub) -> None:
         if level != "DEBUG":
             outcome.sign_in_refused |= any(m in message for m in SIGN_IN_MARKERS)
             outcome.web_access_off |= any(m in message for m in WEB_ACCESS_MARKERS)
-            outcome.apple_busy |= any(m in message for m in APPLE_BUSY_MARKERS)
+            outcome.apple_busy |= message.startswith(APPLE_BUSY_MARKERS)
+            outcome.listing_short |= message.startswith(LISTING_SHORT)
         if level != "DEBUG":
             outcome.tail.append(line)
         return
@@ -175,6 +190,10 @@ def classify_line(outcome: Outcome, line: str, action: str, scrub) -> None:
     ):
         outcome.libraries.append(stripped)
         return
+    if stripped.startswith(_CRASH_START):
+        outcome.last_level = "CRASH"
+    if outcome.last_level == "CRASH" and _XMP_FRAME in stripped:
+        outcome.xmp_crashed = True
     # A line that continues a DEBUG message (a dumped Apple response runs
     # over many lines) is dropped with it.
     if outcome.last_level != "DEBUG":
@@ -188,7 +207,7 @@ def judge(outcome: Outcome, action: str) -> None:
     if outcome.status is not None:
         return
     text = "\n".join(outcome.tail)
-    if outcome.apple_busy or any(marker in text for marker in APPLE_BUSY_MARKERS):
+    if outcome.apple_busy:
         # Before the exit: icloudpd 1.32.3 can log Apple's refusal and still
         # exit 0, and judged on the exit, nas's first full pass (2026-11-06)
         # was recorded as complete at about half the library.
@@ -209,6 +228,19 @@ def judge(outcome: Outcome, action: str) -> None:
                          "they are tried again next time")  # fmt: skip
         else:
             outcome.stop(OK, None, None)
+        return
+    if outcome.listing_short:
+        outcome.stop(
+            FAILED,
+            "listing_incomplete",
+            "iCloud ended its list of photos early, so not every photo was "
+            "seen. Nothing is lost: the rest is downloaded on the next run.",
+        )
+        return
+    if outcome.xmp_crashed:
+        outcome.stop(FAILED, "xmp_crashed",
+                     "icloudpd crashed while writing a photo's metadata (XMP) "
+                     "file")  # fmt: skip
         return
     if outcome.sign_in_refused or any(marker in text for marker in SIGN_IN_MARKERS):
         outcome.stop(

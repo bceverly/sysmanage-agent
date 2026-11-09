@@ -19,6 +19,7 @@ the extraction has to leave the file rather than just move within it.
 import asyncio
 
 from src.i18n import _
+from src.sysmanage_agent.cloud_backup import tool as cloud_tool
 from src.sysmanage_agent.collection.public_ip_fetcher import public_ip_refresh_service
 from src.sysmanage_agent.core.agent_utils import reconcile_inflight_journal
 
@@ -58,6 +59,14 @@ class AgentLifecycleMixin:
         # 24h to catch dynamic-IP rotations.  On airgapped agents the fetch
         # silently returns None and the heartbeat just omits public_ip -- no
         # penalty.
+        # The pinned icloudpd (24.12): a host with iCloud backup enabled moves
+        # to this release's pin as the agent starts, before any job runs.
+        try:
+            if cloud_tool.method() is not None:
+                self._cloud_backup().start_upgrade()
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.warning("Could not start the icloudpd upgrade: %s", error)
+
         try:
             self._public_ip_task = asyncio.create_task(public_ip_refresh_service())
             self.logger.info("Public-IP refresh service started")

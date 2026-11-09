@@ -11,6 +11,7 @@ it got, so "presented" means a server actually saw it.
 # pylint: disable=redefined-outer-name,protected-access
 
 import socket
+import ssl
 import time
 from datetime import timedelta
 from types import SimpleNamespace
@@ -57,6 +58,14 @@ def _connect(endpoint, port):
     with socket.create_connection(("127.0.0.1", port), timeout=5) as raw:
         with context.wrap_socket(raw, server_hostname="localhost") as conn:
             conn.sendall(b"x")
+            # Until the server closes: it reads the certificate only after the
+            # client's handshake is done, and Windows answers a close with
+            # unread data (the TLS 1.3 session tickets) with a reset that
+            # discards it before the server's handshake gets it.
+            try:
+                conn.recv(1)
+            except (OSError, ssl.SSLError):
+                pass
 
 
 def _endpoint(port, store):
