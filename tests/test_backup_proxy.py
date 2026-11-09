@@ -292,6 +292,15 @@ async def test_a_grant_outlives_neither_its_host_nor_the_proxy(remote):
     assert not remote.fake.ran("rm", "-f", "--", other)
 
 
+@pytest.mark.asyncio
+async def test_an_audit_that_could_not_run_is_reported_as_none(remote, monkeypatch):
+    # Windows has no pwd: the audit says it could not run, and the proxy's
+    # findings alone are never passed off as the whole audit.
+    monkeypatch.setattr(remote, "_audit", lambda _entry: None)
+    answer = await remote.backup_configure(_storage())
+    assert answer["storage_audit"] is None
+
+
 def test_the_proxy_certificate_is_audited():
     assert access.certificate_finding(_cert(90))["level"] == "ok"
     assert access.certificate_finding(_cert(5))["params"]["problem"] == "expiring"

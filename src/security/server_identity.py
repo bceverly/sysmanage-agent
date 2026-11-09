@@ -64,10 +64,14 @@ def _proxy_for(endpoint) -> Optional[Tuple[str, int]]:
 def _connection(endpoint, context) -> http.client.HTTPSConnection:
     port = endpoint.port or 443
     proxy = _proxy_for(endpoint)
+    # ``context`` verifies the certificate (the rule is about Python before
+    # 3.4.3, which verified nothing by default).
     if proxy is None:
+        # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
         return http.client.HTTPSConnection(
             endpoint.host, port, context=context, timeout=FETCH_TIMEOUT_SECONDS
         )
+    # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
     conn = http.client.HTTPSConnection(
         proxy[0], proxy[1], context=context, timeout=FETCH_TIMEOUT_SECONDS
     )

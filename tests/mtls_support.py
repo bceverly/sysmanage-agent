@@ -171,7 +171,13 @@ def identity_document(
     ).encode("utf-8")
     signer = sign_with or identity_key
     if isinstance(signer, rsa.RSAPrivateKey):
-        signature = signer.sign(statement, padding.PKCS1v15(), hashes.SHA256())
+        signature = signer.sign(
+            statement,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH
+            ),
+            hashes.SHA256(),
+        )
     else:
         signature = signer.sign(statement, ec.ECDSA(hashes.SHA256()))
     return {

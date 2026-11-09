@@ -120,9 +120,12 @@ class SelfBackupMixin:
             )
         if role == "storage":
             # restate-proxy (25.5): the proxy, its certificate and the grants.
-            reply["storage_audit"] = self._audit(entry) + await self._proxy_audit(
-                policy
-            )
+            # An audit that could not run stays None, so the server keeps
+            # what it last knew rather than taking the proxy's part as all.
+            findings = self._audit(entry)
+            if findings is not None:
+                findings += await self._proxy_audit(policy)
+            reply["storage_audit"] = findings
             # Where a host mounts its repository over NFSv4 (the server
             # sends it to the host, which mounts it only while a job runs).
             reply["nfs_path"] = storage_audit.client_path(

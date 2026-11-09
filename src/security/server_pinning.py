@@ -188,11 +188,17 @@ def _check_identity_certificate(
         )
 
 
+# The server signs with PSS (MGF1-SHA256, salt the digest's length).
+_PSS = padding.PSS(
+    mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH
+)
+
+
 def _check_signature(identity: x509.Certificate, statement: bytes, sig: bytes):
     key = identity.public_key()
     try:
         if isinstance(key, rsa.RSAPublicKey):
-            key.verify(sig, statement, padding.PKCS1v15(), hashes.SHA256())
+            key.verify(sig, statement, _PSS, hashes.SHA256())
         elif isinstance(key, ec.EllipticCurvePublicKey):
             key.verify(sig, statement, ec.ECDSA(hashes.SHA256()))
         else:
