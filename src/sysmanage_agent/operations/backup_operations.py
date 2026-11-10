@@ -173,6 +173,33 @@ def _drop_hook_options(
     return []
 
 
+def _through_proxy(
+    jobs: Dict[str, Dict[str, Any]],
+    policy: Dict[str, Any],
+    proxy_state: Dict[str, Any],
+    features: Dict[str, Any],
+) -> List[str]:
+    """Point the capture and its snapshot listing at the proxy when this
+    host captures through it (25.5): the URL, the token file and the CA or
+    pin instead of the mount.  ``create`` goes: through a proxy restate
+    cannot make a repository, so the storage host's prepare makes it.  The
+    actions that now go through the proxy."""
+    tokens = proxy_state.get("proxy_tokens")
+    if not repository_choice.captures_remote(policy, tokens, features):
+        return []
+    proxy = policy["proxy"]
+    moved = []
+    for action in repository_choice.REMOTE_JOBS:
+        job = jobs.get(action)
+        if job is None:
+            continue
+        job["repository"] = proxy["url"]
+        job.pop("create", None)
+        job.update(proxy_access.job_keys(policy["policy_id"], proxy, False))
+        moved.append(action)
+    return moved
+
+
 def _saved_proxy(proxy: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """What policies.json keeps of the proxy block: a CA only as a flag."""
     if proxy is None:
@@ -381,6 +408,19 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
 
     async def _apply_policy(self, policy: Dict[str, Any]) -> Dict[str, Any]:
         policy_id = policy["policy_id"]
+        if (
+            policy["encrypt_key"]
+            and policy["role"] in validation.CAPTURING_ROLES
+            and not contract.can_encrypt(self._features())
+        ):
+            # Said now, not as a failed capture every night (lab, 2026-11-10).
+            return self._refusal(
+                restate_probe.REASON_MISSING_TOOL,
+                _(
+                    "This host cannot encrypt its backups: restate does not find "
+                    "gpg. Install GnuPG, and the backup policy is sent again."
+                ),
+            )
         if policy["encrypt_key"]:
             await self._install_root_file(
                 policy["encrypt_key"], contract.key_path(policy_id)
@@ -390,6 +430,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         features = self._features() or {}
         network_rules, network = await self._apply_network_rules(policy, features)
         self_points = await self._apply_self_rules(policy)
+        # restate-proxy first (25.5): a capture through it needs the token.
+        proxy_state = await self._apply_proxy(policy, features)
         jobs = job_builder.build_jobs(
             policy,
             state_dir=self.state_dir,
@@ -402,6 +444,16 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         for action in contract.GATED_COMMANDS & set(jobs):
             if not contract.supports_command(features, action):
                 del jobs[action]  # this restate cannot run it: no job file
+        remote_jobs = _through_proxy(jobs, policy, proxy_state, features)
+        if platform.system() in job_runner.NO_NFSV4 and "capture" not in remote_jobs:
+            # No NFSv4 client to mount the repository with (25.5).
+            return self._refusal(
+                restate_probe.REASON_NO_NFSV4_CLIENT,
+                _(
+                    "This host has no NFSv4 client, so it backs up only "
+                    "through restate-proxy; its target uses NFS."
+                ),
+            )
         dropped = _drop_hook_options(jobs, features)
         if dropped:
             self.logger.warning(
@@ -423,7 +475,6 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
         removed = await self._remove_stale(policy_id, set(jobs))
-        proxy_state = await self._apply_proxy(policy, features)
         policies = self._load(POLICIES_FILE)
         policies[policy_id] = {
             "role": policy["role"],
@@ -443,6 +494,13 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             # host's tokens (never a token); a CA is kept as a file, not here.
             "proxy": _saved_proxy(policy.get("proxy")),
             "proxy_tokens": proxy_state.get("proxy_tokens"),
+            # The public key a storage host's prepare makes a proxy host's
+            # repository encrypted to (restate init --encrypt-to).
+            "encrypt_to": (
+                contract.key_path(policy_id) if policy["encrypt_key"] else None
+            ),
+            # The configured jobs that go through the proxy: never mounted.
+            "remote_jobs": remote_jobs,
         }
         self._save(POLICIES_FILE, policies)
         reply = {
@@ -521,7 +579,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             policies = self._load(POLICIES_FILE)
             policies.setdefault(policy_id, {})["network_excluded"] = excluded
             self._save(POLICIES_FILE, policies)
-        return await self._start_job(run_id, policy_id, action)
+        remote = action in (policy.get("remote_jobs") or [])
+        return await self._start_job(run_id, policy_id, action, remote=remote)
 
     async def _start_browse(
         self,

@@ -115,3 +115,10 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/nginx, /usr/bin/nginx
 # ships 1.9.15).  The export is mounted and unmounted with the mount, umount
 # and mkdir grants above.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/restate ^run /etc/restate/jobs\.d/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(prune|check|copy|du|repack|protect|sign|signatures|capture|estimate|snapshots|restore|list|status|diff)\.conf$
+# restate-proxy (server ROADMAP 25.5): a storage host's prepare makes the
+# repository of a host that backs up through the proxy, which restate cannot
+# do from the host: ``restate init [--encrypt-to <policy key>] <repository>``
+# (the policy's PUBLIC key, which restate seals the chunk key to), an absolute path with no
+# component starting with a dot (so no ``..``).  restate init only ever makes
+# a new repository in an empty or missing directory; it refuses anything else.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/restate ^init (--encrypt-to /etc/restate/keys/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.asc )?/[A-Za-z0-9_-]+(/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$

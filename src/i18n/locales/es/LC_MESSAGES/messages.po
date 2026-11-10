@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 11:48-0500\n"
+"POT-Creation-Date: 2026-11-10 13:18-0800\n"
 "Language: es\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -125,36 +125,36 @@ msgid "Restart the agent; it pins the server again on its next connection."
 msgstr ""
 "Reinicie el agente; volverá a fijar el servidor en su próxima conexión."
 
-#: src/security/server_identity.py:95
+#: src/security/server_identity.py:99
 #, python-format
 msgid "The server identity request failed: HTTP %s"
 msgstr "La solicitud de identidad del servidor falló: HTTP %s"
 
-#: src/security/server_identity.py:101 src/security/server_pinning.py:160
+#: src/security/server_identity.py:105 src/security/server_pinning.py:160
 #: src/security/server_pinning.py:164 src/security/server_pinning.py:169
-#: src/security/server_pinning.py:173 src/security/server_pinning.py:245
+#: src/security/server_pinning.py:173 src/security/server_pinning.py:251
 msgid "The server identity response is incomplete"
 msgstr "La respuesta de identidad del servidor está incompleta"
 
-#: src/security/server_identity.py:124
+#: src/security/server_identity.py:128
 msgid "The server cannot state its TLS identity yet; pinning will be retried"
 msgstr ""
 "El servidor todavía no puede declarar su identidad TLS; se volverá a "
 "intentar la fijación"
 
-#: src/security/server_identity.py:129
+#: src/security/server_identity.py:133
 #, python-format
 msgid "Could not pin this server's identity: %s. Pinning will be retried."
 msgstr ""
 "No se pudo fijar la identidad de este servidor: %s. Se volverá a intentar la"
 " fijación."
 
-#: src/security/server_identity.py:134
+#: src/security/server_identity.py:138
 msgid "Pinned this server's identity; its TLS certificate is now checked"
 msgstr ""
 "Se fijó la identidad de este servidor; ahora se comprueba su certificado TLS"
 
-#: src/security/server_identity.py:150
+#: src/security/server_identity.py:154
 msgid ""
 "The server's TLS certificate changed, but the server cannot state its TLS "
 "identity right now; keeping the current pins and trying again later"
@@ -163,7 +163,7 @@ msgstr ""
 "su identidad TLS en este momento; se conservan los pines actuales y se "
 "volverá a intentar más tarde"
 
-#: src/security/server_identity.py:159
+#: src/security/server_identity.py:163
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
@@ -177,7 +177,7 @@ msgstr ""
 "fijarlo deliberadamente: elimine %s o ejecute el comando de restablecimiento"
 " del agente y luego reinicie el agente."
 
-#: src/security/server_identity.py:172
+#: src/security/server_identity.py:176
 msgid ""
 "The server's TLS certificate changed; the new one is signed by this server's"
 " identity and is now trusted"
@@ -185,7 +185,7 @@ msgstr ""
 "El certificado TLS del servidor cambió; el nuevo está firmado por la "
 "identidad de este servidor y ahora es de confianza"
 
-#: src/security/server_identity.py:200
+#: src/security/server_identity.py:204
 #, python-format
 msgid "Could not re-pin this server's identity: %s"
 msgstr "No se pudo volver a fijar la identidad de este servidor: %s"
@@ -216,32 +216,32 @@ msgid "The server's identity certificate is outside its validity period"
 msgstr ""
 "El certificado de identidad del servidor está fuera de su período de validez"
 
-#: src/security/server_pinning.py:200
+#: src/security/server_pinning.py:206
 msgid "The server's identity certificate uses an unsupported key type"
 msgstr ""
 "El certificado de identidad del servidor usa un tipo de clave no compatible"
 
-#: src/security/server_pinning.py:204
+#: src/security/server_pinning.py:210
 msgid ""
 "The server identity statement is not signed by its identity certificate"
 msgstr ""
 "La declaración de identidad del servidor no está firmada por su certificado "
 "de identidad"
 
-#: src/security/server_pinning.py:213 src/security/server_pinning.py:216
-#: src/security/server_pinning.py:221
+#: src/security/server_pinning.py:219 src/security/server_pinning.py:222
+#: src/security/server_pinning.py:227
 msgid "The server identity statement is not readable"
 msgstr "La declaración de identidad del servidor no se puede leer"
 
-#: src/security/server_pinning.py:218
+#: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
 msgstr "La declaración de identidad del servidor ha caducado"
 
-#: src/security/server_pinning.py:255
+#: src/security/server_pinning.py:261
 msgid "The server's CA is not the CA this agent has pinned"
 msgstr "La CA del servidor no es la CA que este agente ha fijado"
 
-#: src/security/server_pinning.py:262
+#: src/security/server_pinning.py:268
 msgid ""
 "The certificate on this connection is not one the server's signed statement "
 "lists"
@@ -274,15 +274,25 @@ msgstr ""
 msgid "restate is not installed on this host."
 msgstr "restate no está instalado en este host."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:117
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:122
 msgid "That backup job is already running."
 msgstr "Esa tarea de copia de seguridad ya está en ejecución."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:139
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:144
 msgid "The backup job could not be started."
 msgstr "No se pudo iniciar la tarea de copia de seguridad."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:227
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
+msgstr ""
+"restate se detuvo (código de salida %(code)s) antes de escribir un "
+"resultado, y su registro %(log)s está vacío: se detuvo, o la máquina se "
+"reinició, mientras se ejecutaba"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -291,7 +301,7 @@ msgstr ""
 "restate se detuvo (salida %(code)s) antes de escribir un resultado; consulte"
 " journalctl -u %(unit)s en este host"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:271
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:285
 msgid "Could not queue the backup report"
 msgstr "No se pudo poner en cola el informe de copia de seguridad"
 
@@ -399,35 +409,39 @@ msgid "Could not unmount the backup storage at %s: %s"
 msgstr ""
 "No se pudo desmontar el almacenamiento de copias de seguridad en %s: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:86
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "No se pudieron enumerar las instantáneas selladas: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:101
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:102
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr ""
 "No se pudo eliminar la instantánea sellada antigua %(name)s: %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:176
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:182
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s no está montado en %(path)s en este host"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:213
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:197
+msgid "restate is not installed on this storage host"
+msgstr "restate no está instalado en este host de almacenamiento"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:240
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 "No se pudo preparar el almacenamiento de copias de seguridad para la "
 "política %s: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:286
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "No se pudo ejecutar la auditoría del almacenamiento: %s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:122
+#: src/sysmanage_agent/backup/storage_prepare.py:137
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -436,7 +450,7 @@ msgstr ""
 "La cuenta de servicio de copias de seguridad %(account)s (usuario y grupo) "
 "no existe en este host de almacenamiento. Créela y vuelva a preparar."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:152
+#: src/sysmanage_agent/backup/storage_prepare.py:167
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -446,7 +460,7 @@ msgstr ""
 "de seguridad. Ejecute el agente como root o mueva el directorio a otro "
 "lugar, y vuelva a preparar."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:163
+#: src/sysmanage_agent/backup/storage_prepare.py:178
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -460,7 +474,7 @@ msgstr ""
 "nuevo dataset como root; o 2) elimínelo si esas copias de seguridad ya no se"
 " necesitan."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:171
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -474,7 +488,7 @@ msgstr ""
 "nuevo subvolumen como root; o 2) elimínelo si esas copias de seguridad ya no"
 " se necesitan."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:206
+#: src/sysmanage_agent/backup/storage_prepare.py:223
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -484,12 +498,12 @@ msgstr ""
 "exportación no puede limitarse a ella. Espere a que ese host informe sus "
 "datos de red y vuelva a preparar."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:217
+#: src/sysmanage_agent/backup/storage_prepare.py:234
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "La preparación del almacenamiento no es compatible con %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:225
+#: src/sysmanage_agent/backup/storage_prepare.py:242
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -498,7 +512,7 @@ msgstr ""
 "cada host necesita su propio dataset ZFS. Ponga la ruta de almacenamiento en"
 " ZFS y vuelva a preparar."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:303
+#: src/sysmanage_agent/backup/storage_prepare.py:345
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -509,7 +523,7 @@ msgstr ""
 " que un dataset hijo no quedaría en el repositorio. Cree un dataset montado "
 "ahí (zfs create -o mountpoint=%(path)s POOL/NAME) y vuelva a preparar."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:330
+#: src/sysmanage_agent/backup/storage_prepare.py:372
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -2366,7 +2380,7 @@ msgstr ""
 msgid "Could not determine hostname, using fallback: %s"
 msgstr "No se pudo determinar el nombre del host, usando la alternativa: %s"
 
-#: src/sysmanage_agent/core/agent_lifecycle.py:54
+#: src/sysmanage_agent/core/agent_lifecycle.py:55
 #, python-format
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "La reconciliación del diario en vuelo falló: %s"
@@ -2641,36 +2655,52 @@ msgstr "Error recopilando registros del agente: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Error recopilando registros de error: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:164
+#: src/sysmanage_agent/operations/backup_operations.py:213
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr ""
 "Un Mac solo puede ser un host respaldado, no un host de almacenamiento de "
 "copias de seguridad."
 
-#: src/sysmanage_agent/operations/backup_operations.py:165
+#: src/sysmanage_agent/operations/backup_operations.py:214
 msgid "This platform cannot take that backup role."
 msgstr "Esta plataforma no puede asumir esa función de copia de seguridad."
 
-#: src/sysmanage_agent/operations/backup_operations.py:309
+#: src/sysmanage_agent/operations/backup_operations.py:365
 msgid "That backup action is not configured on this host."
 msgstr "Esa acción de copia de seguridad no está configurada en este host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:317
+#: src/sysmanage_agent/operations/backup_operations.py:373
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate no es utilizable en este host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:350
+#: src/sysmanage_agent/operations/backup_operations.py:406
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "No se pudieron instalar las tareas de copia de seguridad: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:382
+#: src/sysmanage_agent/operations/backup_operations.py:420
+msgid ""
+"This host cannot encrypt its backups: restate does not find gpg. Install "
+"GnuPG, and the backup policy is sent again."
+msgstr ""
+"Este host no puede cifrar sus copias de seguridad: restate no encuentra gpg."
+" Instale GnuPG y la política de copia de seguridad se envía nuevamente."
+
+#: src/sysmanage_agent/operations/backup_operations.py:453
+msgid ""
+"This host has no NFSv4 client, so it backs up only through restate-proxy; "
+"its target uses NFS."
+msgstr ""
+"Este host no tiene cliente NFSv4, por lo que solo realiza copias de "
+"seguridad a través de restate-proxy; su objetivo utiliza NFS."
+
+#: src/sysmanage_agent/operations/backup_operations.py:471
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Esta versión de restate no admite: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:498
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Este restate no puede ejecutar %s como tarea; actualice restate."
@@ -4033,7 +4063,7 @@ msgstr "Anuncio JSON no válido de fuente desconocida"
 msgid "Error listening for announcements: %s"
 msgstr "Error escuchando anuncios: %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:164
+#: src/sysmanage_agent/registration/host_certificate.py:170
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
@@ -4044,7 +4074,7 @@ msgstr ""
 "host (%s). El agente no lo reemplaza por sí mismo; un administrador debe "
 "revisar este host en el servidor."
 
-#: src/sysmanage_agent/registration/host_certificate.py:174
+#: src/sysmanage_agent/registration/host_certificate.py:180
 #, python-format
 msgid ""
 "The server requires a certificate from this host and refused the connection "
@@ -4053,7 +4083,7 @@ msgstr ""
 "El servidor exige un certificado de este host y rechazó la conexión sin él "
 "(%s); se solicita un certificado ahora."
 
-#: src/sysmanage_agent/registration/host_certificate.py:182
+#: src/sysmanage_agent/registration/host_certificate.py:188
 #, python-format
 msgid ""
 "The server refused this host's certificate because it has expired (%s); "
@@ -4062,20 +4092,20 @@ msgstr ""
 "El servidor rechazó el certificado de este host porque ha caducado (%s); se "
 "solicita un certificado nuevo ahora."
 
-#: src/sysmanage_agent/registration/host_certificate.py:196
+#: src/sysmanage_agent/registration/host_certificate.py:202
 #, python-format
 msgid "Certificate check failed: %s"
 msgstr "Falló la comprobación del certificado: %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:267
+#: src/sysmanage_agent/registration/host_certificate.py:273
 msgid "The server's certificate response is not usable"
 msgstr "La respuesta de certificado del servidor no se puede usar"
 
-#: src/sysmanage_agent/registration/host_certificate.py:272
+#: src/sysmanage_agent/registration/host_certificate.py:278
 msgid "The server issued a certificate for a different key"
 msgstr "El servidor emitió un certificado para una clave distinta"
 
-#: src/sysmanage_agent/registration/host_certificate.py:279
+#: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
 "changed server TLS certificate will not be accepted until the pins are reset"
@@ -4085,17 +4115,17 @@ msgstr ""
 "No se aceptará un certificado TLS del servidor cambiado hasta que los pines "
 "se restablezcan deliberadamente."
 
-#: src/sysmanage_agent/registration/host_certificate.py:288
+#: src/sysmanage_agent/registration/host_certificate.py:294
 #, python-format
 msgid "This host's certificate was issued; it is valid until %s"
 msgstr "Se emitió el certificado de este host; es válido hasta el %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:303
+#: src/sysmanage_agent/registration/host_certificate.py:309
 #, python-format
 msgid "No certificate yet: this host is not approved (%s)"
 msgstr "Todavía no hay certificado: este host no está aprobado (%s)"
 
-#: src/sysmanage_agent/registration/host_certificate.py:308
+#: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
 "The server says this host's certificate is still current but did not receive"
@@ -4106,7 +4136,7 @@ msgstr ""
 " recibió (%s). Algo entre el agente y el servidor podría estar eliminándolo;"
 " el agente conserva el certificado y volverá a preguntar más tarde."
 
-#: src/sysmanage_agent/registration/host_certificate.py:317
+#: src/sysmanage_agent/registration/host_certificate.py:323
 #, python-format
 msgid "The server did not issue a certificate: HTTP %s, %s"
 msgstr "El servidor no emitió un certificado: HTTP %s, %s"

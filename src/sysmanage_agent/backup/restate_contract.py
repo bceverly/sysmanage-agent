@@ -238,17 +238,43 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
         # the server then sends the proxy's address, and this agent makes
         # its own token for it.
         found.append(REMOTE_ABILITY)
+    if captures_remote(features):
+        # Captures through it too (restate 3.2.0.0): the server then has
+        # this host back up through the proxy, with no NFS mount at all.
+        found.append(REMOTE_CAPTURE)
     return found
 
 
 REMOTE_ABILITY = "remote_repository"
+REMOTE_CAPTURE = "remote_capture"
 
 
 def reads_remote(features: Optional[Dict[str, Any]]) -> bool:
-    """restate reads a repository at an https:// URL, with a token file."""
-    return bool((features or {}).get(REMOTE_ABILITY)) and supports(
-        features, "repository_token_file"
+    """restate reads a repository at an https:// URL, with a token file --
+    and can run curl, which it does that with.  restate looks for curl in
+    fixed places, not on PATH (``programs`` in its features says whether it
+    found it): a NetBSD host with pkgsrc's /usr/pkg/bin/curl and an older
+    restate said it could, then failed every run (lab, 2026-11-10)."""
+    programs = (features or {}).get("programs")
+    has_curl = not isinstance(programs, dict) or programs.get("curl") is not False
+    return (
+        bool((features or {}).get(REMOTE_ABILITY))
+        and supports(features, "repository_token_file")
+        and has_curl
     )
+
+
+def can_encrypt(features: Optional[Dict[str, Any]]) -> bool:
+    """restate finds gpg, which ``--encrypt-to`` runs.  It looks in fixed
+    places (``programs`` in its features); an older restate that does not
+    say is taken at its word."""
+    programs = (features or {}).get("programs")
+    return not isinstance(programs, dict) or programs.get("gpg") is not False
+
+
+def captures_remote(features: Optional[Dict[str, Any]]) -> bool:
+    """restate also captures into a repository at an https:// URL."""
+    return reads_remote(features) and bool((features or {}).get(REMOTE_CAPTURE))
 
 
 def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:

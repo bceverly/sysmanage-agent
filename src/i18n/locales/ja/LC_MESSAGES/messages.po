@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 11:48-0500\n"
+"POT-Creation-Date: 2026-11-10 13:18-0800\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -121,37 +121,37 @@ msgstr "ファイルを削除できませんでした: %s"
 msgid "Restart the agent; it pins the server again on its next connection."
 msgstr "エージェントを再起動してください。次回の接続時にサーバーを再びピン留めします。"
 
-#: src/security/server_identity.py:95
+#: src/security/server_identity.py:99
 #, python-format
 msgid "The server identity request failed: HTTP %s"
 msgstr "サーバーのアイデンティティの要求に失敗しました: HTTP %s"
 
-#: src/security/server_identity.py:101 src/security/server_pinning.py:160
+#: src/security/server_identity.py:105 src/security/server_pinning.py:160
 #: src/security/server_pinning.py:164 src/security/server_pinning.py:169
-#: src/security/server_pinning.py:173 src/security/server_pinning.py:245
+#: src/security/server_pinning.py:173 src/security/server_pinning.py:251
 msgid "The server identity response is incomplete"
 msgstr "サーバーのアイデンティティの応答が不完全です"
 
-#: src/security/server_identity.py:124
+#: src/security/server_identity.py:128
 msgid "The server cannot state its TLS identity yet; pinning will be retried"
 msgstr "サーバーはまだ TLS アイデンティティを示せません。ピン留めは再試行されます"
 
-#: src/security/server_identity.py:129
+#: src/security/server_identity.py:133
 #, python-format
 msgid "Could not pin this server's identity: %s. Pinning will be retried."
 msgstr "このサーバーのアイデンティティをピン留めできませんでした: %s。ピン留めは再試行されます。"
 
-#: src/security/server_identity.py:134
+#: src/security/server_identity.py:138
 msgid "Pinned this server's identity; its TLS certificate is now checked"
 msgstr "このサーバーのアイデンティティをピン留めしました。今後は TLS 証明書を検証します"
 
-#: src/security/server_identity.py:150
+#: src/security/server_identity.py:154
 msgid ""
 "The server's TLS certificate changed, but the server cannot state its TLS "
 "identity right now; keeping the current pins and trying again later"
 msgstr "サーバーの TLS 証明書が変更されましたが、サーバーは現在 TLS アイデンティティを示せません。現在のピンを維持し、後で再試行します"
 
-#: src/security/server_identity.py:159
+#: src/security/server_identity.py:163
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
@@ -163,13 +163,13 @@ msgstr ""
 "(%s)。考えられる原因は、プロキシまたは別のサーバーが異なる証明書を提示していることです。このサーバーが本当に置き換えられた場合は、意図的にピン留めし直してください。%s"
 " を削除するか、エージェントのリセットコマンドを実行してから、エージェントを再起動します。"
 
-#: src/security/server_identity.py:172
+#: src/security/server_identity.py:176
 msgid ""
 "The server's TLS certificate changed; the new one is signed by this server's"
 " identity and is now trusted"
 msgstr "サーバーの TLS 証明書が変更されました。新しい証明書はこのサーバーのアイデンティティによって署名されており、信頼されるようになりました"
 
-#: src/security/server_identity.py:200
+#: src/security/server_identity.py:204
 #, python-format
 msgid "Could not re-pin this server's identity: %s"
 msgstr "このサーバーのアイデンティティをピン留めし直せませんでした: %s"
@@ -196,29 +196,29 @@ msgstr "サーバーのアイデンティティ証明書は、ピン留めされ
 msgid "The server's identity certificate is outside its validity period"
 msgstr "サーバーのアイデンティティ証明書は有効期間外です"
 
-#: src/security/server_pinning.py:200
+#: src/security/server_pinning.py:206
 msgid "The server's identity certificate uses an unsupported key type"
 msgstr "サーバーのアイデンティティ証明書はサポートされていない鍵の種類を使用しています"
 
-#: src/security/server_pinning.py:204
+#: src/security/server_pinning.py:210
 msgid ""
 "The server identity statement is not signed by its identity certificate"
 msgstr "サーバーのアイデンティティのステートメントは、そのアイデンティティ証明書で署名されていません"
 
-#: src/security/server_pinning.py:213 src/security/server_pinning.py:216
-#: src/security/server_pinning.py:221
+#: src/security/server_pinning.py:219 src/security/server_pinning.py:222
+#: src/security/server_pinning.py:227
 msgid "The server identity statement is not readable"
 msgstr "サーバーのアイデンティティのステートメントを読み取れません"
 
-#: src/security/server_pinning.py:218
+#: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
 msgstr "サーバーのアイデンティティのステートメントは期限切れです"
 
-#: src/security/server_pinning.py:255
+#: src/security/server_pinning.py:261
 msgid "The server's CA is not the CA this agent has pinned"
 msgstr "サーバーの CA は、このエージェントがピン留めした CA ではありません"
 
-#: src/security/server_pinning.py:262
+#: src/security/server_pinning.py:268
 msgid ""
 "The certificate on this connection is not one the server's signed statement "
 "lists"
@@ -243,15 +243,24 @@ msgstr "%(where)s のバックアップストレージでロックが機能し�
 msgid "restate is not installed on this host."
 msgstr "このホストにはrestateがインストールされていません。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:117
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:122
 msgid "That backup job is already running."
 msgstr "そのバックアップジョブはすでに実行中です。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:139
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:144
 msgid "The backup job could not be started."
 msgstr "バックアップジョブを開始できませんでした。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:227
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
+msgstr ""
+"restate は結果を書き込む前に停止しました（終了コード %(code)s）。ログ %(log)s "
+"は空です。実行中に停止されたか、マシンが再起動されました"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -260,7 +269,7 @@ msgstr ""
 "restate は結果を書き込む前に停止しました（終了コード %(code)s）。このホストで journalctl -u %(unit)s "
 "を確認してください"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:271
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:285
 msgid "Could not queue the backup report"
 msgstr "バックアップレポートをキューに追加できませんでした"
 
@@ -354,32 +363,36 @@ msgstr "%s のバックアップストレージが応答しませんでした。
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "%s のバックアップストレージをアンマウントできませんでした: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:86
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "封印したスナップショットを一覧表示できませんでした: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:101
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:102
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "古い封印済みスナップショット %(name)s を削除できませんでした: %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:176
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:182
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s はこのホストの %(path)s にマウントされていません"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:213
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:197
+msgid "restate is not installed on this storage host"
+msgstr "このストレージホストにrestateはインストールされていません"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:240
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "ポリシー %s のバックアップストレージを準備できませんでした: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:286
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "ストレージの監査を実行できませんでした: %s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:122
+#: src/sysmanage_agent/backup/storage_prepare.py:137
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -388,7 +401,7 @@ msgstr ""
 "バックアップ用サービスアカウント %(account)s (ユーザーとグループ) "
 "がこのストレージホストに存在しません。作成してから、もう一度準備してください。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:152
+#: src/sysmanage_agent/backup/storage_prepare.py:167
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -397,7 +410,7 @@ msgstr ""
 "エージェントは %(path)s を読み取れないため、バックアップが含まれているか判断できません。エージェントを root "
 "で実行するか、ディレクトリを別の場所に移動してから、もう一度準備してください。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:163
+#: src/sysmanage_agent/backup/storage_prepare.py:178
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -409,7 +422,7 @@ msgstr ""
 "(例: %(path)s.old)、もう一度準備して、その内容を root で新しいデータセットにコピーするか、2) "
 "それらのバックアップが不要なら削除してください。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:171
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -421,7 +434,7 @@ msgstr ""
 "名前を変更し (例: %(path)s.old)、もう一度準備して、その内容を root で新しいサブボリュームにコピーするか、2) "
 "それらのバックアップが不要なら削除してください。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:206
+#: src/sysmanage_agent/backup/storage_prepare.py:223
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -430,12 +443,12 @@ msgstr ""
 "サーバーはバックアップ対象ホストの IP "
 "アドレスをまだ把握していないため、そのエクスポートをそのアドレスに限定できません。そのホストがネットワーク情報を報告するまで待ってから、もう一度準備してください。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:217
+#: src/sysmanage_agent/backup/storage_prepare.py:234
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s ではストレージの準備はサポートされていません。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:225
+#: src/sysmanage_agent/backup/storage_prepare.py:242
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -443,7 +456,7 @@ msgstr ""
 "FreeBSD はファイルシステム全体をエクスポートするため、各ホストのリポジトリには独自の ZFS データセットが必要です。ストレージパスを ZFS "
 "上に置いてから、もう一度準備してください。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:303
+#: src/sysmanage_agent/backup/storage_prepare.py:345
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -454,7 +467,7 @@ msgstr ""
 "データセットがマウントされていないため、子データセットはリポジトリの位置に作成されません。そこにマウントされるデータセットを作成してから (zfs "
 "create -o mountpoint=%(path)s POOL/NAME)、もう一度準備してください。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:330
+#: src/sysmanage_agent/backup/storage_prepare.py:372
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -2274,7 +2287,7 @@ msgstr ""
 msgid "Could not determine hostname, using fallback: %s"
 msgstr "ホスト名が取得できません。デフォルト値を使用します：%s"
 
-#: src/sysmanage_agent/core/agent_lifecycle.py:54
+#: src/sysmanage_agent/core/agent_lifecycle.py:55
 #, python-format
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "フライト中のジャーナル調整に失敗しました: %s"
@@ -2541,34 +2554,49 @@ msgstr "エージェントログの収集に失敗しました: %s"
 msgid "Error collecting error logs: %s"
 msgstr "エラーログの収集に失敗しました: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:164
+#: src/sysmanage_agent/operations/backup_operations.py:213
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr "Mac はバックアップ対象ホストにのみなれます。バックアップのストレージホストにはなれません。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:165
+#: src/sysmanage_agent/operations/backup_operations.py:214
 msgid "This platform cannot take that backup role."
 msgstr "このプラットフォームはそのバックアップの役割を担えません。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:309
+#: src/sysmanage_agent/operations/backup_operations.py:365
 msgid "That backup action is not configured on this host."
 msgstr "このホストでは、そのバックアップアクションは設定されていません。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:317
+#: src/sysmanage_agent/operations/backup_operations.py:373
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "このホストではrestateを使用できません: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:350
+#: src/sysmanage_agent/operations/backup_operations.py:406
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "バックアップジョブのインストールに失敗しました: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:382
+#: src/sysmanage_agent/operations/backup_operations.py:420
+msgid ""
+"This host cannot encrypt its backups: restate does not find gpg. Install "
+"GnuPG, and the backup policy is sent again."
+msgstr ""
+"このホストはバックアップを暗号化できません: restate が gpg を見つけられません。GnuPG "
+"をインストールすると、バックアップポリシーが再送信されます。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:453
+msgid ""
+"This host has no NFSv4 client, so it backs up only through restate-proxy; "
+"its target uses NFS."
+msgstr ""
+"このホストにはNFSv4クライアントがないため、restate-proxy経由でのみバックアップします。このホストのターゲットはNFSを使用しています。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:471
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "このrestateは以下の機能をサポートしていません: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:498
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "この restate では %s をジョブとして実行できません。restate を更新してください。"
@@ -3909,7 +3937,7 @@ msgstr "不明なソースからの無効な JSON アナウンス"
 msgid "Error listening for announcements: %s"
 msgstr "アナウンスメントの受信中にエラーが発生しました: %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:164
+#: src/sysmanage_agent/registration/host_certificate.py:170
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
@@ -3919,34 +3947,34 @@ msgstr ""
 "サーバーは、このホストの証明書をこのホストに対して無効として拒否しました "
 "(%s)。エージェントは自動では置き換えません。管理者がサーバー上でこのホストを確認する必要があります。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:174
+#: src/sysmanage_agent/registration/host_certificate.py:180
 #, python-format
 msgid ""
 "The server requires a certificate from this host and refused the connection "
 "without one (%s); requesting a certificate now."
 msgstr "サーバーはこのホストに証明書を要求しており、証明書のない接続を拒否しました (%s)。今すぐ証明書を要求します。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:182
+#: src/sysmanage_agent/registration/host_certificate.py:188
 #, python-format
 msgid ""
 "The server refused this host's certificate because it has expired (%s); "
 "requesting a new certificate now."
 msgstr "サーバーは、このホストの証明書が期限切れのため拒否しました (%s)。今すぐ新しい証明書を要求します。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:196
+#: src/sysmanage_agent/registration/host_certificate.py:202
 #, python-format
 msgid "Certificate check failed: %s"
 msgstr "証明書の確認に失敗しました: %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:267
+#: src/sysmanage_agent/registration/host_certificate.py:273
 msgid "The server's certificate response is not usable"
 msgstr "サーバーの証明書の応答は使用できません"
 
-#: src/sysmanage_agent/registration/host_certificate.py:272
+#: src/sysmanage_agent/registration/host_certificate.py:278
 msgid "The server issued a certificate for a different key"
 msgstr "サーバーは別の鍵に対する証明書を発行しました"
 
-#: src/sysmanage_agent/registration/host_certificate.py:279
+#: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
 "changed server TLS certificate will not be accepted until the pins are reset"
@@ -3955,17 +3983,17 @@ msgstr ""
 "新しいホスト証明書は、ピン留めされたものとは別の CA によって発行されました。ピンを意図的にリセットするまで、変更されたサーバーの TLS "
 "証明書は受け入れられません。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:288
+#: src/sysmanage_agent/registration/host_certificate.py:294
 #, python-format
 msgid "This host's certificate was issued; it is valid until %s"
 msgstr "このホストの証明書が発行されました。有効期限は %s です"
 
-#: src/sysmanage_agent/registration/host_certificate.py:303
+#: src/sysmanage_agent/registration/host_certificate.py:309
 #, python-format
 msgid "No certificate yet: this host is not approved (%s)"
 msgstr "まだ証明書はありません。このホストは承認されていません (%s)"
 
-#: src/sysmanage_agent/registration/host_certificate.py:308
+#: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
 "The server says this host's certificate is still current but did not receive"
@@ -3975,7 +4003,7 @@ msgstr ""
 "サーバーは、このホストの証明書はまだ有効だが受け取っていないと報告しています "
 "(%s)。エージェントとサーバーの間にある何かが証明書を取り除いている可能性があります。エージェントは証明書を保持し、後で再度要求します。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:317
+#: src/sysmanage_agent/registration/host_certificate.py:323
 #, python-format
 msgid "The server did not issue a certificate: HTTP %s, %s"
 msgstr "サーバーは証明書を発行しませんでした: HTTP %s, %s"

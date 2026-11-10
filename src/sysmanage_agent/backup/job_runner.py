@@ -24,9 +24,11 @@ Off systemd the command line is still never built from server data: it is
 the job file's fixed path (``<policy uuid>.<action>.conf``, both validated),
 and the sudoers rule for it is a regular expression that admits nothing else.
 
-OpenBSD and NetBSD are not driven: their NFS clients speak NFSv2 and v3
-only, and a host's repository is an NFSv4 export.  They back up once
-restate-proxy (ROADMAP 25.5) carries backups over HTTPS instead.
+OpenBSD and NetBSD (25.5): their NFS clients speak NFSv2 and v3 only, and a
+host's repository is an NFSv4 export, so they back up only through
+restate-proxy, over HTTPS -- once their restate captures through it.  Then
+``detach.py`` drives them as it does macOS, as backed-up hosts only (they
+are never storage hosts: no NFSv4 server for the repositories either).
 """
 
 import os
@@ -43,7 +45,7 @@ DETACH_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "detach
 # Which runner drives restate on each platform.system() (Linux: systemd when
 # it is PID 1, else DETACH).  Anything else is not driven, and the backup
 # capability reports wrong_platform.
-RUNNERS = {"FreeBSD": DAEMON, "Darwin": DETACH}
+RUNNERS = {"FreeBSD": DAEMON, "Darwin": DETACH, "OpenBSD": DETACH, "NetBSD": DETACH}
 
 # The roles each runner may drive.  ``self`` (24.13): a storage host backing
 # up its own OS.  Every runner drives all three; a platform may take fewer
@@ -51,7 +53,8 @@ RUNNERS = {"FreeBSD": DAEMON, "Darwin": DETACH}
 # prepare, no NFS server set up for it).
 ALL_ROLES = ("host", "storage", "self")
 ROLES = {SYSTEMD: ALL_ROLES, DAEMON: ALL_ROLES, DETACH: ALL_ROLES}
-PLATFORM_ROLES = {"Darwin": ("host",)}
+PLATFORM_ROLES = {"Darwin": ("host",), "OpenBSD": ("host",), "NetBSD": ("host",)}
+# No NFSv4 client: these back up through restate-proxy alone.
 NO_NFSV4 = ("OpenBSD", "NetBSD")
 
 LOG_TAIL_BYTES = 2000

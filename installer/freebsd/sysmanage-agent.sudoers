@@ -133,6 +133,13 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs snapshot *
 # refuses a job file that is not root's and in a directory only root can
 # change.  Needs sudo 1.9.10 or later (FreeBSD 14 ships 1.9.17).
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate ^run /etc/restate/jobs\.d/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(prune|check|copy|du|repack|protect|sign|signatures|capture|estimate|snapshots|restore|list|status|diff)\.conf$
+# restate-proxy (server ROADMAP 25.5): a storage host's prepare makes the
+# repository of a host that backs up through the proxy, which restate cannot
+# do from the host: ``restate init [--encrypt-to <policy key>] <repository>``
+# (the policy's PUBLIC key, which restate seals the chunk key to), an absolute path with no
+# component starting with a dot (so no ``..``).  restate init only ever makes
+# a new repository in an empty or missing directory; it refuses anything else.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate ^init (--encrypt-to /etc/restate/keys/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.asc )?/[A-Za-z0-9_-]+(/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$
 # "Equip for backup" (backup/equip.py): pkg add a restate release package the
 # agent downloaded into its own state dir and checked against the release's
 # SHA256SUMS -- only a restate package, only from exactly there.

@@ -14,7 +14,10 @@ name a path.
 Through restate-proxy (25.5) a read job -- restore, browse, compare, verify
 -- names the repository's URL instead (``remote``), with no mount; whether it
 may is ``reads_remote``: the target is on the proxy, this restate reads
-through one, and the host has made its token for that repository.
+through one, and the host has made its token for that repository.  The
+capture and its snapshot listing go the same way once ``captures_remote``
+(restate 3.2.0.0 captures through a proxy, and the server says so): their
+job files name the URL from the start, and nothing is ever mounted.
 """
 
 from typing import Any, Dict, Optional, Tuple
@@ -51,6 +54,27 @@ def for_record(policy: Dict[str, Any], record: Dict[str, Any]) -> Choice:
         policy,
         {"previous": bool(record.get("previous"))},
         remote=bool(record.get("remote")),
+    )
+
+
+# The configured host jobs that name the repository: through the proxy
+# when the host captures through it (estimate reads the live host only).
+REMOTE_JOBS = ("capture", "snapshots")
+
+
+def captures_remote(
+    policy: Dict[str, Any],
+    tokens: Optional[Dict[str, Any]],
+    features: Optional[Dict[str, Any]],
+) -> bool:
+    """Whether this host's capture goes through the proxy: the server says
+    so (``proxy.capture``), its restate can, and its token is made."""
+    proxy = policy.get("proxy") or {}
+    return (
+        policy.get("role") == "host"
+        and proxy.get("capture") is True
+        and contract.captures_remote(features)
+        and bool((tokens or {}).get("current"))
     )
 
 

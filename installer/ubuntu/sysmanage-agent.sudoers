@@ -352,6 +352,14 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume snapshot -r *, /usr
 # (installed with ``install``, then ``exportfs -ra``).  The agent builds every
 # argument from the policy it validated; ownership uses chown/chmod above.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs create *
+# restate-proxy (server ROADMAP 25.5): a storage host's prepare makes the
+# repository of a host that backs up through the proxy, which restate cannot
+# do from the host: ``restate init <repository>`` (a wildcard, as sudo-rs has
+# no regular expressions; the agent builds the path from the policy it
+# validated).  restate init only ever makes a new repository in an empty or
+# missing directory, and refuses anything else.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/restate init *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate init *
 # ZFS's create and mount run in the host's mount namespace (PID 1's): the
 # agent's unit (PrivateTmp/ProtectHome) has its own, and a dataset mounted
 # there alone left NFS exporting the empty directory beneath it.

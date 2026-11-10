@@ -32,6 +32,15 @@ Ubuntu and systemd default) refuses to open a file it just made in a sticky,
 group-writable directory, because the squashed owner is neither the caller
 nor the directory's owner.  On FreeBSD it is 0770 plus an NFSv4 ACL.
 
+For a host that backs up through restate-proxy (25.5) there is no export
+and no client address: the dataset, subvolume or directory and its
+append-only rule as above, and the repository itself -- ``restate init``,
+since through a proxy restate cannot make one -- its files given to the
+service account, as a host's own first capture over NFS leaves them, so the
+proxy (running as that account) can write to it.  The init comes before the
+ownership and append-only rule: it leaves the directory 0700 and root's.  A
+repository already there is left as it is.
+
 It never moves data: a repository that already holds backups on the parent
 filesystem is refused with the steps to move it.  The baseline (NFS server,
 NFSv4, lock sharing, the ``V4:`` line, the account itself) is the operator's,
@@ -77,6 +86,12 @@ APPEND_ONLY_OFF = ("chattr", "-a")
 # owner may delete its own.
 APPEND_ONLY_ACL = ("group@:D::deny", "owner@:d:f:allow", "owner@:d:d:allow")
 
+
+# What ``restate init`` makes in the repository directory: the service
+# account's after a prepare, as a host's own first capture leaves them.
+INIT_ENTRIES = ("restate-repository", "lock", "readers", "packs", "snapshots")
+# restate init's answer (exit 2) for a repository that is already there.
+ALREADY_A_REPOSITORY = "it is a repository already"
 
 # ZFS's create and mount run in the host's mount namespace (host_mount).
 HOST_NAMESPACE = host_mount.HOST_NAMESPACE
@@ -197,9 +212,11 @@ def plan(  # pylint: disable=too-many-arguments
     address = policy.get("client_address")
     # The storage host's own backup (24.13): its repository on its own pool,
     # written locally -- a dataset / subvolume / directory and the append-only
-    # rule, but no export and so no client address.
+    # rule, but no export and so no client address.  A host that backs up
+    # through restate-proxy (25.5) mounts nothing either.
     local = policy.get("role") == SELF_ROLE
-    if not address and not local:
+    proxied = not local and not _needs_export(policy)
+    if not address and not local and not proxied:
         raise PrepareRefused(
             "no_address",
             _(
@@ -231,7 +248,7 @@ def plan(  # pylint: disable=too-many-arguments
         steps = _btrfs_steps(repository, listdir, is_subvolume)
     else:
         steps = _plain_steps(repository, listdir)
-    if local:
+    if local or proxied:
         _no_export(steps)
     elif system == "FreeBSD":
         _freebsd_export(steps, address, account)
@@ -248,7 +265,32 @@ def plan(  # pylint: disable=too-many-arguments
         steps["reload"] = True
     steps.pop("exists")
     steps["protect"] = protect
+    steps["init"] = (
+        {"repository": repository, "owner": f"{account}:{account}",
+         "encrypt_to": policy.get("encrypt_to")}
+        if proxied
+        else None
+    )  # fmt: skip
     return steps
+
+
+def _needs_export(policy: Dict[str, Any]) -> bool:
+    proxy = policy.get("proxy") or {}
+    return not proxy.get("enabled") or proxy.get("export", True) is not False
+
+
+def init_argv(restate: str, repository: str, encrypt_to: Optional[str]) -> List[str]:
+    """``restate init [--encrypt-to KEY] REPOSITORY``: encrypted when the
+    policy is, as a host's own first capture would make it over NFS."""
+    key = ["--encrypt-to", encrypt_to] if encrypt_to else []
+    return [restate, "init", *key, repository]
+
+
+def init_owner_argv(repository: str, owner: str) -> List[str]:
+    """Give what ``restate init`` made to the service account."""
+    return ["chown", "-R", owner] + [
+        posixpath.join(repository, e) for e in INIT_ENTRIES
+    ]
 
 
 def _protect_steps(system: str, account: str, repository: str) -> List[List[str]]:

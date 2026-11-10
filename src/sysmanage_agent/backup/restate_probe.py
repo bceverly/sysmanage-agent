@@ -6,8 +6,11 @@
 
 The answer has three outcomes, each a reason code the server understands:
 
-* OpenBSD or NetBSD             -> ``no_nfsv4_client`` (their NFS clients
-  speak v2 and v3 only; a host's repository is an NFSv4 export)
+* OpenBSD or NetBSD, with a restate that cannot capture through
+  restate-proxy                 -> ``no_nfsv4_client`` (their NFS clients
+  speak v2 and v3 only; a host's repository is an NFSv4 export).  With one
+  that can (restate 3.2.0.0), they back up through the proxy, and the
+  server keeps them off a target on NFS
 * any other unknown platform    -> ``wrong_platform`` (Linux runs jobs
   through a systemd unit, or detach.py without systemd; FreeBSD under
   daemon(8); macOS through detach.py -- see ``job_runner``)
@@ -89,10 +92,10 @@ def forget() -> None:
 # Where restate installs when it is not on the service PATH: FreeBSD's rc
 # PATH is /sbin:/bin:/usr/sbin:/usr/bin, and a port or ``gmake install``
 # puts restate in /usr/local/sbin.
-# The last two: Homebrew's formula on Apple silicon and on Intel Macs (the
-# macOS agent's PATH does not include Homebrew's sbin).
+# Then Homebrew's formula on Apple silicon and on Intel Macs (the macOS
+# agent's PATH does not include Homebrew's sbin), and pkgsrc's on NetBSD.
 FALLBACK_PATHS = ("/usr/sbin/restate", "/usr/local/sbin/restate",
-                  "/opt/homebrew/sbin/restate")  # fmt: skip
+                  "/opt/homebrew/sbin/restate", "/usr/pkg/sbin/restate")  # fmt: skip
 
 
 def locate(
@@ -118,12 +121,14 @@ def unavailable_reason(
 ) -> Optional[str]:
     """Why this host cannot run backups, or None when it can.  ``systemd``:
     whether systemd is PID 1 on Linux (looked up when not given)."""
-    if system in job_runner.NO_NFSV4:
-        return REASON_NO_NFSV4_CLIENT
     runner = job_runner.runner_for(system, systemd)
     if runner is None:
         return REASON_WRONG_PLATFORM
     executable = locate(lookup, exists)
+    if system in job_runner.NO_NFSV4 and not (
+        executable and contract.captures_remote(features(executable, ask))
+    ):
+        return REASON_NO_NFSV4_CLIENT
     if not executable:
         return REASON_MISSING_TOOL
     if runner == job_runner.SYSTEMD and not contract.unit_installed(unit_exists):

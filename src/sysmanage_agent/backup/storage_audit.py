@@ -431,15 +431,23 @@ def audit(
     account: str,
     read_text: Callable,
     system: Optional[str] = None,
+    export: bool = True,
 ) -> List[Dict[str, Any]]:
-    """Every finding for one repository on this storage host."""
+    """Every finding for one repository on this storage host.  ``export``:
+    false for a host that backs up through restate-proxy (25.5), which has
+    no export to find fault with."""
     system = system or platform.system()
     filesystem = filesystem_findings(repository, read_text)
     own_fs = filesystem[0]["level"] == OK
+    exports = (
+        export_findings(system, repository, client, account, own_fs=own_fs)
+        if export
+        else []
+    )
     return (
         baseline(system, account)
         + filesystem
-        + export_findings(system, repository, client, account, own_fs=own_fs)
+        + exports
         + layout_findings(repository, account)
         + space_findings(repository, read_text)
     )

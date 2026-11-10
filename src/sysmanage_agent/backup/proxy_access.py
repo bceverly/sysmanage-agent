@@ -13,8 +13,10 @@ checked again, whatever the server checked:
   pinned key.  The host makes each token itself -- 32 random bytes,
   base64url, ``rsp_`` -- installs it root's alone, and reports only its
   SHA-256; the token never leaves the host.  Read jobs (restore, browse,
-  compare, verify) then name the URL and the token file instead of a mount.
-  Captures stay on NFS until restate 3.2.0.0.
+  compare, verify) then name the URL and the token file instead of a mount,
+  and so do the capture and its snapshot listing once the server says
+  ``capture`` (this host's restate captures through a proxy, 3.2.0.0):
+  such a host never mounts its storage.
 * **The storage host's side.**  The server sends this host's grants and the
   target's clients.  The agent writes one ``/etc/restate/proxy.d/<client>.conf``
   per grant, naming the repository it already serves, and removes every grant
@@ -102,16 +104,21 @@ def check_ca(value: Any) -> str:
 
 def check_host_proxy(value: Any) -> Optional[Dict[str, Any]]:
     """A backed-up host's ``target.proxy``: ``url``, optionally
-    ``previous_url`` (the same client with ``.previous``), ``pin_sha256``
-    and ``ca``.  None when the server sent none."""
+    ``previous_url`` (the same client with ``.previous``), ``pin_sha256``,
+    ``ca`` and ``capture`` (the capture goes through it too).  None when the
+    server sent none."""
     if value is None:
         return None
     if not isinstance(value, dict) or not set(value) <= {
-        "url", "previous_url", "pin_sha256", "ca"
+        "url", "previous_url", "pin_sha256", "ca", "capture"
     } or "url" not in value:  # fmt: skip
         raise PolicyError("proxy must have url, and optionally previous_url, "
-                          "pin_sha256 and ca")  # fmt: skip
+                          "pin_sha256, ca and capture")  # fmt: skip
     out: Dict[str, Any] = {"url": _check_url(value["url"], "proxy url")}
+    if value.get("capture") is not None:
+        if not isinstance(value["capture"], bool):
+            raise PolicyError("proxy capture must be true or false")
+        out["capture"] = value["capture"]
     if value.get("previous_url") is not None:
         if value["previous_url"] != out["url"] + PREVIOUS_SUFFIX:
             raise PolicyError("proxy previous_url must be url + .previous")
@@ -160,19 +167,23 @@ def _check_grant(grant: Any) -> Dict[str, Any]:
 
 def check_storage_proxy(value: Any) -> Optional[Dict[str, Any]]:
     """A storage host's ``target.proxy``: ``target_id``, ``enabled``, this
-    host's ``grants`` and every one of the target's ``clients``.  None when
-    the server sent none (an older server)."""
+    host's ``grants``, every one of the target's ``clients``, and
+    ``export``: false when the host captures through the proxy too (25.5),
+    so it needs no NFS export and prepare makes its repository instead.
+    None when the server sent none (an older server)."""
     if value is None:
         return None
-    if not isinstance(value, dict) or set(value) != {
-        "target_id", "enabled", "grants", "clients"
-    }:  # fmt: skip
+    keys = {"target_id", "enabled", "grants", "clients"}
+    if not isinstance(value, dict) or not keys <= set(value) <= keys | {"export"}:
         raise PolicyError("proxy must have target_id, enabled, grants and clients")
     target_id = value["target_id"]
     if not isinstance(target_id, str) or not _UUID.match(target_id):
         raise PolicyError("proxy target_id is not a UUID")
     if not isinstance(value["enabled"], bool):
         raise PolicyError("proxy enabled must be true or false")
+    export = value.get("export", True)
+    if not isinstance(export, bool):
+        raise PolicyError("proxy export must be true or false")
     grants, clients = value["grants"], value["clients"]
     if not isinstance(grants, list) or len(grants) > 2:
         raise PolicyError("proxy grants must be a list of at most two")
@@ -187,7 +198,14 @@ def check_storage_proxy(value: Any) -> Optional[Dict[str, Any]]:
         raise PolicyError("a proxy grant's client is not one of the target's")
     return {"target_id": target_id, "enabled": value["enabled"],
             "grants": checked if value["enabled"] else [],
-            "clients": sorted(set(clients))}  # fmt: skip
+            "clients": sorted(set(clients)),
+            "export": export or not value["enabled"]}  # fmt: skip
+
+
+def needs_export(policy: Dict[str, Any]) -> bool:
+    """A storage policy's host still mounts its repository over NFS."""
+    proxy = policy.get("proxy") or {}
+    return proxy.get("export", True) is not False
 
 
 # --- the host's tokens and read jobs -------------------------------------
@@ -218,13 +236,20 @@ def url_for(proxy: Optional[Dict[str, Any]], previous: bool) -> Optional[str]:
     return proxy.get("previous_url") if previous else proxy.get("url")
 
 
+def pin_base64(pin_hex: str) -> str:
+    """The pinned key as restate takes it -- the base64 of its SHA-256, as
+    ``openssl`` prints it and curl's ``--pinnedpubkey sha256//`` reads it --
+    from the hex SysManage keeps every SPKI hash in."""
+    return base64.b64encode(bytes.fromhex(pin_hex)).decode("ascii")
+
+
 def job_keys(policy_id: str, proxy: Dict[str, Any], previous: bool) -> Dict[str, Any]:
-    """The keys a read job adds to reach its repository through the proxy."""
+    """The keys a job adds to reach its repository through the proxy."""
     keys: Dict[str, Any] = {"repository_token_file": token_path(policy_id, previous)}
     if proxy.get("ca"):
         keys["repository_ca_file"] = ca_path(policy_id)
     if proxy.get("pin_sha256"):
-        keys["repository_pin_sha256"] = proxy["pin_sha256"]
+        keys["repository_pin_sha256"] = pin_base64(proxy["pin_sha256"])
     return keys
 
 

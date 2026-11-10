@@ -69,9 +69,11 @@ REASON_BUILD_EXCLUDED = "build_excluded"
 #
 # REASON_MISSING_TOOL is deliberately NOT here: a missing `virsh` on Linux is a
 # real gap the operator can close by installing it.
-# REASON_NO_NFSV4_CLIENT (25.8): OpenBSD and NetBSD back up nowhere yet -- the
-# repository is an NFSv4 export and their clients speak v2 and v3 -- which no
+# REASON_NO_NFSV4_CLIENT (25.8): OpenBSD and NetBSD cannot mount the
+# repository -- an NFSv4 export, and their clients speak v2 and v3 -- which no
 # operator can fix on the host; it names why rather than a bare wrong_platform.
+# With a restate that captures through restate-proxy (25.5) they back up that
+# way instead, and the reason is not given.
 REASON_NO_NFSV4_CLIENT = "no_nfsv4_client"
 INAPPLICABLE_REASONS = frozenset({REASON_WRONG_PLATFORM, REASON_NO_NFSV4_CLIENT})
 

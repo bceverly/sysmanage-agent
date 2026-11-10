@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.backup import host_mount
+from src.sysmanage_agent.backup import proxy_access
 from src.sysmanage_agent.backup import seal_retention
 from src.sysmanage_agent.backup import storage_audit
 from src.sysmanage_agent.backup import storage_fs
@@ -148,6 +149,11 @@ class BackupStorageActionsMixin:
             path, text = steps["export_file"]
             await self._install_root_file(text, path)
             await self._checked(["exportfs", "-ra"])
+        # restate-proxy (25.5): the repository itself, before the ownership
+        # and append-only rule -- restate init leaves the directory 0700
+        # root's, which the proxy's account could not enter.
+        if steps.get("init"):
+            await self._init_repository(**steps["init"])
         for argv in steps["protect"]:
             await self._checked(argv)
         self.logger.info(
@@ -176,6 +182,27 @@ class BackupStorageActionsMixin:
                 _("%(dataset)s is not mounted at %(path)s on this host") % {
                     "dataset": dataset, "path": repository}  # fmt: skip
             )
+
+    async def _init_repository(
+        self, repository: str, owner: str, encrypt_to: Optional[str] = None
+    ) -> None:
+        """restate-proxy (25.5): make the repository a host captures into
+        through the proxy, which restate cannot do from the host.  One that
+        is there already is left as it is."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.backup import restate_probe  # noqa: PLC0415
+
+        restate = restate_probe.locate()
+        if restate is None:
+            raise PermissionError(_("restate is not installed on this storage host"))
+        code, _out, err = await self._run(
+            self._privileged(storage_prepare.init_argv(restate, repository, encrypt_to))
+        )
+        if code != 0:
+            if storage_prepare.ALREADY_A_REPOSITORY in err:
+                return
+            raise PermissionError(f"restate init {repository}: {err or code}")
+        await self._checked(storage_prepare.init_owner_argv(repository, owner))
 
     async def _checked(self, argv: List[str]) -> None:
         code, _out, err = await self._run(self._privileged(argv))
@@ -253,6 +280,7 @@ class BackupStorageActionsMixin:
                 client=policy.get("client_address"),
                 account=policy.get("service_account") or "restate",
                 read_text=_ops()._read_text,
+                export=proxy_access.needs_export(policy),
             )
         except Exception as error:  # pylint: disable=broad-except
             self.logger.warning(_("The storage audit could not run: %s"), error)

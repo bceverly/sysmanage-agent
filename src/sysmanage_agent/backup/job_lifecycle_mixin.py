@@ -131,7 +131,7 @@ class BackupJobLifecycleMixin:
         if error:
             return {"success": False, "run_id": run_id, "reason": "mount_failed",
                     "error": error}  # fmt: skip
-        if action == "capture":
+        if action == "capture" and not remote:  # a proxy has no mount to check
             error = await self._preflight(policy_id)
             if error:
                 await self._release_mount(run_id, policy_id, record)
@@ -224,6 +224,15 @@ class BackupJobLifecycleMixin:
             # No result file: what restate said is the only clue to why.
             tail = job_runner.log_tail(record["log"])
             result = {"message": tail} if tail else None
+        if result is None and record.get("log"):
+            # Detached (daemon(8), detach.py): no systemd journal to point
+            # at, and restate wrote nothing -- it was stopped from outside
+            # (lab, OpenBSD, 2026-11-10: the message named journalctl).
+            result = {"message": _(
+                "restate stopped (exit %(code)s) before writing a result, and "
+                "its log %(log)s is empty: it was stopped, or the machine "
+                "restarted, while it ran"
+            ) % {"code": code, "log": record["log"]}}  # fmt: skip
         if result is None:
             # systemd keeps restate's output in the journal, which the
             # agent does not read; say where the reason is.

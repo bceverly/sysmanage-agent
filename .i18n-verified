@@ -294,6 +294,7 @@ ar	5d31378cd97a8c2c	human hand-translated ROADMAP 25.10 agent mTLS string (writt
 ar	5e9b48c5e723c300	model
 ar	5f58d31444fb5fc9	model
 ar	5fb554f82eb3251e	model
+ar	5ff70ff3ced5aa95	model
 ar	602d63a0daa1f127	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
 ar	60942f7cdd6b3518	model
 ar	60a6d3df07bef8c5	model
@@ -523,6 +524,7 @@ ar	a87415cc66f47c4a	model
 ar	a89f0d91f284c017	model
 ar	a8ae950ebbaacae7	model
 ar	a8bac8136a94fe72	model
+ar	a93d9fc58d58d2f5	model
 ar	a95c0a74a7b7cb08	model
 ar	a9db29d885671096	model
 ar	aa4d9cfe12d03943	model
@@ -740,7 +742,9 @@ ar	e78ca3a86945cf12	model
 ar	e8a72e05559585f6	model
 ar	e8b34c8a6eb954e7	model
 ar	e8f7395401ecae33	model
+ar	e902dadce3276477	model
 ar	e950bb92c7a5c2c3	model
+ar	e95ace9e6d331443	model
 ar	e99e16852287be99	model
 ar	e9aca9d9b538394a	model
 ar	ea79478fb9ddbbd5	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
@@ -1257,6 +1261,7 @@ de	8bcca093c883eac7	model
 de	8c54f2e87f5bf2c1	model
 de	8c84c979f33b6fae	model
 de	8dcb91bc627d5572	model
+de	8e2aabdac70583ba	model
 de	8e7c08af6b0daf29	model
 de	8e8c3b4a3cfe8d12	model
 de	8ea1c48b7efed221	model
@@ -1276,6 +1281,7 @@ de	92e8a82a1e672d60	model
 de	93047709cf613807	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 de	93121fb28b850f41	model
 de	93152864afc6c948	model
+de	93250eac40f3df46	model
 de	938e72a6feefefef	model
 de	93c033163eb07e68	model
 de	9412d39499a82b68	model
@@ -1426,6 +1432,7 @@ de	c2fdb7fd174afd16	model
 de	c33d29c23e11aed8	model
 de	c43a56d613b9e6cc	model
 de	c47994da0bd1acfa	model
+de	c4bace2c000c3ab6	model
 de	c4c1eca3f2a34419	model
 de	c512ed95e0a1cf09	model
 de	c5b8977f791067c5	model
@@ -1436,6 +1443,7 @@ de	c748e346ef88a6c2	model
 de	c7674b6546853cef	model
 de	c7bc13c39bfc761c	model
 de	c7fef7079120b955	model
+de	c80a8e8e1a80cbe1	model
 de	c81fa99350cee5dc	model
 de	c82ae36ea8720649	model
 de	c87ff733f7363e56	model
@@ -1863,6 +1871,7 @@ es	4b06f68f16c95477	model
 es	4b3e778f8d38b450	model
 es	4b4004f7239860bc	model
 es	4bc23e957c7e17d9	model
+es	4c1c46449e0f2e45	model
 es	4c786d784efb6e75	model
 es	4cbac94a4f5a4334	model
 es	4cc068712e3758ec	model
@@ -2048,6 +2057,7 @@ es	897881b532ece37d	model
 es	89e16071564be478	model
 es	8a056352eaae7e58	model
 es	8a6fafcdd9d6d6fd	model
+es	8a7dd27b639641e6	model
 es	8ad2ec70b8a28797	model
 es	8aee050cb4d7b221	model
 es	8b624d62963b6456	model
@@ -2224,6 +2234,7 @@ es	c24a6e21426be733	model
 es	c28cdc8c48bc371d	model
 es	c3b221cd745da0bc	model
 es	c441889cf56d9827	model
+es	c4592899ec531616	model
 es	c48a978b5a1471b6	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 es	c495ab963aadf022	model
 es	c4cd6a46c17d5926	model
@@ -2420,6 +2431,7 @@ es	feae72419e9a09d6	model
 es	ff2fbb6994077c2c	model
 es	ff9fe60e15592b8e	model
 es	ffa17d468a57bffb	model
+es	ffdb8aa46bad8a60	model
 fr	00376ba181ec952e	model
 fr	0086fbc323390192	model
 fr	00acaec050fec70b	model
@@ -2484,6 +2496,7 @@ fr	16293cb2e0f7427e	model
 fr	16338d15f9fab576	model
 fr	165e7277b81bec6d	model
 fr	173bcfc6c62dc230	model
+fr	1782481bb2483ea6	model
 fr	179d1116f4e031db	model
 fr	179f4e8f471ce9f4	model
 fr	17c68a6031def828	model
@@ -2811,6 +2824,7 @@ fr	78e15b99a088fefd	human hand-translated ROADMAP 25.10 agent mTLS string (writt
 fr	78e2d22334c0b14d	model
 fr	78ee2961dd8eaa02	model
 fr	79207ba38ccdeeb4	model
+fr	7982b4640cf7bc83	model
 fr	79930dd62dd37a01	model
 fr	79f5c631e32d3389	model
 fr	7a33c5c8c90f3686	model
@@ -3028,6 +3042,7 @@ fr	bee2f0399c84db15	model
 fr	bf1a17f3ab103c08	model
 fr	bf9265bea93b09c5	model
 fr	bfa923e4929b1039	model
+fr	bfb27028850907b7	model
 fr	bfdb535cb2ad18c8	model
 fr	c043095806866759	model
 fr	c0c4a9b1aeeead71	model
@@ -3070,6 +3085,7 @@ fr	c8779454bbd2af31	model
 fr	c94bbaffe7d5f56b	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 fr	c9c39c57799b09d0	model
 fr	ca12c4c7e6e81b2a	model
+fr	ca55f706b4a58ff8	model
 fr	ca79dfbd91e3d506	model
 fr	cb0419c647fa845f	model
 fr	cb3f6308cecda327	model
@@ -3256,6 +3272,7 @@ hi	079eec472262fa48	model
 hi	07cc99899ca3dbfd	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
 hi	07d798250faf67fb	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 hi	07e309a1b1070142	model
+hi	07eab27744e066a3	model
 hi	080ca4156d79aeb9	model
 hi	08264f04fb6a0265	model
 hi	0858575e78ef00f8	model
@@ -3439,6 +3456,7 @@ hi	44c4294dc80dc145	model
 hi	45414ffd1579939f	model
 hi	456867336b5c3bf2	model
 hi	4667341191d52c73	model
+hi	46958b3d6ae08d95	model
 hi	46f68a910b10d831	model
 hi	478ada40565731e8	model
 hi	4850ad73cb62edd1	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
@@ -3454,6 +3472,7 @@ hi	4bb5266559030a66	model
 hi	4bc4707c670dde09	model
 hi	4beaea588860c781	model
 hi	4c3770d8b36326a8	model
+hi	4d1af792afcdaf1f	model
 hi	4d26e3ae83c3fe85	model
 hi	4d96c2956d9d7e21	model
 hi	4dd33cafa90a65f5	model
@@ -3489,6 +3508,7 @@ hi	5503b0bc1a03a71a	model
 hi	55224e5a26a384bd	model
 hi	55379faead3458c4	model
 hi	5696f801dd1a2049	model
+hi	57213b2db87f54a0	model
 hi	577e8d201ec53ebf	model
 hi	57bf36e6261c3e20	model
 hi	57c5651250c3b196	model
@@ -4209,6 +4229,7 @@ it	32485cbdebc86f3d	model
 it	325125b13820e064	model
 it	32d21e85962739f1	model
 it	330ad1ed053da0b7	model
+it	334b5b90a73ff009	model
 it	3363be4e30d0e0f6	model
 it	3365d8f7b17780b5	model
 it	339c617a1eafcced	model
@@ -4277,6 +4298,7 @@ it	449df9436c8fb6af	model
 it	44de3dc02cda57c8	model
 it	45429e9c916913ca	model
 it	456488b2cb568744	model
+it	4632ec79fe574f95	model
 it	46631772e6241ff1	model
 it	468a824edad0532a	model
 it	46c7a0720d2e11cf	model
@@ -4489,6 +4511,7 @@ it	8639d133c5d80f77	model
 it	8645beeb4361ae65	model
 it	8660cfe2da86859f	model
 it	8687af1c7bece41c	model
+it	874961efdf6f2d50	model
 it	877e804d6e278c55	model
 it	87cefe2c06e1d8c5	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 it	88b694135fecd409	model
@@ -4596,6 +4619,7 @@ it	a6fe9cb2c1972ebb	model
 it	a70168ed5b599c3a	model
 it	a758a8d577245aca	model
 it	a7c3c31600833590	model
+it	a7c69143d42f6b28	model
 it	a878b7164e07e55b	model
 it	a8ad23c03a182e0d	model
 it	a91c937888063f59	model
@@ -5015,6 +5039,7 @@ ja	3797b83327777f37	model
 ja	37e9cc79f79a63f6	model
 ja	388724eedf0ed693	model
 ja	38c1d719bb7584f8	model
+ja	395450634552e235	model
 ja	39d3f954f6fd1a83	model
 ja	39eb34d5960f08a5	model
 ja	3a13bc48fe653f24	model
@@ -5340,6 +5365,7 @@ ja	97422fb3c4b07bfb	human hand-translated ROADMAP 25.10 agent mTLS string (writt
 ja	9759bf0a9387eab4	model
 ja	97ae5f1f3f91b2f5	model
 ja	985344934eccdc8d	model
+ja	996c9bcf5aea9382	model
 ja	99a7c31db6fd4111	model
 ja	99f8598f0d36175a	model
 ja	9a996cc98731a5eb	model
@@ -5581,6 +5607,7 @@ ja	ecae49bc5f1a8410	model
 ja	ecff4477c906b554	model
 ja	ed3bcbd12b5bca1a	model
 ja	ed59ea4f284b3931	model
+ja	ed79549a83c5a928	model
 ja	ed7a3a1531760768	model
 ja	eda0415e60414199	model
 ja	eda79d7868d28e9c	model
@@ -5629,6 +5656,7 @@ ja	f8e496d93f3a3edb	model
 ja	f8eba9c79641b22c	model
 ja	f9e3fe3b741076f0	model
 ja	f9f48c4af19d3ad7	model
+ja	fa050700607d458c	model
 ja	fa4bc8370ac1d15d	model
 ja	faa533c95e49f690	model
 ja	fb0e1a63d85ee44b	model
@@ -5707,6 +5735,7 @@ ko	0d4bc4084d086dc6	model
 ko	0db363da48d523f1	model
 ko	0dc07de13ea44191	model
 ko	0def8c80e76be64e	model
+ko	0e0ad66658710d42	model
 ko	0e1e9155e1b274e6	model
 ko	0e9fbbac97e5aecd	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
 ko	0ec3617d704c0161	model
@@ -5746,6 +5775,7 @@ ko	1f13ac83044d2a5c	model
 ko	1f8bd4f738891fd0	model
 ko	200c3c2166c2e6b8	model
 ko	201e298209607642	model
+ko	20b7efc820769c0d	model
 ko	211ddab46d88ec10	model
 ko	2155048f9e5c3b65	model
 ko	242e4bceb5c622d6	model
@@ -5821,6 +5851,7 @@ ko	3b2bbcdeeec55e40	model
 ko	3b48b0ab3121023c	model
 ko	3c11cb9a91cfe285	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 ko	3c3c21f938180084	model
+ko	3c60849a6f4f111d	model
 ko	3c6352c3b5a2e2e0	model
 ko	3c82337cff9e76c0	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 ko	3cde8b7a087543e0	model
@@ -5954,6 +5985,7 @@ ko	68d876f3bf3d3329	model
 ko	691c1cf54e2dfc59	model
 ko	69ae76f487247d3b	model
 ko	69b60cd17bded0d9	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
+ko	69cf5d4f563032ee	model
 ko	6a0fa17836b6cf44	model
 ko	6a20d11c8bc0e906	model
 ko	6aded5838ac5387f	model
@@ -6523,6 +6555,7 @@ nl	142e36dff35edd7d	model
 nl	1431d93cc1896547	model
 nl	14ab06ca3772d35d	model
 nl	14f4607945ccc701	model
+nl	1504f7c27d765641	model
 nl	150acfb24b9cf77e	model
 nl	155c34b406236959	model
 nl	16e772ae0c6b8ff5	model
@@ -6631,6 +6664,7 @@ nl	382d5e70645ba726	model
 nl	3846722c9d05433d	model
 nl	38d43c121154b5ec	model
 nl	3933b47bf0baae8f	model
+nl	3a1b39d6d792e3b0	model
 nl	3a1dfadd9dc20016	model
 nl	3a44c2fed70f6564	model
 nl	3a91200beb2b4654	model
@@ -6740,6 +6774,7 @@ nl	5f6b6a4c9b3b86e4	model
 nl	604d890c33cb9641	model
 nl	6060987eafbe4292	model
 nl	60ccf3cae4050618	model
+nl	613c40007e94c433	model
 nl	615608a2dffffea6	model
 nl	61d7540f64e045d0	model
 nl	62056859b6108cd7	model
@@ -7081,6 +7116,7 @@ nl	c4bff2e02482d523	model
 nl	c51096eea313a42a	model
 nl	c66f097c0b526a04	model
 nl	c6be3a7c43869532	model
+nl	c6c154a0df7b70b0	model
 nl	c6fe36368c21e795	model
 nl	c7112d1c3af93cfa	model
 nl	c78dbb1c0ebc9c73	model
@@ -7773,6 +7809,7 @@ pt	9b3a0e5d1c4fb568	model
 pt	9b3f30bd2331a418	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 pt	9b4d38a87780d8e6	model
 pt	9b64350d058d5236	model
+pt	9bcbe2e82a6c7391	model
 pt	9c1bf380ad6bbbe0	model
 pt	9cb0ce0defbf1c21	model
 pt	9ccc102c1fa84287	model
@@ -7799,8 +7836,10 @@ pt	a542a6bc6869c717	model
 pt	a557bdf3a21568d5	model
 pt	a570746427435c82	model
 pt	a57d6dacf56c1ede	model
+pt	a5cdbe156da4330e	model
 pt	a6b0cb3775cd66ee	model
 pt	a72e73d5a7c35ecc	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
+pt	a73a2cdaede74a25	model
 pt	a793972762325aac	model
 pt	a7c1415cd921c7ab	model
 pt	a80a62e09f124684	model
@@ -8050,6 +8089,7 @@ pt	f9a8a2f3e2b6ede1	model
 pt	fa297201a52e1e01	model
 pt	fa9ba95badb0e35b	model
 pt	fabce2ff62cd6aed	model
+pt	fb0ea5f76affae82	model
 pt	fba36b1290908343	model
 pt	fbc0356c13413266	model
 pt	fbc061c55a757975	model
@@ -8101,6 +8141,7 @@ ru	064741994d772233	model
 ru	06a972f134956952	model
 ru	06ad254efa9f30fc	model
 ru	06b4a6bb32c60d6c	model
+ru	06d79b02ec5cc1a1	model
 ru	0736d23eda06fef5	model
 ru	08976a8b059d64fa	model
 ru	08b5f34918ab06e1	model
@@ -8223,6 +8264,7 @@ ru	2ef3d82c8824afe3	model
 ru	2f4f3d6b8398f3db	model
 ru	2fbec2a2c246f154	model
 ru	2fc8ca870602f4fa	model
+ru	2ffb83bbdfaedaa5	model
 ru	3312cb9fca9c559f	model
 ru	333a566da07cfe63	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 ru	335a9afe8830dae2	model
@@ -8737,6 +8779,7 @@ ru	d77c2ab9fdc8ac3f	model
 ru	d7fc09ce37918515	model
 ru	d84ccb9cca89aae3	model
 ru	d85115d6337895b5	model
+ru	d8679b7b9b18fb30	model
 ru	d8f2869222af8502	model
 ru	d90d2d9f4be4d3c1	model
 ru	d9a103f97c8abf6f	model
@@ -8830,6 +8873,7 @@ ru	f219797cd0c29867	model
 ru	f288b90a7d569f38	model
 ru	f2dc5b63cadac844	model
 ru	f33d64d5bf73b69d	model
+ru	f3638d5c5b3e7b01	model
 ru	f3be88ae79277179	model
 ru	f4719b39c6d064cc	model
 ru	f473c1c1ae0c416c	model
@@ -8911,6 +8955,7 @@ zh_CN	0a27155d765c23b0	model
 zh_CN	0b4f60b7251b4bbe	model
 zh_CN	0b6958ba53c0fef9	model
 zh_CN	0bfb930ba87a9cc0	model
+zh_CN	0c1dbca45cfde549	model
 zh_CN	0cfbbc90e5e93be4	model
 zh_CN	0d36322dc05617dd	model
 zh_CN	0d426c43feef9704	model
@@ -9416,6 +9461,7 @@ zh_CN	acb1782b3b503c3e	model
 zh_CN	ad01ae3b04086347	model
 zh_CN	ae1de47d4657626c	model
 zh_CN	ae77432661c5cc7d	model
+zh_CN	aede7656a751d5d0	model
 zh_CN	af06af1bab9ef0f6	model
 zh_CN	af201c85f7e8a60a	model
 zh_CN	af507b2283986cc5	model
@@ -9461,6 +9507,7 @@ zh_CN	bb3964e6a88ce2d8	model
 zh_CN	bbcf2524e02226b8	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 zh_CN	bbe6faaa368e0d17	model
 zh_CN	bc106cbeb6179e84	model
+zh_CN	bc18732c950fbf7c	model
 zh_CN	bc3471c28c6432d3	model
 zh_CN	bc6f7b87b1f357b4	model
 zh_CN	bd594243ae54358f	model
@@ -9598,6 +9645,7 @@ zh_CN	e5e59b09af8afbd5	model
 zh_CN	e6b9c1470d75853b	model
 zh_CN	e6c3b4a2025f6a22	model
 zh_CN	e7216ba9455df5d8	model
+zh_CN	e7d356c48a031341	model
 zh_CN	e7e4498781eeeafb	model
 zh_CN	e7f0a267c52bda58	model
 zh_CN	e8b2487d83a139c6	model
@@ -9804,6 +9852,7 @@ zh_TW	26ed50ba3f2f650d	model
 zh_TW	26ffb137c9386742	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 zh_TW	27a24f84f544107b	model
 zh_TW	27baaf5cbd8995ea	model
+zh_TW	27ce36c7d4ca4d9b	model
 zh_TW	27eb0df361345f2d	model
 zh_TW	283eab8bd0fb57cb	model
 zh_TW	28663801c8483f61	model
@@ -9992,6 +10041,7 @@ zh_TW	637b701de9d76b57	model
 zh_TW	638b67a638406d6c	model
 zh_TW	63bf6f874dec8c28	model
 zh_TW	63bff168c6f2f441	model
+zh_TW	63f68c69eda9ce01	model
 zh_TW	64cdf469fef09c1e	model
 zh_TW	651cb5e5176d06d5	model
 zh_TW	651e2223f4bb9397	model
@@ -10123,8 +10173,10 @@ zh_TW	8842ff0383c95280	model
 zh_TW	8879cad3b1b8827e	model
 zh_TW	88bfce1f58b268fe	model
 zh_TW	88feff8a8bc06b72	model
+zh_TW	8908a7b993da93f6	model
 zh_TW	8922c66faed4ab3e	model
 zh_TW	89519ae1ba0345c2	model
+zh_TW	89581953198f1ab8	model
 zh_TW	89aad1558f62d942	model
 zh_TW	8a0445de37a805b2	model
 zh_TW	8a1c0da31bac0bf4	model

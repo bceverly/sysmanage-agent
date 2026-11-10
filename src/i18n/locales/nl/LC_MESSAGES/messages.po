@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 11:48-0500\n"
+"POT-Creation-Date: 2026-11-10 13:18-0800\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -130,37 +130,37 @@ msgid "Restart the agent; it pins the server again on its next connection."
 msgstr ""
 "Herstart de agent; deze pint de server opnieuw bij de volgende verbinding."
 
-#: src/security/server_identity.py:95
+#: src/security/server_identity.py:99
 #, python-format
 msgid "The server identity request failed: HTTP %s"
 msgstr "Het opvragen van de serveridentiteit is mislukt: HTTP %s"
 
-#: src/security/server_identity.py:101 src/security/server_pinning.py:160
+#: src/security/server_identity.py:105 src/security/server_pinning.py:160
 #: src/security/server_pinning.py:164 src/security/server_pinning.py:169
-#: src/security/server_pinning.py:173 src/security/server_pinning.py:245
+#: src/security/server_pinning.py:173 src/security/server_pinning.py:251
 msgid "The server identity response is incomplete"
 msgstr "Het antwoord met de serveridentiteit is onvolledig"
 
-#: src/security/server_identity.py:124
+#: src/security/server_identity.py:128
 msgid "The server cannot state its TLS identity yet; pinning will be retried"
 msgstr ""
 "De server kan zijn TLS-identiteit nog niet opgeven; het pinnen wordt opnieuw"
 " geprobeerd"
 
-#: src/security/server_identity.py:129
+#: src/security/server_identity.py:133
 #, python-format
 msgid "Could not pin this server's identity: %s. Pinning will be retried."
 msgstr ""
 "De identiteit van deze server kon niet worden gepind: %s. Het pinnen wordt "
 "opnieuw geprobeerd."
 
-#: src/security/server_identity.py:134
+#: src/security/server_identity.py:138
 msgid "Pinned this server's identity; its TLS certificate is now checked"
 msgstr ""
 "De identiteit van deze server is gepind; het TLS-certificaat wordt nu "
 "gecontroleerd"
 
-#: src/security/server_identity.py:150
+#: src/security/server_identity.py:154
 msgid ""
 "The server's TLS certificate changed, but the server cannot state its TLS "
 "identity right now; keeping the current pins and trying again later"
@@ -169,7 +169,7 @@ msgstr ""
 "identiteit nu niet opgeven; de huidige pins blijven behouden en het wordt "
 "later opnieuw geprobeerd"
 
-#: src/security/server_identity.py:159
+#: src/security/server_identity.py:163
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
@@ -183,7 +183,7 @@ msgstr ""
 "vervangen, pin dan bewust opnieuw: verwijder %s of voer het resetcommando "
 "van de agent uit en herstart daarna de agent."
 
-#: src/security/server_identity.py:172
+#: src/security/server_identity.py:176
 msgid ""
 "The server's TLS certificate changed; the new one is signed by this server's"
 " identity and is now trusted"
@@ -191,7 +191,7 @@ msgstr ""
 "Het TLS-certificaat van de server is gewijzigd; het nieuwe is ondertekend "
 "door de identiteit van deze server en wordt nu vertrouwd"
 
-#: src/security/server_identity.py:200
+#: src/security/server_identity.py:204
 #, python-format
 msgid "Could not re-pin this server's identity: %s"
 msgstr "De identiteit van deze server kon niet opnieuw worden gepind: %s"
@@ -222,33 +222,33 @@ msgid "The server's identity certificate is outside its validity period"
 msgstr ""
 "Het identiteitscertificaat van de server valt buiten de geldigheidsperiode"
 
-#: src/security/server_pinning.py:200
+#: src/security/server_pinning.py:206
 msgid "The server's identity certificate uses an unsupported key type"
 msgstr ""
 "Het identiteitscertificaat van de server gebruikt een niet-ondersteund "
 "sleuteltype"
 
-#: src/security/server_pinning.py:204
+#: src/security/server_pinning.py:210
 msgid ""
 "The server identity statement is not signed by its identity certificate"
 msgstr ""
 "De identiteitsverklaring van de server is niet ondertekend door het "
 "identiteitscertificaat"
 
-#: src/security/server_pinning.py:213 src/security/server_pinning.py:216
-#: src/security/server_pinning.py:221
+#: src/security/server_pinning.py:219 src/security/server_pinning.py:222
+#: src/security/server_pinning.py:227
 msgid "The server identity statement is not readable"
 msgstr "De identiteitsverklaring van de server is niet leesbaar"
 
-#: src/security/server_pinning.py:218
+#: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
 msgstr "De identiteitsverklaring van de server is verlopen"
 
-#: src/security/server_pinning.py:255
+#: src/security/server_pinning.py:261
 msgid "The server's CA is not the CA this agent has pinned"
 msgstr "De CA van de server is niet de CA die deze agent heeft gepind"
 
-#: src/security/server_pinning.py:262
+#: src/security/server_pinning.py:268
 msgid ""
 "The certificate on this connection is not one the server's signed statement "
 "lists"
@@ -276,15 +276,25 @@ msgstr "Vergrendeling werkt niet op de back-upopslag op %(where)s: %(error)s"
 msgid "restate is not installed on this host."
 msgstr "restate is niet geïnstalleerd op deze host."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:117
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:122
 msgid "That backup job is already running."
 msgstr "Die back-uptaak wordt al uitgevoerd."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:139
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:144
 msgid "The backup job could not be started."
 msgstr "De back-uptaak kon niet worden gestart."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:227
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
+msgstr ""
+"restate stopte (afsluitcode %(code)s) voordat het een resultaat schreef, en "
+"het logboek %(log)s is leeg: het werd gestopt, of de machine werd herstart, "
+"terwijl het liep"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -293,7 +303,7 @@ msgstr ""
 "restate is gestopt (exit %(code)s) voordat er een resultaat is geschreven; "
 "zie journalctl -u %(unit)s op deze host"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:271
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:285
 msgid "Could not queue the backup report"
 msgstr "Kan het back-uprapport niet in de wachtrij plaatsen"
 
@@ -394,32 +404,36 @@ msgstr "De back-upopslag op %s reageerde niet."
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Kan de back-upopslag op %s niet ontkoppelen: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:86
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Kan de verzegelde snapshots niet weergeven: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:101
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:102
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Kan de oude verzegelde snapshot %(name)s niet verwijderen: %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:176
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:182
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s is op deze host niet gekoppeld op %(path)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:213
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:197
+msgid "restate is not installed on this storage host"
+msgstr "restate is niet geïnstalleerd op deze opslaghost"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:240
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "Kan de back-upopslag voor beleid %s niet voorbereiden: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:286
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "De opslagcontrole kon niet worden uitgevoerd: %s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:122
+#: src/sysmanage_agent/backup/storage_prepare.py:137
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
@@ -428,7 +442,7 @@ msgstr ""
 "Het back-upserviceaccount %(account)s (gebruiker en groep) bestaat niet op "
 "deze opslaghost. Maak het aan en bereid dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:152
+#: src/sysmanage_agent/backup/storage_prepare.py:167
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
@@ -438,7 +452,7 @@ msgstr ""
 "staan. Voer de agent uit als root of verplaats de map, en bereid dan opnieuw"
 " voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:163
+#: src/sysmanage_agent/backup/storage_prepare.py:178
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -452,7 +466,7 @@ msgstr ""
 "nieuwe dataset; ofwel 2) verwijder het als die back-ups niet meer nodig "
 "zijn."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:171
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -466,7 +480,7 @@ msgstr ""
 "het nieuwe subvolume; ofwel 2) verwijder het als die back-ups niet meer "
 "nodig zijn."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:206
+#: src/sysmanage_agent/backup/storage_prepare.py:223
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -476,12 +490,12 @@ msgstr ""
 "kan daar niet toe worden beperkt. Wacht tot die host zijn netwerkgegevens "
 "meldt en bereid dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:217
+#: src/sysmanage_agent/backup/storage_prepare.py:234
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "Opslag voorbereiden wordt niet ondersteund op %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:225
+#: src/sysmanage_agent/backup/storage_prepare.py:242
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
@@ -490,7 +504,7 @@ msgstr ""
 "host heeft een eigen ZFS-dataset nodig. Zet het opslagpad op ZFS en bereid "
 "dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:303
+#: src/sysmanage_agent/backup/storage_prepare.py:345
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -502,7 +516,7 @@ msgstr ""
 "gekoppelde dataset aan (zfs create -o mountpoint=%(path)s POOL/NAME) en "
 "bereid dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:330
+#: src/sysmanage_agent/backup/storage_prepare.py:372
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -2353,7 +2367,7 @@ msgstr ""
 msgid "Could not determine hostname, using fallback: %s"
 msgstr "Kan hostname niet bepalen, valt terug op fallback: %s"
 
-#: src/sysmanage_agent/core/agent_lifecycle.py:54
+#: src/sysmanage_agent/core/agent_lifecycle.py:55
 #, python-format
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "In-flight dagboekreconciliatie is mislukt: %s"
@@ -2627,35 +2641,51 @@ msgstr "Fout bij verzamelen van agent-logboeken: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Fout bij verzamelen van foutlogboeken: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:164
+#: src/sysmanage_agent/operations/backup_operations.py:213
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr ""
 "Een Mac kan alleen een geback-upte host zijn, geen opslaghost voor back-ups."
 
-#: src/sysmanage_agent/operations/backup_operations.py:165
+#: src/sysmanage_agent/operations/backup_operations.py:214
 msgid "This platform cannot take that backup role."
 msgstr "Dit platform kan die back-uprol niet vervullen."
 
-#: src/sysmanage_agent/operations/backup_operations.py:309
+#: src/sysmanage_agent/operations/backup_operations.py:365
 msgid "That backup action is not configured on this host."
 msgstr "Die back-upactie is op deze host niet geconfigureerd."
 
-#: src/sysmanage_agent/operations/backup_operations.py:317
+#: src/sysmanage_agent/operations/backup_operations.py:373
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate is op deze host niet bruikbaar: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:350
+#: src/sysmanage_agent/operations/backup_operations.py:406
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Kan de back-uptaken niet installeren: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:382
+#: src/sysmanage_agent/operations/backup_operations.py:420
+msgid ""
+"This host cannot encrypt its backups: restate does not find gpg. Install "
+"GnuPG, and the backup policy is sent again."
+msgstr ""
+"Deze host kan zijn back-ups niet versleutelen: restate vindt gpg niet. "
+"Installeer GnuPG, dan wordt het back-upbeleid opnieuw verzonden."
+
+#: src/sysmanage_agent/operations/backup_operations.py:453
+msgid ""
+"This host has no NFSv4 client, so it backs up only through restate-proxy; "
+"its target uses NFS."
+msgstr ""
+"Deze host heeft geen NFSv4-client, dus het maakt alleen back-ups via "
+"restate-proxy; zijn doel gebruikt NFS."
+
+#: src/sysmanage_agent/operations/backup_operations.py:471
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Deze versie van restate ondersteunt niet: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:498
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Deze restate kan %s niet als taak uitvoeren; werk restate bij."
@@ -4010,7 +4040,7 @@ msgstr "Ongeldige JSON-aankondiging van onbekende bron"
 msgid "Error listening for announcements: %s"
 msgstr "Fout bij luisteren naar aankondigingen: %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:164
+#: src/sysmanage_agent/registration/host_certificate.py:170
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
@@ -4021,7 +4051,7 @@ msgstr ""
 "deze host (%s). De agent vervangt het niet uit zichzelf; een beheerder moet "
 "deze host op de server controleren."
 
-#: src/sysmanage_agent/registration/host_certificate.py:174
+#: src/sysmanage_agent/registration/host_certificate.py:180
 #, python-format
 msgid ""
 "The server requires a certificate from this host and refused the connection "
@@ -4030,7 +4060,7 @@ msgstr ""
 "De server vereist een certificaat van deze host en weigerde de verbinding "
 "zonder certificaat (%s); er wordt nu een certificaat aangevraagd."
 
-#: src/sysmanage_agent/registration/host_certificate.py:182
+#: src/sysmanage_agent/registration/host_certificate.py:188
 #, python-format
 msgid ""
 "The server refused this host's certificate because it has expired (%s); "
@@ -4039,20 +4069,20 @@ msgstr ""
 "De server heeft het certificaat van deze host geweigerd omdat het is "
 "verlopen (%s); er wordt nu een nieuw certificaat aangevraagd."
 
-#: src/sysmanage_agent/registration/host_certificate.py:196
+#: src/sysmanage_agent/registration/host_certificate.py:202
 #, python-format
 msgid "Certificate check failed: %s"
 msgstr "Certificaatcontrole mislukt: %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:267
+#: src/sysmanage_agent/registration/host_certificate.py:273
 msgid "The server's certificate response is not usable"
 msgstr "Het certificaatantwoord van de server is onbruikbaar"
 
-#: src/sysmanage_agent/registration/host_certificate.py:272
+#: src/sysmanage_agent/registration/host_certificate.py:278
 msgid "The server issued a certificate for a different key"
 msgstr "De server heeft een certificaat voor een andere sleutel uitgegeven"
 
-#: src/sysmanage_agent/registration/host_certificate.py:279
+#: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
 "changed server TLS certificate will not be accepted until the pins are reset"
@@ -4062,17 +4092,17 @@ msgstr ""
 "Een gewijzigd TLS-certificaat van de server wordt pas geaccepteerd nadat de "
 "pins bewust zijn gereset."
 
-#: src/sysmanage_agent/registration/host_certificate.py:288
+#: src/sysmanage_agent/registration/host_certificate.py:294
 #, python-format
 msgid "This host's certificate was issued; it is valid until %s"
 msgstr "Het certificaat van deze host is uitgegeven; het is geldig tot %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:303
+#: src/sysmanage_agent/registration/host_certificate.py:309
 #, python-format
 msgid "No certificate yet: this host is not approved (%s)"
 msgstr "Nog geen certificaat: deze host is niet goedgekeurd (%s)"
 
-#: src/sysmanage_agent/registration/host_certificate.py:308
+#: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
 "The server says this host's certificate is still current but did not receive"
@@ -4083,7 +4113,7 @@ msgstr ""
 "het niet ontvangen (%s). Iets tussen de agent en de server verwijdert het "
 "mogelijk; de agent behoudt het certificaat en vraagt het later opnieuw aan."
 
-#: src/sysmanage_agent/registration/host_certificate.py:317
+#: src/sysmanage_agent/registration/host_certificate.py:323
 #, python-format
 msgid "The server did not issue a certificate: HTTP %s, %s"
 msgstr "De server heeft geen certificaat uitgegeven: HTTP %s, %s"

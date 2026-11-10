@@ -20,13 +20,28 @@ and when the server asks (``hold_seconds``) the connection is kept open that
 long, while the storage host's agent lists who it sees on port 2049
 (backup/nfs_peers.py): the server finds this connection there by its source
 port and compares the address the storage host sees.
+
+Through restate-proxy (25.5) the server sends the proxy's port and how its
+certificate is trusted instead (``proxy``: ``port``, and optionally ``ca``
+and ``pin_sha256``).  The connection is then to that port, and a second one
+completes a TLS handshake as restate's curl will: the certificate checked
+against the site CA if one was sent, else the system's, for the proxy's
+name, and its key against the pin.  ``tls`` says how that went, so a host
+that reaches the port but would refuse the certificate is told before its
+first backup fails.  NAT does not matter there: the proxy knows a host by its
+token, not its address.
 """
 
 import asyncio
+import hashlib
 import ipaddress
 import platform
 import re
+import ssl
 from typing import Any, Callable, Dict, Optional
+
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
 
 from src.sysmanage_agent.backup import restate_probe
 
@@ -65,13 +80,77 @@ def unavailable_reason(
     return None
 
 
-async def _open(connect: Callable, address: str):
-    """``connect`` to port 2049, given CONNECT_SECONDS at most -- inside a
+async def _open(connect: Callable, address: str, port: int = NFS_PORT, **tls):
+    """``connect`` to the port, given CONNECT_SECONDS at most -- inside a
     timeout context where Python has one (3.11+), ``wait_for`` on 3.9/3.10."""
     if hasattr(asyncio, "timeout"):
         async with asyncio.timeout(CONNECT_SECONDS):
-            return await connect(address, NFS_PORT)
-    return await asyncio.wait_for(connect(address, NFS_PORT), CONNECT_SECONDS)
+            return await connect(address, port, **tls)
+    return await asyncio.wait_for(connect(address, port, **tls), CONNECT_SECONDS)
+
+
+def _proxy(parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """The proxy part of the request, checked, or None (an NFS target)."""
+    proxy = (parameters or {}).get("proxy")
+    if not isinstance(proxy, dict):
+        return None
+    port = proxy.get("port")
+    if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
+        return None
+    pin = proxy.get("pin_sha256")
+    pin = pin if isinstance(pin, str) and re.match(r"^[0-9a-f]{64}$", pin) else None
+    ca = proxy.get("ca")
+    ca = ca if isinstance(ca, str) and "-----BEGIN CERTIFICATE-----" in ca else None
+    return {"port": port, "pin_sha256": pin, "ca": ca}
+
+
+def spki_sha256(der: bytes) -> str:
+    """The SHA-256 of a certificate's public key, in hex."""
+    key = x509.load_der_x509_certificate(der).public_key()
+    return hashlib.sha256(
+        key.public_bytes(
+            serialization.Encoding.DER,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+    ).hexdigest()
+
+
+def _tls_context(ca: Optional[str]) -> ssl.SSLContext:
+    context = (
+        ssl.create_default_context(cadata=ca) if ca else (ssl.create_default_context())
+    )
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    return context
+
+
+async def _tls(
+    connect: Callable, address: str, proxy: Dict[str, Any]
+) -> Dict[str, Any]:
+    """``{"ok", "error", "spki_sha256"}``: a TLS handshake with the proxy as
+    restate's curl makes it."""
+    try:
+        context = _tls_context(proxy["ca"])
+        _reader, writer = await _open(
+            connect, address, proxy["port"], ssl=context, server_hostname=address
+        )
+    except asyncio.TimeoutError:
+        return {"ok": False, "error": "timeout", "spki_sha256": None}
+    except (ssl.SSLError, ssl.CertificateError, OSError, ValueError) as error:
+        reason = (
+            getattr(error, "verify_message", None)
+            or getattr(error, "reason", None)
+            or str(error)
+        )
+        return {"ok": False, "error": str(reason)[:200], "spki_sha256": None}
+    try:
+        der = writer.get_extra_info("ssl_object").getpeercert(binary_form=True)
+        found = spki_sha256(der) if der else None
+    except (AttributeError, ValueError):
+        found = None
+    await _close(writer, 0)
+    if proxy["pin_sha256"] and found != proxy["pin_sha256"]:
+        return {"ok": False, "error": "pin_mismatch", "spki_sha256": found}
+    return {"ok": True, "error": None, "spki_sha256": found}
 
 
 async def check(
@@ -79,18 +158,25 @@ async def check(
     connect: Callable = asyncio.open_connection,
 ) -> Dict[str, Any]:
     """``{"success", "reachable", "address", "port", "error"}`` for the
-    address the server sent (port 2049 always)."""
+    address the server sent: port 2049, or the proxy's port and then
+    ``tls`` as well."""
     address = (parameters or {}).get("address")
+    proxy = _proxy(parameters)
+    port = proxy["port"] if proxy else NFS_PORT
     if not valid_address(address):
         return {"success": False, "reachable": None, "address": None,
-                "port": NFS_PORT, "error": "invalid_address"}  # fmt: skip
+                "port": port, "error": "invalid_address"}  # fmt: skip
     try:
-        _reader, writer = await _open(connect, address)
+        _reader, writer = await _open(connect, address, port)
     except asyncio.TimeoutError:
-        return _answer(address, False, "timeout")
+        return _answer(address, False, "timeout", port)
     except OSError as error:
-        return _answer(address, False, (error.strerror or str(error))[:200])
-    answer = _answer(address, True, None)
+        return _answer(address, False, (error.strerror or str(error))[:200], port)
+    answer = _answer(address, True, None, port)
+    if proxy:
+        await _close(writer, 0)
+        answer["tls"] = await _tls(connect, address, proxy)
+        return answer
     local = _local_end(writer)
     if local is not None:
         answer["local_address"], answer["local_port"] = local
@@ -132,6 +218,8 @@ async def _close(writer, after: float) -> None:
         pass  # connected is what was asked; how it closed does not matter
 
 
-def _answer(address: str, reachable: bool, error: Optional[str]) -> Dict[str, Any]:
+def _answer(
+    address: str, reachable: bool, error: Optional[str], port: int = NFS_PORT
+) -> Dict[str, Any]:
     return {"success": True, "reachable": reachable, "address": address,
-            "port": NFS_PORT, "error": error}  # fmt: skip
+            "port": port, "error": error}  # fmt: skip

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 11:48-0500\n"
+"POT-Creation-Date: 2026-11-10 13:18-0800\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -121,37 +121,37 @@ msgstr "无法删除文件：%s"
 msgid "Restart the agent; it pins the server again on its next connection."
 msgstr "请重启代理；它会在下次连接时重新固定服务器。"
 
-#: src/security/server_identity.py:95
+#: src/security/server_identity.py:99
 #, python-format
 msgid "The server identity request failed: HTTP %s"
 msgstr "服务器身份请求失败：HTTP %s"
 
-#: src/security/server_identity.py:101 src/security/server_pinning.py:160
+#: src/security/server_identity.py:105 src/security/server_pinning.py:160
 #: src/security/server_pinning.py:164 src/security/server_pinning.py:169
-#: src/security/server_pinning.py:173 src/security/server_pinning.py:245
+#: src/security/server_pinning.py:173 src/security/server_pinning.py:251
 msgid "The server identity response is incomplete"
 msgstr "服务器身份响应不完整"
 
-#: src/security/server_identity.py:124
+#: src/security/server_identity.py:128
 msgid "The server cannot state its TLS identity yet; pinning will be retried"
 msgstr "服务器尚无法声明其 TLS 身份；将重试固定"
 
-#: src/security/server_identity.py:129
+#: src/security/server_identity.py:133
 #, python-format
 msgid "Could not pin this server's identity: %s. Pinning will be retried."
 msgstr "无法固定此服务器的身份：%s。将重试固定。"
 
-#: src/security/server_identity.py:134
+#: src/security/server_identity.py:138
 msgid "Pinned this server's identity; its TLS certificate is now checked"
 msgstr "已固定此服务器的身份；现在会检查其 TLS 证书"
 
-#: src/security/server_identity.py:150
+#: src/security/server_identity.py:154
 msgid ""
 "The server's TLS certificate changed, but the server cannot state its TLS "
 "identity right now; keeping the current pins and trying again later"
 msgstr "服务器的 TLS 证书已更改，但服务器目前无法声明其 TLS 身份；保留当前固定信息，稍后重试"
 
-#: src/security/server_identity.py:159
+#: src/security/server_identity.py:163
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
@@ -163,13 +163,13 @@ msgstr ""
 "证书已更改，且无法验证此更改（%s）。可能的原因是代理服务器或另一台服务器出示了不同的证书。如果此服务器确实已被替换，请有意地重新固定：删除 %s "
 "或运行代理的重置命令，然后重启代理。"
 
-#: src/security/server_identity.py:172
+#: src/security/server_identity.py:176
 msgid ""
 "The server's TLS certificate changed; the new one is signed by this server's"
 " identity and is now trusted"
 msgstr "服务器的 TLS 证书已更改；新证书由此服务器的身份签名，现已受信任"
 
-#: src/security/server_identity.py:200
+#: src/security/server_identity.py:204
 #, python-format
 msgid "Could not re-pin this server's identity: %s"
 msgstr "无法重新固定此服务器的身份：%s"
@@ -194,29 +194,29 @@ msgstr "服务器的身份证书不是由已固定的 CA 签发的"
 msgid "The server's identity certificate is outside its validity period"
 msgstr "服务器的身份证书不在其有效期内"
 
-#: src/security/server_pinning.py:200
+#: src/security/server_pinning.py:206
 msgid "The server's identity certificate uses an unsupported key type"
 msgstr "服务器的身份证书使用了不受支持的密钥类型"
 
-#: src/security/server_pinning.py:204
+#: src/security/server_pinning.py:210
 msgid ""
 "The server identity statement is not signed by its identity certificate"
 msgstr "服务器身份声明未由其身份证书签名"
 
-#: src/security/server_pinning.py:213 src/security/server_pinning.py:216
-#: src/security/server_pinning.py:221
+#: src/security/server_pinning.py:219 src/security/server_pinning.py:222
+#: src/security/server_pinning.py:227
 msgid "The server identity statement is not readable"
 msgstr "服务器身份声明无法读取"
 
-#: src/security/server_pinning.py:218
+#: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
 msgstr "服务器身份声明已过期"
 
-#: src/security/server_pinning.py:255
+#: src/security/server_pinning.py:261
 msgid "The server's CA is not the CA this agent has pinned"
 msgstr "服务器的 CA 不是此代理已固定的 CA"
 
-#: src/security/server_pinning.py:262
+#: src/security/server_pinning.py:268
 msgid ""
 "The certificate on this connection is not one the server's signed statement "
 "lists"
@@ -241,22 +241,29 @@ msgstr "%(where)s 处的备份存储上锁定不起作用：%(error)s"
 msgid "restate is not installed on this host."
 msgstr "此主机上未安装restate。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:117
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:122
 msgid "That backup job is already running."
 msgstr "该备份作业正在运行中。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:139
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:144
 msgid "The backup job could not be started."
 msgstr "无法启动备份作业。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:227
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
+#, python-format
+msgid ""
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
+msgstr "restate 在写入结果之前停止（退出代码 %(code)s），其日志 %(log)s 为空：它在运行时被停止，或者机器重新启动了"
+
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
 "%(unit)s on this host"
 msgstr "restate 在写入结果之前已停止（退出码 %(code)s）；请在此主机上查看 journalctl -u %(unit)s"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:271
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:285
 msgid "Could not queue the backup report"
 msgstr "无法将备份报告加入队列"
 
@@ -349,46 +356,50 @@ msgstr "%s 处的备份存储没有响应。"
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "无法卸载 %s 处的备份存储：%s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:86
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "无法列出封存快照：%s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:101
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:102
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "无法删除旧的封存快照 %(name)s：%(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:176
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:182
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s 未挂载在此主机的 %(path)s 上"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:213
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:197
+msgid "restate is not installed on this storage host"
+msgstr "此存储主机上未安装 restate"
+
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:240
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "无法为策略 %s 准备备份存储：%s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:286
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "无法运行存储审核：%s"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:122
+#: src/sysmanage_agent/backup/storage_prepare.py:137
 #, python-format
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
 "this storage host. Create it, then prepare again."
 msgstr "此存储主机上不存在备份服务账户 %(account)s（用户和组）。请创建它，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:152
+#: src/sysmanage_agent/backup/storage_prepare.py:167
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr "代理无法读取 %(path)s，因此无法判断其中是否有备份。请以 root 身份运行代理，或将该目录移到别处，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:163
+#: src/sysmanage_agent/backup/storage_prepare.py:178
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own ZFS dataset, and preparing "
@@ -399,7 +410,7 @@ msgstr ""
 "%(path)s 中已有文件，但它不是独立的 ZFS 数据集，而准备操作从不移动备份。请 1) 将其重命名（例如改为 "
 "%(path)s.old），重新准备，再以 root 身份将其内容复制到新数据集中；或 2) 如果不再需要这些备份，则将其删除。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:171
+#: src/sysmanage_agent/backup/storage_prepare.py:186
 #, python-format
 msgid ""
 "%(path)s already holds files but is not its own btrfs subvolume, and "
@@ -410,25 +421,25 @@ msgstr ""
 "%(path)s 中已有文件，但它不是独立的 btrfs 子卷，而准备操作从不移动备份。请 1) 将其重命名（例如改为 "
 "%(path)s.old），重新准备，再以 root 身份将其内容复制到新子卷中；或 2) 如果不再需要这些备份，则将其删除。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:206
+#: src/sysmanage_agent/backup/storage_prepare.py:223
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
 msgstr "服务器尚不知道被备份主机的 IP 地址，因此无法将其导出限制为该地址。请等待该主机报告其网络信息，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:217
+#: src/sysmanage_agent/backup/storage_prepare.py:234
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s 不支持准备存储。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:225
+#: src/sysmanage_agent/backup/storage_prepare.py:242
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
 msgstr "FreeBSD 导出的是整个文件系统，因此每台主机的存储库都需要独立的 ZFS 数据集。请将存储路径放在 ZFS 上，然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:303
+#: src/sysmanage_agent/backup/storage_prepare.py:345
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -438,7 +449,7 @@ msgstr ""
 "存储路径 %(path)s 处未挂载 ZFS 数据集，因此子数据集不会位于存储库所在位置。请在该处创建一个挂载的数据集（zfs create -o "
 "mountpoint=%(path)s POOL/NAME），然后重新准备。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:330
+#: src/sysmanage_agent/backup/storage_prepare.py:372
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -2251,7 +2262,7 @@ msgstr ">>> [CREATE_CHILD_HOST_DUPLICATE] 跳过重复 vm_name=%s queue_message_
 msgid "Could not determine hostname, using fallback: %s"
 msgstr "无法确定主机名，使用备用名称：%s"
 
-#: src/sysmanage_agent/core/agent_lifecycle.py:54
+#: src/sysmanage_agent/core/agent_lifecycle.py:55
 #, python-format
 msgid "In-flight journal reconciliation failed: %s"
 msgstr "飞行日志对账失败：%s"
@@ -2518,34 +2529,46 @@ msgstr "收集代理日志时出错：%s"
 msgid "Error collecting error logs: %s"
 msgstr "收集错误日志时出错：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:164
+#: src/sysmanage_agent/operations/backup_operations.py:213
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr "Mac 只能作为被备份主机，不能作为备份存储主机。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:165
+#: src/sysmanage_agent/operations/backup_operations.py:214
 msgid "This platform cannot take that backup role."
 msgstr "此平台无法承担该备份角色。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:309
+#: src/sysmanage_agent/operations/backup_operations.py:365
 msgid "That backup action is not configured on this host."
 msgstr "该备份操作在此主机上未配置。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:317
+#: src/sysmanage_agent/operations/backup_operations.py:373
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate在此主机上不可用：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:350
+#: src/sysmanage_agent/operations/backup_operations.py:406
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "无法安装备份作业：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:382
+#: src/sysmanage_agent/operations/backup_operations.py:420
+msgid ""
+"This host cannot encrypt its backups: restate does not find gpg. Install "
+"GnuPG, and the backup policy is sent again."
+msgstr "此主机无法加密其备份：restate 找不到 gpg。安装 GnuPG 后，备份策略会重新发送。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:453
+msgid ""
+"This host has no NFSv4 client, so it backs up only through restate-proxy; "
+"its target uses NFS."
+msgstr "此主机没有 NFSv4 客户端，因此只能通过 restate-proxy 备份；它的目标使用 NFS。"
+
+#: src/sysmanage_agent/operations/backup_operations.py:471
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支持：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:498
+#: src/sysmanage_agent/operations/backup_operations.py:600
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 无法将 %s 作为作业运行；请升级 restate。"
@@ -3886,7 +3909,7 @@ msgstr "来自未知来源的无效 JSON 公告"
 msgid "Error listening for announcements: %s"
 msgstr "监听通告时出错：%s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:164
+#: src/sysmanage_agent/registration/host_certificate.py:170
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
@@ -3894,51 +3917,51 @@ msgid ""
 " host on the server."
 msgstr "服务器拒绝了此主机的证书，认为它对此主机无效（%s）。代理不会自行替换它；管理员应在服务器上检查此主机。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:174
+#: src/sysmanage_agent/registration/host_certificate.py:180
 #, python-format
 msgid ""
 "The server requires a certificate from this host and refused the connection "
 "without one (%s); requesting a certificate now."
 msgstr "服务器要求此主机提供证书，并拒绝了没有证书的连接（%s）；现在正在请求证书。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:182
+#: src/sysmanage_agent/registration/host_certificate.py:188
 #, python-format
 msgid ""
 "The server refused this host's certificate because it has expired (%s); "
 "requesting a new certificate now."
 msgstr "服务器拒绝了此主机的证书，因为它已过期（%s）；现在正在请求新证书。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:196
+#: src/sysmanage_agent/registration/host_certificate.py:202
 #, python-format
 msgid "Certificate check failed: %s"
 msgstr "证书检查失败：%s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:267
+#: src/sysmanage_agent/registration/host_certificate.py:273
 msgid "The server's certificate response is not usable"
 msgstr "服务器的证书响应不可用"
 
-#: src/sysmanage_agent/registration/host_certificate.py:272
+#: src/sysmanage_agent/registration/host_certificate.py:278
 msgid "The server issued a certificate for a different key"
 msgstr "服务器为另一个密钥签发了证书"
 
-#: src/sysmanage_agent/registration/host_certificate.py:279
+#: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
 "changed server TLS certificate will not be accepted until the pins are reset"
 " deliberately."
 msgstr "新的主机证书由已固定 CA 以外的 CA 签发。在有意重置固定信息之前，不会接受已更改的服务器 TLS 证书。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:288
+#: src/sysmanage_agent/registration/host_certificate.py:294
 #, python-format
 msgid "This host's certificate was issued; it is valid until %s"
 msgstr "已签发此主机的证书；有效期至 %s"
 
-#: src/sysmanage_agent/registration/host_certificate.py:303
+#: src/sysmanage_agent/registration/host_certificate.py:309
 #, python-format
 msgid "No certificate yet: this host is not approved (%s)"
 msgstr "尚无证书：此主机未获批准（%s）"
 
-#: src/sysmanage_agent/registration/host_certificate.py:308
+#: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
 "The server says this host's certificate is still current but did not receive"
@@ -3946,7 +3969,7 @@ msgid ""
 " agent keeps the certificate and asks again later."
 msgstr "服务器表示此主机的证书仍然有效，但未收到该证书（%s）。代理与服务器之间可能有东西正在移除它；代理会保留该证书，稍后再次请求。"
 
-#: src/sysmanage_agent/registration/host_certificate.py:317
+#: src/sysmanage_agent/registration/host_certificate.py:323
 #, python-format
 msgid "The server did not issue a certificate: HTTP %s, %s"
 msgstr "服务器未签发证书：HTTP %s, %s"

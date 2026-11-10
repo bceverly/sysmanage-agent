@@ -94,19 +94,40 @@ def darwin_mounts(mount_out: str) -> List[Mount]:
     return found
 
 
+# OpenBSD and NetBSD ``mount`` (neither has -p):
+# ``SOURCE on POINT type TYPE (option, ...)``.
+_TYPED_LINE = re.compile(r"^(?P<source>.*?) on (?P<point>.*) type (?P<fstype>\S+)")
+# Their mount(8) is in /sbin, which NetBSD leaves off a non-login PATH.
+TYPED_MOUNT = "/sbin/mount"
+
+
+def typed_mounts(mount_out: str) -> List[Mount]:
+    """OpenBSD and NetBSD ``mount`` output."""
+    found = []
+    for line in (mount_out or "").splitlines():
+        match = _TYPED_LINE.match(line)
+        if match:
+            found.append(Mount(match["point"], match["fstype"], match["source"]))
+    return found
+
+
 def read_mounts(system: str) -> List[Mount]:
     """This machine's mounts: the host's mountinfo on Linux, ``mount -p`` on
-    the BSDs (which have no /proc), ``mount`` on macOS."""
+    FreeBSD (no /proc), ``mount`` on macOS, OpenBSD and NetBSD."""
     if system == "Linux":
         return linux_mounts(network_mounts.read_host_mountinfo())
-    argv = ["mount"] if system == "Darwin" else ["mount", "-p"]
+    typed = system in ("OpenBSD", "NetBSD")
+    argv = (["mount"] if system == "Darwin"
+            else [TYPED_MOUNT] if typed else ["mount", "-p"])  # fmt: skip
     try:
         out = subprocess.run(  # nosec B603 B607 - fixed argv
             argv, capture_output=True, text=True, timeout=30, check=False
         )
     except (OSError, subprocess.SubprocessError):
         return []
-    return darwin_mounts(out.stdout) if system == "Darwin" else bsd_mounts(out.stdout)
+    if system == "Darwin":
+        return darwin_mounts(out.stdout)
+    return typed_mounts(out.stdout) if typed else bsd_mounts(out.stdout)
 
 
 def mount_types(system: str) -> Dict[str, str]:

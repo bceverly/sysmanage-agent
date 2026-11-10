@@ -7,6 +7,7 @@ through the proxy, and the storage host's grants and audit."""
 
 # pylint: disable=protected-access,redefined-outer-name,unused-import
 
+import base64
 import hashlib
 import json
 import os
@@ -230,7 +231,10 @@ async def test_a_restore_reads_through_the_proxy_with_no_mount(remote, monkeypat
     job = rendered[-1]
     assert job["repository"] == URL
     assert job["repository_token_file"] == access.token_path(PID)
-    assert job["repository_pin_sha256"] == HASH
+    # restate takes the pin as openssl prints it: the base64 of the SHA-256.
+    assert (
+        job["repository_pin_sha256"] == base64.b64encode(bytes.fromhex(HASH)).decode()
+    )
     assert not remote.fake.ran("mount")
     for task in list(remote._tasks):
         task.cancel()

@@ -66,13 +66,17 @@ def test_runners_by_platform():
     assert job_runner.runner_for("Linux", systemd=False) == job_runner.DETACH
     assert job_runner.runner_for("FreeBSD") == job_runner.DAEMON
     assert job_runner.runner_for("Darwin") == job_runner.DETACH
-    for system in ("OpenBSD", "NetBSD", "Windows", "", None):
+    # 25.5: OpenBSD and NetBSD back up through restate-proxy, detached.
+    for system in ("OpenBSD", "NetBSD"):
+        assert job_runner.runner_for(system) == job_runner.DETACH
+        assert job_runner.roles_for(system, job_runner.DETACH) == ("host",)
+    for system in ("Windows", "", None):
         assert job_runner.runner_for(system) is None
     # 25.8: FreeBSD backs up as a host too; a Mac only as a host.
     assert job_runner.roles_for("FreeBSD", job_runner.DAEMON) == job_runner.ALL_ROLES
     assert job_runner.roles_for("Linux", job_runner.DETACH) == job_runner.ALL_ROLES
     assert job_runner.roles_for("Darwin", job_runner.DETACH) == ("host",)
-    assert job_runner.roles_for("OpenBSD", None) == ()
+    assert job_runner.roles_for("Windows", None) == ()
 
 
 def test_a_pidfile_is_running_only_while_locked(tmp_path):
@@ -194,6 +198,21 @@ async def test_a_run_with_no_result_reports_what_restate_said(
     report = _sent(agent, "backup_result")[0]
     assert (report["status"], report["exit"]) == ("failed", None)
     assert report["result"] == {"message": "restate: run: not run: it has to be root's"}
+
+
+@pytest.mark.asyncio
+async def test_a_stopped_run_that_said_nothing_names_its_log_not_journalctl(
+    bsd, agent, job_files, monkeypatch
+):
+    # A detached run has no systemd journal to point at (OpenBSD, 2026-11-10).
+    monkeypatch.setattr(ops_module, "START_GRACE_SECONDS", -1)
+    await bsd.backup_configure(_prune_policy())
+    _touch_jobs(job_files, "prune")
+    await bsd.backup_run({"run_id": RID, "policy_id": PID, "action": "prune"})
+    await _drain(bsd)
+    message = _sent(agent, "backup_result")[0]["result"]["message"]
+    assert "journalctl" not in message
+    assert job_runner.logfile(bsd.state_dir, contract.job_name(PID, "prune")) in message
 
 
 @pytest.mark.asyncio
