@@ -10,6 +10,7 @@ through the proxy, and the storage host's grants and audit."""
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 from datetime import datetime, timedelta, timezone
 
@@ -147,7 +148,12 @@ def test_a_token_is_what_the_protocol_says_and_its_hash_what_sha256sum_says():
     token = access.new_token()
     assert token.startswith("rsp_") and len(token) == 47
     assert access.token_sha256(token) == hashlib.sha256(token.encode()).hexdigest()
-    printed = subprocess.run(["sha256sum"], input=token.encode(), capture_output=True,
+    # GNU's sha256sum, or the BSDs' sha256 (NetBSD's in /usr/bin too).
+    tool = (["sha256sum"] if shutil.which("sha256sum")
+            else ["sha256", "-q"] if shutil.which("sha256") else None)  # fmt: skip
+    if tool is None:
+        pytest.skip("no sha256sum or sha256 on this machine")
+    printed = subprocess.run(tool, input=token.encode(), capture_output=True,
                              check=True).stdout.decode().split()[0]  # fmt: skip
     assert access.token_sha256(token) == printed
 
@@ -277,9 +283,9 @@ async def test_the_previous_repository_is_granted_read_only_beside_it(remote):
 
 @pytest.mark.asyncio
 async def test_a_grant_outlives_neither_its_host_nor_the_proxy(remote):
-    gone = os.path.join(access.GRANTS_DIR, "deleted-host.conf")
-    by_hand = os.path.join(access.GRANTS_DIR, "someone.conf")
-    other = os.path.join(access.GRANTS_DIR, "other-target.conf")
+    gone = access.grant_path("deleted-host")
+    by_hand = access.grant_path("someone")
+    other = access.grant_path("other-target")
     for path, label in ((gone, f"sysmanage-agent target {TID}"),
                         (by_hand, None),
                         (other, "sysmanage-agent target 9a000000-0000-4000-8000-000000000099")):  # fmt: skip
