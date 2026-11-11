@@ -12,6 +12,7 @@ and enables and restarts it."""
 import os
 import platform
 import stat
+import sys
 
 import pytest
 from cryptography import x509
@@ -27,6 +28,9 @@ from src.sysmanage_agent.backup import proxy_service as service
 from src.sysmanage_agent.backup.job_validation import PolicyError
 from tests.backup_ops_support import STORAGE_TARGET, agent, ops  # noqa: F401
 from tests.test_backup_proxy import HOST, TID, _storage_proxy, remote  # noqa: F401
+
+# A storage host is never Windows (and Windows has no Unix file modes).
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Unix-only feature")
 
 NAME = "backup.example.lan"
 
