@@ -143,10 +143,16 @@ async def test_a_host_with_no_nfsv4_client_refuses_an_nfs_policy(
 
 
 @pytest.mark.parametrize("system", ["OpenBSD", "NetBSD"])
-def test_they_can_back_up_once_restate_captures_through_a_proxy(system):
+def test_they_can_back_up_once_restate_captures_through_a_proxy(system, tmp_path):
+    # A real file: the probe stats the binary (its cache key) before it asks
+    # restate anything, so a path that exists only on some machines made this
+    # pass where restate was installed and fail on the BSD CI VMs.
+    restate = tmp_path / "restate"
+    restate.write_text("#!/bin/sh\n")
+
     def reason(features):
         return restate_probe.unavailable_reason(
-            lookup=lambda name: "/usr/local/sbin/restate",
+            lookup=lambda name: str(restate),
             system=system,
             ask=lambda _exe: features,
             exists=lambda path: True,
