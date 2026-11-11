@@ -590,10 +590,9 @@ jobs:
           mkdir -p /tmp/vendor
           # Download pip wheel (needed to upgrade old pip in build chroot)
           pip3 download pip -d /tmp/vendor --only-binary=:all:
-          # cp312: this RPM is published for EL9, where the spec builds the
-          # agent with python3.12 (rpmbuild gets --define "el9 1" below).
-          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: --python-version 312
-          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all: --python-version 312
+          # cp311: openSUSE's spec builds the agent with python311.
+          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: --python-version 311
+          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all: --python-version 311
 
           # Also download for any platform (for pure Python packages)
           pip3 download -r requirements-prod.txt -d /tmp/vendor --no-deps 2>/dev/null || true
