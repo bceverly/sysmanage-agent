@@ -84,11 +84,17 @@ def version_from_url(url: str) -> Optional[str]:
     return match.group(1) if match else None
 
 
-def asset_names(
-    kind: str, version: str, release: str, arch: str, listed: Dict[str, str]
+def asset_names(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    kind: str,
+    version: str,
+    release: str,
+    arch: str,
+    listed: Dict[str, str],
+    proxy: bool = False,
 ) -> Optional[List[str]]:
     """This host's package file(s) in the release, or None when the release
-    has none for it."""
+    has none for it.  ``proxy``: restate-proxy's too, on FreeBSD -- the one
+    release-package system a storage host can be."""
     names = {
         FREEBSD: [f"restate-{version}-freebsd-{release}-{arch}.pkg"],
         OPENBSD: [f"restate-{version}-openbsd-{release}-{arch}.tgz"],
@@ -98,6 +104,8 @@ def asset_names(
         EL: [f"restate-{version}-1.el{release}.{arch}.rpm"],
         LEAP: [f"restate-{version}-1.opensuseleap{release}.{arch}.rpm"],
     }.get(kind)
+    if proxy and kind == FREEBSD:
+        names = names + [f"restate-proxy-{version}-freebsd-{release}-{arch}.pkg"]
     if kind == TUMBLEWEED:
         # Named for the snapshot it was built on: the newest one.
         pattern = re.compile(
@@ -128,7 +136,7 @@ def local_name(kind: str, version: str, name: str) -> str:
 def install_steps(kind: str, paths: List[str]) -> List[List[str]]:
     """The commands that install the saved package(s) and the NFS client."""
     if kind == FREEBSD:
-        return [["pkg", "add", "-f", paths[0]]]
+        return [["pkg", "add", "-f", path] for path in paths]
     if kind == OPENBSD:
         # doas matches the command as typed: the absolute path its rule names.
         return [["/usr/sbin/pkg_add", "-D", "unsigned", paths[0]]]
@@ -162,8 +170,8 @@ def failed(reason: str, detail: str = "") -> Dict[str, object]:
     return {"success": False, "reason": reason, "detail": detail[-800:]}
 
 
-async def _download(
-    get: Callable, kind: str, release: str, arch: str
+async def _download(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    get: Callable, kind: str, release: str, arch: str, proxy: bool = False
 ) -> Tuple[Optional[str], Dict[str, bytes], Optional[Dict[str, object]]]:
     """``(version, {name: package}, None)``, or a failure as the third item."""
     loop = asyncio.get_running_loop()
@@ -174,7 +182,7 @@ async def _download(
     base = f"{RELEASES_URL}/download/v{version}/"
     _, sums = await loop.run_in_executor(None, get, base + "SHA256SUMS", MAX_SUMS_BYTES)
     listed = parse_sums(sums.decode("utf-8", "replace"))
-    names = asset_names(kind, version, release, arch, listed)
+    names = asset_names(kind, version, release, arch, listed, proxy)
     if not names:
         return None, {}, failed("no_release", offered(kind, listed))
     packages = {}
@@ -196,10 +204,11 @@ async def install(  # pylint: disable=too-many-arguments
     run: Callable,
     get: Callable,
     privileged: Callable[[List[str]], List[str]],
+    proxy: bool = False,
 ) -> Dict[str, object]:
     """Download, check and install this host's release package(s)."""
     try:
-        version, packages, failure = await _download(get, kind, release, arch)
+        version, packages, failure = await _download(get, kind, release, arch, proxy)
     except OSError as error:
         return failed("download_failed", str(error))
     if failure:

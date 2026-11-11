@@ -33,8 +33,14 @@ namespace (``host_mount.in_host_namespace``): the agent's unit gives it a
 private one with ``/root`` read-only, and add-apt-repository failed there
 writing ``/root/.launchpadlib`` (production, milsurpmonitor, 2026-10-30).
 
+restate-proxy (25.5): on a storage host whose target is on the proxy the
+server adds one flag, ``proxy``, and Equip installs restate-proxy beside
+restate -- from the same PPA or COPR, or FreeBSD's release package from the
+same release.  The service itself (running as ``restate``, its certificate,
+enabled and started) is the storage configure's (backup/proxy_service.py).
+
 Everything that decides what runs is HERE: the server sends no URL, package
-name or command, only "equip".  Downloads come only from restate's own
+name or command, only "equip" (and whether this storage host serves a proxy).  Downloads come only from restate's own
 release page, file names are built from this host's release, and nothing is
 installed unless its checksum matches the release's list.
 
@@ -158,22 +164,27 @@ def unavailable_reason(
     return None if found else restate_probe.REASON_WRONG_PLATFORM
 
 
-def ubuntu_steps() -> List[List[str]]:
+PROXY_PACKAGE = "restate-proxy"
+
+
+def ubuntu_steps(proxy: bool = False) -> List[List[str]]:
     """The PPA (add-apt-repository refreshes the package lists), then restate
-    and the NFS client."""
+    and the NFS client -- and restate-proxy for a proxy target's storage."""
+    extra = [PROXY_PACKAGE] if proxy else []
     return [
         ["add-apt-repository", "-y", PPA],
-        ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE],
+        ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra],
     ]
 
 
-def fedora_steps() -> List[List[str]]:
+def fedora_steps(proxy: bool = False) -> List[List[str]]:
     """The copr command (dnf-plugins-core, or dnf5's plugins), restate's
-    COPR, then restate and the NFS client."""
+    COPR, then restate and the NFS client (and restate-proxy)."""
+    extra = [PROXY_PACKAGE] if proxy else []
     return [
         ["dnf", "install", "-y", "dnf-command(copr)"],
         ["dnf", "-y", "copr", "enable", COPR],
-        ["dnf", "install", "-y", "restate", "nfs-utils"],
+        ["dnf", "install", "-y", "restate", "nfs-utils", *extra],
     ]
 
 
@@ -258,21 +269,25 @@ async def equip(  # pylint: disable=too-many-arguments
     release_text: Optional[str] = None,
     exists: Callable = os.path.exists,
     stat: Callable = os.stat,
+    proxy: bool = False,
 ) -> Dict[str, object]:
     """Install restate (and the NFS client) on this host; ``{"success": True,
     "installed"}`` or a failure with its reason code and the tool's last
-    output."""
+    output.  ``proxy``: this storage host serves a restate-proxy target, so
+    restate-proxy is installed too (Ubuntu, Fedora, FreeBSD -- where a storage
+    host can be)."""
     system = system or platform.system()
     found = target(system, release_text=release_text, exists=exists)
     if found is None:
         return _failed("unsupported")
     if found.kind == UBUNTU:
-        return await _steps(run, ubuntu_steps(), "ppa")
+        return await _steps(run, ubuntu_steps(proxy), "ppa")
     if found.kind == FEDORA:
-        return await _steps(run, fedora_steps(), "copr")
+        return await _steps(run, fedora_steps(proxy), "copr")
     if found.kind == MACOS:
         return await _equip_macos(run, exists, stat)
     return await release.install(
         found.kind, found.release, found.arch, state_dir, run, fetch,
         _linux_privileged if system == "Linux" else lambda argv: _privileged(argv, system),
+        proxy=proxy,
     )  # fmt: skip

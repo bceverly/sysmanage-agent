@@ -418,15 +418,16 @@ class MiscDelegator:
         """Sweep one on-link network on the server's request (Phase 21.6 S4)."""
         return await self.network_discovery_ops.run_network_sweep(parameters)
 
-    async def equip_backup(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def equip_backup(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Install restate so this host can back up ("Equip for backup").  The
-        server sends nothing but the request; backup/equip.py decides what
-        runs on this OS."""
+        server sends nothing but the request -- and ``proxy`` for a storage
+        host serving restate-proxy; backup/equip.py decides what runs."""
         # pylint: disable=import-outside-toplevel
         from src.sysmanage_agent.backup import equip  # noqa: PLC0415
         from src.sysmanage_agent.operations import backup_operations  # noqa: PLC0415
 
-        return await equip.equip(backup_operations.default_state_dir())
+        proxy = (parameters or {}).get("proxy") is True
+        return await equip.equip(backup_operations.default_state_dir(), proxy=proxy)
 
     async def check_backup_storage(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Can this host reach its backup storage's NFS port?  The server

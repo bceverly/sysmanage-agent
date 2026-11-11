@@ -12,10 +12,13 @@ proxy.  Nothing here ever logs or reports a token.
 
 import json
 import os
+import platform
 import shutil
 from typing import Any, Dict, List, Optional
 
+from src.sysmanage_agent.backup import host_mount
 from src.sysmanage_agent.backup import proxy_access as access
+from src.sysmanage_agent.backup import proxy_service as service
 from src.sysmanage_agent.backup import restate_contract as contract
 
 PROXY_BINARIES = (
@@ -115,7 +118,106 @@ class BackupProxyMixin:
         ):
             await self._remove_root_file(path)
             removed.append(os.path.basename(path)[: -len(".conf")])
-        return {"proxy_grants": {"written": written, "removed": removed}}
+        return {
+            "proxy_grants": {"written": written, "removed": removed},
+            **await self._apply_proxy_service(policy),
+        }
+
+    # --- the proxy as a service (backup/proxy_service.py) -----------------
+
+    async def _apply_proxy_service(self, policy: Dict[str, Any]) -> Dict[str, Any]:
+        """Run restate-proxy as the repositories' account, with its
+        certificate; what the configure reply says of it (``proxy_csr`` when
+        a certificate is wanted)."""
+        proxy = policy["proxy"]
+        account = policy.get("service_account") or "restate"
+        if not proxy["enabled"]:
+            await self._stop_proxy_service(account)
+            return {}
+        if proxy_binary() is None:
+            return {"proxy_service": "not_installed"}
+        await self._run_proxy_as(account)
+        out: Dict[str, Any] = {}
+        changed = False
+        if proxy.get("cert"):
+            changed, csr = await self._apply_proxy_cert(proxy["cert"], account)
+            if csr:
+                out["proxy_csr"] = csr
+        if os.path.exists(access.PROXY_CERT) and os.path.exists(access.PROXY_KEY):
+            await self._start_proxy_service(restart=changed)
+            out["proxy_service"] = "started"
+        return out
+
+    async def _apply_proxy_cert(self, cert: Dict[str, Any], account: str):
+        """Install the certificate the server signed for this host's pending
+        key, or ask for one; ``(installed something, request or None)``."""
+        pending_path = service.pending_path(self._backup_dir())
+        pending = service.load_key(_read_text(pending_path))
+        pem = cert["pem"]
+        if pem and pending is not None and service.same_key(pending, pem):
+            await self._install_root_file(
+                service.key_pem(pending), access.PROXY_KEY, mode="600"
+            )
+            await self._run(self._privileged(
+                ["chown", f"{account}:{account}", access.PROXY_KEY]))  # fmt: skip
+            await self._install_root_file(pem, access.PROXY_CERT)
+            os.unlink(pending_path)
+            return True, None
+        installed = _read_text(access.PROXY_CERT)
+        if not cert["renew"] and (not pem or installed == pem):
+            return False, None
+        # Wanted: a new one, or the server holds one this host has no key
+        # for (it is issued again for the key this host does hold).
+        if pending is None:
+            self._ensure_dirs()
+            pending = service.new_key()
+            service.write_private(pending_path, service.key_pem(pending))
+        return False, service.csr_pem(pending, cert["name"])
+
+    def _proxy_systemd(self) -> bool:
+        return platform.system() == "Linux" and host_mount.systemd_running()
+
+    async def _run_proxy_as(self, account: str) -> None:
+        if self._proxy_systemd():
+            text = service.drop_in(account)
+            if _read_text(service.DROP_IN) != text:
+                await self._install_root_file(text, service.DROP_IN)
+                await self._run(self._privileged(["systemctl", "daemon-reload"]))
+        elif platform.system() == "FreeBSD":
+            await self._run(
+                self._privileged(["sysrc", *service.freebsd_settings(account)])
+            )
+
+    async def _start_proxy_service(self, restart: bool) -> None:
+        if self._proxy_systemd():
+            await self._run(self._privileged(["systemctl", "enable", service.UNIT]))
+            action = "restart" if restart else "start"
+            await self._run(self._privileged(["systemctl", action, service.UNIT]))
+        elif platform.system() == "FreeBSD":
+            await self._run(self._privileged(["sysrc", "restate_proxy_enable=YES"]))
+            action = "restart" if restart else "start"
+            await self._run(
+                self._privileged(["service", service.FREEBSD_SERVICE, action])
+            )
+
+    async def _stop_proxy_service(self, account: str) -> None:
+        """Back on NFS: stop and disable the service this agent turned on --
+        never one an operator runs by hand (no drop-in, no knob of ours)."""
+        if self._proxy_systemd():
+            if not os.path.exists(service.DROP_IN):
+                return
+            await self._run(self._privileged(["systemctl", "disable", service.UNIT]))
+            await self._run(self._privileged(["systemctl", "stop", service.UNIT]))
+            await self._remove_root_file(service.DROP_IN)
+            await self._run(self._privileged(["systemctl", "daemon-reload"]))
+        elif platform.system() == "FreeBSD":
+            code, out, _err = await self._run(["sysrc", "-n", "restate_proxy_user"])
+            if code != 0 or out.strip() != account:
+                return
+            await self._run(
+                self._privileged(["service", service.FREEBSD_SERVICE, "stop"])
+            )
+            await self._run(self._privileged(["sysrc", "restate_proxy_enable=NO"]))
 
     async def _proxy_audit(self, policy: Dict[str, Any]) -> List[Dict[str, Any]]:
         """The proxy as this host's clients need it: running, its certificate

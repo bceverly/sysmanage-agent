@@ -42,6 +42,7 @@ TOKEN_DIR = "/etc/restate/tokens"
 CA_DIR = "/etc/restate/proxy-ca"
 GRANTS_DIR = "/etc/restate/proxy.d"
 PROXY_CERT = "/etc/restate/proxy.crt"
+PROXY_KEY = "/etc/restate/proxy.key"
 PREVIOUS_SUFFIX = ".previous"
 LABEL_PREFIX = "sysmanage-agent target "
 OPERATIONS = ("append", "read")
@@ -63,6 +64,10 @@ _CERT = "-----BEGIN CERTIFICATE-----"
 
 
 # --- checking what the server sent ---------------------------------------
+
+
+def valid_host_name(value: Any) -> bool:
+    return isinstance(value, str) and bool(_HOSTNAME.match(value))
 
 
 def _check_url(value: Any, what: str) -> str:
@@ -174,7 +179,10 @@ def check_storage_proxy(value: Any) -> Optional[Dict[str, Any]]:
     if value is None:
         return None
     keys = {"target_id", "enabled", "grants", "clients"}
-    if not isinstance(value, dict) or not keys <= set(value) <= keys | {"export"}:
+    if not isinstance(value, dict) or not keys <= set(value) <= keys | {
+        "export",
+        "cert",
+    }:
         raise PolicyError("proxy must have target_id, enabled, grants and clients")
     target_id = value["target_id"]
     if not isinstance(target_id, str) or not _UUID.match(target_id):
@@ -196,10 +204,15 @@ def check_storage_proxy(value: Any) -> Optional[Dict[str, Any]]:
     checked = [_check_grant(g) for g in grants]
     if any(g["client"] not in clients for g in checked):
         raise PolicyError("a proxy grant's client is not one of the target's")
+    # pylint: disable=import-outside-toplevel
+    from src.sysmanage_agent.backup import proxy_service  # noqa: PLC0415
+
     return {"target_id": target_id, "enabled": value["enabled"],
             "grants": checked if value["enabled"] else [],
             "clients": sorted(set(clients)),
-            "export": export or not value["enabled"]}  # fmt: skip
+            "export": export or not value["enabled"],
+            "cert": proxy_service.check_cert(value.get("cert"))
+            if value["enabled"] else None}  # fmt: skip
 
 
 def needs_export(policy: Dict[str, Any]) -> bool:
