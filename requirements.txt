@@ -1,37 +1,15 @@
-# Capped below 16.0 because websockets 16.x dropped Python 3.9 wheels.
-# OL9 / RHEL 9 / CentOS Stream 9 / Amazon Linux 2023 ship cp39 as the
-# default python3, and the rpm's vendor dir relies on per-Python wheel
-# downloads; a >=15.0.1 unbounded constraint resolved to 16.0, which has
-# no cp39 wheel, leaving cp39 targets without a websockets install and
-# crashing the agent with "No matching distribution". Bump the upper
-# bound only when cp39 is dropped from the supported Python matrix.
-#
-# VERIFIED 2026-08-08: websockets 16.0 works fine on cp310+ (tested on Linux,
-# and the FreeBSD port runs against 16.0 because ports ignore this file
-# entirely and declare their own dependencies).  The cap is NOT about API
-# compatibility -- it is purely about cp39 wheel availability.  ci.yml runs a
-# 3.9 leg off THIS file, so relaxing it here breaks CI, not just packaging.
-websockets>=15.0.1,<16
+# The <16 cap was only for cp39 wheels (websockets 16 dropped 3.9; verified
+# 2026-08-08 to work on cp310+).  The agent needs Python 3.10+ since 2026-11-11
+# (EL9 and Amazon Linux 2023 packages use their python3.12), so it is gone.
+websockets>=15.0.1
 PyYAML>=6.0.2
-# aiohttp: the PYSEC-2026-2104..2113 fix is in 3.14.x, which requires Python >=3.10;
-# the agent's 3.9 leg (RHEL9/OL9 cp39) can only reach 3.13.x (no backport of the
-# fix exists -- an accepted gap until cp39 is dropped).  Express this as a BARE
-# FLOOR, NOT a ``; python_version`` marker: the COPR/RPM vendor step runs
-# ``pip download --python-version 3.9.21``, and pip evaluates env markers against
-# the BUILD HOST's interpreter (3.12), not the target -- so a ``>= '3.10'`` marker
-# is wrongly ACTIVE during the 3.9 wheel pass and pulls 3.14.x (no cp39 wheel) →
-# build fails.  A bare floor instead lets pip's Requires-Python metadata pick the
-# right version per target automatically: verified to resolve to 3.14.1 on the
-# 3.10+ passes (the fix) and 3.13.5 on 3.9.  Same constraint as the
-# python_multipart note below -- prod deps must not gate on python_version markers.
-# Code scanning (2026-11-10) reports 36 advisories open on aiohttp 3.13.x; every
-# fix is in 3.14.x (3.14.0-3.14.4), which requires Python >= 3.10.  Python 3.10+
-# hosts resolve this floor to 3.14.5 and are fixed.  Only the Python 3.9 hosts
-# (RHEL/Rocky/Alma 9's system python) stay on 3.13.5, and no 3.9 release carries
-# the fixes.  Decided (Bryan, 2026-11-10): keep Python 3.9 supported and dismiss
-# those alerts; raise this floor to >=3.14.4 when 3.9 is dropped.
-aiohttp>=3.13.5
-cryptography>=50.0.0  # 49.0.0 and 50.0.0 fix six advisories open on 48.x (code scanning 2026-11-10); 50.x still ships cp39 wheels (requires >=3.9.2).
+# aiohttp 3.14.x fixes PYSEC-2026-2104..2113 and the 36 advisories code scanning
+# reported on 3.13.x (2026-11-10).  It needs Python 3.10+, the agent's floor.
+# Runtime pins stay BARE floors, never ``; python_version`` markers: the RPM
+# vendor step runs ``pip download --python-version X``, which evaluates markers
+# against the build host's Python, not the target's.
+aiohttp>=3.14.4
+cryptography>=50.0.0  # 49.0.0 and 50.0.0 fix six advisories open on 48.x (code scanning 2026-11-10).
 psutil>=5.9.0
 bcrypt>=4.0.0
 aiofiles>=24.1.0
@@ -41,19 +19,9 @@ aiofiles>=24.1.0
 # pattern semgrep ``use-defused-xml`` (correctly) flags.  defusedxml
 # rejects external-entity references + billion-laughs payloads.
 defusedxml>=0.7.1
-# python_multipart was briefly pinned here as defense-in-depth against
-# the 0.0.20 DoS + form-parser-bypass CVE chain that affected the
-# server.  Removed because:
-#   1. ``pip download --python-version 3.9.21`` evaluates env markers
-#      against the CI HOST's python (3.12), not the target -- so a
-#      ``; python_version >= '3.10'`` gate doesn't actually skip the
-#      pin in the Python-3.9 wheel-download passes that the RPM
-#      builder uses.  pip then can't find a 0.0.27+ wheel for cp39
-#      (no such release exists) and the build fails.
-#   2. The agent has no untrusted-form-parser surface, so the CVE
-#      class doesn't reach it even if 0.0.20 lands transitively.
-# If a future code change starts parsing multipart input on the
-# agent, add the pin back AND split requirements per Python version.
+# python_multipart is not a runtime dependency: the agent has no untrusted
+# form-parser surface.  It arrives only through dev tooling, and is pinned with
+# the other dev-tooling transitives below.
 
 # Database dependencies
 SQLAlchemy>=2.0.43
@@ -63,12 +31,8 @@ alembic>=1.16.5
 #   idna  -- pulled by aiohttp (via yarl) for hostname handling.  PYSEC-2026-215
 #           fixed in 3.15.
 #   Mako 1.4.2 also fixes CVE-2026-102991 (a Windows drive-letter path
-#           traversal) but needs Python >=3.10, which the 3.9 leg and EL9's
-#           system Python cannot meet.  The floor stays at 1.3.12 (bare: runtime
-#           pins carry no markers, see agent-prod-deps note); every 3.10+
-#           install -- CI, `make install-dev`, the Windows MSI's bundled 3.13 --
-#           still resolves the latest 1.4.x, and the fix is Windows-only.
-Mako>=1.3.12
+#           traversal); it needs Python 3.10+, the agent's floor.
+Mako>=1.4.2
 idna>=3.15
 
 # packaging -- imported directly by
@@ -90,42 +54,27 @@ packaging>=24.0
 
 # Development dependencies for linting and testing
 babel>=2.12.0  # pybabel CLI for i18n-validate
-# black is dev-only (``make lint``).  CVE-2026-32274 (arbitrary file writes
-# via crafted ``--python-cell-magics`` cache filename) is fixed in 26.3.1+,
-# which requires Python >=3.10.  Older patched releases for 3.9 don't
-# exist -- so we install black ONLY on Py 3.10+, and skip it on Py 3.9.
-# The 3.9 CI jobs run ``pip install`` + ``pytest`` but not ``make lint``;
-# lint runs on 3.10+ only.  Exactly the requirements-dev.txt pin: a looser
-# spec here let `make install-dev` upgrade black past it on its second pass,
-# so `make security` reported the venv stale forever (2026-10-08).
-black==26.10.1; python_version >= '3.10'
-# pylint 4.0.9 fixes an advisory open on everything before it, and needs
-# Python 3.10; lint runs on 3.10+, the 3.9 test leg keeps the 3.x line.
-pylint>=4.0.9; python_version >= '3.10'
-pylint>=3.0.0,<4; python_version < '3.10'
+# black is dev-only (``make lint``).  26.3.1+ fixes CVE-2026-32274.  Exactly the
+# requirements-dev.txt pin: a looser spec here let `make install-dev` upgrade
+# black past it on its second pass, so `make security` reported the venv stale
+# forever (2026-10-08).
+black==26.10.1
+# pylint 4.0.9 fixes an advisory open on everything before it.
+pylint>=4.0.9
 isort>=5.12.0
 bandit>=1.8.6
 safety>=3.6.1,<4.0.0
-# semgrep 1.137+ requires Python >=3.10; agent CI matrix includes 3.9.
-# 1.162.0 relaxed tomli~=2.0.1 → ~=2.4.0 (compatible with pip-audit) -- used
-# on >=3.10.  On 3.9, 1.136.0 is the last release; the older tomli pin
-# is fine because the agent doesn't ship pip-audit (see Makefile).
-semgrep>=1.162.0; python_version >= '3.10'
-semgrep>=1.95.0,<1.137; python_version < '3.10'
-# `make security` audits the installed environment with pip-audit (3.10+ leg,
-# where semgrep's tomli pin is compatible); see scripts/check_python_deps.py.
-pip-audit>=2.10.0; python_version >= '3.10'
+# semgrep 1.162.0 relaxed tomli~=2.0.1 -> ~=2.4.0 (compatible with pip-audit).
+semgrep>=1.162.0
+# `make security` audits the installed environment with pip-audit; see
+# scripts/check_python_deps.py.
+pip-audit>=2.10.0
 # starlette arrives through semgrep -> mcp -> sse-starlette (dev tooling only);
 # 0.52.x has PYSEC-2026-161/248/249/2280/2281, all fixed by 1.3.1.
-starlette>=1.3.1; python_version >= '3.10'
+starlette>=1.3.1
 typer>=0.9.0,<0.24.0
-# pytest 9.x (which carries the PYSEC tmp-dir advisory fix) requires Python
-# >=3.10, so the agent's 3.9 CI leg can't install it.  On 3.10+ we take the
-# fixed 9.0.3+; on 3.9 we stay on the newest 3.9-compatible pytest (8.4.x) and
-# accept that dev-tool-only medium advisory -- pytest is never shipped with the
-# agent, and no 3.9-compatible release carries the fix.
-pytest>=9.0.3; python_version >= '3.10'
-pytest>=8.4.2,<9; python_version < '3.10'
+# pytest 9.0.3 carries the PYSEC tmp-dir advisory fix.
+pytest>=9.0.3
 pytest-asyncio>=0.21.0
 pytest-cov>=4.0.0
 pytest-xdist>=3.0.0
@@ -134,24 +83,13 @@ coverage>=7.0.0
 # --- Transitive security pins for DEV / CI tooling only (safety, semgrep,
 #     selenium, requests) -- NOT shipped with the agent runtime.  Pinned to their
 #     patched releases so the dependency scanners come back clean. ---
-# urllib3 2.7 dropped Python 3.9, so the 3.9 leg can't take >=2.7.0 (its ceiling
-# is the 2.6.x line).  Split like aiohttp/pytest: latest fix on 3.10+, highest
-# 3.9-compatible secure release on 3.9.  PYSEC-2026-141/142 (pulled by
-# requests/semgrep/selenium).  Scanners run on the 3.10+ leg, which takes >=2.8.0.
-urllib3>=2.8.0; python_version >= '3.10'  # 2.7.0: PYSEC-2026-4175..4177
-urllib3>=2.6.3,<2.7; python_version < '3.10'  # 2.6.0/2.6.3 fixes; 2.7.0+ is 3.10-only
-# ujson's PYSEC fix (5.13.0) and Authlib's (1.7.2) both require Python >=3.10, so
-# pin them ONLY on the 3.10+ leg -- where the dependency scanners actually run.  On
-# 3.9 they resolve transitively via semgrep/safety to their newest 3.9-compatible
-# releases (ujson 5.11.x / Authlib 1.6.x); those aren't scanned there, so the gap
-# is inert.  An explicit 3.9 floor is avoided so it can't fight the tools' own pins.
-ujson>=5.13.0; python_version >= '3.10'  # PYSEC-2026-2293/2294 (pulled by semgrep)
-Authlib>=1.9.1; python_version >= '3.10'  # 1.8.0, 1.9.0 and 1.9.1 fix nine advisories open on 1.7.x (pulled by safety)
-# python_multipart: still intentionally UNPINNED despite PYSEC-2026-3036..3040.
-# It reaches the agent only through dev tooling (no untrusted-form-parser
-# surface at runtime), and pinning 0.0.27+ breaks the Python-3.9 wheel-download
-# pass the RPM builder uses (see the note above the Database section). Revisit
-# if/when cp39 is dropped from the support matrix.
+# PYSEC-2026-141/142 and PYSEC-2026-4175..4177 (pulled by requests/semgrep/selenium).
+urllib3>=2.8.0
+ujson>=5.13.0  # PYSEC-2026-2293/2294 (pulled by semgrep)
+Authlib>=1.9.1  # 1.8.0, 1.9.0 and 1.9.1 fix nine advisories open on 1.7.x (pulled by safety)
+# python_multipart: PYSEC-2026-3036..3040, fixed in 0.0.27.  Dev tooling only;
+# it was left unpinned while the RPM build still needed Python 3.9 wheels.
+python-multipart>=0.0.27
 
 # Note: On OpenBSD 7.7, coverage.py C tracer requires gcc and py3-cffi
 # Install with: doas pkg_add gcc py3-cffi

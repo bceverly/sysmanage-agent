@@ -4,7 +4,7 @@ on:
   # Tag-push only.  Day-to-day branch pushes and pull requests are
   # covered by ``multi-os-ci.yml`` (Python 3.12 on
   # ubuntu/macos/windows).  This workflow runs the *exhaustive*
-  # Python-version matrix (3.9 through 3.14) plus the full lint
+  # Python-version matrix (3.10 through 3.14) plus the full lint
   # suite + coverage badge updates only when an installer is being
   # cut -- that's the moment a regression in any of those dimensions
   # actually gates a release.  The same trigger satisfies
@@ -31,9 +31,7 @@ permissions:
 jobs:
   test-backend:
     name: Backend Tests (Python ${{ matrix.python-version }})
-    # Python 3.9 is past end of life and has no build for Ubuntu 26.04,
-    # which ubuntu-latest became in October 2026: its leg stays on 24.04.
-    runs-on: ${{ matrix.python-version == '3.9' && 'ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       contents: write  # Allow writing to update README badge
@@ -42,8 +40,10 @@ jobs:
     strategy:
       fail-fast: false  # Continue testing other versions even if one fails
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
-        # Python 3.9 included for macOS system Python compatibility
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        # 3.10 is the floor: the dependencies' security fixes need it.  EL9 and
+        # Amazon Linux 2023 packages use python3.12; macOS installs its own
+        # Python when the system one is 3.9 (installer/macos-python/).
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6

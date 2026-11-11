@@ -5,14 +5,11 @@
 # black is pinned because point releases reshape formatting and a local /
 # CI version skew silently produces diffs that only surface in CI.
 # Floors at the releases that fix the advisories code scanning reported
-# (2026-11-10); pytest 9.0.3 and pylint 4.0.9 need Python 3.10, so the 3.9 leg
-# keeps the newest releases it can install.
-pytest>=9.0.3; python_version >= '3.10'
-pytest>=8.4.2,<9; python_version < '3.10'
+# (2026-11-10).
+pytest>=9.0.3
 pytest-cov
 pytest-asyncio
-pylint>=4.0.9; python_version >= '3.10'
-pylint>=3.0.0,<4; python_version < '3.10'
+pylint>=4.0.9
 black==26.10.1
 isort
 bandit

@@ -430,14 +430,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Build RPM package
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # Use --nodeps to skip dependency checking since we're building on Ubuntu
-          rpmbuild -bb --nodeps ~/rpmbuild/SPECS/sysmanage-agent.spec
+          # Use --nodeps to skip dependency checking since we're building on Ubuntu.
+          # This RPM is published under rpm/el9, but Ubuntu's rpmbuild does not
+          # define %{el9}; without it the spec fell into its generic branch and
+          # built the agent from EL9's python3 (3.9).  Define it so the RPM uses
+          # python3.12, which the vendored cp312 wheels match.
+          rpmbuild -bb --nodeps --define "el9 1" ~/rpmbuild/SPECS/sysmanage-agent.spec
 
           # Find the built RPM
           RPM_FILE=$(find ~/rpmbuild/RPMS -name "sysmanage-agent-$VERSION-*.rpm" | head -1)
@@ -586,8 +590,10 @@ jobs:
           mkdir -p /tmp/vendor
           # Download pip wheel (needed to upgrade old pip in build chroot)
           pip3 download pip -d /tmp/vendor --only-binary=:all:
-          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: --python-version 311
-          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all: --python-version 311
+          # cp312: this RPM is published for EL9, where the spec builds the
+          # agent with python3.12 (rpmbuild gets --define "el9 1" below).
+          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all: --python-version 312
+          pip3 download -r requirements-prod.txt -d /tmp/vendor --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all: --python-version 312
 
           # Also download for any platform (for pure Python packages)
           pip3 download -r requirements-prod.txt -d /tmp/vendor --no-deps 2>/dev/null || true
@@ -3925,20 +3931,10 @@ jobs:
           echo "Downloading pip wheel..."
           pip3 download pip -d /tmp/vendor --only-binary=:all:
 
-          # Download wheels for Python 3.9 (EPEL 9, CentOS Stream 9, Amazon Linux 2023)
-          # Note: Use 3.9.21 to avoid cryptography's exclusion of 3.9.0 and 3.9.1
-          # IMPORTANT: x86_64 and aarch64 must be separate pip download calls because
-          # pip only downloads one matching wheel per package when multiple platforms are specified
-          echo "Downloading wheels for Python 3.9 x86_64..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
-          echo "Downloading wheels for Python 3.9 aarch64..."
-          pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
-          # Download conditional dependencies for Python <3.11
-          pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
-          pip3 download "async-timeout<6.0,>=4.0" -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
-          pip3 download tomli -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
-          pip3 download tomli -d /tmp/vendor --python-version 3.9.21 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
-          echo "Downloaded $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l) wheels for Python 3.9"
+          # No Python 3.9 wheels: EL9 and Amazon Linux 2023 build the agent with
+          # their python3.12 (the spec's el9/amzn branch), because the agent's
+          # dependencies ship security fixes only for 3.10+.  The 3.12 pass
+          # below covers them along with EPEL 10.
 
           # Download wheels for Python 3.11 (EPEL 8)
           echo ""
@@ -3948,9 +3944,9 @@ jobs:
           pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.11.11 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
           echo "Total wheels after Python 3.11: $(ls -1 /tmp/vendor/*.whl 2>/dev/null | wc -l)"
 
-          # Download wheels for Python 3.12 (EPEL 10, CentOS Stream 10)
+          # Download wheels for Python 3.12 (EPEL 9 and 10, CentOS Stream 9 and 10, Amazon Linux 2023)
           echo ""
-          echo "Downloading wheels for Python 3.12 x86_64 (EPEL 10, CentOS Stream 10)..."
+          echo "Downloading wheels for Python 3.12 x86_64 (EPEL 9/10, Amazon Linux 2023)..."
           pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.12.11 --platform manylinux2014_x86_64 --platform manylinux_2_17_x86_64 --only-binary=:all:
           echo "Downloading wheels for Python 3.12 aarch64..."
           pip3 download -r $WORKSPACE/requirements-prod.txt -d /tmp/vendor --python-version 3.12.11 --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 --only-binary=:all:
@@ -4085,11 +4081,11 @@ jobs:
           echo "  - Fedora 41 x86_64 and aarch64 (Python 3.13)"
           echo "  - Fedora 42 x86_64 and aarch64 (Python 3.13)"
           echo "  - Fedora 43 x86_64 and aarch64 (Python 3.14)"
-          echo "  - EPEL 9 x86_64 and aarch64 (RHEL 9, Rocky 9, AlmaLinux 9, Oracle Linux 9, CentOS Stream 9 - Python 3.9)"
+          echo "  - EPEL 9 x86_64 and aarch64 (RHEL 9, Rocky 9, AlmaLinux 9, Oracle Linux 9, CentOS Stream 9 - python3.12)"
           echo "  - EPEL 10 x86_64 and aarch64 (RHEL 10, CentOS Stream 10 - Python 3.12)"
-          echo "  - Amazon Linux 2023 (Python 3.9)"
+          echo "  - Amazon Linux 2023 (python3.12)"
           echo ""
-          echo "Note: EPEL 8 (Python 3.6) is not supported - dependencies require Python >=3.9"
+          echo "Note: EPEL 8 (Python 3.6) is not supported - dependencies require Python >=3.10"
           echo ""
           echo "Installation instructions:"
           echo "  sudo dnf copr enable $COPR_USERNAME/sysmanage-agent"

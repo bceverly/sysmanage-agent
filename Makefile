@@ -1293,6 +1293,7 @@ installer-pkg:
 	cp main.py "$$BUILD_DIR/"; \
 	cp alembic.ini "$$BUILD_DIR/"; \
 	cp requirements-prod.txt "$$BUILD_DIR/"; \
+	cp installer/macos-python/install-python-macos.sh "$$BUILD_DIR/"; \
 	cp README.md "$$BUILD_DIR/" 2>/dev/null || touch "$$BUILD_DIR/README.md"; \
 	echo "✓ Application source copied (excluding test artifacts)"; \
 	echo ""; \
@@ -1347,8 +1348,7 @@ installer-pkg:
 		'echo "=== SysManage Agent Installation ===" ' \
 		'echo "Date: $$(date)"' \
 		'echo "Architecture: $$(uname -m)"' \
-		'echo "Python: $$(which python3)"' \
-		'echo "Python version: $$(python3 --version)"' \
+		'echo "System Python: $$(python3 --version 2>&1)"' \
 		'' \
 		'echo "Setting up sysmanage-agent..."' \
 		'' \
@@ -1365,12 +1365,22 @@ installer-pkg:
 		'# Use sysctl to detect actual hardware, not uname which may report x86_64 under Rosetta' \
 		'ACTUAL_ARCH=$$(sysctl -n machdep.cpu.brand_string | grep -q "Apple" && echo "arm64" || uname -m)' \
 		'echo "Detected architecture: $$ACTUAL_ARCH"' \
+		'# The agent needs Python 3.10+ (its dependencies ship security fixes only' \
+		'# for 3.10+).  A stock Mac has the Xcode tools Python 3.9, so the helper' \
+		'# installs a pinned, sha256-verified Python under /opt/sysmanage-agent/python' \
+		'# when the system one is too old, and prints the interpreter to use.' \
+		'if [ "$$ACTUAL_ARCH" = "arm64" ]; then' \
+		'	AGENT_PY=$$(arch -arm64 /bin/sh ./install-python-macos.sh)' \
+		'else' \
+		'	AGENT_PY=$$(/bin/sh ./install-python-macos.sh)' \
+		'fi' \
+		'echo "Building the agent with: $$AGENT_PY"' \
 		'if [ "$$ACTUAL_ARCH" = "arm64" ]; then' \
 		'	echo "Apple Silicon detected - forcing ARM64 architecture"' \
 		'	echo "Creating ARM64 virtual environment with system Python..."' \
 		'	export ARCHFLAGS="-arch arm64"' \
 		'	export _PYTHON_HOST_PLATFORM="macosx-11.0-arm64"' \
-		'	arch -arm64 python3 -m venv venv' \
+		'	arch -arm64 "$$AGENT_PY" -m venv venv' \
 		'	echo "Installing Python dependencies for ARM64..."' \
 		'	arch -arm64 ./venv/bin/pip install --upgrade pip setuptools wheel' \
 		'	echo "Installing application dependencies..."' \
@@ -1378,7 +1388,7 @@ installer-pkg:
 		'	echo "Dependency installation complete"' \
 		'else' \
 		'	echo "Intel architecture detected"' \
-		'	python3 -m venv venv' \
+		'	"$$AGENT_PY" -m venv venv' \
 		'	echo "Installing Python dependencies..."' \
 		'	./venv/bin/pip install --upgrade pip setuptools wheel' \
 		'	./venv/bin/pip install -r requirements-prod.txt' \

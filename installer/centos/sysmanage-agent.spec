@@ -15,7 +15,8 @@ Source1:        %{name}-vendor-%{version}.tar.gz
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 
 # Disable automatic Python dependency generation
-# We manually specify python3 version in Requires (3.11 on EL8, 3.9+ elsewhere)
+# We manually specify python3 version in Requires (3.11 on EL8, 3.12 on EL9 and
+# Amazon Linux 2023, the system python3 elsewhere)
 %global __requires_exclude ^python\\(abi\\)
 %global __provides_exclude_from ^%{_libdir}/sysmanage-agent/venv/.*$
 
@@ -27,11 +28,22 @@ Source1:        %{name}-vendor-%{version}.tar.gz
 %global python3_pip python3.11-pip
 %global python3_setuptools python3.11-setuptools
 %else
+# EL9 and Amazon Linux 2023 ship Python 3.9 as python3, and the agent's
+# dependencies ship their security fixes only for 3.10+ (aiohttp 3.14,
+# urllib3 2.7).  Both carry a vendor-maintained python3.12; use that.
+%if 0%{?el9} || 0%{?amzn}
+%global python3_bin python3.12
+%global python3_pkg python3.12
+%global python3_devel python3.12-devel
+%global python3_pip python3.12-pip
+%global python3_setuptools python3.12-setuptools
+%else
 %global python3_bin python3
-%global python3_pkg python3 >= 3.9
-%global python3_devel python3-devel >= 3.9
+%global python3_pkg python3 >= 3.10
+%global python3_devel python3-devel >= 3.10
 %global python3_pip python3-pip
 %global python3_setuptools python3-setuptools
+%endif
 %endif
 
 BuildRequires:  %{python3_devel}

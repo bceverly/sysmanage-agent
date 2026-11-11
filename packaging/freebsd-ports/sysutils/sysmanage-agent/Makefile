@@ -36,7 +36,7 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}websockets>0:devel/py-websockets@${PY_FLAVOR
 # list for setuptools-installed modules, and this port has no setup.py at all --
 # it stages a source tree by hand below.  The two mechanisms together produce
 # an empty or wrong plist.
-USES=		python:3.9+,run shebangfix
+USES=		python:3.10+,run shebangfix
 USE_GITHUB=	yes
 GH_ACCOUNT=	bceverly
 GH_PROJECT=	sysmanage-agent

@@ -35,7 +35,8 @@ DEPENDS+=	${PYPKGPREFIX}-alembic-[0-9]*:../../databases/py-alembic
 DEPENDS+=	${PYPKGPREFIX}-defusedxml-[0-9]*:../../textproc/py-defusedxml
 DEPENDS+=	${PYPKGPREFIX}-packaging-[0-9]*:../../devel/py-packaging
 
-PYTHON_VERSIONS_INCOMPATIBLE=	27
+# The agent needs Python 3.10+: its dependencies ship security fixes only for 3.10+.
+PYTHON_VERSIONS_INCOMPATIBLE=	27 39
 
 do-install:
 	${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/libexec/sysmanage-agent
