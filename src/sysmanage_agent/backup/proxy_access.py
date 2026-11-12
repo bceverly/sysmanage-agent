@@ -138,9 +138,68 @@ def check_host_proxy(value: Any) -> Optional[Dict[str, Any]]:
     return out
 
 
+_BANDWIDTH = re.compile(
+    r"^(?:(\d{2})-(\d{2}) )?(unlimited|([1-9]\d{0,6})(KiB|MiB|GiB)/s)$"
+)
+_RATE_SCALE = {"KiB": 1 << 10, "MiB": 1 << 20, "GiB": 1 << 30}
+MIN_RATE = 64 << 10  # restate-proxy's least rate
+MAX_BANDWIDTH_RULES = 25
+
+
+def _hours(start: int, end: int) -> int:
+    """The hours from ``start`` up to ``end`` (across midnight when ``end``
+    is not after ``start``), as a bit mask: restate-proxy's reading."""
+    mask, hour = 0, start
+    while hour != end % 24 or mask == 0:
+        mask |= 1 << hour
+        hour = (hour + 1) % 24
+    return mask
+
+
+def check_bandwidth(value: Any) -> List[str]:
+    """A grant's ``bandwidth`` lines (Pro+, server 25.7), checked as
+    restate-proxy checks them: ``RATE`` or ``HH-HH RATE``, at least 64KiB/s
+    or ``unlimited``, no hour in two ranges, one ``RATE`` alone at most."""
+    if not isinstance(value, list) or not 1 <= len(value) <= MAX_BANDWIDTH_RULES:
+        raise PolicyError("a proxy grant's bandwidth must be 1 to 25 rules")
+    taken, default = 0, False
+    for rule in value:
+        match = _BANDWIDTH.match(rule) if isinstance(rule, str) else None
+        if not match:
+            raise PolicyError(
+                "a proxy grant's bandwidth rule is not RATE or HH-HH RATE"
+            )
+        start, end, _rate, number, unit = match.groups()
+        if number and int(number) * _RATE_SCALE[unit] < MIN_RATE:
+            raise PolicyError("a proxy grant's bandwidth rate is under 64KiB/s")
+        if start is None:
+            if default:
+                raise PolicyError(
+                    "a proxy grant's bandwidth has two rates for the rest"
+                )
+            default = True
+            continue
+        first, last = int(start), int(end)
+        if first > 23 or last > 24 or first == last:
+            raise PolicyError("a proxy grant's bandwidth hours are not 00 to 24")
+        hours = _hours(first, last)
+        if hours & taken:
+            raise PolicyError("a proxy grant's bandwidth names an hour twice")
+        taken |= hours
+    return list(value)
+
+
+def limits_supported(features: Optional[Dict[str, Any]]) -> bool:
+    """Whether this host's restate-proxy reads a grant's ``bandwidth``: its
+    restate lists the key in ``grant_keys`` (restate 3.2.1.4).  An older
+    proxy refuses a grant with a key it does not know, so none is written."""
+    keys = (features or {}).get("grant_keys")
+    return isinstance(keys, list) and "bandwidth" in keys
+
+
 def _check_grant(grant: Any) -> Dict[str, Any]:
     if not isinstance(grant, dict) or not set(grant) <= {
-        "client", "token_sha256", "operations", "repo_dir"
+        "client", "token_sha256", "operations", "repo_dir", "bandwidth"
     }:  # fmt: skip
         raise PolicyError("a proxy grant has unknown keys")
     client = grant.get("client")
@@ -165,9 +224,12 @@ def _check_grant(grant: Any) -> Dict[str, Any]:
         not isinstance(repo_dir, str) or not _REPO_DIR.match(repo_dir)
     ):
         raise PolicyError("a proxy grant's repo_dir must be a single directory name")
-    return {"client": client, "token_sha256": list(dict.fromkeys(hashes)),
-            "operations": [o for o in OPERATIONS if o in operations],
-            "repo_dir": repo_dir}  # fmt: skip
+    checked = {"client": client, "token_sha256": list(dict.fromkeys(hashes)),
+               "operations": [o for o in OPERATIONS if o in operations],
+               "repo_dir": repo_dir}  # fmt: skip
+    if "bandwidth" in grant:
+        checked["bandwidth"] = check_bandwidth(grant["bandwidth"])
+    return checked
 
 
 def check_storage_proxy(value: Any) -> Optional[Dict[str, Any]]:
@@ -288,7 +350,11 @@ def grant_repository(policy: Dict[str, Any], grant: Dict[str, Any]) -> str:
     return repository
 
 
-def render_grant(repository: str, grant: Dict[str, Any], target_id: str) -> str:
+def render_grant(
+    repository: str, grant: Dict[str, Any], target_id: str, limits: bool = False
+) -> str:
+    """The grant file.  ``bandwidth`` lines only when ``limits`` (this
+    host's restate-proxy reads them, ``limits_supported``)."""
     lines = [
         "# Written by sysmanage-agent (restate-proxy, SysManage 25.5). Do not edit:",
         "# the agent rewrites or removes it.",
@@ -296,6 +362,8 @@ def render_grant(repository: str, grant: Dict[str, Any], target_id: str) -> str:
         f"operations = {', '.join(grant['operations'])}",
     ]
     lines += [f"token_sha256 = {h}" for h in grant["token_sha256"]]
+    if limits:
+        lines += [f"bandwidth = {rule}" for rule in grant.get("bandwidth") or []]
     lines.append(f"label = {label(target_id)}")
     return "\n".join(lines) + "\n"
 

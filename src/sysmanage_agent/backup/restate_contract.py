@@ -284,12 +284,18 @@ def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     ``sign`` (the ``sign`` job command with ``sign_with``), since snapshots
     are signed on the storage host, between the capture and protect, and
     ``signatures``: this agent lists them there, checked against the
-    signer's key, so the server learns them from the trusted side."""
+    signer's key, so the server learns them from the trusted side; and
+    ``proxy_bandwidth``, the proxy reads bandwidth lines in a grant."""
     found = ["keep_yearly"] if supports(features, "keep_yearly") else []
     if supports_job_command(features, "sign") and supports(features, "sign_with"):
         found.append("sign")
     if supports(features, "trusted_key"):
         found.append("signatures")
+    # restate-proxy reads a grant's bandwidth lines (restate 3.2.1.4 lists
+    # ``grant_keys``): the server sends its Pro+ bandwidth rules only then.
+    keys = (features or {}).get("grant_keys")
+    if isinstance(keys, list) and "bandwidth" in keys:
+        found.append("proxy_bandwidth")
     return found
 
 

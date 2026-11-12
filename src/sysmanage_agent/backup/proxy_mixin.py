@@ -61,7 +61,7 @@ class BackupProxyMixin:
         if policy["role"] == "host":
             return await self._apply_host_proxy(policy, features)
         if policy["role"] == "storage" and policy.get("proxy") is not None:
-            return await self._apply_grants(policy)
+            return await self._apply_grants(policy, features)
         return {}
 
     async def _apply_host_proxy(
@@ -99,15 +99,20 @@ class BackupProxyMixin:
             await self._remove_root_file(access.ca_path(policy_id))
         return {"proxy_tokens": tokens}
 
-    async def _apply_grants(self, policy: Dict[str, Any]) -> Dict[str, Any]:
+    async def _apply_grants(
+        self, policy: Dict[str, Any], features: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Write this host's grants; remove the ones this agent wrote for the
-        target whose client the target no longer has."""
+        target whose client the target no longer has.  Bandwidth lines go in
+        only when this host's restate-proxy reads them."""
         proxy = policy["proxy"]
+        limits = access.limits_supported(features)
         written = []
         for grant in proxy["grants"]:
             text = access.render_grant(
-                access.grant_repository(policy, grant), grant, proxy["target_id"]
-            )
+                access.grant_repository(policy, grant), grant, proxy["target_id"],
+                limits=limits,
+            )  # fmt: skip
             path = access.grant_path(grant["client"])
             if _read_text(path) != text:
                 await self._install_root_file(text, path)
