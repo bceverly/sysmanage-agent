@@ -92,6 +92,21 @@ def test_baseline_agent_advertises_everything():
     assert report["partial"] == {}
 
 
+def test_a_host_property_is_reported_only_beside_its_group():
+    """``backup_proxy_only`` (a Linux host with no NFS client whose restate
+    captures through restate-proxy) qualifies backups: never alone."""
+    live = _live_command_types()
+    report = build_capability_report(
+        {c: None for c in live}, properties=["backup_proxy_only"]
+    )
+    assert "backup_proxy_only" in report["capabilities"]
+    trimmed = [c for c in live if c not in CAPABILITY_GROUPS["backup"]]
+    report = build_capability_report(
+        {c: None for c in trimmed}, properties=["backup_proxy_only"]
+    )
+    assert "backup_proxy_only" not in report["capabilities"]
+
+
 def test_a_trimmed_build_advertises_a_strict_subset():
     """The whole point: a build without virtualization must say so."""
     live = _live_command_types()

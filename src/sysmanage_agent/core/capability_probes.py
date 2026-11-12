@@ -40,7 +40,7 @@ DESIGN RULES
 import os
 import platform
 import shutil
-from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from src.sysmanage_agent.backup import equip as backup_equip
 from src.sysmanage_agent.backup import restate_probe
@@ -187,6 +187,18 @@ _REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
     "cloud_backup_remove": cloud_tool.enable_unavailable_reason,
     "cloud_backup_run": lambda _lookup, system: _cloud_run_reason(system),
 }
+
+
+def host_properties(
+    system: Optional[str] = None, lookup: Callable[..., Optional[str]] = None
+) -> List[str]:
+    """Capabilities that are properties of this host rather than command
+    groups, for ``build_capability_report``: ``backup_proxy_only`` where
+    backups can go through restate-proxy alone."""
+    system = system or platform.system()
+    if restate_probe.proxy_only(system, lookup or _which):
+        return [restate_probe.PROXY_ONLY_CAPABILITY]
+    return []
 
 
 def _cloud_run_reason(system: Optional[str]) -> Optional[str]:

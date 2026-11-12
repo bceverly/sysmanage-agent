@@ -247,6 +247,7 @@ def build_capability_report(
     handlers: Mapping[str, Any],
     suppressed: Optional[Mapping[str, str]] = None,
     config: Optional[Any] = None,
+    properties: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Describe what this agent build can actually do.
 
@@ -332,6 +333,11 @@ def build_capability_report(
     # Not a command group: a property of this agent the server acts on (it
     # requires this host's token from now on -- the Phase 22.0 ratchet).
     supported.append(PERSISTENT_TOKEN_CAPABILITY)
+    # Properties of this host the caller probed (capability_probes.
+    # host_properties): a Linux host that backs up through restate-proxy
+    # alone, say.  Only beside the group they qualify.
+    if "backup" in supported:
+        supported.extend(p for p in properties or () if p not in supported)
     return {
         "schema_version": CAPABILITY_SCHEMA_VERSION,
         "capabilities": sorted(supported),

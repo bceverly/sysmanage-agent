@@ -92,3 +92,80 @@ def test_the_check_is_its_own_capability_and_runs_in_the_express_lane():
     assert message_handler_queue.is_express(
         {"data": {"command_type": "check_backup_storage"}}
     )
+
+
+def _prod_like_chain(tmp_path):
+    """A CA and a proxy certificate made as the SysManage CA made them before
+    2026-11-12: no Subject Key Identifier on the CA, no Authority Key
+    Identifier on the leaf -- which Python 3.13's strict default refuses."""
+    # pylint: disable=import-outside-toplevel
+    import datetime
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.x509.oid import NameOID
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    ca_key = ec.generate_private_key(ec.SECP256R1())
+    ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "SysManage CA")])
+    ca = (
+        x509.CertificateBuilder().subject_name(ca_name).issuer_name(ca_name)
+        .public_key(ca_key.public_key()).serial_number(1)
+        .not_valid_before(now - datetime.timedelta(days=1))
+        .not_valid_after(now + datetime.timedelta(days=30))
+        .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
+        .sign(ca_key, hashes.SHA256())
+    )  # fmt: skip
+    key = ec.generate_private_key(ec.SECP256R1())
+    leaf = (
+        x509.CertificateBuilder()
+        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")]))
+        .issuer_name(ca_name).public_key(key.public_key()).serial_number(2)
+        .not_valid_before(now - datetime.timedelta(days=1))
+        .not_valid_after(now + datetime.timedelta(days=30))
+        .add_extension(x509.SubjectAlternativeName([x509.DNSName("localhost")]),
+                       critical=False)
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+        .sign(ca_key, hashes.SHA256())
+    )  # fmt: skip
+    cert = tmp_path / "proxy.crt"
+    cert.write_bytes(leaf.public_bytes(serialization.Encoding.PEM))
+    keyfile = tmp_path / "proxy.key"
+    keyfile.write_bytes(key.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption()))  # fmt: skip
+    return ca.public_bytes(serialization.Encoding.PEM).decode(), cert, keyfile
+
+
+def test_a_certificate_curl_accepts_is_accepted_on_strict_pythons(tmp_path):
+    """The check verifies as restate's curl does: the SysManage CA's
+    certificates without key identifiers, which Python 3.13 and later refuse
+    by default, are reachable (prod, 2026-11-12)."""
+    import ssl  # pylint: disable=import-outside-toplevel
+
+    ca, cert, keyfile = _prod_like_chain(tmp_path)
+
+    async def handshake(context):
+        server_side = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        server_side.load_cert_chain(cert, keyfile)
+        server = await asyncio.start_server(lambda r, w: w.close(), "127.0.0.1", 0,
+                                            ssl=server_side)  # fmt: skip
+        port = server.sockets[0].getsockname()[1]
+        try:
+            _r, writer = await asyncio.open_connection(
+                "127.0.0.1", port, ssl=context, server_hostname="localhost")  # fmt: skip
+            writer.close()
+            return True
+        except ssl.SSLError:
+            return False
+        finally:
+            server.close()
+            await server.wait_closed()
+
+    if (
+        getattr(ssl, "VERIFY_X509_STRICT", 0)
+        & ssl.create_default_context().verify_flags
+    ):
+        assert asyncio.run(handshake(ssl.create_default_context(cadata=ca))) is False
+    assert asyncio.run(handshake(storage_reach._tls_context(ca))) is True

@@ -320,6 +320,7 @@ class MessageProcessor:
         from src.sysmanage_agent.core.capability_probes import (  # noqa: PLC0415
             build_excluded_from_env,
             detect_suppressed,
+            host_properties,
         )
 
         try:
@@ -334,7 +335,7 @@ class MessageProcessor:
             # opted this host into osquery.
             agent = getattr(self, "agent", None)
             report = build_capability_report(
-                handlers, suppressed, getattr(agent, "config", None)
+                handlers, suppressed, getattr(agent, "config", None), host_properties()
             )
             return {"success": True, "result": report}
         except Exception as error:  # pylint: disable=broad-except

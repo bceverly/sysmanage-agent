@@ -105,6 +105,31 @@ def test_linux_without_an_nfs_client_cannot_back_up(monkeypatch):
     assert _reason(system="FreeBSD", nfs=False) is None  # in the base system
 
 
+def test_linux_without_an_nfs_client_backs_up_through_the_proxy_alone(monkeypatch):
+    """Alpine, a minimal install: with a restate that captures through
+    restate-proxy it can back up, and says it can only that way, so the
+    server keeps it off a target on NFS -- as OpenBSD and NetBSD."""
+    remote = {"version": "3.2.0.0", "remote_repository": True, "remote_capture": True,
+              "job_keys": GOOD["job_keys"] + ["repository_token_file"]}  # fmt: skip
+    monkeypatch.setattr(probe, "features", lambda e, ask=None: remote)
+    assert contract.captures_remote(remote)
+    assert _reason(nfs=False, unit=False, systemd=False) is None
+
+    def only(nfs, system="Linux", found="/usr/local/sbin/restate"):
+        return probe.proxy_only(
+            system, lambda name: found if name == "restate" else None,
+            exists=lambda path: False,
+            nfs_exists=lambda path: nfs and path == "/sbin/mount.nfs4",
+        )  # fmt: skip
+
+    assert only(nfs=False) is True
+    assert only(nfs=True) is False  # it has a client: NFS targets too
+    assert only(nfs=False, system="FreeBSD") is False
+    assert only(nfs=False, found=None) is False
+    monkeypatch.setattr(probe, "features", lambda e, ask=None: GOOD)
+    assert only(nfs=False) is False  # a restate that cannot: Equip installs NFS
+
+
 def test_restate_is_asked_once_per_installed_binary(tmp_path):
     binary = tmp_path / "restate"
     binary.write_text("#!/bin/sh\n")

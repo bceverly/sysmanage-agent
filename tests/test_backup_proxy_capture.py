@@ -259,6 +259,37 @@ def test_a_proxy_host_has_no_export_to_audit(monkeypatch):
     assert not called
 
 
+def test_a_proxy_repository_not_made_yet_is_said_so(monkeypatch, tmp_path):
+    """restate-proxy answers 404 no-repository until Prepare storage makes
+    it, so the audit says so (and the server leads with Prepare storage)
+    rather than check a directory that is not there."""
+    monkeypatch.setattr(storage_audit, "baseline", lambda *a, **k: [])
+    monkeypatch.setattr(storage_audit, "space_findings", lambda *a, **k: [])
+    checked = []
+    monkeypatch.setattr(storage_audit, "filesystem_findings",
+                        lambda *a: checked.append("filesystem")
+                        or [{"code": "own_filesystem", "level": "ok"}])  # fmt: skip
+    monkeypatch.setattr(storage_audit, "layout_findings",
+                        lambda *a, **k: checked.append("layout") or [])  # fmt: skip
+
+    def codes(repository, export=False):
+        return {f["code"]: f["level"] for f in storage_audit.audit(
+            str(repository), client=None, account="restate",
+            read_text=lambda p: None, export=export)}  # fmt: skip
+
+    assert codes(tmp_path / "web01") == {"repository_made": "error"}
+    assert not checked
+    (tmp_path / "web01").mkdir()
+    assert codes(tmp_path / "web01") == {
+        "repository_made": "ok",
+        "own_filesystem": "ok",
+    }
+    assert checked == ["filesystem", "layout"]
+    # Over NFS the export findings already say what Prepare storage makes.
+    monkeypatch.setattr(storage_audit, "export_findings", lambda *a, **k: [])
+    assert "repository_made" not in codes(tmp_path / "db01", export=True)
+
+
 # --- the reach check -----------------------------------------------------
 
 

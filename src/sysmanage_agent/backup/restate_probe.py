@@ -19,7 +19,9 @@ The answer has three outcomes, each a reason code the server understands:
   the ``restate-job@.service`` unit is missing; or ``restate features
   --json`` fails, or it reports a major version below 2 or no job keys
 * Linux with no NFS client      -> ``missing_nfs_client`` (Equip installs
-  it): the host could never mount its backup storage
+  it): the host could never mount its backup storage -- unless its restate
+  captures through restate-proxy, when it backs up through a proxy target
+  alone, as OpenBSD and NetBSD do, and says so (``proxy_only``)
 
 ONE DELIBERATE EXCEPTION to the capability probes' "no subprocess" rule: the
 version can only be learned by asking restate.  The answer is cached per
@@ -136,5 +138,27 @@ def unavailable_reason(
     if not contract.features_usable(features(executable, ask)):
         return REASON_TOOL_OUTDATED
     if system == "Linux" and host_mount.nfs_client_missing("Linux", nfs_exists):
-        return REASON_MISSING_NFS_CLIENT
+        if not contract.captures_remote(features(executable, ask)):
+            return REASON_MISSING_NFS_CLIENT
     return None
+
+
+# Reported among the capabilities by a host that backs up through
+# restate-proxy alone: the server keeps it off a target on NFS.
+PROXY_ONLY_CAPABILITY = "backup_proxy_only"
+
+
+def proxy_only(
+    system: Optional[str],
+    lookup: Callable = shutil.which,
+    ask: Callable = _ask,
+    exists: Callable = os.path.exists,
+    nfs_exists: Callable = os.path.exists,
+) -> bool:
+    """A Linux host with no NFS client whose restate captures through
+    restate-proxy (Alpine, a minimal install): it can back up, through a
+    proxy target and no other."""
+    if system != "Linux" or not host_mount.nfs_client_missing("Linux", nfs_exists):
+        return False
+    executable = locate(lookup, exists)
+    return bool(executable) and contract.captures_remote(features(executable, ask))

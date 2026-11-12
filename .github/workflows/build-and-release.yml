@@ -2024,7 +2024,11 @@ jobs:
   release:
     name: Create Release and Push to Docs
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 120, not 60: the R2 publish alone ran past an hour on a slow R2 day
+    # (agent 3.13.0.12, 2026-11-12), and a timeout here skips every package
+    # channel after it (Launchpad, OBS, Copr, snap, winget, Homebrew, AUR,
+    # the BSD ports).  Each sync now says how long it took.
+    timeout-minutes: 120
     needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd, build-flatpak, build-openbsd-packages, build-alpine]
 
     steps:
@@ -2117,10 +2121,13 @@ jobs:
           # A sync that still lost files after its retries is run again; each
           # pass copies only what the bucket (or the stage) is still missing.
           s3sync() {
-            local pass
+            local pass began=$SECONDS
             for pass in 1 2 3; do
-              s3 sync "$@" && return 0
-              echo "R2 sync pass $pass was incomplete; trying again in $((pass * 30))s"
+              if s3 sync "$@"; then
+                echo "R2 sync $1 -> $2: $((SECONDS - began))s (pass $pass)"
+                return 0
+              fi
+              echo "R2 sync pass $pass was incomplete after $((SECONDS - began))s; trying again in $((pass * 30))s"
               sleep $((pass * 30))
             done
             return 1
@@ -2287,8 +2294,18 @@ jobs:
             if [ -f "$cand/config" ] && [ -d "$cand/objects" ]; then FP_SRC="$cand"; break; fi
           done
           if [ -n "$FP_SRC" ]; then
-            rsync -a "$FP_SRC/" repo/
-            echo "Flatpak repository synced from $FP_SRC"
+            # Objects are content-addressed: one already pulled from R2 holds
+            # these same bytes, so only the new ones are copied.  `rsync -a` of
+            # the whole build repo rewrote every object the build holds with
+            # the build's own mtime, newer than the bucket's, so the publish
+            # sync below uploaded all of them again every release -- thousands
+            # of PUTs, silent under --only-show-errors, until the job's hour
+            # ran out (3.13.0.12, 2026-11-12).
+            rsync -a --ignore-existing --out-format='%n' \
+              "$FP_SRC/objects/" repo/objects/ > "$RUNNER_TEMP/new-objects.txt"
+            NEW_OBJECTS=$(grep -c '[^/]$' "$RUNNER_TEMP/new-objects.txt" || true)
+            rsync -a --exclude '/objects/' "$FP_SRC/" repo/
+            echo "Flatpak repository synced from $FP_SRC: $NEW_OBJECTS new object(s)"
           else
             echo "::warning::no Flatpak OSTree repository in the artifact; the Flatpak remote is not updated this release"
           fi

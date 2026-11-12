@@ -27,6 +27,7 @@ from src.sysmanage_agent.core.capabilities import build_capability_report
 from src.sysmanage_agent.core.capability_probes import (
     build_excluded_from_env,
     detect_suppressed,
+    host_properties,
 )
 from src.sysmanage_agent.core.version import get_agent_version
 from src.sysmanage_agent.collection.os_info_collection import OSInfoCollector
@@ -145,7 +146,9 @@ class ClientRegistration:
             suppressed = detect_suppressed(
                 handlers, build_excluded=build_excluded_from_env()
             )
-            return build_capability_report(handlers, suppressed, self.config)
+            return build_capability_report(
+                handlers, suppressed, self.config, host_properties()
+            )
         except Exception:  # pylint: disable=broad-except
             self.logger.warning(
                 "Could not build the agent capability report; registering "

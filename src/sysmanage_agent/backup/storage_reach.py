@@ -116,10 +116,18 @@ def spki_sha256(der: bytes) -> str:
 
 
 def _tls_context(ca: Optional[str]) -> ssl.SSLContext:
+    """Verifying as restate's curl does, which is what the check predicts.
+    Python 3.13 made its default context X.509-strict, which refuses a
+    certificate without an Authority Key Identifier, or a CA without a
+    Subject Key Identifier -- as the SysManage CA's certificates before
+    2026-11-12 are; curl (OpenSSL's defaults) accepts them.  So hosts on
+    3.13 and later were told they could not reach a proxy their backups
+    could reach (prod, 2026-11-12)."""
     context = (
         ssl.create_default_context(cadata=ca) if ca else (ssl.create_default_context())
     )
     context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.verify_flags &= ~getattr(ssl, "VERIFY_X509_STRICT", 0)
     return context
 
 

@@ -435,8 +435,19 @@ def audit(
 ) -> List[Dict[str, Any]]:
     """Every finding for one repository on this storage host.  ``export``:
     false for a host that backs up through restate-proxy (25.5), which has
-    no export to find fault with."""
+    no export to find fault with, and whose repository is said to be made
+    or not (``repository_made``)."""
     system = system or platform.system()
+    if not export:
+        # Through restate-proxy the repository is what Prepare storage
+        # makes; until it is there a capture is refused (404
+        # no-repository), and there is nothing under it to check yet.
+        if not os.path.isdir(repository):
+            return (
+                baseline(system, account)
+                + [_finding("repository_made", ERROR)]
+                + space_findings(repository, read_text)
+            )
     filesystem = filesystem_findings(repository, read_text)
     own_fs = filesystem[0]["level"] == OK
     exports = (
@@ -444,8 +455,10 @@ def audit(
         if export
         else []
     )
+    made = [] if export else [_finding("repository_made", OK)]
     return (
         baseline(system, account)
+        + made
         + filesystem
         + exports
         + layout_findings(repository, account)
