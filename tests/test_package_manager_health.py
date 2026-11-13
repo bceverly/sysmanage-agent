@@ -75,7 +75,7 @@ def test_freebsd_missing_dependencies():
 
 
 def test_repair_runs_the_standard_fix_then_checks_again(monkeypatch):
-    monkeypatch.setattr(health.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(health.os, "geteuid", lambda: 1000, raising=False)
     state = {"updates": ["0001"]}
     tools = Tools({"dpkg"})
 
@@ -96,7 +96,7 @@ def test_repair_runs_the_standard_fix_then_checks_again(monkeypatch):
 
 
 def test_a_failed_repair_says_so_with_its_output(monkeypatch):
-    monkeypatch.setattr(health.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(health.os, "geteuid", lambda: 1000, raising=False)
     tools = Tools(
         {"dpkg"},
         {("dpkg", "--configure", "-a"): (1, "dpkg: error processing package snapd\n")},

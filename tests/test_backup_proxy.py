@@ -365,7 +365,8 @@ async def test_an_old_token_is_replaced_only_once_its_successor_is_granted(
     assert due["proxy_tokens"]["current"] == current and nxt != current
     assert path not in remote.installed  # still the old token in use
     waiting = remote._next_token_path(PID)
-    assert oct(os.stat(waiting).st_mode & 0o777) == "0o600"
+    if os.name != "nt":  # Windows has no POSIX mode bits
+        assert oct(os.stat(waiting).st_mode & 0o777) == "0o600"
     assert "proxy_token_made" not in due  # the agent's own record, never sent
 
     # Not granted yet: the same next token, still not used.
