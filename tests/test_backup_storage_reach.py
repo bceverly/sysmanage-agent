@@ -163,9 +163,13 @@ def test_a_certificate_curl_accepts_is_accepted_on_strict_pythons(tmp_path):
             server.close()
             await server.wait_closed()
 
-    if (
-        getattr(ssl, "VERIFY_X509_STRICT", 0)
-        & ssl.create_default_context().verify_flags
+    # The refusal itself is OpenSSL's: its strict mode (3.0 and later) wants
+    # the key identifiers. LibreSSL (OpenBSD's Python) has the same flag but
+    # does not check them, so there the default context accepts this chain.
+    if getattr(
+        ssl, "VERIFY_X509_STRICT", 0
+    ) & ssl.create_default_context().verify_flags and ssl.OPENSSL_VERSION.startswith(
+        "OpenSSL"
     ):
         assert asyncio.run(handshake(ssl.create_default_context(cadata=ca))) is False
     assert asyncio.run(handshake(storage_reach._tls_context(ca))) is True
