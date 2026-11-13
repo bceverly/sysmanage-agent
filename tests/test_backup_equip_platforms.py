@@ -78,12 +78,13 @@ def host(monkeypatch, tmp_path):
             return url, SUMS.encode()
         return url, _body(url.rsplit("/", 1)[1])
 
-    def go(system, info=None, machine="x86_64", release_text=None):
+    def go(system, info=None, machine="x86_64", release_text=None, **flags):
         if info is not None:
             monkeypatch.setattr(equip, "_os_release", lambda path="": info)
         monkeypatch.setattr(equip.platform, "machine", lambda: machine)
         return asyncio.run(equip.equip(str(tmp_path), run=run, fetch=fetch,
-                                       system=system, release_text=release_text))  # fmt: skip
+                                       system=system, release_text=release_text,
+                                       **flags))  # fmt: skip
 
     return SimpleNamespace(go=go, ran=ran, fetched=fetched, seen=seen,
                            folder=tmp_path / "equip")  # fmt: skip
@@ -269,3 +270,38 @@ def test_openbsds_doas_admits_pkg_add_by_its_absolute_path():
             "permit nopass _sysmanage as root cmd /usr/sbin/pkg_add\n" in handle.read()
         )
     assert release.install_steps(release.OPENBSD, ["/p"])[0][0] == "/usr/sbin/pkg_add"
+
+
+# An air-gapped site (server ROADMAP 25.9): the host's own repositories only.
+@pytest.mark.parametrize(
+    "system,info,release_text,machine,expected",
+    [
+        ("Linux", {"ID": "ubuntu", "VERSION_ID": "24.04"}, None, "x86_64",
+         [["apt-get", "install", "-y", "restate", "nfs-common", "restate-proxy"]]),
+        ("Linux", {"ID": "fedora", "VERSION_ID": "44"}, None, "x86_64",
+         [["dnf", "install", "-y", "restate", "nfs-utils", "restate-proxy"]]),
+        ("Linux", {"ID": "alpine", "VERSION_ID": "3.23.4"}, None, "x86_64",
+         [["apk", "add", "restate", "nfs-utils"]]),
+        ("FreeBSD", None, "15.0-RELEASE", "amd64",
+         [["pkg", "install", "-y", "restate", "restate-proxy"]]),
+        ("OpenBSD", None, "8.0", "amd64", [["pkg_add", "restate"]]),
+    ],
+    ids=["ubuntu", "fedora", "alpine", "freebsd", "openbsd"],
+)  # fmt: skip
+def test_an_air_gapped_site_installs_from_its_own_repositories(
+    host, system, info, release_text, machine, expected
+):
+    result = host.go(system, info, machine=machine, release_text=release_text,
+                     proxy=True, local=True)  # fmt: skip
+    assert result == {"success": True, "installed": "local"}
+    assert [_bare(a) for a in host.ran] == expected
+    assert not host.fetched  # no PPA, COPR or GitHub: nothing from the internet
+
+
+def test_an_air_gapped_mac_says_there_is_no_local_package(host, monkeypatch):
+    monkeypatch.setattr(
+        equip, "target", lambda *a, **k: equip.Target(equip.MACOS, "", "arm64")
+    )
+    result = host.go("Darwin", local=True)
+    assert result["success"] is False and result["reason"] == "no_local_package"
+    assert not host.ran and not host.fetched

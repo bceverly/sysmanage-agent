@@ -2024,11 +2024,14 @@ jobs:
   release:
     name: Create Release and Push to Docs
     runs-on: ubuntu-latest
-    # 120, not 60: the R2 publish alone ran past an hour on a slow R2 day
-    # (agent 3.13.0.12, 2026-11-12), and a timeout here skips every package
-    # channel after it (Launchpad, OBS, Copr, snap, winget, Homebrew, AUR,
-    # the BSD ports).  Each sync now says how long it took.
-    timeout-minutes: 120
+    # 360, GitHub's most for a hosted runner: at 60 and then 120 the R2
+    # publish still ran past the limit (agent 3.13.0.12 at an hour, 2026-11-12;
+    # 3.13.0.14 cancelled at 2 h, 2026-11-13) -- it pulls the whole flatpak
+    # OSTree store, thousands of small objects, before it uploads -- and a
+    # timeout here skips every package channel after it (Launchpad, OBS, Copr,
+    # snap, winget, Homebrew, AUR, the BSD ports).  Each sync says how long it
+    # took, so a slow day shows which part.
+    timeout-minutes: 360
     needs: [build-ubuntu, build-centos, build-opensuse, build-macos, build-windows, build-freebsd, build-netbsd, build-openbsd, build-flatpak, build-openbsd-packages, build-alpine]
 
     steps:

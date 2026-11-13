@@ -10,10 +10,12 @@ storage host writes and removes the grants that name them, and audits the
 proxy.  Nothing here ever logs or reports a token.
 """
 
+import asyncio
 import json
 import os
 import platform
 import shutil
+import time
 from typing import Any, Dict, List, Optional
 
 from src.sysmanage_agent.backup import host_mount
@@ -76,10 +78,11 @@ class BackupProxyMixin:
                          access.token_path(policy_id, previous=True)):  # fmt: skip
                 if os.path.exists(path):
                     await self._remove_root_file(path)
+            self._drop_next_token(policy_id)
             return {}
-        known = (self._load("policies.json").get(policy_id) or {}).get(
-            "proxy_tokens"
-        ) or {}
+        saved = self._load("policies.json").get(policy_id) or {}
+        known = saved.get("proxy_tokens") or {}
+        made = None
         tokens: Dict[str, str] = {}
         for key, previous in (("current", False), ("previous", True)):
             path = access.token_path(policy_id, previous)
@@ -89,15 +92,73 @@ class BackupProxyMixin:
                 continue
             if known.get(key) and os.path.exists(path):
                 tokens[key] = known[key]
+                if not previous:
+                    made = saved.get("proxy_token_made") or int(time.time())
+                    turned = await self._rotate_token(policy_id, path, proxy, made)
+                    made = turned.pop("made", made)
+                    tokens.update(turned)
                 continue
             token = access.new_token()
             await self._install_root_file(token, path, mode="600")
             tokens[key] = access.token_sha256(token)
+            if not previous:
+                made = int(time.time())
+                self._drop_next_token(policy_id)
         if proxy.get("ca"):
             await self._install_root_file(proxy["ca"], access.ca_path(policy_id))
         elif os.path.exists(access.ca_path(policy_id)):
             await self._remove_root_file(access.ca_path(policy_id))
-        return {"proxy_tokens": tokens}
+        # ``proxy_token_made`` stays here: saved with the policy, never sent.
+        return {"proxy_tokens": tokens, "proxy_token_made": made}
+
+    # --- token rotation (25.5) ----------------------------------------------
+    #
+    # A token older than ROTATE_AFTER_SECONDS gets a next one, kept in the
+    # agent's own state (0600) and reported only as its hash; the server
+    # grants it beside the current one, and once the storage host has
+    # acknowledged that grant it says so (``granted``).  Only then does the
+    # host install it as its token: it never uses a token the proxy would
+    # refuse, so no backup fails in between (2026-11-13: the old way, a
+    # token remade at once, was refused for the seconds before the grant).
+
+    def _next_token_path(self, policy_id: str) -> str:
+        return os.path.join(self._backup_dir(), "next-tokens", f"{policy_id}.token")
+
+    def _drop_next_token(self, policy_id: str) -> None:
+        path = self._next_token_path(policy_id)
+        if os.path.exists(path):
+            os.unlink(path)
+
+    def _keep_next_token(self, policy_id: str, token: str) -> None:
+        path = self._next_token_path(policy_id)
+        os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="ascii") as out:
+            out.write(token)
+
+    async def _rotate_token(
+        self, policy_id: str, path: str, proxy: Dict[str, Any], made: float
+    ) -> Dict[str, Any]:
+        """What the rotation adds to this configure's token report:
+        ``next`` while one waits for its grant, the new ``current`` once
+        granted (with ``made``, when it was, for the agent's own record), or
+        nothing.  ``made``: when the current token was made."""
+        waiting = (_read_text(self._next_token_path(policy_id)) or "").strip()
+        if waiting:
+            digest = access.token_sha256(waiting)
+            if digest not in (proxy.get("granted") or []):
+                return {"next": digest}
+            await self._install_root_file(waiting, path, mode="600")
+            self._drop_next_token(policy_id)
+            return {"current": digest, "made": int(time.time())}
+        if (
+            not isinstance(made, (int, float))
+            or time.time() - made < access.ROTATE_AFTER_SECONDS
+        ):
+            return {}
+        token = access.new_token()
+        self._keep_next_token(policy_id, token)
+        return {"next": access.token_sha256(token)}
 
     async def _apply_grants(
         self, policy: Dict[str, Any], features: Optional[Dict[str, Any]] = None
@@ -223,6 +284,23 @@ class BackupProxyMixin:
                 self._privileged(["service", service.FREEBSD_SERVICE, "stop"])
             )
             await self._run(self._privileged(["sysrc", "restate_proxy_enable=NO"]))
+
+    async def _storage_findings(
+        self, policy: Dict[str, Any], audited: Optional[Dict[str, Any]] = None
+    ) -> Optional[List[Dict[str, Any]]]:
+        """The whole storage audit of one repository: the append-only set-up
+        and, on a proxy target, the proxy.  Every path that reports an audit
+        (configure, each storage job, the daily re-audit) sends this one: the
+        later two sent only the first part, so a protect after every capture
+        cleared "restate-proxy is not installed" (drill-storage, 2026-11-13).
+        None when the audit could not run, so the server keeps what it knew."""
+        loop = asyncio.get_running_loop()
+        findings = await loop.run_in_executor(
+            None, self._audit, audited if audited is not None else policy
+        )
+        if findings is None:
+            return None
+        return list(findings) + await self._proxy_audit(policy)
 
     async def _proxy_audit(self, policy: Dict[str, Any]) -> List[Dict[str, Any]]:
         """The proxy as this host's clients need it: running, its certificate

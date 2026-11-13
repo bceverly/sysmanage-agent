@@ -24,6 +24,9 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg update
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg install *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg delete *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg upgrade *
+# Repair package manager (2026-11-13): install what packages depend on but is missing.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg check -d -y
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg check -d -y
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/pkg autoremove
 
 # Repository mirroring tools (Pro+ repository_mirroring_engine).

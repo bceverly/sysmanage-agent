@@ -11,7 +11,7 @@ arbitrary path.
 """
 
 import posixpath
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from src.sysmanage_agent.backup import job_validation as v
 from src.sysmanage_agent.backup import restate_contract as contract
@@ -66,23 +66,44 @@ def self_rules_path(policy_id: str) -> str:
     return posixpath.join(RULES_DIR, f"{policy_id}.self.rules")
 
 
-def policy_rules(policy: Dict[str, Any]) -> Optional[str]:
-    """The rules file for the operator's paths, or None when there are none.
+# SQLite's scratch files beside a database: the rollback journal, the
+# write-ahead log and its index.  They appear and vanish while the agent
+# writes, so a capture that met one mid-read was incomplete (mail, 2026-11-12).
+SCRATCH_SUFFIXES = ("-journal", "-wal", "-shm")
+
+
+def agent_scratch(database_path: Optional[str]) -> List[str]:
+    """The agent's own database's scratch files, left out of every capture
+    (the database itself is kept)."""
+    if not database_path or not database_path.startswith("/"):
+        return []
+    return [database_path + suffix for suffix in SCRATCH_SUFFIXES]
+
+
+def policy_rules(policy: Dict[str, Any], scratch: Sequence[str] = ()) -> Optional[str]:
+    """The rules file for the operator's paths and the agent's own scratch
+    files, or None when there are none.
 
     ``keep_paths`` are ``state`` (kept even where the built-in rules leave
     them out, e.g. ~/Downloads), ``skip_paths`` are ``expendable`` (left
     out, as restate treats caches).  restate's LAST matching rule wins, so
-    the skips come after the keeps: a path matching both is left out.
+    the skips come after the keeps: a path matching both is left out.  The
+    agent's ``scratch`` comes last of all, so no keep brings it back.
     """
     capture = policy["jobs"].get("capture") or {}
     keep = capture.get("keep_paths") or []
     skip = capture.get("skip_paths") or []
-    if not keep and not skip:
+    if not set(policy["jobs"]) & set(WALKS):
+        scratch = ()  # the storage side walks nothing of this host
+    if not keep and not skip and not scratch:
         return None
     lines = ["# Written by sysmanage-agent from the backup policy; replaced on"]
     lines.append("# every configure.  Later rules win: leave-outs follow keeps.")
     lines += [f"state {pattern}" for pattern in keep]
     lines += [f"expendable {pattern}" for pattern in skip]
+    if scratch:
+        lines.append("# The agent's own database's scratch files.")
+        lines += [f"expendable {path}" for path in scratch]
     return "\n".join(lines) + "\n"
 
 
@@ -119,6 +140,7 @@ def build_jobs(
     can_create: bool = False,
     network_rules: bool = False,
     include_mounts: Optional[List[str]] = None,
+    scratch: Sequence[str] = (),
 ) -> Dict[str, Dict[str, Any]]:
     """``{action: full job}`` for every restate action in the policy.
 
@@ -128,6 +150,7 @@ def build_jobs(
     (over NFS only the HOST can: the storage side's files must belong to the
     export's mapped user).  ``network_rules``: the agent's network-mount
     rules file is installed, and the walks (capture, estimate) read it.
+    ``scratch``: the agent's own scratch files, in the policy's rules file.
     ``include_mounts``: the network mounts an operator's keep path leads
     into, which a restate that skips network mounts walks all the same
     (``include_mount``).  A status job takes none: restate walks what the
@@ -138,7 +161,7 @@ def build_jobs(
     for action, keys in policy["jobs"].items():
         if action == "seal":
             continue
-        job = _action_keys(policy, action, keys, network_rules)
+        job = _action_keys(policy, action, keys, network_rules, scratch)
         if mounts and action in WALKS:
             job["include_mount"] = list(mounts)
         job.update(_extra_keys(policy, action, state_dir, key_installed, can_create))
@@ -177,6 +200,7 @@ def _action_keys(
     action: str,
     keys: Dict[str, Any],
     network_rules: bool = False,
+    scratch: Sequence[str] = (),
 ) -> Dict[str, Any]:
     """The server's keys for ``action``, its rules files and repository.
 
@@ -186,7 +210,7 @@ def _action_keys(
     job = {key: value for key, value in keys.items() if key not in _PATH_RULE_KEYS}
     if action in WALKS:
         files = [network_rules_path(policy["policy_id"])] if network_rules else []
-        if policy_rules(policy):
+        if policy_rules(policy, scratch):
             files.append(rules_path(policy["policy_id"]))
         if policy.get("role") == v.SELF:
             # Last, so it wins: no operator keep brings the backups back in.

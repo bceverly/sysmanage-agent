@@ -115,11 +115,13 @@ def check_host_proxy(value: Any) -> Optional[Dict[str, Any]]:
     if value is None:
         return None
     if not isinstance(value, dict) or not set(value) <= {
-        "url", "previous_url", "pin_sha256", "ca", "capture"
+        "url", "previous_url", "pin_sha256", "ca", "capture", "granted"
     } or "url" not in value:  # fmt: skip
         raise PolicyError("proxy must have url, and optionally previous_url, "
-                          "pin_sha256, ca and capture")  # fmt: skip
+                          "pin_sha256, ca, capture and granted")  # fmt: skip
     out: Dict[str, Any] = {"url": _check_url(value["url"], "proxy url")}
+    if value.get("granted") is not None:
+        out["granted"] = _check_granted(value["granted"])
     if value.get("capture") is not None:
         if not isinstance(value["capture"], bool):
             raise PolicyError("proxy capture must be true or false")
@@ -284,6 +286,23 @@ def needs_export(policy: Dict[str, Any]) -> bool:
 
 
 # --- the host's tokens and read jobs -------------------------------------
+
+
+# A host's token is replaced this often (25.5): by a next token, granted on
+# the storage host before the host uses it.
+ROTATE_AFTER_SECONDS = 90 * 24 * 3600
+MAX_GRANTED = 8
+
+
+def _check_granted(value: Any) -> List[str]:
+    """The token hashes the storage host's grant for this host holds."""
+    if (
+        not isinstance(value, list)
+        or len(value) > MAX_GRANTED
+        or not all(isinstance(h, str) and _SHA256.match(h) for h in value)
+    ):
+        raise PolicyError("proxy granted must be a list of SHA-256 hashes")
+    return list(value)
 
 
 def new_token() -> str:

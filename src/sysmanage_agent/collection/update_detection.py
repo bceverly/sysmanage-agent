@@ -45,6 +45,18 @@ logger = logging.getLogger(__name__)
 _MANAGER_ALIASES = {"chocolatey": "choco", "pkg_add": "pkg", "homebrew": "brew"}
 
 
+def _package_manager_health():
+    """collection/package_manager_health.check(); None when it cannot run."""
+    # pylint: disable-next=import-outside-toplevel
+    from src.sysmanage_agent.collection import package_manager_health
+
+    try:
+        return package_manager_health.check()
+    except Exception as error:  # pylint: disable=broad-except
+        logger.warning("Package manager health check failed: %s", error)
+        return None
+
+
 class UpdateDetector:
     """
     Comprehensive update detector supporting multiple platforms
@@ -132,6 +144,8 @@ class UpdateDetector:
                 "system_updates": len(system_updates),
                 "application_updates": len(application_updates),
                 "requires_reboot": self.detector.check_reboot_required(),
+                # Can the package manager install anything at all (2026-11-13)?
+                "package_manager_health": _package_manager_health(),
             }
 
         except Exception as error:

@@ -22,6 +22,15 @@ RestartSec=10
 # agent logs exactly what to edit and must NOT be restarted every 10 s.
 # systemctl status then shows status=78/CONFIG and the reason in the log.
 RestartPreventExitStatus=78
+# Stopping the agent stops the agent's own process only (2026-11-13).  The
+# agent applies package updates with apt/dnf/zypper as its children; when an
+# update includes sysmanage-agent itself, the package scripts stop or restart
+# this unit, and the default (control-group) killed dpkg mid-upgrade with it:
+# six production hosts were left with sysmanage-agent half-installed and no
+# agent running.  With "process" the package manager finishes, and its own
+# scripts start the new agent.  Long-running work the agent hands off (restate
+# jobs) runs in units of its own, so nothing else is left behind.
+KillMode=process
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sysmanage-agent

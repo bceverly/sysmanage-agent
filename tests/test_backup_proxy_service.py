@@ -255,6 +255,48 @@ async def test_the_server_flag_reaches_equip(monkeypatch):
     monkeypatch.setattr(equip, "equip", fake_equip)
     delegator = agent_delegators.AgentDelegatorMixin.equip_backup
     await delegator(object(), {"proxy": True})
-    assert seen == {"proxy": True}
-    await delegator(object(), {"proxy": "yes"})
-    assert seen == {"proxy": False}
+    assert seen == {"proxy": True, "local": False}
+    await delegator(object(), {"proxy": "yes", "local": "yes"})
+    assert seen == {"proxy": False, "local": False}
+    await delegator(object(), {"local": True})  # an air-gapped site (25.9)
+    assert seen == {"proxy": False, "local": True}
+
+
+@pytest.mark.asyncio
+async def test_every_audit_path_carries_the_proxy_findings(storage, monkeypatch):
+    """Configure, each storage job's report and the daily re-audit all send
+    the proxy part: the last two sent only the export audit, so the protect
+    after each capture cleared "not installed" (drill-storage, 2026-11-13)."""
+    monkeypatch.setattr(proxy_mixin, "proxy_binary", lambda: None)
+    monkeypatch.setattr(
+        storage, "_audit", lambda policy: [{"code": "nfs_v4", "level": "ok"}]
+    )
+    policy = _policy({"name": NAME, "pem": None, "renew": True})
+    missing = {
+        "code": "proxy_running",
+        "level": "error",
+        "params": {"problem": "not_installed"},
+    }
+
+    assert await storage._storage_findings(policy) == [
+        {"code": "nfs_v4", "level": "ok"},
+        missing,
+    ]
+
+    sent = []
+
+    async def send(message_type, data, then=None):
+        sent.append((message_type, data))
+
+    monkeypatch.setattr(storage, "_send", send)
+    monkeypatch.setattr(storage, "_policy", lambda policy_id: policy)
+    await storage._report({"policy_id": policy["policy_id"], "run_id": "r"})
+    assert missing in sent[-1][1]["storage_audit"]
+
+    monkeypatch.setattr(storage, "_load", lambda name: {policy["policy_id"]: policy})
+    monkeypatch.setattr(storage, "_features", lambda: {"version": "3.2.1.5"})
+    assert await storage.reaudit_storage() == 1
+    assert missing in sent[-1][1]["storage_audit"]
+
+    monkeypatch.setattr(storage, "_audit", lambda policy: None)  # could not run
+    assert await storage._storage_findings(policy) is None

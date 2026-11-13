@@ -269,7 +269,7 @@ class BackupStorageActionsMixin:
         loop = asyncio.get_running_loop()
         features = await loop.run_in_executor(None, self._features) or {}
         return await storage_reaudit.send_all(
-            policies, self._audit, self._send, features.get("version")
+            policies, self._storage_findings, self._send, features.get("version")
         )
 
     def _audit(self, policy: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:

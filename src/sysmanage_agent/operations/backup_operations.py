@@ -426,8 +426,10 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 policy["encrypt_key"], contract.key_path(policy_id)
             )
         await self._apply_trusted_key(policy)
-        await self._apply_rules(policy)
         features = self._features() or {}
+        # A restate that takes no rules files gets none (its job would fail).
+        scratch = self._agent_scratch() if contract.supports(features, "rules") else []
+        await self._apply_rules(policy, scratch)
         network_rules, network = await self._apply_network_rules(policy, features)
         self_points = await self._apply_self_rules(policy)
         # restate-proxy first (25.5): a capture through it needs the token.
@@ -440,6 +442,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             can_create=contract.supports(features, "create"),
             network_rules=network_rules,
             include_mounts=(network or {}).get("kept") if not network_rules else None,
+            scratch=scratch,
         )
         for action in contract.GATED_COMMANDS & set(jobs):
             if not contract.supports_command(features, action):
@@ -494,6 +497,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             # host's tokens (never a token); a CA is kept as a file, not here.
             "proxy": _saved_proxy(policy.get("proxy")),
             "proxy_tokens": proxy_state.get("proxy_tokens"),
+            # When the current token was made, for its rotation (25.5).
+            "proxy_token_made": proxy_state.pop("proxy_token_made", None),
             # The public key a storage host's prepare makes a proxy host's
             # repository encrypted to (restate init --encrypt-to).
             "encrypt_to": (
@@ -517,10 +522,21 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             policy, policies[policy_id], reply, network, self_points
         )
 
-    async def _apply_rules(self, policy: Dict[str, Any]) -> None:
+    @staticmethod
+    def _agent_scratch() -> List[str]:
+        """This agent's database's scratch files (job_builder.agent_scratch)."""
+        # pylint: disable=import-outside-toplevel
+        from src.database.base import get_database_manager
+
+        try:
+            return job_builder.agent_scratch(get_database_manager().database_path)
+        except Exception:  # pylint: disable=broad-except
+            return []  # no database to leave out of anything
+
+    async def _apply_rules(self, policy: Dict[str, Any], scratch: List[str]) -> None:
         """Install the policy's rules file, or remove one it no longer needs."""
         path = job_builder.rules_path(policy["policy_id"])
-        text = job_builder.policy_rules(policy)
+        text = job_builder.policy_rules(policy, scratch)
         if text:
             await self._install_root_file(text, path)
         elif os.path.exists(path):

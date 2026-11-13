@@ -427,7 +427,26 @@ class MiscDelegator:
         from src.sysmanage_agent.operations import backup_operations  # noqa: PLC0415
 
         proxy = (parameters or {}).get("proxy") is True
-        return await equip.equip(backup_operations.default_state_dir(), proxy=proxy)
+        # An air-gapped site (25.9): from the host's own repositories only.
+        local = (parameters or {}).get("local") is True
+        return await equip.equip(
+            backup_operations.default_state_dir(), proxy=proxy, local=local
+        )
+
+    async def repair_package_manager(
+        self, _parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Repair the package manager ("Repair package manager" in the hosts
+        grid); collection/package_manager_health.py decides how.  The
+        server sends nothing but the request."""
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.collection import (
+            package_manager_health,
+        )  # noqa: PLC0415
+
+        return await asyncio.get_running_loop().run_in_executor(
+            None, package_manager_health.repair
+        )
 
     async def check_backup_storage(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Can this host reach its backup storage's NFS port?  The server

@@ -22,6 +22,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
 from src.sysmanage_agent.backup import proxy_access as access
+from src.sysmanage_agent.backup import proxy_mixin
 from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup.job_validation import PolicyError
@@ -337,3 +338,61 @@ def test_each_grant_is_audited_as_the_proxy_reads_it():
 def test_the_agent_says_it_reads_through_a_proxy_only_when_restate_can():
     assert contract.REMOTE_ABILITY in contract.host_abilities(REMOTE)
     assert contract.REMOTE_ABILITY not in contract.host_abilities(FEATURES)
+
+
+# --- token rotation (2026-11-13) -------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_an_old_token_is_replaced_only_once_its_successor_is_granted(
+    remote, monkeypatch
+):
+    """The host never uses a token the storage host does not hold yet: a
+    due token gets a next one, reported only as its hash and kept in the
+    agent's own state; the host installs it only when the server says the
+    storage host's grant has it."""
+    await remote.backup_configure(_proxy_policy())
+    path = access.token_path(PID)
+    with open(path, "w", encoding="ascii") as out:
+        out.write(remote.installed[path][0])  # what the install put there
+    current = remote._policy(PID)["proxy_tokens"]["current"]
+    later = remote._policy(PID)["proxy_token_made"] + access.ROTATE_AFTER_SECONDS + 1
+    monkeypatch.setattr(proxy_mixin.time, "time", lambda: later)
+    remote.installed.clear()
+
+    due = await remote.backup_configure(_proxy_policy())
+    nxt = due["proxy_tokens"]["next"]
+    assert due["proxy_tokens"]["current"] == current and nxt != current
+    assert path not in remote.installed  # still the old token in use
+    waiting = remote._next_token_path(PID)
+    assert oct(os.stat(waiting).st_mode & 0o777) == "0o600"
+    assert "proxy_token_made" not in due  # the agent's own record, never sent
+
+    # Not granted yet: the same next token, still not used.
+    again = await remote.backup_configure(_proxy_policy(granted=[current]))
+    assert again["proxy_tokens"] == {"current": current, "next": nxt}
+    assert path not in remote.installed
+
+    # Granted: installed root's alone, reported as current, its file gone.
+    switched = await remote.backup_configure(_proxy_policy(granted=[current, nxt]))
+    assert switched["proxy_tokens"] == {"current": nxt}
+    token, mode = remote.installed[path]
+    assert mode == "600" and access.token_sha256(token) == nxt
+    assert not os.path.exists(waiting)
+    assert remote._policy(PID)["proxy_token_made"] == later
+
+
+@pytest.mark.asyncio
+async def test_a_fresh_token_is_not_rotated(remote):
+    await remote.backup_configure(_proxy_policy())
+    with open(access.token_path(PID), "w", encoding="ascii") as out:
+        out.write("rsp_kept")
+    again = await remote.backup_configure(_proxy_policy())
+    assert set(again["proxy_tokens"]) == {"current"}
+
+
+def test_granted_is_a_short_list_of_hashes():
+    assert access.check_host_proxy({"url": URL, "granted": [HASH]})["granted"] == [HASH]
+    for bad in ("x", ["nothex"], [HASH] * (access.MAX_GRANTED + 1)):
+        with pytest.raises(PolicyError):
+            access.check_host_proxy({"url": URL, "granted": bad})

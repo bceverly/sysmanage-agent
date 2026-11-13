@@ -201,6 +201,47 @@ async def test_path_rules_install_a_rules_file_and_remove_it_when_dropped(
 
 
 @pytest.mark.asyncio
+async def test_the_agents_own_database_scratch_files_are_left_out(
+    ops, monkeypatch, tmp_path
+):
+    """SQLite's journal and write-ahead files come and go while the agent
+    writes, and a capture that met one mid-read was incomplete (mail,
+    2026-11-12): every capture leaves them out, after any keep."""
+    rules = tmp_path / "rules.d" / f"{PID}.rules"
+    monkeypatch.setattr(ops_module.job_builder, "rules_path", lambda _pid: str(rules))
+    db = "/var/lib/sysmanage-agent/agent.db"
+    monkeypatch.setattr(BackupOperations, "_agent_scratch",
+                        staticmethod(lambda: job_builder.agent_scratch(db)))  # fmt: skip
+    installed = {}
+    real = ops._install_root_file
+
+    async def install(content, dest, mode="644"):
+        installed[dest] = content
+        await real(content, dest, mode)
+
+    monkeypatch.setattr(ops, "_install_root_file", install)
+    policy = _host_policy()
+    policy["jobs"]["capture"]["keep_paths"] = ["/var/lib/sysmanage-agent"]
+    assert (await ops.backup_configure(policy))["success"]
+    text = installed[str(rules)]
+    assert text.index("state /var/lib/sysmanage-agent\n") < text.index(
+        f"expendable {db}-wal\n"
+    )
+    for suffix in ("-journal", "-wal", "-shm"):
+        assert f"expendable {db}{suffix}\n" in text
+    assert f"expendable {db}\n" not in text  # the database itself is kept
+    assert str(rules) in installed[contract.job_path(PID, "capture")]
+    # A restate that takes no rules files is sent none.
+    old = dict(FEATURES, job_keys=[k for k in FEATURES["job_keys"] if k != "rules"])
+    monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: old))
+    installed.clear()
+    assert (await ops.backup_configure(_host_policy()))["success"]
+    assert str(rules) not in installed
+    assert str(rules) not in installed[contract.job_path(PID, "capture")]
+    assert job_builder.agent_scratch("agent.db") == []  # relative: unknown place
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("has_repack", [True, False], ids=["repack", "no-repack"])
 async def test_repack_is_installed_only_where_restate_has_it(
     ops, monkeypatch, has_repack

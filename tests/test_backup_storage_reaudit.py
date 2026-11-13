@@ -18,7 +18,7 @@ POLICIES = {
 }
 
 
-def _audit(policy):
+async def _audit(policy):
     if policy["repository"].endswith("h-2"):
         return None  # the audit could not run
     return [{"code": "nfs_v4", "level": "ok", "params": {}}]

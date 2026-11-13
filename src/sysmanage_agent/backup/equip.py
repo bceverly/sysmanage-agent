@@ -188,6 +188,33 @@ def fedora_steps(proxy: bool = False) -> List[List[str]]:
     ]
 
 
+# An air-gapped site (server ROADMAP 25.9): restate comes from the site's own
+# repository, which the host already uses -- no PPA, COPR, GitHub release or
+# Homebrew, none of which it can reach.  The package manager installs by name,
+# through the rules each platform's sudoers already grants it.
+def local_steps(kind: str, proxy: bool = False) -> Optional[List[List[str]]]:
+    """Install restate (and restate-proxy for a proxy target's storage host)
+    from the host's configured repositories; None where there is no such
+    repository (macOS: Homebrew's formula comes from the internet)."""
+    extra = [PROXY_PACKAGE] if proxy else []
+    steps = {
+        UBUNTU: [["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra]],
+        FEDORA: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
+        release.EL: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
+        release.LEAP: [
+            ["zypper", "--non-interactive", "install", "restate", "nfs-client"]
+        ],
+        release.TUMBLEWEED: [
+            ["zypper", "--non-interactive", "install", "restate", "nfs-client"]
+        ],
+        release.ALPINE: [["apk", "add", "restate", "nfs-utils"]],
+        release.FREEBSD: [["pkg", "install", "-y", "restate", *extra]],
+        release.NETBSD: [["pkgin", "-y", "install", "restate"]],
+        release.OPENBSD: [["pkg_add", "restate"]],
+    }
+    return steps.get(kind)
+
+
 def asset_name(version: str, release_name: str) -> str:
     """FreeBSD's package for this release (amd64)."""
     return f"restate-{version}-freebsd-{release_name}-amd64.pkg"
@@ -261,6 +288,24 @@ async def _equip_macos(run: Callable, exists: Callable, stat: Callable):
     return {"success": True, "installed": "homebrew"}
 
 
+async def _equip_local(run: Callable, kind: str, proxy: bool, system: str):
+    steps = local_steps(kind, proxy)
+    if steps is None:
+        return _failed(
+            "no_local_package", "restate has no package in a local repository here"
+        )
+    privileged = (
+        _linux_privileged
+        if system == "Linux"
+        else lambda argv: _privileged(argv, system)
+    )
+    for argv in steps:
+        code, out = await run(privileged(argv))
+        if code:
+            return _failed("install_failed", out)
+    return {"success": True, "installed": "local"}
+
+
 async def equip(  # pylint: disable=too-many-arguments
     state_dir: str,
     run: Callable = _run,
@@ -270,16 +315,20 @@ async def equip(  # pylint: disable=too-many-arguments
     exists: Callable = os.path.exists,
     stat: Callable = os.stat,
     proxy: bool = False,
+    local: bool = False,
 ) -> Dict[str, object]:
     """Install restate (and the NFS client) on this host; ``{"success": True,
     "installed"}`` or a failure with its reason code and the tool's last
     output.  ``proxy``: this storage host serves a restate-proxy target, so
     restate-proxy is installed too (Ubuntu, Fedora, FreeBSD -- where a storage
-    host can be)."""
+    host can be).  ``local``: an air-gapped site, so from the host's own
+    repositories only (see local_steps)."""
     system = system or platform.system()
     found = target(system, release_text=release_text, exists=exists)
     if found is None:
         return _failed("unsupported")
+    if local:
+        return await _equip_local(run, found.kind, proxy, system)
     if found.kind == UBUNTU:
         return await _steps(run, ubuntu_steps(proxy), "ppa")
     if found.kind == FEDORA:

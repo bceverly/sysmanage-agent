@@ -47,6 +47,7 @@ from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.backup import nfs_peers
 from src.sysmanage_agent.backup import storage_reach
 from src.sysmanage_agent.cloud_backup import tool as cloud_tool
+from src.sysmanage_agent.collection import package_manager_health
 from src.sysmanage_agent.collection import malware_scan
 from src.sysmanage_agent.operations import config_mgmt_locator
 
@@ -178,6 +179,8 @@ _REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
     # Where restate has a package this agent can install (Ubuntu's PPA,
     # FreeBSD's release package); not applicable elsewhere.
     "equip_backup": backup_equip.unavailable_reason,
+    # Where a package manager is checked: Linux and FreeBSD.
+    "repair_package_manager": package_manager_health.unavailable_reason,
     # A TCP connection: every agent but Windows' (no backups there).
     "check_backup_storage": storage_reach.unavailable_reason,
     # 25.8: where a storage host can run (Linux, FreeBSD): no privilege.

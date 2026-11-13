@@ -96,6 +96,8 @@ def ops(agent, tmp_path, monkeypatch):
     monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: FEATURES))
     monkeypatch.setattr(ops_module.restate_probe, "unavailable_reason", lambda *a: None)
     monkeypatch.setattr(ops_module, "_agent_group", lambda: "sysmanage-agent")
+    # No agent database of its own here; test_backup_operations covers one.
+    monkeypatch.setattr(BackupOperations, "_agent_scratch", staticmethod(lambda: []))
     monkeypatch.setattr(ops_module, "POLL_SECONDS", 0)
     monkeypatch.setattr(ops_module, "PROGRESS_EVERY_SECONDS", 0)
     monkeypatch.setattr(ops_module.validation, "check_target", _fake_target)

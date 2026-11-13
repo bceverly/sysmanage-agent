@@ -33,7 +33,7 @@ FIRST_DELAY_SECONDS = 60
 
 logger = logging.getLogger(__name__)
 
-Audit = Callable[[Dict[str, Any]], Optional[List[Dict[str, Any]]]]
+Audit = Callable[[Dict[str, Any]], Awaitable[Optional[List[Dict[str, Any]]]]]
 Send = Callable[[str, Dict[str, Any]], Awaitable[None]]
 
 
@@ -42,8 +42,8 @@ async def send_all(
 ) -> int:
     """Audit every storage policy's repository and send each result, with the
     restate ``version`` when known; a host policy sends the version alone.
-    How many were sent.  The audit runs commands, so it runs off the event
-    loop."""
+    How many were sent.  ``audit`` is a coroutine: its commands run off the
+    event loop."""
     sent = 0
     for policy_id, policy in sorted(policies.items()):
         if not isinstance(policy, dict):
@@ -63,7 +63,7 @@ async def _payload(
     if version:
         payload["restate_version"] = version
     if policy.get("role") == "storage":
-        found = await asyncio.get_running_loop().run_in_executor(None, audit, policy)
+        found = await audit(policy)
         if found is None and not version:
             return None  # the audit could not run; _audit logged why
         if found is not None:

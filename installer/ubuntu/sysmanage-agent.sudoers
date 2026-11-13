@@ -33,6 +33,8 @@ Defaults:sysmanage-agent env_keep += "DEBIAN_FRONTEND DEBCONF_NONINTERACTIVE_SEE
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/apt-get *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dpkg -i *
+# Repair package manager (2026-11-13): finish an interrupted dpkg run, exactly.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/dpkg --configure -a
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/add-apt-repository *
 
 # Snap package updates (apply_snap_updates).  ``snap refresh <name>``

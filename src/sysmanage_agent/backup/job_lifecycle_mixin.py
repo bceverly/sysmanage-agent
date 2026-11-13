@@ -264,7 +264,7 @@ class BackupJobLifecycleMixin:
         # picture of the append-only set-up never goes stale.
         policy = self._policy(str(data.get("policy_id") or ""))
         if policy and policy.get("role") == "storage":
-            data = dict(data, storage_audit=self._audit(policy))
+            data = dict(data, storage_audit=await self._storage_findings(policy))
         await self._send("backup_result", data, then)
 
     async def _send(self, message_type: str, data: Dict[str, Any], then=None) -> None:

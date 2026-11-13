@@ -411,6 +411,7 @@ class MessageProcessor:
             # Phase 24: backups with restate (bare references: params ride along).
             "backup_configure": self.agent.backup_ops.backup_configure,
             "equip_backup": self.agent.equip_backup,
+            "repair_package_manager": self.agent.repair_package_manager,
             "check_backup_storage": self.agent.check_backup_storage,
             "list_nfs_peers": self.agent.list_nfs_peers,
             # 24.12: iCloud Photos to local, on the backup storage host.
