@@ -31,6 +31,9 @@ FILES = [
     f"restate-{V}-r0-alpine3.24-aarch64.apk",
     f"restate-doc-{V}-r0-alpine3.24-aarch64.apk",
     f"restate-{V}-freebsd-15.1-amd64.pkg",
+    f"restate-{V}-debian12-amd64.deb",
+    f"restate-{V}-debian13-arm64.deb",
+    f"restate-proxy-{V}-debian13-arm64.deb",
 ]
 
 
@@ -138,6 +141,40 @@ def test_alpine_adds_nfs_utils_then_both_checked_packages(host):
         ["apk", "add", "nfs-utils"],
         ["apk", "add", "--allow-untrusted", *[str(host.folder / n) for n in names]],
     ]
+
+
+def test_debian_installs_the_release_deb_with_the_nfs_client(host):
+    result = host.go("Linux", {"ID": "debian", "VERSION_ID": "12"})
+    assert result == {"success": True, "installed": V}
+    path = str(host.folder / f"restate-{V}-debian12-amd64.deb")
+    assert [_bare(a) for a in host.ran] == [
+        ["apt-get", "update"],
+        ["apt-get", "install", "-y", path, "nfs-common"],
+    ]
+    assert host.seen[path] == _body(f"restate-{V}-debian12-amd64.deb")
+    assert not list(host.folder.iterdir())  # removed afterwards
+
+
+def test_a_debian_storage_host_gets_restate_proxy_by_dpkgs_processor_name(host):
+    result = host.go(
+        "Linux", {"ID": "debian", "VERSION_ID": "13"}, machine="aarch64", proxy=True
+    )
+    assert result["success"] is True
+    names = [f"restate-{V}-debian13-arm64.deb", f"restate-proxy-{V}-debian13-arm64.deb"]
+    assert _bare(host.ran[-1]) == [
+        "apt-get", "install", "-y", *[str(host.folder / n) for n in names], "nfs-common"
+    ]  # fmt: skip
+
+
+def test_debian_without_a_package_for_its_release_says_which_exist(host):
+    result = host.go("Linux", {"ID": "debian", "VERSION_ID": "13"})  # no amd64 13
+    assert result["reason"] == "no_release"
+    assert "debian12-amd64" in result["detail"] and ".el" not in result["detail"]
+    assert host.ran == []
+
+
+def test_an_older_debian_is_not_offered():
+    assert equip.target("Linux", {"ID": "debian", "VERSION_ID": "11"}, "x86_64") is None
 
 
 def test_openbsd_saves_the_package_under_its_own_name_and_uses_doas(host):
@@ -280,13 +317,15 @@ def test_openbsds_doas_admits_pkg_add_by_its_absolute_path():
          [["apt-get", "install", "-y", "restate", "nfs-common", "restate-proxy"]]),
         ("Linux", {"ID": "fedora", "VERSION_ID": "44"}, None, "x86_64",
          [["dnf", "install", "-y", "restate", "nfs-utils", "restate-proxy"]]),
+        ("Linux", {"ID": "debian", "VERSION_ID": "13"}, None, "x86_64",
+         [["apt-get", "install", "-y", "restate", "nfs-common", "restate-proxy"]]),
         ("Linux", {"ID": "alpine", "VERSION_ID": "3.23.4"}, None, "x86_64",
          [["apk", "add", "restate", "nfs-utils"]]),
         ("FreeBSD", None, "15.0-RELEASE", "amd64",
          [["pkg", "install", "-y", "restate", "restate-proxy"]]),
         ("OpenBSD", None, "8.0", "amd64", [["pkg_add", "restate"]]),
     ],
-    ids=["ubuntu", "fedora", "alpine", "freebsd", "openbsd"],
+    ids=["ubuntu", "fedora", "debian", "alpine", "freebsd", "openbsd"],
 )  # fmt: skip
 def test_an_air_gapped_site_installs_from_its_own_repositories(
     host, system, info, release_text, machine, expected

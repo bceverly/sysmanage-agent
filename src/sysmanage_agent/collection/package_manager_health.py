@@ -31,6 +31,8 @@ import shutil
 import subprocess  # nosec B404
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from src.i18n import _
+
 DPKG_UPDATES = "/var/lib/dpkg/updates"
 CHECK_SECONDS = 120
 REPAIR_SECONDS = 1800
@@ -91,7 +93,7 @@ def check(
         except OSError:
             interrupted = False
         if interrupted:
-            found.update(needs_repair=True, reason="dpkg was interrupted")
+            found.update(needs_repair=True, reason=_("dpkg was interrupted"))
             return found
         code, out = run(["dpkg", "--audit"], CHECK_SECONDS)
         if code == 0 and out.strip():

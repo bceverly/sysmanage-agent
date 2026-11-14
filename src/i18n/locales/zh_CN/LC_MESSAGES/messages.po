@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 13:18-0800\n"
+"POT-Creation-Date: 2026-11-14 06:40-0800\n"
 "Language: zh_CN\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1121,6 +1121,10 @@ msgstr "通过API收集Chocolatey软件包时出错：%s"
 msgid "No packages collected from Chocolatey community repository"
 msgstr "未从 Chocolatey 社区仓库收集到任何软件包"
 
+#: src/sysmanage_agent/collection/package_manager_health.py:96
+msgid "dpkg was interrupted"
+msgstr "dpkg 已被中断"
+
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
 msgid "No process with PID %d"
@@ -1267,17 +1271,17 @@ msgstr "收集 Microsoft Store 应用失败：%s"
 msgid "Failed to collect winget packages: %s"
 msgstr "收集 winget 包失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:69
+#: src/sysmanage_agent/collection/update_detection.py:81
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "检测更新不支持的平台：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:138
+#: src/sysmanage_agent/collection/update_detection.py:152
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "检测可用更新失败：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:189
+#: src/sysmanage_agent/collection/update_detection.py:203
 #: src/sysmanage_agent/operations/package_installation_helpers.py:261
 #: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
@@ -2295,85 +2299,85 @@ msgstr "包收集过程中出错：%s"
 msgid "Package collection scheduler error: %s"
 msgstr "软件包收集调度器错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:341
+#: src/sysmanage_agent/core/agent_utils.py:342
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "构建能力报告失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:469
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "脚本执行 UUID %s 已处理，跳过重复"
 
-#: src/sysmanage_agent/core/agent_utils.py:511
+#: src/sysmanage_agent/core/agent_utils.py:513
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少嵌套的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:523
+#: src/sysmanage_agent/core/agent_utils.py:525
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令类型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:584
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "脚本执行结果无法队列：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:601
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "检查执行UUID时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:615
+#: src/sysmanage_agent/core/agent_utils.py:617
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供执行 UUID，无法跟踪"
 
-#: src/sysmanage_agent/core/agent_utils.py:630
+#: src/sysmanage_agent/core/agent_utils.py:632
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "执行 UUID %s 已存在于数据库中"
 
-#: src/sysmanage_agent/core/agent_utils.py:655
+#: src/sysmanage_agent/core/agent_utils.py:657
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存储执行 UUID 时出错：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:720
+#: src/sysmanage_agent/core/agent_utils.py:722
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服务控制处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:769
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服务控制超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:773
+#: src/sysmanage_agent/core/agent_utils.py:775
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服务控制错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:858
+#: src/sysmanage_agent/core/agent_utils.py:860
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "对服务 %s 执行 %s 失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:868
+#: src/sysmanage_agent/core/agent_utils.py:870
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服务控制后更新角色失败：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:907
+#: src/sysmanage_agent/core/agent_utils.py:909
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服务状态处理程序错误：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:950
+#: src/sysmanage_agent/core/agent_utils.py:952
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服务状态超时：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:962
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服务状态错误：%s"
@@ -2557,18 +2561,18 @@ msgid ""
 "GnuPG, and the backup policy is sent again."
 msgstr "此主机无法加密其备份：restate 找不到 gpg。安装 GnuPG 后，备份策略会重新发送。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:453
+#: src/sysmanage_agent/operations/backup_operations.py:456
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 msgstr "此主机没有 NFSv4 客户端，因此只能通过 restate-proxy 备份；它的目标使用 NFS。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:471
+#: src/sysmanage_agent/operations/backup_operations.py:474
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支持：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:600
+#: src/sysmanage_agent/operations/backup_operations.py:616
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 无法将 %s 作为作业运行；请升级 restate。"
@@ -3839,50 +3843,50 @@ msgstr "添加Windows存储库 %s失败：%s"
 msgid "Error adding Windows repository: %s"
 msgstr "添加Windows仓库时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:46
+#: src/sysmanage_agent/registration/client_registration.py:47
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  警告：aiohttp 不可用，将跳过注册"
 
-#: src/sysmanage_agent/registration/client_registration.py:313
+#: src/sysmanage_agent/registration/client_registration.py:316
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp 不可用，跳过注册"
 
-#: src/sysmanage_agent/registration/client_registration.py:392
+#: src/sysmanage_agent/registration/client_registration.py:395
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "注册失败，状态为：%s：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:401
+#: src/sysmanage_agent/registration/client_registration.py:404
 #, python-format
 msgid "Error during registration: %s"
 msgstr "注册过程中出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:438
+#: src/sysmanage_agent/registration/client_registration.py:441
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "尝试注册后失败：%s次"
 
-#: src/sysmanage_agent/registration/client_registration.py:444
+#: src/sysmanage_agent/registration/client_registration.py:447
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "注册失败，%s 秒后重试..."
 
-#: src/sysmanage_agent/registration/client_registration.py:501
+#: src/sysmanage_agent/registration/client_registration.py:504
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "加载存储的认证数据时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:531
+#: src/sysmanage_agent/registration/client_registration.py:534
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "存储认证数据时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:546
+#: src/sysmanage_agent/registration/client_registration.py:549
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "获取存储的host_id时出错：%s"
 
-#: src/sysmanage_agent/registration/client_registration.py:563
+#: src/sysmanage_agent/registration/client_registration.py:566
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "获取存储的批准数据时出错：%s"

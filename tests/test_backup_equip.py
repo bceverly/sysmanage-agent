@@ -32,7 +32,8 @@ SUMS = (
     [
         ("Linux", UBUNTU, "x86_64", None),
         ("Linux", {"ID": "ubuntu", "VERSION_ID": "20.04"}, "x86_64", "wrong_platform"),
-        ("Linux", {"ID": "debian", "VERSION_ID": "13"}, "x86_64", "wrong_platform"),
+        ("Linux", {"ID": "debian", "VERSION_ID": "13"}, "x86_64", None),
+        ("Linux", {"ID": "debian", "VERSION_ID": "11"}, "x86_64", "wrong_platform"),
         ("Linux", {"ID": "fedora", "VERSION_ID": "44"}, "x86_64", None),
         ("Linux", {"ID": "rocky", "VERSION_ID": "9.6"}, "aarch64", None),
         ("Linux", {"ID": "rhel", "VERSION_ID": "8.10"}, "x86_64", "wrong_platform"),
@@ -199,7 +200,9 @@ def test_a_download_error_is_reported(monkeypatch, tmp_path):
 
 
 def test_an_unsupported_host_is_refused_before_anything_runs(monkeypatch):
-    monkeypatch.setattr(equip, "_os_release", lambda path="": {"ID": "debian"})
+    monkeypatch.setattr(
+        equip, "_os_release", lambda path="": {"ID": "debian", "VERSION_ID": "11"}
+    )
     ran, run = _runner()
     result = asyncio.run(equip.equip("/x", run=run, system="Linux"))
     assert result["reason"] == "unsupported" and ran == []

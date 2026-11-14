@@ -6,8 +6,8 @@
 
 Each restate release carries a package for every system it is built for --
 FreeBSD, OpenBSD and NetBSD (amd64), Alpine 3.21 to 3.24, RHEL 9 and 10 and
-their rebuilds, openSUSE Leap 16 and Tumbleweed (x86_64 and aarch64) -- and a
-``SHA256SUMS`` listing them all.  The agent:
+their rebuilds, openSUSE Leap 16 and Tumbleweed, Debian 12 and 13 (x86_64 and
+aarch64) -- and a ``SHA256SUMS`` listing them all.  The agent:
 
 1. follows ``/releases/latest`` to learn the newest version;
 2. reads that release's ``SHA256SUMS`` (bounded);
@@ -20,12 +20,14 @@ their rebuilds, openSUSE Leap 16 and Tumbleweed (x86_64 and aarch64) -- and a
 5. writes them into its own state directory's ``equip/`` folder, installs
    them with the system's own tool together with the NFS client where it is
    a package (Alpine's ``nfs-utils``, openSUSE's ``nfs-client``, EL's
-   ``nfs-utils``; the BSDs have it in the base system), and removes them.
+   ``nfs-utils``, Debian's ``nfs-common``; the BSDs have it in the base
+   system), and removes them.
 
 OpenBSD's ``pkg_add`` refuses a file whose name is not the package's own, so
 the OpenBSD package is saved as ``restate-VERSION.tgz``.  These packages are
 signed by no key the systems know (hence ``-D unsigned``, ``--allow-untrusted``
-and ``--allow-unsigned-rpm``): the release's checksums vouch for them.
+and ``--allow-unsigned-rpm``; apt installs a local .deb unsigned anyway): the
+release's checksums vouch for them.
 """
 
 import asyncio
@@ -45,7 +47,12 @@ DOWNLOAD_SECONDS = 120
 # The kinds installed from the release (equip.py's ``Target.kind``).
 FREEBSD, OPENBSD, NETBSD = "freebsd", "openbsd", "netbsd"
 ALPINE, EL, LEAP, TUMBLEWEED = "alpine", "el", "leap", "tumbleweed"
-KINDS = (FREEBSD, OPENBSD, NETBSD, ALPINE, EL, LEAP, TUMBLEWEED)
+DEBIAN = "debian"
+KINDS = (FREEBSD, OPENBSD, NETBSD, ALPINE, EL, LEAP, TUMBLEWEED, DEBIAN)
+# Debian's packages are named for dpkg's architectures.
+DEB_ARCHES = {"x86_64": "amd64", "aarch64": "arm64"}
+# The release-package systems a storage host can be, so restate-proxy too.
+PROXY_KINDS = (FREEBSD, DEBIAN)
 
 _VERSION = r"\d+(?:\.\d+){3}"
 _TAG = re.compile(r"/releases/tag/v(" + _VERSION + r")$")
@@ -93,8 +100,9 @@ def asset_names(  # pylint: disable=too-many-arguments,too-many-positional-argum
     proxy: bool = False,
 ) -> Optional[List[str]]:
     """This host's package file(s) in the release, or None when the release
-    has none for it.  ``proxy``: restate-proxy's too, on FreeBSD -- the one
-    release-package system a storage host can be."""
+    has none for it.  ``proxy``: restate-proxy's too, on the release-package
+    systems a storage host can be (PROXY_KINDS)."""
+    deb_arch = DEB_ARCHES.get(arch, "")
     names = {
         FREEBSD: [f"restate-{version}-freebsd-{release}-{arch}.pkg"],
         OPENBSD: [f"restate-{version}-openbsd-{release}-{arch}.tgz"],
@@ -103,9 +111,10 @@ def asset_names(  # pylint: disable=too-many-arguments,too-many-positional-argum
                  f"restate-doc-{version}-r0-alpine{release}-{arch}.apk"],  # fmt: skip
         EL: [f"restate-{version}-1.el{release}.{arch}.rpm"],
         LEAP: [f"restate-{version}-1.opensuseleap{release}.{arch}.rpm"],
+        DEBIAN: [f"restate-{version}-debian{release}-{deb_arch}.deb"],
     }.get(kind)
-    if proxy and kind == FREEBSD:
-        names = names + [f"restate-proxy-{version}-freebsd-{release}-{arch}.pkg"]
+    if names and proxy and kind in PROXY_KINDS:
+        names = names + [names[0].replace("restate-", "restate-proxy-", 1)]
     if kind == TUMBLEWEED:
         # Named for the snapshot it was built on: the newest one.
         pattern = re.compile(
@@ -123,7 +132,7 @@ def offered(kind: str, listed: Dict[str, str]) -> str:
     marks = {
         FREEBSD: "-freebsd-", OPENBSD: "-openbsd-", NETBSD: "-netbsd-",
         ALPINE: "-alpine", EL: ".el", LEAP: ".opensuseleap",
-        TUMBLEWEED: ".opensusetumbleweed",
+        TUMBLEWEED: ".opensusetumbleweed", DEBIAN: "-debian",
     }  # fmt: skip
     return ", ".join(sorted(n for n in listed if marks.get(kind, "\0") in n))
 
@@ -147,6 +156,10 @@ def install_steps(kind: str, paths: List[str]) -> List[List[str]]:
                 ["apk", "add", "--allow-untrusted", *paths]]  # fmt: skip
     if kind == EL:
         return [["dnf", "install", "-y", *paths, "nfs-utils"]]
+    if kind == DEBIAN:
+        # The package lists first: the .deb's dependencies come from them.
+        return [["apt-get", "update"],
+                ["apt-get", "install", "-y", *paths, "nfs-common"]]  # fmt: skip
     return [["zypper", "--non-interactive", "install", "--allow-unsigned-rpm",
              *paths, "nfs-client"]]  # fmt: skip
 

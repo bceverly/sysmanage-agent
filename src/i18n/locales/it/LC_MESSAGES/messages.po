@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 13:18-0800\n"
+"POT-Creation-Date: 2026-11-14 06:40-0800\n"
 "Language: it\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1206,6 +1206,10 @@ msgstr "Errore durante la raccolta dei pacchetti Chocolatey tramite API: %s"
 msgid "No packages collected from Chocolatey community repository"
 msgstr "Nessun pacchetto raccolto dal repository della community Chocolatey"
 
+#: src/sysmanage_agent/collection/package_manager_health.py:96
+msgid "dpkg was interrupted"
+msgstr "dpkg è stato interrotto"
+
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
 msgid "No process with PID %d"
@@ -1356,17 +1360,17 @@ msgstr "Impossibile raccogliere le app Microsoft Store: %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "Impossibile raccogliere/i pacchetti winget: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:69
+#: src/sysmanage_agent/collection/update_detection.py:81
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Piattaforma non supportata per la detezione delle aggiornazioni: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:138
+#: src/sysmanage_agent/collection/update_detection.py:152
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "Impossibile rilevare gli aggiornamenti disponibili: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:189
+#: src/sysmanage_agent/collection/update_detection.py:203
 #: src/sysmanage_agent/operations/package_installation_helpers.py:261
 #: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
@@ -2419,87 +2423,87 @@ msgstr "Errore durante la raccolta dei pacchetti: %s"
 msgid "Package collection scheduler error: %s"
 msgstr "Errore dello scheduler di raccolta pacchetti: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:341
+#: src/sysmanage_agent/core/agent_utils.py:342
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "Impossibile creare il rapporto delle capacità: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:469
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID di esecuzione script %s già elaborato, duplicato saltato"
 
-#: src/sysmanage_agent/core/agent_utils.py:511
+#: src/sysmanage_agent/core/agent_utils.py:513
 msgid "Generic command missing nested command_type"
 msgstr "Comando generico privo di command_type annidato"
 
-#: src/sysmanage_agent/core/agent_utils.py:523
+#: src/sysmanage_agent/core/agent_utils.py:525
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Tipo di comando sconosciuto: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:584
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr ""
 "Fallito il tentativo di mettere in coda il risultato dell'esecuzione dello "
 "script: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:601
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Errore durante il controllo dell'esecuzione UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:615
+#: src/sysmanage_agent/core/agent_utils.py:617
 msgid "No execution UUID provided, cannot track"
 msgstr "Nessun UUID di esecuzione fornito, impossibile tracciare"
 
-#: src/sysmanage_agent/core/agent_utils.py:630
+#: src/sysmanage_agent/core/agent_utils.py:632
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "L'UUID di esecuzione %s esiste già nel database"
 
-#: src/sysmanage_agent/core/agent_utils.py:655
+#: src/sysmanage_agent/core/agent_utils.py:657
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Errore nel salvataggio dell'UUID di esecuzione: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:720
+#: src/sysmanage_agent/core/agent_utils.py:722
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Errore nel gestore del controllo servizi: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:769
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Timeout del controllo del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:773
+#: src/sysmanage_agent/core/agent_utils.py:775
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Errore di controllo del servizio per %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:858
+#: src/sysmanage_agent/core/agent_utils.py:860
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Impossibile %s il servizio %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:868
+#: src/sysmanage_agent/core/agent_utils.py:870
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Impossibile aggiornare i ruoli dopo il controllo del servizio: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:907
+#: src/sysmanage_agent/core/agent_utils.py:909
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Errore nel gestore dello stato dei servizi: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:950
+#: src/sysmanage_agent/core/agent_utils.py:952
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Timeout dello stato del servizio %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:962
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Errore di stato del servizio per %s: %s"
@@ -2692,7 +2696,7 @@ msgstr ""
 "Questo host non può cifrare i propri backup: restate non trova gpg. Installa"
 " GnuPG e il criterio di backup verrà inviato di nuovo."
 
-#: src/sysmanage_agent/operations/backup_operations.py:453
+#: src/sysmanage_agent/operations/backup_operations.py:456
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2700,12 +2704,12 @@ msgstr ""
 "Questo host non ha un client NFSv4, quindi effettua il backup solo tramite "
 "restate-proxy; il suo target utilizza NFS."
 
-#: src/sysmanage_agent/operations/backup_operations.py:471
+#: src/sysmanage_agent/operations/backup_operations.py:474
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Questa versione di restate non supporta: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:600
+#: src/sysmanage_agent/operations/backup_operations.py:616
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Questo restate non può eseguire %s come processo; aggiorna restate."
@@ -4002,50 +4006,50 @@ msgstr "Impossibile aggiungere il repository Windows %s: %s"
 msgid "Error adding Windows repository: %s"
 msgstr "Errore nell'aggiunta del repository Windows: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:46
+#: src/sysmanage_agent/registration/client_registration.py:47
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  AVVISO: aiohttp non disponibile, la registrazione verrà saltata"
 
-#: src/sysmanage_agent/registration/client_registration.py:313
+#: src/sysmanage_agent/registration/client_registration.py:316
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp non disponibile, registrazione saltata"
 
-#: src/sysmanage_agent/registration/client_registration.py:392
+#: src/sysmanage_agent/registration/client_registration.py:395
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "Registrazione fallita con stato %s: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:401
+#: src/sysmanage_agent/registration/client_registration.py:404
 #, python-format
 msgid "Error during registration: %s"
 msgstr "Errore durante la registrazione: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:438
+#: src/sysmanage_agent/registration/client_registration.py:441
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "Impossibile registrarsi dopo %s tentativi"
 
-#: src/sysmanage_agent/registration/client_registration.py:444
+#: src/sysmanage_agent/registration/client_registration.py:447
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "Registrazione fallita, ripetizione tra %s secondi..."
 
-#: src/sysmanage_agent/registration/client_registration.py:501
+#: src/sysmanage_agent/registration/client_registration.py:504
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "Errore nel caricamento dei dati di autenticazione memorizzati: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:531
+#: src/sysmanage_agent/registration/client_registration.py:534
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "Errore nel salvataggio dei dati di autenticazione: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:546
+#: src/sysmanage_agent/registration/client_registration.py:549
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr "Errore durante il recupero dell'host_id memorizzato: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:563
+#: src/sysmanage_agent/registration/client_registration.py:566
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "Errore nell'ottenimento dei dati di approvazione memorizzati: %s"

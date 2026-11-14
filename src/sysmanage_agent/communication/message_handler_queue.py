@@ -17,6 +17,7 @@ class at runtime.
 
 import asyncio
 import json
+import threading
 import time
 from typing import Any, Dict
 
@@ -24,6 +25,9 @@ from src.database.models import Priority, QueueDirection
 from src.i18n import _
 from src.sysmanage_agent.communication import delivery_confirmation as delivery
 from src.sysmanage_agent.communication import send_on_change
+
+# Set once this process has recovered its predecessor's in_progress messages.
+_RECOVERED_SINCE_START = threading.Event()
 
 # Commands short, self-contained and urgent enough to run BESIDE a long one.
 # The inbound queue runs one command at a time, and a fresh agent's first
@@ -467,9 +471,20 @@ class MessageHandlerQueueMixin:
         except Exception as error:
             self.logger.error(_("Error requeuing unconfirmed messages: %s"), error)
 
-        # Recover any messages stuck in 'in_progress' state from previous crash/disconnect
+        # Recover any messages stuck in 'in_progress' state from previous crash/disconnect.
+        # On this process's first connection every in_progress message is an
+        # orphan -- the process that started it is gone -- whatever its age.
+        # With the 10-minute rule alone, a command cut off by an agent restart
+        # was younger than that when the agent reconnected seconds later, so it
+        # stayed in_progress until some later reconnect and its backup run sat
+        # queued on the server for 12 hours (server-loss drill, 2026-11-06).
+        # Later reconnects keep the 10 minutes: a handler may still be running.
+        stale_minutes = 10 if _RECOVERED_SINCE_START.is_set() else 0
+        _RECOVERED_SINCE_START.set()
         try:
-            recovered = self.queue_manager.recover_stuck_messages(stale_minutes=10)
+            recovered = self.queue_manager.recover_stuck_messages(
+                stale_minutes=stale_minutes
+            )
             if recovered > 0:
                 self.logger.info(
                     "Recovered %d stuck messages on connection establishment",

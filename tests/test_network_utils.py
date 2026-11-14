@@ -235,3 +235,72 @@ class TestNetworkUtils:
         deserialized = json.loads(json_str)
         assert isinstance(deserialized, dict)
         assert "hostname" in deserialized
+
+
+def test_an_air_gapped_host_reports_its_address_toward_the_server(monkeypatch):
+    """No default route (an air-gapped network): the internet probe has no
+    route, so the address is the one on the route to the SysManage server."""
+    import socket as real_socket  # pylint: disable=import-outside-toplevel
+    from unittest.mock import Mock  # pylint: disable=import-outside-toplevel
+
+    from src.sysmanage_agent.communication import (  # pylint: disable=import-outside-toplevel
+        network_utils,
+    )
+
+    config = Mock()
+    config.get_server_url.return_value = (
+        "wss://drill-server.example:443/api/agent/connect"
+    )
+    connected = []
+
+    class FakeSocket:
+        def __init__(self, family, _kind):
+            self.family = family
+            self.peer = None
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_exc):
+            return False
+
+        def connect(self, address):
+            if (
+                address[0] in ("8.8.8.8", "2001:4860:4860::8888")
+                or self.family != real_socket.AF_INET
+            ):
+                raise OSError(101, "Network is unreachable")
+            connected.append(address)
+            self.peer = address
+
+        def getsockname(self):
+            return ("192.168.150.190", 40000)
+
+    def getaddrinfo(host, port, family, _kind):
+        if host == "drill-server.example":
+            if family != real_socket.AF_INET:
+                raise real_socket.gaierror("no AAAA")
+            return [(family, _kind, 0, "", ("192.168.150.136", port))]
+        return [(family, _kind, 0, "", (host, port))]
+
+    monkeypatch.setattr(network_utils.socket, "socket", FakeSocket)
+    monkeypatch.setattr(network_utils.socket, "getaddrinfo", getaddrinfo)
+    utils = network_utils.NetworkUtils(config)
+    assert utils.get_ip_addresses() == ("192.168.150.190", None)
+    assert connected == [("192.168.150.136", 80)]
+
+
+def test_no_route_anywhere_reports_no_address(monkeypatch):
+    from unittest.mock import Mock  # pylint: disable=import-outside-toplevel
+
+    from src.sysmanage_agent.communication import (  # pylint: disable=import-outside-toplevel
+        network_utils,
+    )
+
+    def unreachable(*_args):
+        raise OSError(101, "Network is unreachable")
+
+    config = Mock()
+    config.get_server_url.return_value = "wss://192.168.150.136/api/agent/connect"
+    monkeypatch.setattr(network_utils.socket, "getaddrinfo", unreachable)
+    assert network_utils.NetworkUtils(config).get_ip_addresses() == (None, None)

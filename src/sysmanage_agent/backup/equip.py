@@ -15,17 +15,17 @@ Where restate is packaged, by how this agent installs it:
   the copr command itself), then ``dnf install`` of restate and ``nfs-utils``.
 * **RHEL 9 and 10 and their rebuilds** (AlmaLinux, Rocky, CentOS Stream,
   Oracle Linux), **openSUSE Leap 16 / SLE 16 and Tumbleweed**, **Alpine 3.21
-  to 3.24**, **FreeBSD, OpenBSD and NetBSD (amd64)** -- the package attached
-  to restate's newest GitHub release for this system, release and processor,
-  checked against the release's ``SHA256SUMS`` before it is installed with
-  the NFS client (``backup/equip_release.py``).  The BSDs have the NFS client
-  in the base system.
+  to 3.24**, **Debian 12 and 13**, **FreeBSD, OpenBSD and NetBSD (amd64)** --
+  the package attached to restate's newest GitHub release for this system,
+  release and processor, checked against the release's ``SHA256SUMS`` before
+  it is installed with the NFS client (``backup/equip_release.py``).  The BSDs
+  have the NFS client in the base system.
 * **macOS** -- restate's Homebrew formula (``bceverly/tap/restate``), run as
   the user who owns Homebrew (it refuses root); where Homebrew is not
   installed, Equip is not offered.  The NFS client is in the base system.
 
-Not offered: Debian and every other Linux (restate is built from source
-there, by hand), and Windows (restate does not run there) -- reason
+Not offered: every other Linux (restate is built from source there, by
+hand), and Windows (restate does not run there) -- reason
 ``wrong_platform``.
 
 On Linux under systemd every install step runs in the host's mount
@@ -35,8 +35,8 @@ writing ``/root/.launchpadlib`` (production, milsurpmonitor, 2026-10-30).
 
 restate-proxy (25.5): on a storage host whose target is on the proxy the
 server adds one flag, ``proxy``, and Equip installs restate-proxy beside
-restate -- from the same PPA or COPR, or FreeBSD's release package from the
-same release.  The service itself (running as ``restate``, its certificate,
+restate -- from the same PPA or COPR, or FreeBSD's or Debian's release
+package from the same release.  The service itself (running as ``restate``, its certificate,
 enabled and started) is the storage configure's (backup/proxy_service.py).
 
 Everything that decides what runs is HERE: the server sends no URL, package
@@ -81,6 +81,7 @@ EL_IDS = ("rhel", "almalinux", "rocky", "centos", "ol")
 EL_RELEASES = ("9", "10")
 SUSE_LEAP_IDS = ("opensuse-leap", "sles", "sled", "sle")
 ALPINE_RELEASES = ("3.21", "3.22", "3.23", "3.24")
+DEBIAN_RELEASES = ("12", "13")
 LINUX_ARCHES = {"x86_64": "x86_64", "amd64": "x86_64",
                 "aarch64": "aarch64", "arm64": "aarch64"}  # fmt: skip
 BSD_MACHINES = ("amd64", "x86_64")
@@ -126,6 +127,8 @@ def _linux_target(info: Dict[str, str], machine: str) -> Optional[Target]:
         return Target(release.TUMBLEWEED, "", arch)
     if ident in SUSE_LEAP_IDS and major == "16":
         return Target(release.LEAP, "16.0", arch)
+    if ident == "debian" and major in DEBIAN_RELEASES:
+        return Target(release.DEBIAN, major, arch)
     if ident == "alpine" and release.release_of(version) in ALPINE_RELEASES:
         return Target(release.ALPINE, release.release_of(version) or "", arch)
     return None
@@ -199,6 +202,9 @@ def local_steps(kind: str, proxy: bool = False) -> Optional[List[List[str]]]:
     extra = [PROXY_PACKAGE] if proxy else []
     steps = {
         UBUNTU: [["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra]],
+        release.DEBIAN: [
+            ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra]
+        ],
         FEDORA: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
         release.EL: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
         release.LEAP: [
@@ -320,8 +326,8 @@ async def equip(  # pylint: disable=too-many-arguments
     """Install restate (and the NFS client) on this host; ``{"success": True,
     "installed"}`` or a failure with its reason code and the tool's last
     output.  ``proxy``: this storage host serves a restate-proxy target, so
-    restate-proxy is installed too (Ubuntu, Fedora, FreeBSD -- where a storage
-    host can be).  ``local``: an air-gapped site, so from the host's own
+    restate-proxy is installed too (Ubuntu, Fedora, Debian, FreeBSD -- where
+    a storage host can be).  ``local``: an air-gapped site, so from the host's own
     repositories only (see local_steps)."""
     system = system or platform.system()
     found = target(system, release_text=release_text, exists=exists)

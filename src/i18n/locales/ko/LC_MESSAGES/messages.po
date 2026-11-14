@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 13:18-0800\n"
+"POT-Creation-Date: 2026-11-14 06:40-0800\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -1138,6 +1138,10 @@ msgstr "Chocolatey API를 통한 Chocolatey 패키지 수집 오류: %s"
 msgid "No packages collected from Chocolatey community repository"
 msgstr "Chocolatey 커뮤니티 저장소에서 패키지가 수집되지 않음"
 
+#: src/sysmanage_agent/collection/package_manager_health.py:96
+msgid "dpkg was interrupted"
+msgstr "dpkg가 중단되었습니다"
+
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
 msgid "No process with PID %d"
@@ -1286,17 +1290,17 @@ msgstr "Microsoft Store 앱 수집 실패: %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "winget 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:69
+#: src/sysmanage_agent/collection/update_detection.py:81
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "업데이트 감지에 대한 지원되지 않는 플랫폼: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:138
+#: src/sysmanage_agent/collection/update_detection.py:152
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "사용 가능한 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:189
+#: src/sysmanage_agent/collection/update_detection.py:203
 #: src/sysmanage_agent/operations/package_installation_helpers.py:261
 #: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
@@ -2318,85 +2322,85 @@ msgstr " 패키지 수집 중 오류: %s"
 msgid "Package collection scheduler error: %s"
 msgstr "패키지 수집 스케줄러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:341
+#: src/sysmanage_agent/core/agent_utils.py:342
 #, python-format
 msgid "Failed to build capability report: %s"
 msgstr "능력 보고서 생성 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:469
+#: src/sysmanage_agent/core/agent_utils.py:471
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:511
+#: src/sysmanage_agent/core/agent_utils.py:513
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:523
+#: src/sysmanage_agent/core/agent_utils.py:525
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:582
+#: src/sysmanage_agent/core/agent_utils.py:584
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "스크립트 실행 결과 큐에 오류 발생: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:601
+#: src/sysmanage_agent/core/agent_utils.py:603
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "실행 UUID 확인 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:615
+#: src/sysmanage_agent/core/agent_utils.py:617
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:630
+#: src/sysmanage_agent/core/agent_utils.py:632
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:655
+#: src/sysmanage_agent/core/agent_utils.py:657
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "실행 UUID 저장 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:720
+#: src/sysmanage_agent/core/agent_utils.py:722
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:769
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:773
+#: src/sysmanage_agent/core/agent_utils.py:775
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:858
+#: src/sysmanage_agent/core/agent_utils.py:860
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:868
+#: src/sysmanage_agent/core/agent_utils.py:870
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:907
+#: src/sysmanage_agent/core/agent_utils.py:909
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:950
+#: src/sysmanage_agent/core/agent_utils.py:952
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:960
+#: src/sysmanage_agent/core/agent_utils.py:962
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
@@ -2581,19 +2585,19 @@ msgid ""
 msgstr ""
 "이 호스트는 백업을 암호화할 수 없습니다: restate가 gpg를 찾지 못합니다. GnuPG를 설치하면 백업 정책이 다시 전송됩니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:453
+#: src/sysmanage_agent/operations/backup_operations.py:456
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 msgstr ""
 "이 호스트에는 NFSv4 클라이언트가 없으므로 restate-proxy를 통해서만 백업합니다. 이 호스트의 대상은 NFS를 사용합니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:471
+#: src/sysmanage_agent/operations/backup_operations.py:474
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:600
+#: src/sysmanage_agent/operations/backup_operations.py:616
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "이 restate는 %s을(를) 작업으로 실행할 수 없습니다. restate를 업그레이드하세요."
@@ -3865,50 +3869,50 @@ msgstr "Windows 저장소 %s 추가에 실패했습니다: %s"
 msgid "Error adding Windows repository: %s"
 msgstr "Windows 저장소 추가 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:46
+#: src/sysmanage_agent/registration/client_registration.py:47
 msgid "⚠️  WARNING: aiohttp not available, registration will be skipped"
 msgstr "⚠️  경고: aiohttp 사용 불가, 등록이 건너뜀"
 
-#: src/sysmanage_agent/registration/client_registration.py:313
+#: src/sysmanage_agent/registration/client_registration.py:316
 msgid "aiohttp not available, skipping registration"
 msgstr "aiohttp가 사용 가능하지 않아 등록을 건너뜁니다"
 
-#: src/sysmanage_agent/registration/client_registration.py:392
+#: src/sysmanage_agent/registration/client_registration.py:395
 #, python-format
 msgid "Registration failed with status %s: %s"
 msgstr "등록이 상태 코드 %s: %s로 실패했습니다"
 
-#: src/sysmanage_agent/registration/client_registration.py:401
+#: src/sysmanage_agent/registration/client_registration.py:404
 #, python-format
 msgid "Error during registration: %s"
 msgstr " 등록 중 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:438
+#: src/sysmanage_agent/registration/client_registration.py:441
 #, python-format
 msgid "Failed to register after %s attempts"
 msgstr "%s 시도 후 등록 실패"
 
-#: src/sysmanage_agent/registration/client_registration.py:444
+#: src/sysmanage_agent/registration/client_registration.py:447
 #, python-format
 msgid "Registration failed, retrying in %s seconds..."
 msgstr "등록에 실패했습니다. %s초 후 다시 시도합니다..."
 
-#: src/sysmanage_agent/registration/client_registration.py:501
+#: src/sysmanage_agent/registration/client_registration.py:504
 #, python-format
 msgid "Error loading stored auth data: %s"
 msgstr "저장된 인증 데이터 로드 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:531
+#: src/sysmanage_agent/registration/client_registration.py:534
 #, python-format
 msgid "Error storing auth data: %s"
 msgstr "인증 데이터 저장 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:546
+#: src/sysmanage_agent/registration/client_registration.py:549
 #, python-format
 msgid "Error getting stored host_id: %s"
 msgstr " 저장된 host_id 가져오기 중 오류: %s"
 
-#: src/sysmanage_agent/registration/client_registration.py:563
+#: src/sysmanage_agent/registration/client_registration.py:566
 #, python-format
 msgid "Error retrieving stored approval data: %s"
 msgstr "저장된 승인 데이터 가져오기 오류: %s"

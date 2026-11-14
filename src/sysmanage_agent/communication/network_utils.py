@@ -12,6 +12,7 @@ import os
 import socket
 import subprocess  # nosec B404 # Required for hostname detection
 from typing import Optional, Tuple
+from urllib.parse import urlsplit
 
 from src.i18n import _
 
@@ -164,25 +165,38 @@ class NetworkUtils:
 
         return hostname.strip()
 
+    def _server_host(self) -> Optional[str]:
+        """The SysManage server's host name or address, from the config."""
+        if not self.config:
+            return None
+        try:
+            return urlsplit(self.config.get_server_url()).hostname
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    def _source_address(self, family: int, destination: str) -> Optional[str]:
+        """This machine's address on the route to ``destination`` (a UDP
+        connect sends nothing), or None where there is no such route."""
+        try:
+            infos = socket.getaddrinfo(destination, 80, family, socket.SOCK_DGRAM)
+            with socket.socket(family, socket.SOCK_DGRAM) as sock:
+                sock.connect(infos[0][4])
+                return sock.getsockname()[0]
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.debug("No route to %s: %s", destination, error)
+            return None
+
     def get_ip_addresses(self) -> Tuple[Optional[str], Optional[str]]:
-        """Get both IPv4 and IPv6 addresses of the machine."""
-        ipv4 = None
-        ipv6 = None
-
-        try:
-            # Get IPv4 address by connecting to a remote host
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                sock.connect(("8.8.8.8", 80))  # NOSONAR
-                ipv4 = sock.getsockname()[0]
-        except Exception as error:
-            self.logger.debug("Could not determine IPv4 address: %s", error)
-
-        try:
-            # Get IPv6 address by connecting to a remote host
-            with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as sock:
-                sock.connect(("2001:4860:4860::8888", 80))  # NOSONAR
-                ipv6 = sock.getsockname()[0]
-        except Exception as error:
-            self.logger.debug("Could not determine IPv6 address: %s", error)
-
+        """Get both IPv4 and IPv6 addresses of the machine: the address on
+        the route to the internet, else on the route to the SysManage server.
+        An air-gapped network has no default route, so the first never
+        answers there, and every host reported no address -- an NFS export
+        cannot be limited to a host with none (lab, 2026-11-14)."""
+        server = self._server_host()
+        ipv4 = self._source_address(socket.AF_INET, "8.8.8.8")  # NOSONAR
+        if ipv4 is None and server:
+            ipv4 = self._source_address(socket.AF_INET, server)
+        ipv6 = self._source_address(socket.AF_INET6, "2001:4860:4860::8888")  # NOSONAR
+        if ipv6 is None and server:
+            ipv6 = self._source_address(socket.AF_INET6, server)
         return ipv4, ipv6

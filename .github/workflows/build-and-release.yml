@@ -2553,13 +2553,35 @@ jobs:
                    $(echo "$META_FILES" | grep -E "$RELEASE_RE" | sort -r); do
             s3 cp "$f" "s3://${R2_BUCKET}/${f#repo/}" --only-show-errors
           done
-          STALE=""
-          for f in $META_FILES; do
-            s3 cp "s3://${R2_BUCKET}/${f#repo/}" - --only-show-errors 2>/dev/null | cmp -s - "$f" \
-              || STALE="$STALE ${f#repo/}"
+          # A read-back that fails (an R2 503 mid-download) hands cmp an empty
+          # stream, which looks exactly like a stale file: agent 3.13.0.16 failed
+          # here on both el9 repomd.xml files while R2 held the right ones.  So a
+          # file that does not match is uploaded and read back again, up to three
+          # passes, and the error says whether it could not be read or differed.
+          CHECK="$META_FILES"
+          for pass in 1 2 3; do
+            STALE=""; UNREAD=""
+            for f in $CHECK; do
+              GOT="$(mktemp)"
+              if ! s3 cp "s3://${R2_BUCKET}/${f#repo/}" "$GOT" --only-show-errors; then
+                UNREAD="$UNREAD $f"
+              elif ! cmp -s "$GOT" "$f"; then
+                STALE="$STALE $f"
+              fi
+              rm -f "$GOT"
+            done
+            CHECK="$STALE $UNREAD"
+            [ -n "${CHECK// /}" ] || break
+            echo "Index read-back pass $pass: differed:${STALE:- none}; unreadable:${UNREAD:- none}"
+            [ "$pass" -lt 3 ] || break
+            sleep $((pass * 20))
+            for f in $STALE; do
+              s3 cp "$f" "s3://${R2_BUCKET}/${f#repo/}" --only-show-errors
+            done
           done
-          if [ -n "$STALE" ]; then
-            echo "::error::R2 does not hold the index files this release generated:$STALE"
+          if [ -n "${STALE// /}" ] || [ -n "${UNREAD// /}" ]; then
+            [ -z "${STALE// /}" ] || echo "::error::R2 holds different index files than this release generated:${STALE//repo\//}"
+            [ -z "${UNREAD// /}" ] || echo "::error::R2 index files could not be read back:${UNREAD//repo\//}"
             echo "Re-run this job; it uploads every index file again."
             exit 1
           fi
