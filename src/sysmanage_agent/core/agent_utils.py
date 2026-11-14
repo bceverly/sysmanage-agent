@@ -473,7 +473,7 @@ class MessageProcessor:
             )
             return {
                 "success": True,
-                "message": "Already processed",
+                "message": _("Already processed"),
                 "duplicate": True,
             }
 
@@ -495,7 +495,10 @@ class MessageProcessor:
         # all the server sends; unbounded nesting is refused, Lucky 13 #1).
         if command_type == "generic_command":
             if depth >= MAX_COMMAND_NESTING:
-                return {"success": False, "error": "generic_command nested too deeply"}
+                return {
+                    "success": False,
+                    "error": _("Generic command nested too deeply"),
+                }
             nested_command_type = parameters.get("command_type")
             nested_parameters = parameters.get("parameters")
             if not isinstance(nested_parameters, dict):
@@ -676,14 +679,12 @@ class MessageProcessor:
             if not action or action not in self._SERVICE_CONTROL_ACTIONS:
                 return {
                     "success": False,
-                    "error": (
-                        "Invalid or missing action. Must be one of: "
-                        + ", ".join(self._SERVICE_CONTROL_ACTIONS)
-                    ),
+                    "error": _("Invalid or missing action. Must be one of: %s")
+                    % ", ".join(self._SERVICE_CONTROL_ACTIONS),
                 }
 
             if not services:
-                return {"success": False, "error": "No services specified"}
+                return {"success": False, "error": _("No services specified")}
 
             self.logger.info(
                 "Service control requested: %s for services: %s", action, services
@@ -693,7 +694,7 @@ class MessageProcessor:
             if not is_running_privileged():
                 return {
                     "success": False,
-                    "error": "Service control requires privileged mode",
+                    "error": _("Service control requires privileged mode"),
                 }
 
             results = {}
@@ -715,7 +716,8 @@ class MessageProcessor:
                 "action": action,
                 "services": services,
                 "results": results,
-                "message": f"Service {action} completed for {len(services)} services",
+                "message": _("Service %(action)s completed for %(count)d services")
+                % {"action": action, "count": len(services)},
             }
 
         except Exception as error:
@@ -751,7 +753,7 @@ class MessageProcessor:
             if cmd is None:
                 # No supported service manager found on this host
                 self.logger.error(_(_SYSTEMCTL_NOT_FOUND))
-                return {"success": False, "error": _SYSTEMCTL_NOT_FOUND}
+                return {"success": False, "error": _(_SYSTEMCTL_NOT_FOUND)}
 
             result = await run_command_async(escalate_service_cmd(cmd), timeout=30.0)
 
@@ -759,12 +761,12 @@ class MessageProcessor:
                 return self._service_ok(action, service)
 
             error_msg = (
-                result.stderr.strip() or result.stdout.strip() or "Unknown error"
+                result.stderr.strip() or result.stdout.strip() or _("Unknown error")
             )
             return self._service_failed(action, service, error_msg)
 
         except asyncio.TimeoutError:
-            error_msg = f"Service {action} timed out after 30 seconds"
+            error_msg = _("Service %s timed out after 30 seconds") % action
             self.logger.error(
                 _("Service control timeout for %s: %s"), service, error_msg
             )
@@ -834,7 +836,7 @@ class MessageProcessor:
     ) -> Dict[str, Any]:
         """One action on FreeBSD/OpenBSD/NetBSD (see bsd_service_control)."""
         if not bsd_service_control.valid_service(service):
-            return {"success": False, "error": f"Invalid service name: {service}"}
+            return {"success": False, "error": _("Invalid service name: %s") % service}
         cmd = bsd_service_control.build_command(system, action, service)
         if cmd is None:  # NetBSD enable/disable: an rc.conf edit, not a command
             ok, error = bsd_service_control.netbsd_set_enabled(
@@ -849,12 +851,12 @@ class MessageProcessor:
             action, output
         ):
             return self._service_ok(action, service)
-        error_msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+        error_msg = result.stderr.strip() or result.stdout.strip() or _("Unknown error")
         return self._service_failed(action, service, error_msg)
 
     def _service_ok(self, action: str, service: str) -> Dict[str, Any]:
         self.logger.info("Successfully %s service: %s", action, service)
-        return {"success": True, "message": f"Service {action} successful"}
+        return {"success": True, "message": _("Service %s successful") % action}
 
     def _service_failed(self, action: str, service: str, error: str) -> Dict[str, Any]:
         self.logger.error(_("Failed to %s service %s: %s"), action, service, error)
@@ -878,7 +880,7 @@ class MessageProcessor:
             services = parameters.get("services", [])
 
             if not services:
-                return {"success": False, "error": "No services specified"}
+                return {"success": False, "error": _("No services specified")}
 
             self.logger.info("Service status check requested for: %s", services)
 
@@ -886,7 +888,7 @@ class MessageProcessor:
             if not is_running_privileged():
                 return {
                     "success": False,
-                    "error": "Service status check requires privileged mode",
+                    "error": _("Service status check requires privileged mode"),
                 }
 
             results = {}
@@ -902,7 +904,8 @@ class MessageProcessor:
                 "success": overall_success,
                 "services": services,
                 "results": results,
-                "message": f"Service status check completed for {len(services)} services",
+                "message": _("Service status check completed for %d services")
+                % len(services),
             }
 
         except Exception as error:
@@ -927,7 +930,7 @@ class MessageProcessor:
                 return {
                     "success": False,
                     "status": "unknown",
-                    "error": _SYSTEMCTL_NOT_FOUND,
+                    "error": _(_SYSTEMCTL_NOT_FOUND),
                 }
 
             cmd = [systemctl_path, "is-active", service]
@@ -947,7 +950,7 @@ class MessageProcessor:
             }
 
         except asyncio.TimeoutError:
-            error_msg = "Service status check timed out after 10 seconds"
+            error_msg = _("Service status check timed out after 10 seconds")
             self.logger.error(
                 _("Service status timeout for %s: %s"), service, error_msg
             )

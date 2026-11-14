@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 06:40-0800\n"
+"POT-Creation-Date: 2026-11-14 13:26-0800\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2301,95 +2301,95 @@ msgstr "Fehler des Nachrichtenversenders: %s"
 msgid "Error closing message handler: %s"
 msgstr "Fehler beim Schließen des Nachrichtenhandlers: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:139
+#: src/sysmanage_agent/communication/message_handler_queue.py:143
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "Fehler beim Erstellen der Aufgabe von queue_outbound_message: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:205
+#: src/sysmanage_agent/communication/message_handler_queue.py:209
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "Fehler im Eingangs-Warteschlangen-Prozessor: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:230
+#: src/sysmanage_agent/communication/message_handler_queue.py:234
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "Fehler im Express-Warteschlangen-Prozessor: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:239
+#: src/sysmanage_agent/communication/message_handler_queue.py:243
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "Konnte die eingehende Nachricht %s nicht als verarbeitet markieren"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:269
+#: src/sysmanage_agent/communication/message_handler_queue.py:273
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "Fehler beim Verarbeiten eines eingehenden Nachrichtens: %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:285
+#: src/sysmanage_agent/communication/message_handler_queue.py:289
 msgid "Cannot send message: not connected to server"
 msgstr "Nachricht kann nicht gesendet werden: nicht mit Server verbunden"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:298
+#: src/sysmanage_agent/communication/message_handler_queue.py:302
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "Fehler beim Direktsenden der Nachricht: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:359
+#: src/sysmanage_agent/communication/message_handler_queue.py:363
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Fehler im Warteschlangen-Prozessor: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:407
+#: src/sysmanage_agent/communication/message_handler_queue.py:411
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Fehler bei der Verarbeitung der Warteschlangen-Nachricht %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:425
+#: src/sysmanage_agent/communication/message_handler_queue.py:429
 #, python-format
 msgid "The server did not confirm %d message(s); sending them again"
 msgstr ""
 "Der Server hat %d Nachricht(en) nicht bestätigt; sie werden erneut gesendet"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:429
-#: src/sysmanage_agent/communication/message_handler_queue.py:468
+#: src/sysmanage_agent/communication/message_handler_queue.py:433
+#: src/sysmanage_agent/communication/message_handler_queue.py:472
 #, python-format
 msgid "Error requeuing unconfirmed messages: %s"
 msgstr "Fehler beim erneuten Einreihen unbestätigter Nachrichten: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:438
+#: src/sysmanage_agent/communication/message_handler_queue.py:442
 #, python-format
 msgid "The server refused message %s; it will not be sent again"
 msgstr ""
 "Der Server hat die Nachricht %s abgelehnt; sie wird nicht erneut gesendet"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:479
+#: src/sysmanage_agent/communication/message_handler_queue.py:494
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Fehler beim Wiederherstellen von verkeilten Nachrichten: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:510
+#: src/sysmanage_agent/communication/message_handler_queue.py:525
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr ""
 "Fehler beim Erstellen der Aufgabe für die Verarbeitung ausgehender "
 "Warteschlangen: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:528
+#: src/sysmanage_agent/communication/message_handler_queue.py:543
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr ""
 "Fehler beim Erstellen der Aufgabe für die Verarbeitung der Express-"
 "Warteschlange: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:546
+#: src/sysmanage_agent/communication/message_handler_queue.py:561
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr ""
 "Fehler beim Erstellen der Aufgabe für die Verarbeitung eingehender "
 "Warteschlangen: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:637
+#: src/sysmanage_agent/communication/message_handler_queue.py:652
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr ""
@@ -2405,7 +2405,7 @@ msgstr ""
 "queue_message_id=%s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/communication/network_utils.py:160
+#: src/sysmanage_agent/communication/network_utils.py:161
 #, python-format
 msgid "Could not determine hostname, using fallback: %s"
 msgstr ""
@@ -2455,75 +2455,135 @@ msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr ""
 "Skriptausführungs-UUID %s bereits verarbeitet, Duplikat wird übersprungen"
 
-#: src/sysmanage_agent/core/agent_utils.py:513
+#: src/sysmanage_agent/core/agent_utils.py:476
+msgid "Already processed"
+msgstr "Bereits verarbeitet"
+
+#: src/sysmanage_agent/core/agent_utils.py:500
+msgid "Generic command nested too deeply"
+msgstr "Generischer Befehl ist zu tief verschachtelt"
+
+#: src/sysmanage_agent/core/agent_utils.py:516
 msgid "Generic command missing nested command_type"
 msgstr "Generischer Befehl fehlt verschachtelter command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:525
+#: src/sysmanage_agent/core/agent_utils.py:528
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Unbekannter Befehlstyp: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:584
+#: src/sysmanage_agent/core/agent_utils.py:587
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Fehler beim Einreihen des Skriptausführungsresultats: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:603
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Fehler beim Prüfen der Ausführungs-ID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:617
+#: src/sysmanage_agent/core/agent_utils.py:620
 msgid "No execution UUID provided, cannot track"
 msgstr "Keine Ausführungs-UUID angegeben, kann nicht verfolgt werden"
 
-#: src/sysmanage_agent/core/agent_utils.py:632
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Ausführungs-UUID %s existiert bereits in der Datenbank"
 
-#: src/sysmanage_agent/core/agent_utils.py:657
+#: src/sysmanage_agent/core/agent_utils.py:660
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Fehler beim Speichern des Execution UUIDs: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:722
+#: src/sysmanage_agent/core/agent_utils.py:682
+#, python-format
+msgid "Invalid or missing action. Must be one of: %s"
+msgstr "Ungültige oder fehlende Aktion. Zulässig sind: %s"
+
+#: src/sysmanage_agent/core/agent_utils.py:687
+#: src/sysmanage_agent/core/agent_utils.py:883
+msgid "No services specified"
+msgstr "Keine Dienste angegeben"
+
+#: src/sysmanage_agent/core/agent_utils.py:697
+msgid "Service control requires privileged mode"
+msgstr "Die Dienststeuerung erfordert den privilegierten Modus"
+
+#: src/sysmanage_agent/core/agent_utils.py:719
+#, python-format
+msgid "Service %(action)s completed for %(count)d services"
+msgstr "Dienstaktion %(action)s für %(count)d Dienste abgeschlossen"
+
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Fehler im Dienststeuerungs-Handler: %s"
 
+#: src/sysmanage_agent/core/agent_utils.py:764
+#: src/sysmanage_agent/core/agent_utils.py:854
+msgid "Unknown error"
+msgstr "Unbekannter Fehler"
+
 #: src/sysmanage_agent/core/agent_utils.py:769
+#, python-format
+msgid "Service %s timed out after 30 seconds"
+msgstr "Zeitüberschreitung der Dienstaktion %s nach 30 Sekunden"
+
+#: src/sysmanage_agent/core/agent_utils.py:771
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Zeitüberschreitung bei Dienststeuerung für %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:775
+#: src/sysmanage_agent/core/agent_utils.py:777
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Dienststeuerungsfehler für %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:860
+#: src/sysmanage_agent/core/agent_utils.py:839
+#, python-format
+msgid "Invalid service name: %s"
+msgstr "Ungültiger Dienstname: %s"
+
+#: src/sysmanage_agent/core/agent_utils.py:859
+#, python-format
+msgid "Service %s successful"
+msgstr "Dienstaktion %s erfolgreich"
+
+#: src/sysmanage_agent/core/agent_utils.py:862
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Fehler beim %s des Dienstes %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:870
+#: src/sysmanage_agent/core/agent_utils.py:872
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Fehler beim Aktualisieren der Rollen nach Dienststeuerung: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:909
+#: src/sysmanage_agent/core/agent_utils.py:891
+msgid "Service status check requires privileged mode"
+msgstr "Die Prüfung des Dienststatus erfordert den privilegierten Modus"
+
+#: src/sysmanage_agent/core/agent_utils.py:907
+#, python-format
+msgid "Service status check completed for %d services"
+msgstr "Statusprüfung für %d Dienste abgeschlossen"
+
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Fehler im Dienststatus-Handler: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:952
+#: src/sysmanage_agent/core/agent_utils.py:953
+msgid "Service status check timed out after 10 seconds"
+msgstr "Zeitüberschreitung der Dienststatusprüfung nach 10 Sekunden"
+
+#: src/sysmanage_agent/core/agent_utils.py:955
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Zeitüberschreitung bei Dienststatusabfrage für %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:962
+#: src/sysmanage_agent/core/agent_utils.py:965
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Dienststatusfehler für %s: %s"

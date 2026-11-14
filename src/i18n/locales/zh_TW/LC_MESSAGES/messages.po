@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 06:40-0800\n"
+"POT-Creation-Date: 2026-11-14 13:26-0800\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -2167,87 +2167,87 @@ msgstr "訊息發送者錯誤: %s"
 msgid "Error closing message handler: %s"
 msgstr "關閉消息處理程序時出錯：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:139
+#: src/sysmanage_agent/communication/message_handler_queue.py:143
 #, python-format
 msgid "Failed to create task from queue_outbound_message: %s"
 msgstr "從 queue_outbound_message 建立任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:205
+#: src/sysmanage_agent/communication/message_handler_queue.py:209
 #, python-format
 msgid "Error in inbound queue processor: %s"
 msgstr "進口隊列處理器中發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:230
+#: src/sysmanage_agent/communication/message_handler_queue.py:234
 #, python-format
 msgid "Error in express queue processor: %s"
 msgstr "快速佇列處理器發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:239
+#: src/sysmanage_agent/communication/message_handler_queue.py:243
 #, python-format
 msgid "Could not mark inbound message %s as processing"
 msgstr "無法標記進站訊息 %s 為處理中"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:269
+#: src/sysmanage_agent/communication/message_handler_queue.py:273
 #, python-format
 msgid "Error processing inbound message %s: %s"
 msgstr "處理進來的消息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:285
+#: src/sysmanage_agent/communication/message_handler_queue.py:289
 msgid "Cannot send message: not connected to server"
 msgstr "無法傳送訊息：未連線至伺服器"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:298
+#: src/sysmanage_agent/communication/message_handler_queue.py:302
 #, python-format
 msgid "Failed to send message directly: %s"
 msgstr "直接傳送消息失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:359
+#: src/sysmanage_agent/communication/message_handler_queue.py:363
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "隊列處理器中發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:407
+#: src/sysmanage_agent/communication/message_handler_queue.py:411
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "處理佇列訊息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:425
+#: src/sysmanage_agent/communication/message_handler_queue.py:429
 #, python-format
 msgid "The server did not confirm %d message(s); sending them again"
 msgstr "伺服器未確認 %d 則訊息；正在重新傳送"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:429
-#: src/sysmanage_agent/communication/message_handler_queue.py:468
+#: src/sysmanage_agent/communication/message_handler_queue.py:433
+#: src/sysmanage_agent/communication/message_handler_queue.py:472
 #, python-format
 msgid "Error requeuing unconfirmed messages: %s"
 msgstr "將未確認的訊息重新加入佇列時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:438
+#: src/sysmanage_agent/communication/message_handler_queue.py:442
 #, python-format
 msgid "The server refused message %s; it will not be sent again"
 msgstr "伺服器拒絕了訊息 %s；不會再次傳送"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:479
+#: src/sysmanage_agent/communication/message_handler_queue.py:494
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "恢復卡住的消息時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:510
+#: src/sysmanage_agent/communication/message_handler_queue.py:525
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "建立出站佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:528
+#: src/sysmanage_agent/communication/message_handler_queue.py:543
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "建立快速佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:546
+#: src/sysmanage_agent/communication/message_handler_queue.py:561
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "建立進階佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:637
+#: src/sysmanage_agent/communication/message_handler_queue.py:652
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "錯誤修剪已完成的隊列消息：%s"
@@ -2260,7 +2260,7 @@ msgid ""
 msgstr ">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/communication/network_utils.py:160
+#: src/sysmanage_agent/communication/network_utils.py:161
 #, python-format
 msgid "Could not determine hostname, using fallback: %s"
 msgstr "無法確定主機名稱，使用備用值：%s"
@@ -2308,75 +2308,135 @@ msgstr "建立能力報告失敗：%s"
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "指令碼執行 UUID %s 已處理，跳過重複"
 
-#: src/sysmanage_agent/core/agent_utils.py:513
+#: src/sysmanage_agent/core/agent_utils.py:476
+msgid "Already processed"
+msgstr "已處理"
+
+#: src/sysmanage_agent/core/agent_utils.py:500
+msgid "Generic command nested too deeply"
+msgstr "通用命令巢狀層級過深"
+
+#: src/sysmanage_agent/core/agent_utils.py:516
 msgid "Generic command missing nested command_type"
 msgstr "通用命令缺少巢狀的 command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:525
+#: src/sysmanage_agent/core/agent_utils.py:528
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "未知的命令類型：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:584
+#: src/sysmanage_agent/core/agent_utils.py:587
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "無法將腳本執行結果排隊：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:603
+#: src/sysmanage_agent/core/agent_utils.py:606
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "檢查執行 UUID 時出錯：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:617
+#: src/sysmanage_agent/core/agent_utils.py:620
 msgid "No execution UUID provided, cannot track"
 msgstr "未提供執行 UUID，無法追蹤"
 
-#: src/sysmanage_agent/core/agent_utils.py:632
+#: src/sysmanage_agent/core/agent_utils.py:635
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "執行 UUID %s 已存在於資料庫中"
 
-#: src/sysmanage_agent/core/agent_utils.py:657
+#: src/sysmanage_agent/core/agent_utils.py:660
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "存儲執行 UUID 時發生錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:722
+#: src/sysmanage_agent/core/agent_utils.py:682
+#, python-format
+msgid "Invalid or missing action. Must be one of: %s"
+msgstr "動作無效或缺少。必須是下列其中之一：%s"
+
+#: src/sysmanage_agent/core/agent_utils.py:687
+#: src/sysmanage_agent/core/agent_utils.py:883
+msgid "No services specified"
+msgstr "未指定服務"
+
+#: src/sysmanage_agent/core/agent_utils.py:697
+msgid "Service control requires privileged mode"
+msgstr "服務控制需要特權模式"
+
+#: src/sysmanage_agent/core/agent_utils.py:719
+#, python-format
+msgid "Service %(action)s completed for %(count)d services"
+msgstr "已對 %(count)d 個服務完成服務動作 %(action)s"
+
+#: src/sysmanage_agent/core/agent_utils.py:724
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "服務控制處理程序錯誤：%s"
 
+#: src/sysmanage_agent/core/agent_utils.py:764
+#: src/sysmanage_agent/core/agent_utils.py:854
+msgid "Unknown error"
+msgstr "未知錯誤"
+
 #: src/sysmanage_agent/core/agent_utils.py:769
+#, python-format
+msgid "Service %s timed out after 30 seconds"
+msgstr "服務動作 %s 在 30 秒後逾時"
+
+#: src/sysmanage_agent/core/agent_utils.py:771
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 的服務控制逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:775
+#: src/sysmanage_agent/core/agent_utils.py:777
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 的服務控制錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:860
+#: src/sysmanage_agent/core/agent_utils.py:839
+#, python-format
+msgid "Invalid service name: %s"
+msgstr "無效的服務名稱：%s"
+
+#: src/sysmanage_agent/core/agent_utils.py:859
+#, python-format
+msgid "Service %s successful"
+msgstr "服務動作 %s 成功"
+
+#: src/sysmanage_agent/core/agent_utils.py:862
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "對服務 %s 執行 %s 失敗：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:870
+#: src/sysmanage_agent/core/agent_utils.py:872
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "服務控制後更新角色失敗:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:909
+#: src/sysmanage_agent/core/agent_utils.py:891
+msgid "Service status check requires privileged mode"
+msgstr "服務狀態檢查需要特權模式"
+
+#: src/sysmanage_agent/core/agent_utils.py:907
+#, python-format
+msgid "Service status check completed for %d services"
+msgstr "已完成 %d 個服務的狀態檢查"
+
+#: src/sysmanage_agent/core/agent_utils.py:912
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "服務狀態處理程序錯誤：%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:952
+#: src/sysmanage_agent/core/agent_utils.py:953
+msgid "Service status check timed out after 10 seconds"
+msgstr "服務狀態檢查在 10 秒後逾時"
+
+#: src/sysmanage_agent/core/agent_utils.py:955
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 的服務狀態逾時:%s"
 
-#: src/sysmanage_agent/core/agent_utils.py:962
+#: src/sysmanage_agent/core/agent_utils.py:965
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 的服務狀態錯誤:%s"
