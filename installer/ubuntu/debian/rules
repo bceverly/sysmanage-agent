@@ -51,8 +51,16 @@ override_dh_auto_install:
 # postinst starts the agent, and restarts it on upgrade, on every series;
 # debhelper's own start would restart it a second time where it finds the
 # unit (noble and later) and not at all where it does not (jammy).
+#
+# --no-stop-on-upgrade: debhelper otherwise stops the agent in preinst, using
+# the unit already loaded.  An upgrade started from the agent runs inside the
+# agent's own service, and a unit from before KillMode=process took the
+# apt-get down with the agent: dpkg left half-installed and no agent to
+# repair it (five production hosts, 2026-11-15).  Without that stop the
+# agent runs through the unpack, and the only stop is postinst's restart,
+# which comes after its daemon-reload has loaded the new unit's KillMode.
 override_dh_installsystemd:
-	dh_installsystemd --no-start
+	dh_installsystemd --no-start --no-stop-on-upgrade
 
 override_dh_fixperms:
 	dh_fixperms
