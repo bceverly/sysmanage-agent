@@ -8,6 +8,7 @@ Provides reliable message delivery with queue-based persistence and message proc
 """
 
 import asyncio
+import inspect
 import json
 import logging
 import uuid
@@ -728,7 +729,10 @@ class MessageHandler(MessageHandlerQueueMixin):
             return bool(self.agent.needs_registration)
         handler = self._received_message_handlers().get(message_type)
         if handler is not None:
-            await handler(data)
+            # Handlers that only update local state are plain functions.
+            outcome = handler(data)
+            if inspect.isawaitable(outcome):
+                await outcome
             return False
         if message_type in self._get_status_confirmation_types():
             self._handle_status_confirmation(message_type, data)
@@ -737,7 +741,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         return False
 
     def _received_message_handlers(self) -> Dict[str, Any]:
-        """``message_type`` -> async handler (``error`` is handled apart)."""
+        """``message_type`` -> handler, async or plain (``error`` is handled apart)."""
         return {
             "command": self._handle_command_message,
             "broadcast": self._handle_broadcast_message,
@@ -754,17 +758,17 @@ class MessageHandler(MessageHandlerQueueMixin):
         pong = self.create_message("pong", {"ping_id": data.get("message_id")})
         await self.send_message(pong)
 
-    async def _on_ack(self, data: Dict[str, Any]) -> None:
+    def _on_ack(self, data: Dict[str, Any]) -> None:
         self._handle_ack_message(data)
 
     async def _on_registration_success(self, data: Dict[str, Any]) -> None:
         self.delivery.server_says(data)
         await self.agent.handle_registration_success(data)
 
-    async def _on_delivery_confirmed(self, data: Dict[str, Any]) -> None:
+    def _on_delivery_confirmed(self, data: Dict[str, Any]) -> None:
         self.delivery_confirmed(data)
 
-    async def _on_registration_pending(self, _data: Dict[str, Any]) -> None:
+    def _on_registration_pending(self, _data: Dict[str, Any]) -> None:
         # The server's answer to system_info while this host awaits
         # approval -- expected, not an unknown message (it was logged as
         # one until 2026-10-15).
@@ -773,7 +777,7 @@ class MessageHandler(MessageHandlerQueueMixin):
             _("Host registration is pending approval. Will continue periodic attempts.")
         )
 
-    async def _on_logging_config_update(self, data: Dict[str, Any]) -> None:
+    def _on_logging_config_update(self, data: Dict[str, Any]) -> None:
         # The payload is nested under the envelope's "data" key (same as
         # command/ack messages), not at the top level.
         self.agent.apply_logging_config(data.get("data", {}).get("logging") or {})

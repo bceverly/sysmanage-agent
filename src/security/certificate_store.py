@@ -31,6 +31,7 @@ import secrets
 import stat
 import sys
 import tempfile
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -90,11 +91,32 @@ def _discard(path: Path) -> None:
         pass
 
 
+# Windows refuses to open a file while os.replace is swapping it in, and
+# refuses the replace while a reader has the old one open: both answer
+# PermissionError for a few milliseconds.  A reader that took that as "no
+# pins" would pin afresh (CI, windows-latest, 2026-11-15), so both sides wait
+# it out.  Elsewhere the replace is atomic and nothing is retried.
+_SHARING_RETRIES = 25
+_SHARING_WAIT = 0.02
+
+
+def _sharing_retry(call):
+    """``call()``, retried briefly on Windows' sharing-violation PermissionError."""
+    for attempt in range(_SHARING_RETRIES):
+        try:
+            return call()
+        except PermissionError:
+            if os.name != "nt" or attempt == _SHARING_RETRIES - 1:
+                raise
+            time.sleep(_SHARING_WAIT)
+    return call()  # pragma: no cover - the loop always returns or raises
+
+
 def write_atomic(path: Path, data: bytes, mode: int) -> None:
     """Replace ``path`` with ``data`` in one step (temp file + os.replace)."""
     tmp = _stage(path, data, mode)
     try:
-        os.replace(tmp, path)
+        _sharing_retry(lambda: os.replace(tmp, path))
     except BaseException:
         _discard(tmp)
         raise
@@ -295,7 +317,8 @@ class CertificateStore:
         next successful connection, exactly as after a deliberate reset.
         """
         try:
-            data = json.loads(self.pins_path.read_text(encoding="utf-8"))
+            raw = _sharing_retry(lambda: self.pins_path.read_text(encoding="utf-8"))
+            data = json.loads(raw)
         except (OSError, ValueError):
             return None
         if not isinstance(data, dict) or data.get("v") != PINS_VERSION:
