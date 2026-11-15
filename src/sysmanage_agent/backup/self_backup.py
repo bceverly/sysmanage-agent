@@ -26,9 +26,8 @@ as the network-mount rules) and refreshed before each capture.
 """
 
 import posixpath
-import re
 import subprocess  # nosec B404 - fixed argv, no shell
-from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 from src.sysmanage_agent.backup import network_mounts
 
@@ -78,25 +77,59 @@ def bsd_mounts(mount_p: str) -> List[Mount]:
     return found
 
 
+def _forward(text: str, sep: str):
+    """Each index of ``sep`` in ``text``, leftmost first."""
+    index = text.find(sep)
+    while index >= 0:
+        yield index
+        index = text.find(sep, index + 1)
+
+
+def _backward(text: str, sep: str):
+    """Each index of ``sep`` in ``text``, rightmost first."""
+    index = text.rfind(sep)
+    while index >= 0:
+        yield index
+        index = text.rfind(sep, 0, index + len(sep) - 1)
+
+
+def _mount_line(line: str, marker: str, fstype_of: Callable) -> Optional[Mount]:
+    """``SOURCE on POINT<marker>TYPE...``: the shortest SOURCE, then the
+    longest POINT whose remainder ``fstype_of`` accepts.  Plain string scans,
+    not a backtracking regex: mount output is not ours to trust."""
+    for on in _forward(line, " on "):
+        rest = line[on + 4 :]
+        for at in _backward(rest, marker):
+            fstype = fstype_of(rest[at + len(marker) :])
+            if fstype:
+                return Mount(rest[:at], fstype, line[:on])
+    return None
+
+
+def _darwin_fstype(tail: str) -> str:
+    """``TYPE`` of ``TYPE, option, ...)``: up to the first ``,`` or ``)``."""
+    end = next((i for i, char in enumerate(tail) if char in ",()"), len(tail))
+    return tail[:end] if end and tail[end : end + 1] in (",", ")") else ""
+
+
+def _typed_fstype(tail: str) -> str:
+    """``TYPE`` of ``TYPE (option, ...)``: the leading non-blank run."""
+    return tail.split(None, 1)[0] if tail[:1] and not tail[:1].isspace() else ""
+
+
 # macOS ``mount``: ``SOURCE on POINT (TYPE, option, ...)`` -- it has no -p.
-_DARWIN_LINE = re.compile(
-    r"^(?P<source>.*?) on (?P<point>.*) \((?P<fstype>[^,()]+)[,)]"
-)
-
-
 def darwin_mounts(mount_out: str) -> List[Mount]:
     """macOS ``mount`` output."""
     found = []
     for line in (mount_out or "").splitlines():
-        match = _DARWIN_LINE.match(line)
-        if match:
-            found.append(Mount(match["point"], match["fstype"], match["source"]))
+        mount = _mount_line(line, " (", _darwin_fstype)
+        if mount:
+            found.append(mount)
     return found
 
 
 # OpenBSD and NetBSD ``mount`` (neither has -p):
 # ``SOURCE on POINT type TYPE (option, ...)``.
-_TYPED_LINE = re.compile(r"^(?P<source>.*?) on (?P<point>.*) type (?P<fstype>\S+)")
 # Their mount(8) is in /sbin, which NetBSD leaves off a non-login PATH.
 TYPED_MOUNT = "/sbin/mount"
 
@@ -105,10 +138,18 @@ def typed_mounts(mount_out: str) -> List[Mount]:
     """OpenBSD and NetBSD ``mount`` output."""
     found = []
     for line in (mount_out or "").splitlines():
-        match = _TYPED_LINE.match(line)
-        if match:
-            found.append(Mount(match["point"], match["fstype"], match["source"]))
+        mount = _mount_line(line, " type ", _typed_fstype)
+        if mount:
+            found.append(mount)
     return found
+
+
+def _mount_argv(system: str) -> List[str]:
+    if system == "Darwin":
+        return ["mount"]
+    if system in ("OpenBSD", "NetBSD"):
+        return [TYPED_MOUNT]
+    return ["mount", "-p"]
 
 
 def read_mounts(system: str) -> List[Mount]:
@@ -117,8 +158,7 @@ def read_mounts(system: str) -> List[Mount]:
     if system == "Linux":
         return linux_mounts(network_mounts.read_host_mountinfo())
     typed = system in ("OpenBSD", "NetBSD")
-    argv = (["mount"] if system == "Darwin"
-            else [TYPED_MOUNT] if typed else ["mount", "-p"])  # fmt: skip
+    argv = _mount_argv(system)
     try:
         out = subprocess.run(  # nosec B603 B607 - fixed argv
             argv, capture_output=True, text=True, timeout=30, check=False

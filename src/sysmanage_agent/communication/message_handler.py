@@ -223,7 +223,7 @@ class MessageHandler(MessageHandlerQueueMixin):
         Queue an acknowledgment to the server confirming receipt of a command.
 
         Goes through the standard outbound queue rather than ``send_message_direct``
-        to honor the architectural rule that all agent → server traffic flows
+        to honor the architectural rule that all agent -> server traffic flows
         through the SQLite outbound queue.  ``queue_outbound_message`` gives
         ``command_acknowledgment`` HIGH priority so it overtakes queued reports
         and the server sees it before its 60-second no-ack retry fires.
@@ -722,46 +722,61 @@ class MessageHandler(MessageHandlerQueueMixin):
         if message_type in self._host_recognized_message_types():
             self.agent.reset_host_not_registered_strikes()
 
-        if message_type == "command":
-            await self._handle_command_message(data)
-        elif message_type == "broadcast":
-            await self._handle_broadcast_message(data)
-        elif message_type == "ping":
-            pong = self.create_message("pong", {"ping_id": data.get("message_id")})
-            await self.send_message(pong)
-        elif message_type == "ack":
-            self._handle_ack_message(data)
-        elif message_type == "error":
+        if message_type == "error":
+            # The one message that can end the loop: re-registration needed.
             await self._handle_server_error(data)
-            if self.agent.needs_registration:
-                return True
-        elif message_type == "host_approved":
-            await self.agent.handle_host_approval(data)
-        elif message_type == "registration_success":
-            self.delivery.server_says(data)
-            await self.agent.handle_registration_success(data)
-        elif message_type == delivery.MESSAGE_TYPE:
-            self.delivery_confirmed(data)
-        elif message_type == "registration_pending":
-            # The server's answer to system_info while this host awaits
-            # approval -- expected, not an unknown message (it was logged as
-            # one until 2026-10-15).
-            self._forget_reports_sent_while_pending()
-            self.logger.info(
-                _(
-                    "Host registration is pending approval. Will continue periodic attempts."
-                )
-            )
-        elif message_type == "logging_config_update":
-            # The payload is nested under the envelope's "data" key (same as
-            # command/ack messages), not at the top level.
-            self.agent.apply_logging_config(data.get("data", {}).get("logging") or {})
-        elif message_type in self._get_status_confirmation_types():
+            return bool(self.agent.needs_registration)
+        handler = self._received_message_handlers().get(message_type)
+        if handler is not None:
+            await handler(data)
+            return False
+        if message_type in self._get_status_confirmation_types():
             self._handle_status_confirmation(message_type, data)
         else:
             self.logger.warning(_("Unknown message type: %s"), message_type)
-
         return False
+
+    def _received_message_handlers(self) -> Dict[str, Any]:
+        """``message_type`` -> async handler (``error`` is handled apart)."""
+        return {
+            "command": self._handle_command_message,
+            "broadcast": self._handle_broadcast_message,
+            "ping": self._on_ping,
+            "ack": self._on_ack,
+            "host_approved": self.agent.handle_host_approval,
+            "registration_success": self._on_registration_success,
+            delivery.MESSAGE_TYPE: self._on_delivery_confirmed,
+            "registration_pending": self._on_registration_pending,
+            "logging_config_update": self._on_logging_config_update,
+        }
+
+    async def _on_ping(self, data: Dict[str, Any]) -> None:
+        pong = self.create_message("pong", {"ping_id": data.get("message_id")})
+        await self.send_message(pong)
+
+    async def _on_ack(self, data: Dict[str, Any]) -> None:
+        self._handle_ack_message(data)
+
+    async def _on_registration_success(self, data: Dict[str, Any]) -> None:
+        self.delivery.server_says(data)
+        await self.agent.handle_registration_success(data)
+
+    async def _on_delivery_confirmed(self, data: Dict[str, Any]) -> None:
+        self.delivery_confirmed(data)
+
+    async def _on_registration_pending(self, _data: Dict[str, Any]) -> None:
+        # The server's answer to system_info while this host awaits
+        # approval -- expected, not an unknown message (it was logged as
+        # one until 2026-10-15).
+        self._forget_reports_sent_while_pending()
+        self.logger.info(
+            _("Host registration is pending approval. Will continue periodic attempts.")
+        )
+
+    async def _on_logging_config_update(self, data: Dict[str, Any]) -> None:
+        # The payload is nested under the envelope's "data" key (same as
+        # command/ack messages), not at the top level.
+        self.agent.apply_logging_config(data.get("data", {}).get("logging") or {})
 
     def _host_recognized_message_types(self) -> set:
         """Message types the server only sends to a registered, recognized host.

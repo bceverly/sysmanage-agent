@@ -74,42 +74,71 @@ class BackupProxyMixin:
         policy_id = policy["policy_id"]
         proxy = policy.get("proxy")
         if not proxy or not contract.reads_remote(features):
-            for path in (access.token_path(policy_id), access.ca_path(policy_id),
-                         access.token_path(policy_id, previous=True)):  # fmt: skip
-                if os.path.exists(path):
-                    await self._remove_root_file(path)
+            await self._remove_root_files(
+                access.token_path(policy_id), access.ca_path(policy_id),
+                access.token_path(policy_id, previous=True),
+            )  # fmt: skip
             self._drop_next_token(policy_id)
             return {}
         saved = self._load("policies.json").get(policy_id) or {}
-        known = saved.get("proxy_tokens") or {}
-        made = None
         tokens: Dict[str, str] = {}
-        for key, previous in (("current", False), ("previous", True)):
-            path = access.token_path(policy_id, previous)
-            if previous and not proxy.get("previous_url"):
-                if os.path.exists(path):
-                    await self._remove_root_file(path)
-                continue
-            if known.get(key) and os.path.exists(path):
-                tokens[key] = known[key]
-                if not previous:
-                    made = saved.get("proxy_token_made") or int(time.time())
-                    turned = await self._rotate_token(policy_id, path, proxy, made)
-                    made = turned.pop("made", made)
-                    tokens.update(turned)
-                continue
-            token = access.new_token()
-            await self._install_root_file(token, path, mode="600")
-            tokens[key] = access.token_sha256(token)
-            if not previous:
-                made = int(time.time())
-                self._drop_next_token(policy_id)
+        made = await self._host_current_token(policy_id, proxy, saved, tokens)
+        await self._host_previous_token(policy_id, proxy, saved, tokens)
         if proxy.get("ca"):
             await self._install_root_file(proxy["ca"], access.ca_path(policy_id))
-        elif os.path.exists(access.ca_path(policy_id)):
-            await self._remove_root_file(access.ca_path(policy_id))
+        else:
+            await self._remove_root_files(access.ca_path(policy_id))
         # ``proxy_token_made`` stays here: saved with the policy, never sent.
         return {"proxy_tokens": tokens, "proxy_token_made": made}
+
+    async def _remove_root_files(self, *paths: str) -> None:
+        for path in paths:
+            if os.path.exists(path):
+                await self._remove_root_file(path)
+
+    async def _host_current_token(
+        self,
+        policy_id: str,
+        proxy: Dict[str, Any],
+        saved: Dict[str, Any],
+        tokens: Dict[str, str],
+    ) -> Optional[float]:
+        """The host's current token, kept (and rotated when due) or made:
+        its hash into ``tokens``; returns when it was made."""
+        path = access.token_path(policy_id, False)
+        known = (saved.get("proxy_tokens") or {}).get("current")
+        if known and os.path.exists(path):
+            tokens["current"] = known
+            made = saved.get("proxy_token_made") or int(time.time())
+            turned = await self._rotate_token(policy_id, path, proxy, made)
+            made = turned.pop("made", made)
+            tokens.update(turned)
+            return made
+        token = access.new_token()
+        await self._install_root_file(token, path, mode="600")
+        tokens["current"] = access.token_sha256(token)
+        self._drop_next_token(policy_id)
+        return int(time.time())
+
+    async def _host_previous_token(
+        self,
+        policy_id: str,
+        proxy: Dict[str, Any],
+        saved: Dict[str, Any],
+        tokens: Dict[str, str],
+    ) -> None:
+        """The token for the previous target's proxy, while there is one."""
+        path = access.token_path(policy_id, True)
+        if not proxy.get("previous_url"):
+            await self._remove_root_files(path)
+            return
+        known = (saved.get("proxy_tokens") or {}).get("previous")
+        if known and os.path.exists(path):
+            tokens["previous"] = known
+            return
+        token = access.new_token()
+        await self._install_root_file(token, path, mode="600")
+        tokens["previous"] = access.token_sha256(token)
 
     # --- token rotation (25.5) ----------------------------------------------
     #

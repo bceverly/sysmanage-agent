@@ -87,9 +87,10 @@ coverage>=7.0.0
 urllib3>=2.8.0
 ujson>=5.13.0  # PYSEC-2026-2293/2294 (pulled by semgrep)
 Authlib>=1.9.1  # 1.8.0, 1.9.0 and 1.9.1 fix nine advisories open on 1.7.x (pulled by safety)
-# python_multipart: PYSEC-2026-3036..3040, fixed in 0.0.27.  Dev tooling only;
-# it was left unpinned while the RPM build still needed Python 3.9 wheels.
-python-multipart>=0.0.27
+# python_multipart: PYSEC-2026-3036/3037 fixed in 0.0.30, PYSEC-2026-3040 in
+# 0.0.31 (0.0.27 was still affected).  Dev tooling only; it was left unpinned
+# while the RPM build still needed Python 3.9 wheels.  0.0.31 needs 3.10+.
+python-multipart>=0.0.31
 
 # Note: On OpenBSD 7.7, coverage.py C tracer requires gcc and py3-cffi
 # Install with: doas pkg_add gcc py3-cffi

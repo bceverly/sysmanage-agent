@@ -29,7 +29,6 @@ after the handshake, before a single byte of HTTP is exchanged.
 """
 
 import base64
-import binascii
 import json
 import ssl
 from datetime import datetime, timezone
@@ -40,8 +39,11 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
 
-from src.i18n import _
+from src.i18n import N_, _
 from src.security.certificate_store import sha256_hex
+
+_INCOMPLETE = N_("The server identity response is incomplete")
+_UNREADABLE = N_("The server identity statement is not readable")
 
 STATEMENT_VERSION = 1
 
@@ -157,20 +159,20 @@ def _parse_time(value: Any) -> datetime:
 
 def _load_pem(value: Any) -> x509.Certificate:
     if not isinstance(value, str):
-        raise IdentityError(_("The server identity response is incomplete"))
+        raise IdentityError(_(_INCOMPLETE))
     try:
         return x509.load_pem_x509_certificate(value.encode("ascii"))
-    except (ValueError, UnicodeEncodeError) as error:
-        raise IdentityError(_("The server identity response is incomplete")) from error
+    except ValueError as error:  # UnicodeEncodeError too
+        raise IdentityError(_(_INCOMPLETE)) from error
 
 
 def _b64(value: Any) -> bytes:
     if not isinstance(value, str):
-        raise IdentityError(_("The server identity response is incomplete"))
+        raise IdentityError(_(_INCOMPLETE))
     try:
         return base64.b64decode(value, validate=True)
-    except (binascii.Error, ValueError) as error:
-        raise IdentityError(_("The server identity response is incomplete")) from error
+    except ValueError as error:  # binascii.Error too
+        raise IdentityError(_(_INCOMPLETE)) from error
 
 
 def _check_identity_certificate(
@@ -214,17 +216,15 @@ def _check_signature(identity: x509.Certificate, statement: bytes, sig: bytes):
 def _statement_spkis(statement: bytes, now: datetime) -> List[str]:
     try:
         body = json.loads(statement.decode("utf-8"))
-    except (UnicodeDecodeError, ValueError) as error:
-        raise IdentityError(
-            _("The server identity statement is not readable")
-        ) from error
+    except ValueError as error:  # UnicodeDecodeError, JSONDecodeError too
+        raise IdentityError(_(_UNREADABLE)) from error
     if not isinstance(body, dict) or body.get("v") != STATEMENT_VERSION:
-        raise IdentityError(_("The server identity statement is not readable"))
+        raise IdentityError(_(_UNREADABLE))
     if now >= _parse_time(body.get("expires_at")):
         raise IdentityError(_("The server identity statement has expired"))
     spkis = body.get("spki_sha256")
     if not isinstance(spkis, list) or not all(isinstance(s, str) for s in spkis):
-        raise IdentityError(_("The server identity statement is not readable"))
+        raise IdentityError(_(_UNREADABLE))
     return [s.lower() for s in spkis]
 
 
@@ -248,7 +248,7 @@ def verify_statement(
        that fetched it.
     """
     if not isinstance(document, dict):
-        raise IdentityError(_("The server identity response is incomplete"))
+        raise IdentityError(_(_INCOMPLETE))
     now = now or datetime.now(timezone.utc)
     ca = _load_pem(document.get("ca_certificate"))
     identity = _load_pem(document.get("identity_certificate"))

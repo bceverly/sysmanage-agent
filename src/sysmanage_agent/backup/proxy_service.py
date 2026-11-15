@@ -71,7 +71,7 @@ def check_cert(value: Any) -> Optional[Dict[str, Any]]:
             raise PolicyError("proxy cert pem must be a PEM certificate")
         try:
             x509.load_pem_x509_certificate(pem.encode("ascii"))
-        except (ValueError, UnicodeEncodeError) as error:
+        except ValueError as error:  # UnicodeEncodeError too
             raise PolicyError("proxy cert pem must be a PEM certificate") from error
     if not isinstance(value["renew"], bool):
         raise PolicyError("proxy cert renew must be true or false")

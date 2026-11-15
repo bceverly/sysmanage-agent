@@ -462,7 +462,9 @@ class MiscDelegator:
         # pylint: disable=import-outside-toplevel
         from src.sysmanage_agent.backup import nfs_peers  # noqa: PLC0415
 
-        return nfs_peers.peers()
+        # FreeBSD's answer runs netstat: off the event loop, which is busy
+        # holding that host's connection open.
+        return await asyncio.to_thread(nfs_peers.peers)
 
     def _cloud_backup(self):
         """The iCloud Photos commands (24.12), made on first use."""

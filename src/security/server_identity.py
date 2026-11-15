@@ -100,7 +100,7 @@ def fetch_identity(endpoint, context) -> Tuple[Dict[str, Any], str]:
             )
         try:
             return json.loads(body.decode("utf-8")), observed
-        except (UnicodeDecodeError, ValueError) as error:
+        except ValueError as error:  # UnicodeDecodeError and JSONDecodeError too
             raise IdentityError(
                 _("The server identity response is incomplete")
             ) from error
@@ -129,7 +129,7 @@ def first_pin(endpoint, store: CertificateStore) -> bool:
         )
         return False
     except (IdentityError, OSError, ValueError) as error:
-        logger.error(
+        logger.exception(
             _("Could not pin this server's identity: %s. Pinning will be retried."),
             error,
         )
@@ -158,7 +158,7 @@ def repin(endpoint, store: CertificateStore) -> bool:
         )
         return False
     except (IdentityError, OSError, ValueError) as error:
-        logger.error(
+        logger.exception(
             _(
                 "The server's TLS certificate changed and the change could not be "
                 "verified (%s). The likely cause is a proxy, or another server, "
@@ -201,4 +201,4 @@ def _repin_quietly(endpoint, store: CertificateStore) -> None:
     try:
         repin(endpoint, store)
     except Exception as error:  # pylint: disable=broad-except
-        logger.error(_("Could not re-pin this server's identity: %s"), error)
+        logger.exception(_("Could not re-pin this server's identity: %s"), error)

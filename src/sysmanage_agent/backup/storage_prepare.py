@@ -192,6 +192,49 @@ def _not_empty(repository: str, kind: str) -> PrepareRefused:
     return PrepareRefused("not_empty", text % {"path": repository})
 
 
+def _filesystem_steps(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    system: str,
+    fstype: Optional[str],
+    repository: str,
+    mount_point: str,
+    datasets: Dict[str, str],
+    listdir: Callable,
+    is_subvolume: Callable[[str], bool],
+) -> Dict[str, Any]:
+    """The repository's own filesystem: a ZFS dataset, a btrfs subvolume,
+    or a plain directory (never on FreeBSD, which exports whole ones)."""
+    if fstype == "zfs" or repository in datasets:
+        return _zfs_steps(repository, mount_point, datasets, listdir)
+    if system == "FreeBSD":
+        raise PrepareRefused(
+            "zfs_required",
+            _(
+                "FreeBSD exports whole filesystems, so each host's repository "
+                "needs its own ZFS dataset. Put the storage path on ZFS, then "
+                "prepare again."
+            ),
+        )
+    if fstype == "btrfs":
+        return _btrfs_steps(repository, listdir, is_subvolume)
+    return _plain_steps(repository, listdir)
+
+
+def _linux_export(
+    steps: Dict[str, Any], policy: Dict[str, Any], address: str, ids: Tuple[int, int]
+) -> None:
+    """Linux: one /etc/exports.d file per policy, whatever the filesystem
+    (rewritten when the host's address changes), then exportfs -ra."""
+    repository = posixpath.normpath(policy["repository"])
+    dataset = steps.pop("dataset", None)
+    if dataset:  # checked mounted host-wide before it is exported
+        steps["zfs_dataset"], steps["repository"] = dataset, repository
+    steps["export_file"] = (
+        exports_file(policy["policy_id"]),
+        export_line(repository, address, ids[0], ids[1]),
+    )
+    steps["reload"] = True
+
+
 def plan(  # pylint: disable=too-many-arguments
     policy: Dict[str, Any],
     *,
@@ -233,36 +276,15 @@ def plan(  # pylint: disable=too-many-arguments
             "unsupported",
             _("Preparing storage is not supported on %(system)s.") % {"system": system},
         )
-    if fstype == "zfs" or repository in datasets:
-        steps = _zfs_steps(repository, mount_point, datasets, listdir)
-    elif system == "FreeBSD":
-        raise PrepareRefused(
-            "zfs_required",
-            _(
-                "FreeBSD exports whole filesystems, so each host's repository "
-                "needs its own ZFS dataset. Put the storage path on ZFS, then "
-                "prepare again."
-            ),
-        )
-    elif fstype == "btrfs":
-        steps = _btrfs_steps(repository, listdir, is_subvolume)
-    else:
-        steps = _plain_steps(repository, listdir)
+    steps = _filesystem_steps(
+        system, fstype, repository, mount_point, datasets, listdir, is_subvolume
+    )
     if local or proxied:
         _no_export(steps)
     elif system == "FreeBSD":
         _freebsd_export(steps, address, account)
     else:
-        # Linux: one /etc/exports.d file per policy, whatever the filesystem
-        # (rewritten when the host's address changes), then exportfs -ra.
-        dataset = steps.pop("dataset", None)
-        if dataset:  # checked mounted host-wide before it is exported
-            steps["zfs_dataset"], steps["repository"] = dataset, repository
-        steps["export_file"] = (
-            exports_file(policy["policy_id"]),
-            export_line(repository, address, uid, gid),
-        )
-        steps["reload"] = True
+        _linux_export(steps, policy, address, (uid, gid))
     steps.pop("exists")
     steps["protect"] = protect
     steps["init"] = (

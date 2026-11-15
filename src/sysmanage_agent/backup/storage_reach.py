@@ -143,7 +143,7 @@ async def _tls(
         )
     except asyncio.TimeoutError:
         return {"ok": False, "error": "timeout", "spki_sha256": None}
-    except (ssl.SSLError, ssl.CertificateError, OSError, ValueError) as error:
+    except (OSError, ValueError) as error:  # ssl.SSLError, CertificateError too
         reason = (
             getattr(error, "verify_message", None)
             or getattr(error, "reason", None)

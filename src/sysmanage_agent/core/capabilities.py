@@ -49,7 +49,7 @@ hosts that already exist.
 """
 
 import platform
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from src.sysmanage_agent.core.capability_probes import INAPPLICABLE_REASONS
 from src.sysmanage_agent.core.fact_schema import build_fact_coverage
@@ -245,6 +245,35 @@ def ungrouped_commands(available: Iterable[str]) -> List[str]:
     return sorted(c for c in available if c not in index)
 
 
+def _one_reason(reasons: set) -> str:
+    """The shared reason, or the generic one when they differ."""
+    return reasons.pop() if len(reasons) == 1 else REASON_NO_HANDLER
+
+
+def _classify_group(
+    commands: Iterable[str], suppressed: Mapping[str, str], available: set
+) -> Tuple[str, Any]:
+    """One group's standing: ``("not_applicable", reason)``,
+    ``("unavailable", reason)`` or ``("supported", sorted missing)``."""
+    inapplicable = [c for c in commands if suppressed.get(c) in INAPPLICABLE_REASONS]
+    # Hoisted out of the comprehension: rebuilding the set on every
+    # iteration made this O(n^2) over the command list for no reason.
+    inapplicable_set = set(inapplicable)
+    applicable = [c for c in commands if c not in inapplicable_set]
+    if not applicable:
+        # Nothing in this group can exist on this OS.  Reported so the UI
+        # can say "not applicable" instead of going silent, but kept OUT of
+        # unavailable/partial so it never reads as a limitation.
+        return "not_applicable", _one_reason({suppressed[c] for c in inapplicable})
+    if not any(c in available for c in applicable):
+        # Prefer a specific reason over the generic one: if every command
+        # in the group was suppressed for the same reason, say that.
+        return "unavailable", _one_reason(
+            {suppressed[c] for c in applicable if c in suppressed}
+        )
+    return "supported", sorted(c for c in applicable if c not in available)
+
+
 def build_capability_report(
     handlers: Mapping[str, Any],
     suppressed: Optional[Mapping[str, str]] = None,
@@ -300,37 +329,15 @@ def build_capability_report(
     not_applicable: Dict[str, str] = {}
 
     for group, commands in CAPABILITY_GROUPS.items():
-        inapplicable = [
-            c for c in commands if suppressed.get(c) in INAPPLICABLE_REASONS
-        ]
-        # Hoisted out of the comprehension: rebuilding the set on every
-        # iteration made this O(n^2) over the command list for no reason.
-        inapplicable_set = set(inapplicable)
-        applicable = [c for c in commands if c not in inapplicable_set]
-
-        if not applicable:
-            # Nothing in this group can exist on this OS.  Reported so the UI
-            # can say "not applicable" instead of going silent, but kept OUT of
-            # unavailable/partial so it never reads as a limitation.
-            reasons = {suppressed[c] for c in inapplicable}
-            not_applicable[group] = (
-                reasons.pop() if len(reasons) == 1 else REASON_NO_HANDLER
-            )
-            continue
-
-        present = [c for c in applicable if c in available]
-        if not present:
-            # Prefer a specific reason over the generic one: if every command
-            # in the group was suppressed for the same reason, say that.
-            reasons = {suppressed[c] for c in applicable if c in suppressed}
-            unavailable[group] = (
-                reasons.pop() if len(reasons) == 1 else REASON_NO_HANDLER
-            )
-            continue
-        supported.append(group)
-        missing = [c for c in applicable if c not in available]
-        if missing:
-            partial[group] = sorted(missing)
+        verdict, detail = _classify_group(commands, suppressed, available)
+        if verdict == "not_applicable":
+            not_applicable[group] = detail
+        elif verdict == "unavailable":
+            unavailable[group] = detail
+        else:
+            supported.append(group)
+            if detail:
+                partial[group] = detail
 
     # Not a command group: a property of this agent the server acts on (it
     # requires this host's token from now on -- the Phase 22.0 ratchet).

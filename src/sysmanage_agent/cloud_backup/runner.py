@@ -164,23 +164,7 @@ def classify_line(outcome: Outcome, line: str, action: str, scrub) -> None:
     line = scrub(line.rstrip("\r"))
     match = _LOG_LINE.match(line)
     if match:
-        level, message = match.groups()
-        if _DOWNLOADED.match(message):
-            outcome.downloaded += 1
-        elif _PRESENT.search(message):
-            outcome.present += 1
-        elif _FAILED_FILE.match(message):
-            outcome.failed += 1
-        if message.startswith("Authentication completed successfully"):
-            outcome.authenticated = True
-        outcome.last_level = level
-        if level != "DEBUG":
-            outcome.sign_in_refused |= any(m in message for m in SIGN_IN_MARKERS)
-            outcome.web_access_off |= any(m in message for m in WEB_ACCESS_MARKERS)
-            outcome.apple_busy |= message.startswith(APPLE_BUSY_MARKERS)
-            outcome.listing_short |= message.startswith(LISTING_SHORT)
-        if level != "DEBUG":
-            outcome.tail.append(line)
+        _classify_log_line(outcome, line, *match.groups())
         return
     stripped = line.strip()
     if not stripped:
@@ -198,6 +182,30 @@ def classify_line(outcome: Outcome, line: str, action: str, scrub) -> None:
     # over many lines) is dropped with it.
     if outcome.last_level != "DEBUG":
         outcome.tail.append(stripped)
+
+
+def _count_file(outcome: Outcome, message: str) -> None:
+    if _DOWNLOADED.match(message):
+        outcome.downloaded += 1
+    elif _PRESENT.search(message):
+        outcome.present += 1
+    elif _FAILED_FILE.match(message):
+        outcome.failed += 1
+
+
+def _classify_log_line(outcome: Outcome, line: str, level: str, message: str):
+    """One ``LEVEL message`` line of icloudpd's log."""
+    _count_file(outcome, message)
+    if message.startswith("Authentication completed successfully"):
+        outcome.authenticated = True
+    outcome.last_level = level
+    if level == "DEBUG":
+        return
+    outcome.sign_in_refused |= any(m in message for m in SIGN_IN_MARKERS)
+    outcome.web_access_off |= any(m in message for m in WEB_ACCESS_MARKERS)
+    outcome.apple_busy |= message.startswith(APPLE_BUSY_MARKERS)
+    outcome.listing_short |= message.startswith(LISTING_SHORT)
+    outcome.tail.append(line)
 
 
 def judge(outcome: Outcome, action: str) -> None:

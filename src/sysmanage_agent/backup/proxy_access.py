@@ -32,7 +32,7 @@ import os
 import posixpath
 import re
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from cryptography import x509
 
@@ -49,7 +49,7 @@ OPERATIONS = ("append", "read")
 MAX_CA_BYTES = 64 * 1024
 CERT_WARN_DAYS = 21
 
-_CLIENT = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9._-]{0,63}$")
+_CLIENT = re.compile(r"^\w[\w.-]{0,63}$", re.ASCII)
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 _HOSTNAME = re.compile(
@@ -102,7 +102,7 @@ def check_ca(value: Any) -> str:
         raise PolicyError("proxy ca must be a PEM certificate")
     try:
         x509.load_pem_x509_certificate(value.encode("ascii"))
-    except (ValueError, UnicodeEncodeError) as error:
+    except ValueError as error:  # UnicodeEncodeError too
         raise PolicyError("proxy ca must be a PEM certificate") from error
     return value.strip() + "\n"
 
@@ -166,29 +166,35 @@ def check_bandwidth(value: Any) -> List[str]:
         raise PolicyError("a proxy grant's bandwidth must be 1 to 25 rules")
     taken, default = 0, False
     for rule in value:
-        match = _BANDWIDTH.match(rule) if isinstance(rule, str) else None
-        if not match:
-            raise PolicyError(
-                "a proxy grant's bandwidth rule is not RATE or HH-HH RATE"
-            )
-        start, end, _rate, number, unit = match.groups()
-        if number and int(number) * _RATE_SCALE[unit] < MIN_RATE:
-            raise PolicyError("a proxy grant's bandwidth rate is under 64KiB/s")
-        if start is None:
+        hours = _bandwidth_hours(rule)
+        if hours is None:
             if default:
                 raise PolicyError(
                     "a proxy grant's bandwidth has two rates for the rest"
                 )
             default = True
-            continue
-        first, last = int(start), int(end)
-        if first > 23 or last > 24 or first == last:
-            raise PolicyError("a proxy grant's bandwidth hours are not 00 to 24")
-        hours = _hours(first, last)
-        if hours & taken:
+        elif hours & taken:
             raise PolicyError("a proxy grant's bandwidth names an hour twice")
-        taken |= hours
+        else:
+            taken |= hours
     return list(value)
+
+
+def _bandwidth_hours(rule: Any) -> Optional[int]:
+    """One bandwidth rule, checked: its hours as a mask, or None for the
+    ``RATE`` alone that covers the rest of the day."""
+    match = _BANDWIDTH.match(rule) if isinstance(rule, str) else None
+    if not match:
+        raise PolicyError("a proxy grant's bandwidth rule is not RATE or HH-HH RATE")
+    start, end, _rate, number, unit = match.groups()
+    if number and int(number) * _RATE_SCALE[unit] < MIN_RATE:
+        raise PolicyError("a proxy grant's bandwidth rate is under 64KiB/s")
+    if start is None:
+        return None
+    first, last = int(start), int(end)
+    if first > 23 or last > 24 or first == last:
+        raise PolicyError("a proxy grant's bandwidth hours are not 00 to 24")
+    return _hours(first, last)
 
 
 def limits_supported(features: Optional[Dict[str, Any]]) -> bool:
@@ -242,20 +248,7 @@ def check_storage_proxy(value: Any) -> Optional[Dict[str, Any]]:
     None when the server sent none (an older server)."""
     if value is None:
         return None
-    keys = {"target_id", "enabled", "grants", "clients"}
-    if not isinstance(value, dict) or not keys <= set(value) <= keys | {
-        "export",
-        "cert",
-    }:
-        raise PolicyError("proxy must have target_id, enabled, grants and clients")
-    target_id = value["target_id"]
-    if not isinstance(target_id, str) or not _UUID.match(target_id):
-        raise PolicyError("proxy target_id is not a UUID")
-    if not isinstance(value["enabled"], bool):
-        raise PolicyError("proxy enabled must be true or false")
-    export = value.get("export", True)
-    if not isinstance(export, bool):
-        raise PolicyError("proxy export must be true or false")
+    target_id, export = _check_storage_proxy_fields(value)
     grants, clients = value["grants"], value["clients"]
     if not isinstance(grants, list) or len(grants) > 2:
         raise PolicyError("proxy grants must be a list of at most two")
@@ -277,6 +270,26 @@ def check_storage_proxy(value: Any) -> Optional[Dict[str, Any]]:
             "export": export or not value["enabled"],
             "cert": proxy_service.check_cert(value.get("cert"))
             if value["enabled"] else None}  # fmt: skip
+
+
+def _check_storage_proxy_fields(value: Any) -> Tuple[str, bool]:
+    """A storage ``target.proxy``'s keys, ``target_id``, ``enabled`` and
+    ``export``: ``(target_id, export)``."""
+    keys = {"target_id", "enabled", "grants", "clients"}
+    if not isinstance(value, dict) or not keys <= set(value) <= keys | {
+        "export",
+        "cert",
+    }:
+        raise PolicyError("proxy must have target_id, enabled, grants and clients")
+    target_id = value["target_id"]
+    if not isinstance(target_id, str) or not _UUID.match(target_id):
+        raise PolicyError("proxy target_id is not a UUID")
+    if not isinstance(value["enabled"], bool):
+        raise PolicyError("proxy enabled must be true or false")
+    export = value.get("export", True)
+    if not isinstance(export, bool):
+        raise PolicyError("proxy export must be true or false")
+    return target_id, export
 
 
 def needs_export(policy: Dict[str, Any]) -> bool:

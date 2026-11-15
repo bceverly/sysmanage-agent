@@ -408,19 +408,9 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
 
     async def _apply_policy(self, policy: Dict[str, Any]) -> Dict[str, Any]:
         policy_id = policy["policy_id"]
-        if (
-            policy["encrypt_key"]
-            and policy["role"] in validation.CAPTURING_ROLES
-            and not contract.can_encrypt(self._features())
-        ):
-            # Said now, not as a failed capture every night (lab, 2026-11-10).
-            return self._refusal(
-                restate_probe.REASON_MISSING_TOOL,
-                _(
-                    "This host cannot encrypt its backups: restate does not find "
-                    "gpg. Install GnuPG, and the backup policy is sent again."
-                ),
-            )
+        refused = self._cannot_encrypt(policy)
+        if refused:
+            return refused
         if policy["encrypt_key"]:
             await self._install_root_file(
                 policy["encrypt_key"], contract.key_path(policy_id)
@@ -448,6 +438,60 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             if not contract.supports_command(features, action):
                 del jobs[action]  # this restate cannot run it: no job file
         remote_jobs = _through_proxy(jobs, policy, proxy_state, features)
+        refused = self._cannot_run(policy_id, jobs, remote_jobs, features)
+        if refused:
+            return refused
+        for action, job in jobs.items():
+            await self._install_root_file(
+                contract.render_job(job), contract.job_path(policy_id, action)
+            )
+        removed = await self._remove_stale(policy_id, set(jobs))
+        policies = self._load(POLICIES_FILE)
+        policies[policy_id] = _saved_policy(
+            policy, network_rules, network, proxy_state, remote_jobs
+        )
+        self._save(POLICIES_FILE, policies)
+        reply = {
+            "success": True,
+            "policy_id": policy_id,
+            "installed": sorted(jobs),
+            "removed": removed,
+            # The restate these job files were written for (the server shows
+            # it, and re-sends the files when a later job reports another).
+            "restate_version": features.get("version"),
+            **proxy_state,
+        }
+        return await self._configure_reply(
+            policy, policies[policy_id], reply, network, self_points
+        )
+
+    def _cannot_encrypt(self, policy: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """The refusal for a capturing host that is sent a key but has no
+        gpg for restate -- said now, not as a failed capture every night
+        (lab, 2026-11-10) -- or None."""
+        if not (
+            policy["encrypt_key"]
+            and policy["role"] in validation.CAPTURING_ROLES
+            and not contract.can_encrypt(self._features())
+        ):
+            return None
+        return self._refusal(
+            restate_probe.REASON_MISSING_TOOL,
+            _(
+                "This host cannot encrypt its backups: restate does not find "
+                "gpg. Install GnuPG, and the backup policy is sent again."
+            ),
+        )
+
+    def _cannot_run(
+        self,
+        policy_id: str,
+        jobs: Dict[str, Any],
+        remote_jobs: List[str],
+        features: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        """The refusal for jobs this host or its restate cannot run, or
+        None (dropping the hook options this restate does not take)."""
         if platform.system() in job_runner.NO_NFSV4 and "capture" not in remote_jobs:
             # No NFSv4 client to mount the repository with (25.5).
             return self._refusal(
@@ -473,54 +517,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 "tool_outdated",
                 _("This restate does not support: %s") % ", ".join(missing),
             )
-        for action, job in jobs.items():
-            await self._install_root_file(
-                contract.render_job(job), contract.job_path(policy_id, action)
-            )
-        removed = await self._remove_stale(policy_id, set(jobs))
-        policies = self._load(POLICIES_FILE)
-        policies[policy_id] = {
-            "role": policy["role"],
-            "repository": policy["repository"],
-            "mount_point": policy["mount_point"],
-            "actions": sorted(policy["jobs"]),
-            "seal": policy["jobs"].get("seal"),
-            "client_address": policy.get("client_address"),
-            "service_account": policy.get("service_account", "restate"),
-            "nfs": policy.get("nfs"),
-            "previous": policy.get("previous"),
-            # For the network-mount refresh before each walk.
-            "network_rules": network_rules,
-            "network_excluded": (network or {}).get("excluded") or [],
-            "keep_paths": (policy["jobs"].get("capture") or {}).get("keep_paths") or [],
-            # restate-proxy (25.5): where reads go, and the hashes of this
-            # host's tokens (never a token); a CA is kept as a file, not here.
-            "proxy": _saved_proxy(policy.get("proxy")),
-            "proxy_tokens": proxy_state.get("proxy_tokens"),
-            # When the current token was made, for its rotation (25.5).
-            "proxy_token_made": proxy_state.pop("proxy_token_made", None),
-            # The public key a storage host's prepare makes a proxy host's
-            # repository encrypted to (restate init --encrypt-to).
-            "encrypt_to": (
-                contract.key_path(policy_id) if policy["encrypt_key"] else None
-            ),
-            # The configured jobs that go through the proxy: never mounted.
-            "remote_jobs": remote_jobs,
-        }
-        self._save(POLICIES_FILE, policies)
-        reply = {
-            "success": True,
-            "policy_id": policy_id,
-            "installed": sorted(jobs),
-            "removed": removed,
-            # The restate these job files were written for (the server shows
-            # it, and re-sends the files when a later job reports another).
-            "restate_version": features.get("version"),
-            **proxy_state,
-        }
-        return await self._configure_reply(
-            policy, policies[policy_id], reply, network, self_points
-        )
+        return None
 
     @staticmethod
     def _agent_scratch() -> List[str]:
@@ -677,3 +674,42 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         return await self._start_job(
             run_id, policy_id, job_builder.RESTORE_ACTION, previous, keys, remote
         )
+
+
+def _saved_policy(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    policy: Dict[str, Any],
+    network_rules: Any,
+    network: Optional[Dict[str, Any]],
+    proxy_state: Dict[str, Any],
+    remote_jobs: List[str],
+) -> Dict[str, Any]:
+    """What the agent keeps of a configured policy (``policies.json``).
+    Takes ``proxy_token_made`` out of ``proxy_state``: saved, never sent."""
+    policy_id = policy["policy_id"]
+    encrypt_to = contract.key_path(policy_id) if policy["encrypt_key"] else None
+    return {
+        "role": policy["role"],
+        "repository": policy["repository"],
+        "mount_point": policy["mount_point"],
+        "actions": sorted(policy["jobs"]),
+        "seal": policy["jobs"].get("seal"),
+        "client_address": policy.get("client_address"),
+        "service_account": policy.get("service_account", "restate"),
+        "nfs": policy.get("nfs"),
+        "previous": policy.get("previous"),
+        # For the network-mount refresh before each walk.
+        "network_rules": network_rules,
+        "network_excluded": (network or {}).get("excluded") or [],
+        "keep_paths": (policy["jobs"].get("capture") or {}).get("keep_paths") or [],
+        # restate-proxy (25.5): where reads go, and the hashes of this
+        # host's tokens (never a token); a CA is kept as a file, not here.
+        "proxy": _saved_proxy(policy.get("proxy")),
+        "proxy_tokens": proxy_state.get("proxy_tokens"),
+        # When the current token was made, for its rotation (25.5).
+        "proxy_token_made": proxy_state.pop("proxy_token_made", None),
+        # The public key a storage host's prepare makes a proxy host's
+        # repository encrypted to (restate init --encrypt-to).
+        "encrypt_to": encrypt_to,
+        # The configured jobs that go through the proxy: never mounted.
+        "remote_jobs": remote_jobs,
+    }

@@ -440,15 +440,7 @@ def check_target(
     Linux); ``system``: platform.system(), looked up when not given."""
     if not isinstance(target, dict):
         raise PolicyError("target must be an object")
-    if role in ("storage", SELF):
-        mount_point = storage_mount_point(target.get("mount_point"), zfs_mounts)
-    else:
-        roots = (
-            DARWIN_HOST_ROOTS
-            if (system or platform.system()) == "Darwin"
-            else BACKUP_ROOTS
-        )
-        mount_point = confined_path(target.get("mount_point"), roots, "mount_point")
+    mount_point = _target_mount_point(role, target, zfs_mounts, system)
     repo_dir = target.get("repo_dir")
     if not isinstance(repo_dir, str) or not _REPO_DIR.match(repo_dir):
         raise PolicyError("repo_dir must be a single directory name")
@@ -457,12 +449,7 @@ def check_target(
         # host's own repository mounted at <mount_point>/<repo_dir>.
         # (managed: the agent mounts that export itself while a job runs.)
         mounts = mount_table() if mount_table else mount_types(mountinfo())
-        own = posixpath.join(mount_point, repo_dir)
-        if (
-            mounts.get(mount_point) not in NFS_TYPES
-            and mounts.get(own) not in NFS_TYPES
-        ):
-            raise PolicyError("mount_point is not an NFS mount on this host")
+        _check_nfs_mounted(mounts, mount_point, repo_dir)
     elif role in ("storage", SELF) and not isdir(mount_point):
         raise PolicyError("mount_point is not a directory on this host")
     real_mount = realpath(mount_point)
@@ -473,6 +460,24 @@ def check_target(
     ):
         raise PolicyError("repository escapes the mount point")
     return real_mount, posixpath.join(real_mount, repo_dir)
+
+
+def _target_mount_point(
+    role: str, target: Dict[str, Any], zfs_mounts: Callable, system: Optional[str]
+) -> str:
+    """The target's mount point: a storage dataset's, or one under the
+    roots a backed-up host may mount at (``/Volumes`` too on a Mac)."""
+    if role in ("storage", SELF):
+        return storage_mount_point(target.get("mount_point"), zfs_mounts)
+    darwin = (system or platform.system()) == "Darwin"
+    roots = DARWIN_HOST_ROOTS if darwin else BACKUP_ROOTS
+    return confined_path(target.get("mount_point"), roots, "mount_point")
+
+
+def _check_nfs_mounted(mounts: Dict[str, str], mount_point: str, repo_dir: str):
+    own = posixpath.join(mount_point, repo_dir)
+    if mounts.get(mount_point) not in NFS_TYPES and mounts.get(own) not in NFS_TYPES:
+        raise PolicyError("mount_point is not an NFS mount on this host")
 
 
 def check_address(value: Any) -> Optional[str]:
@@ -564,9 +569,6 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
     mount_point, repository = check_target(
         role, params.get("target"), mountinfo=mountinfo, managed=nfs is not None, **fs
     )
-    # pylint: disable-next=import-outside-toplevel  # it imports PolicyError
-    from src.sysmanage_agent.backup import proxy_access  # noqa: PLC0415
-
     proxy = target.get("proxy") if isinstance(target, dict) else None
     return {
         "policy_id": policy_id,
@@ -582,11 +584,7 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         "jobs": {action: check_job(role, action, job) for action, job in jobs.items()},
         # restate-proxy (25.5): where a host reads its repository over HTTPS,
         # or the grants a storage host writes for one host.
-        "proxy": (
-            proxy_access.check_host_proxy(proxy)
-            if role == "host"
-            else proxy_access.check_storage_proxy(proxy) if role == "storage" else None
-        ),
+        "proxy": _check_proxy(role, proxy),
         "encrypt_key": check_key(params.get("encrypt_key")),
         # The snapshot signer's public key (Pro+ 24.6): restores check it,
         # and the storage side's ``signatures`` listing.
@@ -596,3 +594,15 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
             else None
         ),
     }
+
+
+def _check_proxy(role: str, proxy: Any) -> Optional[Dict[str, Any]]:
+    """The restate-proxy part of a target, checked for this role."""
+    # pylint: disable-next=import-outside-toplevel  # it imports PolicyError
+    from src.sysmanage_agent.backup import proxy_access  # noqa: PLC0415
+
+    if role == "host":
+        return proxy_access.check_host_proxy(proxy)
+    if role == "storage":
+        return proxy_access.check_storage_proxy(proxy)
+    return None

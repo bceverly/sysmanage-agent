@@ -39,11 +39,36 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Unix-only featu
 RESTATE = "/usr/sbin/restate"
 
 
-def _detach(tmp_path, *command):
-    pid, log = str(tmp_path / "job.pid"), str(tmp_path / "job.log")
+def _fake_restate(tmp_path):
+    """A stand-in ``restate`` that runs its job file as a shell script."""
+    bindir = tmp_path / "bin"
+    bindir.mkdir(exist_ok=True)
+    fake = bindir / "restate"
+    fake.write_text('#!/bin/sh\nexec /bin/sh "$2"\n', encoding="utf-8")
+    fake.chmod(0o755)
+    return str(fake)
+
+
+def _run_files(tmp_path):
+    run = tmp_path / "backup" / "run"
+    run.mkdir(parents=True, exist_ok=True)
+    return str(run / "job.pid"), str(run / "job.log")
+
+
+def _detach_argv(tmp_path, *args):
+    return [sys.executable, "-I", job_runner.DETACH_SCRIPT, *args]
+
+
+def _detach(tmp_path, script, name="x.prune"):
+    """detach.py running ``restate run JOB`` where JOB is ``script``."""
+    pid, log = _run_files(tmp_path)
+    jobs = tmp_path / "jobs"
+    jobs.mkdir(exist_ok=True)
+    job = jobs / f"{name}.conf"
+    job.write_text(script + "\n", encoding="utf-8")
     started = time.monotonic()
     done = subprocess.run(
-        [sys.executable, "-I", job_runner.DETACH_SCRIPT, pid, log, "--", *command],
+        _detach_argv(tmp_path, pid, log, "--", _fake_restate(tmp_path), "run", str(job)),
         capture_output=True, text=True, timeout=30, check=False,
     )  # fmt: skip
     return done, pid, log, time.monotonic() - started
@@ -62,9 +87,7 @@ def _wait_unlocked(pid, seconds=10.0):
 
 
 def test_it_returns_at_once_and_holds_the_lock_while_the_command_runs(tmp_path):
-    done, pid, log, took = _detach(
-        tmp_path, "sh", "-c", "echo started; sleep 1; echo ended"
-    )
+    done, pid, log, took = _detach(tmp_path, "echo started; sleep 1; echo ended")
     assert done.returncode == 0 and took < 1.0  # like daemon -f: it does not wait
     assert job_runner.pidfile_locked(pid)
     assert _wait_unlocked(pid)
@@ -73,7 +96,7 @@ def test_it_returns_at_once_and_holds_the_lock_while_the_command_runs(tmp_path):
 
 
 def test_the_pidfile_names_the_command(tmp_path):
-    _done, pid, _log, _took = _detach(tmp_path, "sleep", "1")
+    _done, pid, _log, _took = _detach(tmp_path, "exec sleep 1")
     deadline, text = time.monotonic() + 5, ""
     while not text.strip() and time.monotonic() < deadline:
         with open(pid, encoding="utf-8") as handle:
@@ -86,8 +109,8 @@ def test_the_pidfile_names_the_command(tmp_path):
 
 
 def test_a_second_start_while_one_runs_is_refused(tmp_path):
-    _detach(tmp_path, "sleep", "1")
-    again, pid, _log, _took = _detach(tmp_path, "echo", "second")
+    _detach(tmp_path, "exec sleep 1")
+    again, pid, _log, _took = _detach(tmp_path, "echo second", name="y.prune")
     assert again.returncode == 3 and "already running" in again.stderr
     assert _wait_unlocked(pid)
 
@@ -95,7 +118,7 @@ def test_a_second_start_while_one_runs_is_refused(tmp_path):
 def test_sigterm_reaches_the_command(tmp_path):
     marker = tmp_path / "stopped"
     script = f"trap 'touch {marker}; exit 0' TERM; sleep 30 & wait"
-    _done, pid, _log, _took = _detach(tmp_path, "sh", "-c", script)
+    _done, pid, _log, _took = _detach(tmp_path, script)
     time.sleep(0.5)
     with open(pid, encoding="utf-8") as handle:
         child = int(handle.read())
@@ -109,12 +132,66 @@ def test_sigterm_reaches_the_command(tmp_path):
 
 
 def test_it_refuses_without_the_separator(tmp_path):
+    pid, log = _run_files(tmp_path)
     done = subprocess.run(
-        [sys.executable, "-I", job_runner.DETACH_SCRIPT, str(tmp_path / "p"),
-         str(tmp_path / "l"), "echo"],
+        _detach_argv(tmp_path, pid, log, "echo"),
         capture_output=True, text=True, timeout=30, check=False,
     )  # fmt: skip
     assert done.returncode == 2 and "usage" in done.stderr
+
+
+def _refused(tmp_path, pid, log, *command):
+    done = subprocess.run(
+        _detach_argv(tmp_path, pid, log, "--", *command),
+        capture_output=True, text=True, timeout=30, check=False,
+    )  # fmt: skip
+    return done.returncode == 2 and "refused" in done.stderr
+
+
+def test_it_runs_restate_and_nothing_else(tmp_path):
+    pid, log = _run_files(tmp_path)
+    restate = _fake_restate(tmp_path)
+    job = str(tmp_path / "x.prune.conf")
+    assert _refused(tmp_path, pid, log, "sh", "-c", "echo hi")
+    assert _refused(tmp_path, pid, log, "/bin/sh", "run", job)
+    assert _refused(tmp_path, pid, log, restate, "run", job, "--extra")
+    assert _refused(tmp_path, pid, log, restate, "list", job)
+    assert _refused(tmp_path, pid, log, restate, "run", "relative.conf")
+    assert _refused(tmp_path, pid, log, restate, "run", "/etc/passwd")
+    assert _refused(tmp_path, pid, log, restate, "run", "/a/../b/x.conf")
+    assert _refused(tmp_path, pid, log, "sudo", restate, "run", job)
+    assert _refused(tmp_path, pid, log, str(tmp_path / "bin" / "missing"), "run", job)
+    assert not os.path.exists(pid)
+
+
+def test_the_pidfile_and_log_stay_in_a_backup_run_directory(tmp_path):
+    pid, log = _run_files(tmp_path)
+    command = (_fake_restate(tmp_path), "run", str(tmp_path / "x.prune.conf"))
+    other = tmp_path / "elsewhere"
+    other.mkdir()
+    assert _refused(tmp_path, str(other / "job.pid"), str(other / "job.log"), *command)
+    assert _refused(tmp_path, pid, str(other / "job.log"), *command)
+    assert _refused(tmp_path, pid + ".txt", log, *command)
+    assert _refused(tmp_path, "job.pid", log, *command)
+    assert _refused(tmp_path, os.path.join(os.path.dirname(pid), "..", "run", "job.pid"),
+                    os.path.join(os.path.dirname(pid), "..", "x", "job.log"), *command)  # fmt: skip
+    os.symlink(str(other / "target"), pid)
+    assert _refused(tmp_path, pid, log, *command)
+    assert not (other / "target").exists()
+
+
+def test_the_validated_command_is_rebuilt_from_its_parts(tmp_path):
+    from src.sysmanage_agent.backup import (  # pylint: disable=import-outside-toplevel
+        detach,
+    )
+
+    restate = _fake_restate(tmp_path)
+    job = str(tmp_path / "jobs" / "x.prune.conf")
+    assert detach.command_argv(["sudo", "-n", restate, "run", job]) == [
+        "sudo", "-n", restate, "run", job]  # fmt: skip
+    assert detach.command_argv([restate, "run", job]) == [restate, "run", job]
+    with pytest.raises(detach.Refused):
+        detach.command_argv([restate, "run", job + "\0"])
 
 
 def test_the_start_command_elevates_only_restate():

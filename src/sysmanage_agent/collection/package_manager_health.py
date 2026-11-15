@@ -87,27 +87,41 @@ def check(
         "reason": None,
         "repairable": manager in ("dpkg", "pkg"),
     }
-    if manager == "dpkg":
-        try:
-            interrupted = bool(listdir(DPKG_UPDATES))
-        except OSError:
-            interrupted = False
-        if interrupted:
-            found.update(needs_repair=True, reason=_("dpkg was interrupted"))
-            return found
-        code, out = run(["dpkg", "--audit"], CHECK_SECONDS)
-        if code == 0 and out.strip():
-            found.update(needs_repair=True, reason=_first_line(out))
-    elif manager == "dnf":
-        code, out = run(["dnf", "-q", "check"], CHECK_SECONDS)
-        if code != 0 and out.strip():
-            found.update(needs_repair=True, reason=_first_line(out))
-    elif manager == "pkg":
-        code, out = run(["pkg", "check", "-d", "-n"], CHECK_SECONDS)
-        if code != 0 or "missing" in out.lower():
-            if out.strip():
-                found.update(needs_repair=True, reason=_first_line(out))
+    reason = _PROBES[manager](run, listdir) if manager in _PROBES else None
+    if reason:
+        found.update(needs_repair=True, reason=reason)
     return found
+
+
+def _dpkg_problem(run: Run, listdir: Callable) -> Optional[str]:
+    try:
+        interrupted = bool(listdir(DPKG_UPDATES))
+    except OSError:
+        interrupted = False
+    if interrupted:
+        return _("dpkg was interrupted")
+    code, out = run(["dpkg", "--audit"], CHECK_SECONDS)
+    return _first_line(out) if code == 0 and out.strip() else None
+
+
+def _dnf_problem(run: Run, _listdir: Callable) -> Optional[str]:
+    code, out = run(["dnf", "-q", "check"], CHECK_SECONDS)
+    return _first_line(out) if code != 0 and out.strip() else None
+
+
+def _pkg_problem(run: Run, _listdir: Callable) -> Optional[str]:
+    code, out = run(["pkg", "check", "-d", "-n"], CHECK_SECONDS)
+    if (code != 0 or "missing" in out.lower()) and out.strip():
+        return _first_line(out)
+    return None
+
+
+# What is wrong with each manager, or None: run, listdir -> reason.
+_PROBES: Dict[str, Callable[[Run, Callable], Optional[str]]] = {
+    "dpkg": _dpkg_problem,
+    "dnf": _dnf_problem,
+    "pkg": _pkg_problem,
+}
 
 
 def _sudo(argv: List[str]) -> List[str]:

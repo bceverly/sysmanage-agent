@@ -328,42 +328,44 @@ class MessageHandlerQueueMixin:
 
         try:
             while self.agent.connected:
-                # An agent that stays connected for weeks never returns to
-                # on_connection_established, so the prune has to recur here or
-                # retention silently stops applying to exactly the long-lived
-                # agents that need it most.
-                if time.monotonic() >= next_prune:
-                    self._prune_completed_messages()
-                    next_prune = time.monotonic() + self.QUEUE_PRUNE_INTERVAL_SECONDS
-                if self.delivery.due_for_check():
-                    self._resend_unconfirmed()
-
-                # Get pending messages ordered by priority
-                messages = self.queue_manager.dequeue_messages(
-                    direction=QueueDirection.OUTBOUND, limit=10, priority_order=True
-                )
-
-                if not messages:
-                    # No messages to process, wait a bit
-                    await asyncio.sleep(1)
-                    continue
-
-                for message in messages:
-                    if not self.agent.connected:
-                        break  # Connection lost during processing
-
-                    send_failed = await self._process_single_outbound_message(message)
-                    if send_failed:
-                        break  # Connection is likely broken
-
-                # Delay between message sends to prevent WebSocket buffer overflow
-                await asyncio.sleep(1.0)
+                next_prune = await self._outbound_pass(next_prune)
 
         except Exception as error:
             self.logger.error(_("Error in queue processor: %s"), error)
         finally:
             self.queue_processor_running = False
             self.logger.debug("Outbound queue processing stopped")
+
+    async def _outbound_pass(self, next_prune: float) -> float:
+        """One pass of the outbound queue; returns when the next prune is due."""
+        # An agent that stays connected for weeks never returns to
+        # on_connection_established, so the prune has to recur here or
+        # retention silently stops applying to exactly the long-lived
+        # agents that need it most.
+        if time.monotonic() >= next_prune:
+            self._prune_completed_messages()
+            next_prune = time.monotonic() + self.QUEUE_PRUNE_INTERVAL_SECONDS
+        if self.delivery.due_for_check():
+            self._resend_unconfirmed()
+
+        # Get pending messages ordered by priority
+        messages = self.queue_manager.dequeue_messages(
+            direction=QueueDirection.OUTBOUND, limit=10, priority_order=True
+        )
+        if not messages:
+            # No messages to process, wait a bit
+            await asyncio.sleep(1)
+            return next_prune
+
+        for message in messages:
+            if not self.agent.connected:
+                break  # Connection lost during processing
+            if await self._process_single_outbound_message(message):
+                break  # The send failed: the connection is likely broken
+
+        # Delay between message sends to prevent WebSocket buffer overflow
+        await asyncio.sleep(1.0)
+        return next_prune
 
     async def _process_single_outbound_message(self, message) -> bool:
         """Process a single outbound message from the queue.

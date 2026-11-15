@@ -96,7 +96,7 @@ def _load_client_certificate(context: ssl.SSLContext, store: CertificateStore):
         return
     try:
         context.load_cert_chain(str(store.client_cert_path), str(store.client_key_path))
-    except (ssl.SSLError, OSError) as error:
+    except OSError as error:  # ssl.SSLError too
         logger.warning(
             _("This host's certificate could not be loaded and is not presented: %s"),
             error,
@@ -142,7 +142,7 @@ def apply(
     if store.ca_cert_path.exists():
         try:
             context.load_verify_locations(cafile=str(store.ca_cert_path))
-        except (ssl.SSLError, OSError) as error:
+        except OSError as error:  # ssl.SSLError too
             logger.debug("SysManage CA not loaded: %s", error)
     if pin:
         _install_pinning(context, endpoint, store, server)
