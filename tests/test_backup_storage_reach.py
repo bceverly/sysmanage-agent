@@ -146,22 +146,36 @@ def test_a_certificate_curl_accepts_is_accepted_on_strict_pythons(tmp_path):
 
     ca, cert, keyfile = _prod_like_chain(tmp_path)
 
+    async def closed(writer):
+        # Wait for the close to finish: a transport still closing when the
+        # loop ends is reported as unclosed (NetBSD CI, 2026-11-15).
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except (ssl.SSLError, ConnectionError, OSError):
+            pass
+
     async def handshake(context):
         server_side = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         server_side.load_cert_chain(cert, keyfile)
-        server = await asyncio.start_server(lambda r, w: w.close(), "127.0.0.1", 0,
-                                            ssl=server_side)  # fmt: skip
+        # Python 3.11's wait_closed() does not wait for the handlers, so the
+        # server side's close is awaited here too.
+        handlers = []
+        server = await asyncio.start_server(
+            lambda _r, w: handlers.append(asyncio.ensure_future(closed(w))),
+            "127.0.0.1", 0, ssl=server_side)  # fmt: skip
         port = server.sockets[0].getsockname()[1]
         try:
             _r, writer = await asyncio.open_connection(
                 "127.0.0.1", port, ssl=context, server_hostname="localhost")  # fmt: skip
-            writer.close()
+            await closed(writer)
             return True
         except ssl.SSLError:
             return False
         finally:
             server.close()
             await server.wait_closed()
+            await asyncio.gather(*handlers, return_exceptions=True)
 
     # The refusal itself is OpenSSL's: its strict mode (3.0 and later) wants
     # the key identifiers. LibreSSL (OpenBSD's Python) has the same flag but
