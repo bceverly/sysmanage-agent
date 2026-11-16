@@ -138,6 +138,39 @@ def _prod_like_chain(tmp_path):
     return ca.public_bytes(serialization.Encoding.PEM).decode(), cert, keyfile
 
 
+def _handshake(context, cert, keyfile):
+    """True when ``context`` verifies the proxy's certificate in a TLS
+    handshake.  Run over memory BIOs: the same OpenSSL verification as a
+    socket, without a socket or an event loop -- a transport still closing
+    when the loop ended failed NetBSD CI even with every close awaited
+    (2026-11-15, 2026-11-16)."""
+    import ssl  # pylint: disable=import-outside-toplevel
+
+    server_side = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    server_side.load_cert_chain(cert, keyfile)
+    to_server, to_client = ssl.MemoryBIO(), ssl.MemoryBIO()
+    from_client, from_server = ssl.MemoryBIO(), ssl.MemoryBIO()
+    client = context.wrap_bio(to_client, from_client, server_hostname="localhost")
+    server = server_side.wrap_bio(to_server, from_server, server_side=True)
+    done = {"client": False, "server": False}
+    for _ in range(20):
+        for name, side in (("client", client), ("server", server)):
+            if done[name]:
+                continue
+            try:
+                side.do_handshake()
+                done[name] = True
+            except ssl.SSLWantReadError:
+                pass
+            except ssl.SSLError:
+                return False
+        to_server.write(from_client.read())
+        to_client.write(from_server.read())
+        if done["client"] and done["server"]:
+            return True
+    raise AssertionError("the handshake neither finished nor failed")
+
+
 def test_a_certificate_curl_accepts_is_accepted_on_strict_pythons(tmp_path):
     """The check verifies as restate's curl does: the SysManage CA's
     certificates without key identifiers, which Python 3.13 and later refuse
@@ -145,37 +178,6 @@ def test_a_certificate_curl_accepts_is_accepted_on_strict_pythons(tmp_path):
     import ssl  # pylint: disable=import-outside-toplevel
 
     ca, cert, keyfile = _prod_like_chain(tmp_path)
-
-    async def closed(writer):
-        # Wait for the close to finish: a transport still closing when the
-        # loop ends is reported as unclosed (NetBSD CI, 2026-11-15).
-        writer.close()
-        try:
-            await writer.wait_closed()
-        except (ssl.SSLError, ConnectionError, OSError):
-            pass
-
-    async def handshake(context):
-        server_side = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        server_side.load_cert_chain(cert, keyfile)
-        # Python 3.11's wait_closed() does not wait for the handlers, so the
-        # server side's close is awaited here too.
-        handlers = []
-        server = await asyncio.start_server(
-            lambda _r, w: handlers.append(asyncio.ensure_future(closed(w))),
-            "127.0.0.1", 0, ssl=server_side)  # fmt: skip
-        port = server.sockets[0].getsockname()[1]
-        try:
-            _r, writer = await asyncio.open_connection(
-                "127.0.0.1", port, ssl=context, server_hostname="localhost")  # fmt: skip
-            await closed(writer)
-            return True
-        except ssl.SSLError:
-            return False
-        finally:
-            server.close()
-            await server.wait_closed()
-            await asyncio.gather(*handlers, return_exceptions=True)
 
     # The refusal itself is OpenSSL's: its strict mode (3.0 and later) wants
     # the key identifiers. LibreSSL (OpenBSD's Python) has the same flag but
@@ -185,5 +187,5 @@ def test_a_certificate_curl_accepts_is_accepted_on_strict_pythons(tmp_path):
     ) & ssl.create_default_context().verify_flags and ssl.OPENSSL_VERSION.startswith(
         "OpenSSL"
     ):
-        assert asyncio.run(handshake(ssl.create_default_context(cadata=ca))) is False
-    assert asyncio.run(handshake(storage_reach._tls_context(ca))) is True
+        assert _handshake(ssl.create_default_context(cadata=ca), cert, keyfile) is False
+    assert _handshake(storage_reach._tls_context(ca), cert, keyfile) is True
