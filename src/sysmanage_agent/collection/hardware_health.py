@@ -395,7 +395,9 @@ def parse_smartctl_json(data: Dict[str, object]) -> Tuple[str, List[str], Dict]:
         state = FAILED
         reasons.insert(0, reason("smart_failed"))
     elif passed is None and not nvme:
+        # smartctl answered (JSON) but read no health: say so, never blank
         state = UNKNOWN
+        reasons.append(reason("smart_not_read"))
     for field in _SECTOR_FIELDS:
         value = metrics.get(field)
         if isinstance(value, int) and value > 0:
@@ -404,17 +406,59 @@ def parse_smartctl_json(data: Dict[str, object]) -> Tuple[str, List[str], Dict]:
     return state, reasons, metrics
 
 
-def smartctl_drive(report: "Report", run, device: str, ident: str, model) -> None:
-    """One drive through ``smartctl -j -H -A``; without smartctl, the drive
-    is UNKNOWN with the reason (and S6 recommends installing smartmontools)."""
-    rc, out = run(["smartctl", "-j", "-H", "-A", device])
+# NVMe-to-USB bridges smartctl can read but cannot recognize on its own: its
+# drive database matches a bridge by USB ID, and an enclosure's ID is the
+# drive maker's (Seagate One Touch 0bc2:ab73 is a Realtek bridge), so it
+# guesses ATA and every read fails (nas, 2026-11-15).  Tried once per drive,
+# only for USB-attached disks whose plain read failed; sudoers grants exactly
+# these forms.
+USB_BRIDGE_TYPES = ("sntrealtek", "sntjmicron", "sntasmedia")
+# (device, model) -> the bridge type that read it, or "" when none did, so a
+# drive is probed once per agent run, never on every report.
+_bridge_types: Dict[Tuple[str, Optional[str]], str] = {}
+
+
+def _smartctl_read(run, device: str, device_type: Optional[str] = None):
+    """rc, then (state, reasons, metrics) -- or None when smartctl is absent."""
+    argv = ["smartctl", "-d", device_type] if device_type else ["smartctl"]
+    rc, out = run([*argv, "-j", "-H", "-A", device])
     if rc == -1:
+        return rc, None
+    try:
+        return rc, parse_smartctl_json(json.loads(out))
+    except (ValueError, TypeError):
+        return rc, (UNKNOWN, [reason("smartctl_failed", rc=rc)], {})
+
+
+def _through_usb_bridge(run, device: str, model):
+    """The first bridge type that reads ``device``, remembered; or None."""
+    key = (device, model)
+    if key in _bridge_types:
+        known = _bridge_types[key]
+        return _smartctl_read(run, device, known)[1] if known else None
+    _bridge_types[key] = ""
+    for device_type in USB_BRIDGE_TYPES:
+        result = _smartctl_read(run, device, device_type)[1]
+        if result is not None and result[0] != UNKNOWN:
+            _bridge_types[key] = device_type
+            return result
+    return None
+
+
+def smartctl_drive(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    report: "Report", run, device: str, ident: str, model, usb: bool = False
+) -> None:
+    """One drive through ``smartctl -j -H -A``; without smartctl, the drive
+    is UNKNOWN with the reason (and S6 recommends installing smartmontools).
+    A ``usb`` drive smartctl could not read is tried through the NVMe-to-USB
+    bridge types before it is called unknown."""
+    _rc, result = _smartctl_read(run, device)
+    if result is None:
         report.add(DRIVE, ident, model, UNKNOWN, [reason("smartctl_absent")], {}, None)
         return
-    try:
-        state, reasons, metrics = parse_smartctl_json(json.loads(out))
-    except (ValueError, TypeError):
-        state, reasons, metrics = UNKNOWN, [reason("smartctl_failed", rc=rc)], {}
+    if usb and result[0] == UNKNOWN:
+        result = _through_usb_bridge(run, device, model) or result
+    state, reasons, metrics = result
     report.add(DRIVE, ident, model, state, reasons, metrics, "smartctl")
 
 

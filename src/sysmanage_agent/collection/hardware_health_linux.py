@@ -219,13 +219,20 @@ def _sata_disks(read, listdir) -> List[str]:
     return disks
 
 
-def collect_smartctl(report: Report, run, read, listdir) -> None:
+def usb_attached(disk: str, resolve=os.path.realpath) -> bool:
+    """Whether ``disk`` sits behind USB: its sysfs node resolves through a
+    USB device (``.../usb6/6-2/6-2:1.0/host10/...``), as lsblk's TRAN says."""
+    return "/usb" in resolve(f"{SYS_BLOCK}/{disk}")
+
+
+def collect_smartctl(report: Report, run, read, listdir, resolve=None) -> None:
     disks = _sata_disks(read, listdir)
     if not disks:
         return
     for disk in disks:
         model = (read(f"{SYS_BLOCK}/{disk}/device/model") or "").strip() or None
-        smartctl_drive(report, run, f"/dev/{disk}", disk, model)
+        usb = usb_attached(disk, resolve or os.path.realpath)
+        smartctl_drive(report, run, f"/dev/{disk}", disk, model, usb=usb)
     smartctl_source(report, run)
 
 

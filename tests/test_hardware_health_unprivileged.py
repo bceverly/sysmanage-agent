@@ -171,6 +171,12 @@ def test_the_sudoers_grants_exactly_the_health_reads(name):
     assert "NOPASSWD: SYSMANAGE_SMART_READ" in text, name
     for device in ("/dev/sda", "/dev/sdz", "/dev/nvme0", "/dev/nvme15"):
         assert f"/usr/sbin/smartctl -j -H -A {device}" in text, (name, device)
+    # the NVMe-to-USB bridge reads, the same exact forms (2026-11-15)
+    for bridge in hh.USB_BRIDGE_TYPES:
+        for path in ("/usr/sbin", "/usr/bin"):
+            for device in ("/dev/sda", "/dev/sdz"):
+                assert f"{path}/smartctl -d {bridge} -j -H -A {device}" in text
+    assert "NOPASSWD: SYSMANAGE_SMART_USB_REALTEK" in text, name
     # never a wildcard that would also allow -s / -t (drive settings, tests)
     rules = "\n".join(l for l in text.splitlines() if not l.lstrip().startswith("#"))
     assert "smartctl -j -H -A *" not in rules and "/dev/*" not in rules, name

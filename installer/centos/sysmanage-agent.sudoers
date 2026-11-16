@@ -250,6 +250,169 @@ Cmnd_Alias SYSMANAGE_SMART_READ = /usr/sbin/smartctl -j -H -A /dev/sda, \
     /usr/bin/smartctl -j -H -A /dev/nvme14, \
     /usr/bin/smartctl -j -H -A /dev/nvme15
 sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_SMART_READ
+# smartctl through an NVMe-to-USB bridge (2026-11-15): smartctl matches a
+# bridge by USB ID, and an enclosure's ID is the drive maker's, so it guesses
+# ATA and the read fails (a Seagate One Touch on nas, a Realtek bridge).  The
+# agent tries these three bridge types once, only on USB-attached disks whose
+# plain read failed.  Same exact forms as above, read-only (-j -H -A); one
+# alias per bridge type, as sudo caps a list at 128 items.
+Cmnd_Alias SYSMANAGE_SMART_USB_REALTEK = /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sda, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdb, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdc, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdd, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sde, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdf, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdg, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdh, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdi, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdj, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdk, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdl, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdm, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdn, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdo, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdp, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdq, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdr, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sds, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdt, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdu, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdv, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdw, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdx, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdy, \
+    /usr/sbin/smartctl -d sntrealtek -j -H -A /dev/sdz, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sda, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdb, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdc, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdd, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sde, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdf, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdg, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdh, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdi, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdj, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdk, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdl, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdm, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdn, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdo, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdp, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdq, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdr, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sds, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdt, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdu, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdv, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdw, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdx, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdy, \
+    /usr/bin/smartctl -d sntrealtek -j -H -A /dev/sdz
+Cmnd_Alias SYSMANAGE_SMART_USB_JMICRON = /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sda, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdb, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdc, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdd, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sde, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdf, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdg, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdh, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdi, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdj, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdk, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdl, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdm, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdn, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdo, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdp, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdq, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdr, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sds, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdt, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdu, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdv, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdw, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdx, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdy, \
+    /usr/sbin/smartctl -d sntjmicron -j -H -A /dev/sdz, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sda, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdb, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdc, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdd, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sde, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdf, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdg, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdh, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdi, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdj, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdk, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdl, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdm, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdn, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdo, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdp, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdq, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdr, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sds, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdt, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdu, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdv, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdw, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdx, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdy, \
+    /usr/bin/smartctl -d sntjmicron -j -H -A /dev/sdz
+Cmnd_Alias SYSMANAGE_SMART_USB_ASMEDIA = /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sda, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdb, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdc, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdd, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sde, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdf, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdg, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdh, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdi, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdj, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdk, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdl, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdm, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdn, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdo, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdp, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdq, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdr, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sds, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdt, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdu, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdv, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdw, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdx, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdy, \
+    /usr/sbin/smartctl -d sntasmedia -j -H -A /dev/sdz, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sda, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdb, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdc, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdd, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sde, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdf, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdg, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdh, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdi, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdj, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdk, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdl, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdm, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdn, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdo, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdp, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdq, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdr, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sds, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdt, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdu, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdv, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdw, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdx, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdy, \
+    /usr/bin/smartctl -d sntasmedia -j -H -A /dev/sdz
+sysmanage-agent ALL=(ALL) NOPASSWD: SYSMANAGE_SMART_USB_REALTEK, SYSMANAGE_SMART_USB_JMICRON, SYSMANAGE_SMART_USB_ASMEDIA
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/lvs --reportformat json -o lv_name\,vg_name\,segtype\,lv_health_status\,sync_percent\,raid_mismatch_count\,lv_attr
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/lvs --reportformat json -o lv_name\,vg_name\,segtype\,lv_health_status\,sync_percent\,raid_mismatch_count\,lv_attr
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/btrfs filesystem show *
