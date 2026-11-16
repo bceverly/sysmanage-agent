@@ -45,6 +45,7 @@ from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
+from . import package_holds  # pylint: disable=wrong-import-position
 from .update_detection_base import (  # pylint: disable=wrong-import-position
     UpdateDetectorBase,
 )
@@ -101,6 +102,7 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
             )
 
             if result.returncode == 0 and result.stdout.strip():
+                locked = package_holds.pkg_locked()
                 for line in result.stdout.strip().split("\n"):
                     # Parse format: package-version < needs updating (remote has version)
                     match = re.match(
@@ -115,6 +117,7 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
                             "package_manager": "pkg",
                             "is_security_update": False,
                             "is_system_update": False,
+                            "held": match.group(1) in locked,
                         }
                         self.available_updates.append(update)
 

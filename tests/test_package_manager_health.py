@@ -125,3 +125,21 @@ def test_the_sudoers_grant_exactly_the_repair_commands():
     )
     freebsd = (root / "freebsd" / "sysmanage-agent.sudoers").read_text()
     assert "NOPASSWD: /usr/local/sbin/pkg check -d -y\n" in freebsd
+
+
+def test_audit_refused_without_root_reads_the_status_file(tmp_path, monkeypatch):
+    """dpkg 1.22 (Ubuntu 26.04) refuses --audit unprivileged; the status file
+    still says what is half-installed (26.1 lab, 2026-11-16)."""
+    status = tmp_path / "status"
+    status.write_text(
+        "Package: curl\nStatus: install ok installed\n\n"
+        "Package: hello\nStatus: install ok unpacked\n\n"
+        "Package: snapd\nStatus: install ok half-configured\n"
+    )
+    monkeypatch.setattr(health, "DPKG_STATUS", str(status))
+    refused = Tools({"dpkg"}, {("dpkg", "--audit"): (2, "")})
+    found = health.check(run=refused.run, **_probe(refused))
+    assert found["needs_repair"] and found["repairable"]
+    assert found["reason"] == "Packages not fully installed: hello, snapd"
+    status.write_text("Package: curl\nStatus: install ok installed\n")
+    assert health.check(run=refused.run, **_probe(refused))["needs_repair"] is False

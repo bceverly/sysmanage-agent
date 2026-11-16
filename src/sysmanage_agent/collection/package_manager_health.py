@@ -34,6 +34,10 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from src.i18n import _
 
 DPKG_UPDATES = "/var/lib/dpkg/updates"
+DPKG_STATUS = "/var/lib/dpkg/status"
+# dpkg states that mean a package is part-way installed or removed.
+_DPKG_UNFINISHED = ("half-installed", "unpacked", "half-configured",
+                    "triggers-awaited", "triggers-pending")  # fmt: skip
 CHECK_SECONDS = 120
 REPAIR_SECONDS = 1800
 
@@ -101,7 +105,32 @@ def _dpkg_problem(run: Run, listdir: Callable) -> Optional[str]:
     if interrupted:
         return _("dpkg was interrupted")
     code, out = run(["dpkg", "--audit"], CHECK_SECONDS)
-    return _first_line(out) if code == 0 and out.strip() else None
+    if code == 0:
+        return _first_line(out) if out.strip() else None
+    # dpkg 1.22 (Ubuntu 26.04) refuses --audit without root ("unable to check
+    # lock file"), and the agent runs unprivileged: the check found nothing,
+    # whatever was half-installed (26.1 lab, 2026-11-16).  The status file
+    # says the same thing and anyone may read it.
+    unfinished = _dpkg_unfinished(DPKG_STATUS)
+    if unfinished:
+        return _("Packages not fully installed: %s") % ", ".join(unfinished[:5])
+    return None
+
+
+def _dpkg_unfinished(path: str) -> List[str]:
+    """Packages dpkg's status file shows part-way installed or removed."""
+    found, name = [], None
+    try:
+        with open(path, encoding="utf-8", errors="replace") as status:
+            for line in status:
+                if line.startswith("Package: "):
+                    name = line[9:].strip()
+                elif line.startswith("Status: ") and name:
+                    if line.split()[-1] in _DPKG_UNFINISHED:
+                        found.append(name)
+    except OSError:
+        return []
+    return found
 
 
 def _dnf_problem(run: Run, _listdir: Callable) -> Optional[str]:

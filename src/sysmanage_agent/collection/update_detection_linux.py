@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from src.i18n import _
 
+from . import package_holds
 from .linux_system_update_detectors import LinuxSystemUpdateDetector
 from .linux_update_applicators import LinuxUpdateApplicator
 from .linux_update_detectors import LinuxUpdateDetector as LinuxPkgDetector
@@ -39,6 +40,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
     def _detect_apt_updates(self):
         """Detect updates from apt/dpkg (Debian/Ubuntu)."""
         updates = self.pkg_detector.detect_apt_updates()
+        package_holds.mark(updates, package_holds.apt_held())
         # Enhance with APT-specific metadata
         for update in updates:
             update["is_security_update"] = self._is_apt_security_update(

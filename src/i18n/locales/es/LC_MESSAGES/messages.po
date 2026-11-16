@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 13:26-0800\n"
+"POT-Creation-Date: 2026-11-16 12:16-0800\n"
 "Language: es\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -66,7 +66,7 @@ msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
 "Mensaje %s (tipo: %s) excedió el máximo de reintentos, marcado como fallido"
 
-#: src/security/certificate_store.py:142
+#: src/security/certificate_store.py:164
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  No se puede acceder a {config_dir}, recurriendo a {fallback_dir}"
@@ -130,9 +130,7 @@ msgstr ""
 msgid "The server identity request failed: HTTP %s"
 msgstr "La solicitud de identidad del servidor falló: HTTP %s"
 
-#: src/security/server_identity.py:105 src/security/server_pinning.py:160
-#: src/security/server_pinning.py:164 src/security/server_pinning.py:169
-#: src/security/server_pinning.py:173 src/security/server_pinning.py:251
+#: src/security/server_identity.py:105 src/security/server_pinning.py:45
 msgid "The server identity response is incomplete"
 msgstr "La respuesta de identidad del servidor está incompleta"
 
@@ -190,7 +188,11 @@ msgstr ""
 msgid "Could not re-pin this server's identity: %s"
 msgstr "No se pudo volver a fijar la identidad de este servidor: %s"
 
-#: src/security/server_pinning.py:94
+#: src/security/server_pinning.py:46
+msgid "The server identity statement is not readable"
+msgstr "La declaración de identidad del servidor no se puede leer"
+
+#: src/security/server_pinning.py:96
 #, python-format
 msgid ""
 "The server presented a TLS certificate this agent has not pinned (SPKI "
@@ -201,37 +203,32 @@ msgstr ""
 "SHA-256 %s). Se rechazó la conexión. El agente está comprobando si el "
 "servidor ha firmado el nuevo certificado."
 
-#: src/security/server_pinning.py:143 src/security/server_pinning.py:151
+#: src/security/server_pinning.py:145 src/security/server_pinning.py:153
 msgid "The server identity statement has no valid expiry"
 msgstr ""
 "La declaración de identidad del servidor no tiene una caducidad válida"
 
-#: src/security/server_pinning.py:183
+#: src/security/server_pinning.py:185
 msgid "The server's identity certificate was not issued by the pinned CA"
 msgstr ""
 "El certificado de identidad del servidor no fue emitido por la CA fijada"
 
-#: src/security/server_pinning.py:187
+#: src/security/server_pinning.py:189
 msgid "The server's identity certificate is outside its validity period"
 msgstr ""
 "El certificado de identidad del servidor está fuera de su período de validez"
 
-#: src/security/server_pinning.py:206
+#: src/security/server_pinning.py:208
 msgid "The server's identity certificate uses an unsupported key type"
 msgstr ""
 "El certificado de identidad del servidor usa un tipo de clave no compatible"
 
-#: src/security/server_pinning.py:210
+#: src/security/server_pinning.py:212
 msgid ""
 "The server identity statement is not signed by its identity certificate"
 msgstr ""
 "La declaración de identidad del servidor no está firmada por su certificado "
 "de identidad"
-
-#: src/security/server_pinning.py:219 src/security/server_pinning.py:222
-#: src/security/server_pinning.py:227
-msgid "The server identity statement is not readable"
-msgstr "La declaración de identidad del servidor no se puede leer"
 
 #: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
@@ -488,7 +485,16 @@ msgstr ""
 "nuevo subvolumen como root; o 2) elimínelo si esas copias de seguridad ya no"
 " se necesitan."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:223
+#: src/sysmanage_agent/backup/storage_prepare.py:212
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr ""
+"FreeBSD exporta sistemas de archivos completos, así que el repositorio de "
+"cada host necesita su propio dataset ZFS. Ponga la ruta de almacenamiento en"
+" ZFS y vuelva a preparar."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:266
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -498,21 +504,12 @@ msgstr ""
 "exportación no puede limitarse a ella. Espere a que ese host informe sus "
 "datos de red y vuelva a preparar."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:234
+#: src/sysmanage_agent/backup/storage_prepare.py:277
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "La preparación del almacenamiento no es compatible con %(system)s."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:242
-msgid ""
-"FreeBSD exports whole filesystems, so each host's repository needs its own "
-"ZFS dataset. Put the storage path on ZFS, then prepare again."
-msgstr ""
-"FreeBSD exporta sistemas de archivos completos, así que el repositorio de "
-"cada host necesita su propio dataset ZFS. Ponga la ruta de almacenamiento en"
-" ZFS y vuelva a preparar."
-
-#: src/sysmanage_agent/backup/storage_prepare.py:345
+#: src/sysmanage_agent/backup/storage_prepare.py:367
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -523,7 +520,7 @@ msgstr ""
 " que un dataset hijo no quedaría en el repositorio. Cree un dataset montado "
 "ahí (zfs create -o mountpoint=%(path)s POOL/NAME) y vuelva a preparar."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:372
+#: src/sysmanage_agent/backup/storage_prepare.py:394
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -806,7 +803,7 @@ msgstr "No se pudo obtener configuración de red de Windows: %s"
 msgid "Hardware event source %s stopped: %s"
 msgstr "La fuente de eventos de hardware %s se detuvo: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:487
+#: src/sysmanage_agent/collection/hardware_health.py:531
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "Error al recopilar el estado del hardware: %s"
@@ -1206,9 +1203,14 @@ msgstr "Error al recopilar paquetes Chocolatey mediante API: %s"
 msgid "No packages collected from Chocolatey community repository"
 msgstr "No se recopilaron paquetes del repositorio comunitario de Chocolatey"
 
-#: src/sysmanage_agent/collection/package_manager_health.py:96
+#: src/sysmanage_agent/collection/package_manager_health.py:106
 msgid "dpkg was interrupted"
 msgstr "dpkg se interrumpió"
+
+#: src/sysmanage_agent/collection/package_manager_health.py:116
+#, python-format
+msgid "Packages not fully installed: %s"
+msgstr "Paquetes no instalados por completo: %s"
 
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
@@ -1375,119 +1377,119 @@ msgstr "No se pudo detectar las actualizaciones disponibles: %s"
 msgid "Failed to install package %s: %s"
 msgstr "Error al instalar paquete %s: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:122
+#: src/sysmanage_agent/collection/update_detection_bsd.py:125
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "No se pudo detectar las actualizaciones de pkg: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:160
+#: src/sysmanage_agent/collection/update_detection_bsd.py:163
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "Falló al aplicar actualizaciones pkg: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:208
+#: src/sysmanage_agent/collection/update_detection_bsd.py:211
 msgid "OpenBSD upgrade failed"
 msgstr "Actualización de OpenBSD falló"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:223
+#: src/sysmanage_agent/collection/update_detection_bsd.py:226
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "La actualización de OpenBSD agotó el tiempo después de 30 minutos"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:322
+#: src/sysmanage_agent/collection/update_detection_bsd.py:325
 msgid "FreeBSD upgrade failed"
 msgstr "Falló la actualización de FreeBSD"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:335
+#: src/sysmanage_agent/collection/update_detection_bsd.py:338
 msgid "FreeBSD upgrade install failed"
 msgstr "Instalación de actualización de FreeBSD falló"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:341
+#: src/sysmanage_agent/collection/update_detection_bsd.py:344
 msgid "FreeBSD upgrade timed out"
 msgstr "La actualización de FreeBSD expiró"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:407
+#: src/sysmanage_agent/collection/update_detection_bsd.py:410
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "Comando syspatch falló con código de salida %d"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:410
+#: src/sysmanage_agent/collection/update_detection_bsd.py:413
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:413
+#: src/sysmanage_agent/collection/update_detection_bsd.py:416
 msgid "OpenBSD system update detection timed out"
 msgstr "La deteccioñn del sistema OpenBSD agotó el tiempo"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:418
+#: src/sysmanage_agent/collection/update_detection_bsd.py:421
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "No se pudo detectar la actualización del sistema OpenBSD: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:435
+#: src/sysmanage_agent/collection/update_detection_bsd.py:438
 msgid "Failed to get current OpenBSD version"
 msgstr "Error al obtener la versión actual de OpenBSD"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:489
+#: src/sysmanage_agent/collection/update_detection_bsd.py:492
 msgid "Could not parse OpenBSD version from website"
 msgstr "No se pudo analizar la versión de OpenBSD del sitio web"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:493
+#: src/sysmanage_agent/collection/update_detection_bsd.py:496
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "Falló al comprobar la página web de OpenBSD para actualizaciones: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:499
+#: src/sysmanage_agent/collection/update_detection_bsd.py:502
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "No se pudo detectar las actualizaciones de versión de OpenBSD: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:697
+#: src/sysmanage_agent/collection/update_detection_bsd.py:700
 msgid "syspatch command failed"
 msgstr "Comando syspatch falló"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:699
-#: src/sysmanage_agent/collection/update_detection_bsd.py:720
+#: src/sysmanage_agent/collection/update_detection_bsd.py:702
+#: src/sysmanage_agent/collection/update_detection_bsd.py:723
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "Falló al aplicar actualizaciones syspatch: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:710
+#: src/sysmanage_agent/collection/update_detection_bsd.py:713
 msgid "syspatch command timed out"
 msgstr "el comando syspatch se agotó"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:716
+#: src/sysmanage_agent/collection/update_detection_bsd.py:719
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch se agotó después de 10 minutos"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:861
+#: src/sysmanage_agent/collection/update_detection_bsd.py:864
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "Gestor de paquetes no soportado: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:917
+#: src/sysmanage_agent/collection/update_detection_bsd.py:920
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
 msgstr "Falló al aplicar actualizaciones: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:236
+#: src/sysmanage_agent/collection/update_detection_linux.py:238
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
 msgstr "No se pudo detectar la actualización del sistema Linux: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:262
+#: src/sysmanage_agent/collection/update_detection_linux.py:264
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "No se pudo detectar las actualizaciones de versión de Linux: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:329
+#: src/sysmanage_agent/collection/update_detection_linux.py:331
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr "Error al aplicar actualizaciones %s: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:373
+#: src/sysmanage_agent/collection/update_detection_linux.py:375
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "Gestor de paquetes no compatible para aplicar: %s"
@@ -2151,54 +2153,54 @@ msgstr "La consulta falló (%s); se volverá a intentar en %ds"
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "Repruebando si esta red ahora permite conexiones WebSocket"
 
-#: src/sysmanage_agent/communication/message_handler.py:214
+#: src/sysmanage_agent/communication/message_handler.py:230
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "No se pudo colocar en cola el mensaje: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:252
+#: src/sysmanage_agent/communication/message_handler.py:268
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr ""
 "No se pudo colocar en cola la confirmación del comando para el mensaje: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:260
+#: src/sysmanage_agent/communication/message_handler.py:276
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "Error al encolar la confirmación del comando para %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:299
+#: src/sysmanage_agent/communication/message_handler.py:315
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "Error del servidor [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:352
+#: src/sysmanage_agent/communication/message_handler.py:368
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr ""
 "No se pudo analizar la marca de tiempo del mensaje para la comprobación "
 "obsoleta: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:405
-#: src/sysmanage_agent/communication/message_handler.py:752
+#: src/sysmanage_agent/communication/message_handler.py:421
+#: src/sysmanage_agent/communication/message_handler.py:792
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "La registración del host está pendiente de aprobación. Se continuará con "
 "intentos periódicos."
 
-#: src/sysmanage_agent/communication/message_handler.py:416
+#: src/sysmanage_agent/communication/message_handler.py:432
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr ""
 "El servidor reporta un nombre de host faltante en el mensaje. Esto es un "
 "error."
 
-#: src/sysmanage_agent/communication/message_handler.py:419
+#: src/sysmanage_agent/communication/message_handler.py:435
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "El servidor no pudo colar el mensaje: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:440
+#: src/sysmanage_agent/communication/message_handler.py:456
 #, python-format
 msgid ""
 "This host's registration was refused; asking the server again in %d seconds."
@@ -2206,7 +2208,7 @@ msgstr ""
 "Se rechazó el registro de este host; se volverá a consultar al servidor en "
 "%d segundos."
 
-#: src/sysmanage_agent/communication/message_handler.py:478
+#: src/sysmanage_agent/communication/message_handler.py:494
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -2218,7 +2220,7 @@ msgstr ""
 " nuevo este host desde su índice de inquilinos; se re-registrará solo si "
 "persiste."
 
-#: src/sysmanage_agent/communication/message_handler.py:491
+#: src/sysmanage_agent/communication/message_handler.py:507
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -2227,37 +2229,37 @@ msgstr ""
 "host_not_registered persistió (%(n)d golpes) -- tratando a este host como "
 "genuinamente desaparecido; borrando el host_id almacenado y re-registrando"
 
-#: src/sysmanage_agent/communication/message_handler.py:502
+#: src/sysmanage_agent/communication/message_handler.py:518
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "Error al eliminar almacenado host_id: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:558
+#: src/sysmanage_agent/communication/message_handler.py:574
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "Transmisión de %s: fallo en la actualización del inventario: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:568
+#: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "Transmisión de %s: acción desconocida '%s' - ignorada"
 
-#: src/sysmanage_agent/communication/message_handler.py:671
+#: src/sysmanage_agent/communication/message_handler.py:687
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "JSON no válido recibido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:673
+#: src/sysmanage_agent/communication/message_handler.py:689
 #, python-format
 msgid "Error processing message: %s"
 msgstr "Error al procesar el mensaje: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:686
+#: src/sysmanage_agent/communication/message_handler.py:702
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "ERROR_DE_SOCKETS_WEB_DESCONOCIDO: Error del receptor de mensajes: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:704
+#: src/sysmanage_agent/communication/message_handler.py:720
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
@@ -2265,21 +2267,21 @@ msgstr ""
 "Receptor de mensajes: websocket limpiado por desconexión concurrente; "
 "saliendo del bucle de recepción para permitir reconexión"
 
-#: src/sysmanage_agent/communication/message_handler.py:762
+#: src/sysmanage_agent/communication/message_handler.py:755
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "Tipo de mensaje desconocido: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:845
+#: src/sysmanage_agent/communication/message_handler.py:879
 msgid "Heartbeat failed, connection may be lost"
 msgstr "El latido falló, la conexión puede haberse perdido"
 
-#: src/sysmanage_agent/communication/message_handler.py:854
+#: src/sysmanage_agent/communication/message_handler.py:888
 #, python-format
 msgid "Message sender error: %s"
 msgstr "Error en el remitente del mensaje: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:870
+#: src/sysmanage_agent/communication/message_handler.py:904
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "Error al cerrar el manejador de mensajes: %s"
@@ -2318,53 +2320,53 @@ msgstr "No se puede enviar mensaje: no conectado al servidor"
 msgid "Failed to send message directly: %s"
 msgstr "Falló al enviar el mensaje directamente: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:363
+#: src/sysmanage_agent/communication/message_handler_queue.py:334
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "Error en el procesador de la cola: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:411
+#: src/sysmanage_agent/communication/message_handler_queue.py:413
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "Error procesando mensaje en cola %s: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:429
+#: src/sysmanage_agent/communication/message_handler_queue.py:431
 #, python-format
 msgid "The server did not confirm %d message(s); sending them again"
 msgstr "El servidor no confirmó %d mensaje(s); se envían de nuevo"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:433
-#: src/sysmanage_agent/communication/message_handler_queue.py:472
+#: src/sysmanage_agent/communication/message_handler_queue.py:435
+#: src/sysmanage_agent/communication/message_handler_queue.py:474
 #, python-format
 msgid "Error requeuing unconfirmed messages: %s"
 msgstr "Error al volver a poner en cola los mensajes no confirmados: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:442
+#: src/sysmanage_agent/communication/message_handler_queue.py:444
 #, python-format
 msgid "The server refused message %s; it will not be sent again"
 msgstr "El servidor rechazó el mensaje %s; no se volverá a enviar"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:494
+#: src/sysmanage_agent/communication/message_handler_queue.py:496
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "Error al recuperar mensajes atascados: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:525
+#: src/sysmanage_agent/communication/message_handler_queue.py:527
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "Falló la creación de la tarea de procesamiento de cola saliente: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:543
+#: src/sysmanage_agent/communication/message_handler_queue.py:545
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "No se pudo crear la tarea de procesamiento de la cola exprés: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:561
+#: src/sysmanage_agent/communication/message_handler_queue.py:563
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "Falló la creación de la tarea de procesamiento de cola entrante: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:652
+#: src/sysmanage_agent/communication/message_handler_queue.py:654
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "Error recortando mensajes de la cola completada: %s"
@@ -2745,7 +2747,7 @@ msgstr "restate no es utilizable en este host: %s"
 msgid "Could not install the backup jobs: %s"
 msgstr "No se pudieron instalar las tareas de copia de seguridad: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:420
+#: src/sysmanage_agent/operations/backup_operations.py:481
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
@@ -2753,7 +2755,7 @@ msgstr ""
 "Este host no puede cifrar sus copias de seguridad: restate no encuentra gpg."
 " Instale GnuPG y la política de copia de seguridad se envía nuevamente."
 
-#: src/sysmanage_agent/operations/backup_operations.py:456
+#: src/sysmanage_agent/operations/backup_operations.py:500
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2761,12 +2763,12 @@ msgstr ""
 "Este host no tiene cliente NFSv4, por lo que solo realiza copias de "
 "seguridad a través de restate-proxy; su objetivo utiliza NFS."
 
-#: src/sysmanage_agent/operations/backup_operations.py:474
+#: src/sysmanage_agent/operations/backup_operations.py:518
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Esta versión de restate no admite: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:616
+#: src/sysmanage_agent/operations/backup_operations.py:613
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Este restate no puede ejecutar %s como tarea; actualice restate."
@@ -3874,58 +3876,58 @@ msgstr "Falló al comprobar el estado de reinicio: %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "Falló al enviar la actualización del estado de reinicio: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:74
+#: src/sysmanage_agent/operations/update_operations.py:75
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "Falló al comprobar las actualizaciones: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:99
+#: src/sysmanage_agent/operations/update_operations.py:100
 msgid "No packages specified for update"
 msgstr "No se especificaron paquetes para actualización"
 
-#: src/sysmanage_agent/operations/update_operations.py:112
+#: src/sysmanage_agent/operations/update_operations.py:113
 msgid "Updates started in background"
 msgstr "Actualizaciones iniciadas en segundo plano"
 
-#: src/sysmanage_agent/operations/update_operations.py:116
+#: src/sysmanage_agent/operations/update_operations.py:117
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "Falló al iniciar las actualizaciones: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:190
+#: src/sysmanage_agent/operations/update_operations.py:191
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "Se requiere un gestor de paquetes para %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:222
+#: src/sysmanage_agent/operations/update_operations.py:223
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "No se pudo determinar el gestor de paquetes para %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:235
+#: src/sysmanage_agent/operations/update_operations.py:236
 msgid "Failed to send update results, will retry..."
 msgstr "Error al enviar resultados de actualización, reintentando..."
 
-#: src/sysmanage_agent/operations/update_operations.py:245
+#: src/sysmanage_agent/operations/update_operations.py:246
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "Error al enviar resultados de actualización después de %d intentos"
 
-#: src/sysmanage_agent/operations/update_operations.py:273
+#: src/sysmanage_agent/operations/update_operations.py:274
 msgid "Could not send fresh update list - not connected"
 msgstr "No se pudo enviar la lista de actualizaciones frescas - no conectado"
 
-#: src/sysmanage_agent/operations/update_operations.py:308
+#: src/sysmanage_agent/operations/update_operations.py:318
 msgid "No valid packages found for update"
 msgstr "No se encontraron paquetes válidos para actualizar"
 
-#: src/sysmanage_agent/operations/update_operations.py:326
+#: src/sysmanage_agent/operations/update_operations.py:336
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "Falló la rescana para actualizaciones tras lote: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:330
+#: src/sysmanage_agent/operations/update_operations.py:340
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "Proceso de actualización en segundo plano fallido: %s"

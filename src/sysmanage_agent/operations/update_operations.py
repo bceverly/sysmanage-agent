@@ -15,6 +15,7 @@ from typing import Any, Dict
 from src.database import run_ledger
 from src.i18n import _
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
+from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.operations.package_name_guard import package_name_problem
 
 
@@ -271,6 +272,15 @@ class UpdateOperations:
             self.logger.info("Successfully sent fresh update list to server")
         else:
             self.logger.warning(_("Could not send fresh update list - not connected"))
+
+        # Whether the host now needs a reboot changes with what was just
+        # installed (a kernel), so report it even if it equals the last value
+        # sent: the server sets "reboot required" from the update results, and
+        # an unforced report after the reboot ("not required", the same as
+        # before the run) was dropped as unchanged, leaving the host flagged
+        # for up to a day (26.1 lab, 2026-11-16).
+        with send_on_change.forced():
+            await self.agent.update_manager.check_reboot_status()
 
     async def _apply_updates_background(
         self, package_names: list, package_managers, packages_list=None

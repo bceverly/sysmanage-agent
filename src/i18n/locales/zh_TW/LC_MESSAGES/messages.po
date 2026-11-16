@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 13:26-0800\n"
+"POT-Creation-Date: 2026-11-16 12:16-0800\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -65,7 +65,7 @@ msgstr "反序列化訊息 %s 失敗：%s"
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr "訊息 %s (類型: %s) 超過最大重試次數，標記為失敗"
 
-#: src/security/certificate_store.py:142
+#: src/security/certificate_store.py:164
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  無法存取 {config_dir}，回退到 {fallback_dir}"
@@ -126,9 +126,7 @@ msgstr "請重新啟動代理；它會在下次連線時重新固定伺服器。
 msgid "The server identity request failed: HTTP %s"
 msgstr "伺服器身分請求失敗：HTTP %s"
 
-#: src/security/server_identity.py:105 src/security/server_pinning.py:160
-#: src/security/server_pinning.py:164 src/security/server_pinning.py:169
-#: src/security/server_pinning.py:173 src/security/server_pinning.py:251
+#: src/security/server_identity.py:105 src/security/server_pinning.py:45
 msgid "The server identity response is incomplete"
 msgstr "伺服器身分回應不完整"
 
@@ -174,7 +172,11 @@ msgstr "伺服器的 TLS 憑證已變更；新憑證由此伺服器的身分簽�
 msgid "Could not re-pin this server's identity: %s"
 msgstr "無法重新固定此伺服器的身分：%s"
 
-#: src/security/server_pinning.py:94
+#: src/security/server_pinning.py:46
+msgid "The server identity statement is not readable"
+msgstr "伺服器身分聲明無法讀取"
+
+#: src/security/server_pinning.py:96
 #, python-format
 msgid ""
 "The server presented a TLS certificate this agent has not pinned (SPKI "
@@ -182,31 +184,26 @@ msgid ""
 "server has signed the new certificate."
 msgstr "伺服器出示了此代理未固定的 TLS 憑證（SPKI SHA-256 %s）。連線已被拒絕。代理正在檢查伺服器是否已簽署新憑證。"
 
-#: src/security/server_pinning.py:143 src/security/server_pinning.py:151
+#: src/security/server_pinning.py:145 src/security/server_pinning.py:153
 msgid "The server identity statement has no valid expiry"
 msgstr "伺服器身分聲明沒有有效的到期時間"
 
-#: src/security/server_pinning.py:183
+#: src/security/server_pinning.py:185
 msgid "The server's identity certificate was not issued by the pinned CA"
 msgstr "伺服器的身分憑證不是由已固定的 CA 簽發的"
 
-#: src/security/server_pinning.py:187
+#: src/security/server_pinning.py:189
 msgid "The server's identity certificate is outside its validity period"
 msgstr "伺服器的身分憑證不在其有效期內"
 
-#: src/security/server_pinning.py:206
+#: src/security/server_pinning.py:208
 msgid "The server's identity certificate uses an unsupported key type"
 msgstr "伺服器的身分憑證使用了不受支援的金鑰類型"
 
-#: src/security/server_pinning.py:210
+#: src/security/server_pinning.py:212
 msgid ""
 "The server identity statement is not signed by its identity certificate"
 msgstr "伺服器身分聲明未由其身分憑證簽署"
-
-#: src/security/server_pinning.py:219 src/security/server_pinning.py:222
-#: src/security/server_pinning.py:227
-msgid "The server identity statement is not readable"
-msgstr "伺服器身分聲明無法讀取"
 
 #: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
@@ -421,25 +418,25 @@ msgstr ""
 "%(path)s 中已有檔案，但它不是獨立的 btrfs 子磁碟區，而準備作業從不移動備份。請 1) 將其重新命名（例如改為 "
 "%(path)s.old），重新準備，再以 root 身分將其內容複製到新子磁碟區中；或 2) 若不再需要這些備份，則將其刪除。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:223
+#: src/sysmanage_agent/backup/storage_prepare.py:212
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr "FreeBSD 匯出的是整個檔案系統，因此每台主機的存放庫都需要獨立的 ZFS 資料集。請將儲存路徑放在 ZFS 上，然後重新準備。"
+
+#: src/sysmanage_agent/backup/storage_prepare.py:266
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
 msgstr "伺服器尚不知道受備份主機的 IP 位址，因此無法將其匯出限制為該位址。請等待該主機回報其網路資訊，然後重新準備。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:234
+#: src/sysmanage_agent/backup/storage_prepare.py:277
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s 不支援準備儲存。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:242
-msgid ""
-"FreeBSD exports whole filesystems, so each host's repository needs its own "
-"ZFS dataset. Put the storage path on ZFS, then prepare again."
-msgstr "FreeBSD 匯出的是整個檔案系統，因此每台主機的存放庫都需要獨立的 ZFS 資料集。請將儲存路徑放在 ZFS 上，然後重新準備。"
-
-#: src/sysmanage_agent/backup/storage_prepare.py:345
+#: src/sysmanage_agent/backup/storage_prepare.py:367
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -449,7 +446,7 @@ msgstr ""
 "儲存路徑 %(path)s 處未掛載 ZFS 資料集，因此子資料集不會位於存放庫所在位置。請在該處建立一個掛載的資料集（zfs create -o "
 "mountpoint=%(path)s POOL/NAME），然後重新準備。"
 
-#: src/sysmanage_agent/backup/storage_prepare.py:372
+#: src/sysmanage_agent/backup/storage_prepare.py:394
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -726,7 +723,7 @@ msgstr "無法取得Windows網路配置：%s"
 msgid "Hardware event source %s stopped: %s"
 msgstr "硬體事件來源 %s 已停止：%s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:487
+#: src/sysmanage_agent/collection/hardware_health.py:531
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "收集硬體健康狀況失敗：%s"
@@ -1121,9 +1118,14 @@ msgstr "通過 API 收集 Chocolatey 包時出錯：%s"
 msgid "No packages collected from Chocolatey community repository"
 msgstr "未從 Chocolatey 社群儲存庫收集到任何套件"
 
-#: src/sysmanage_agent/collection/package_manager_health.py:96
+#: src/sysmanage_agent/collection/package_manager_health.py:106
 msgid "dpkg was interrupted"
 msgstr "dpkg 已被中斷"
+
+#: src/sysmanage_agent/collection/package_manager_health.py:116
+#, python-format
+msgid "Packages not fully installed: %s"
+msgstr "未完全安裝的套件：%s"
 
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
@@ -1288,119 +1290,119 @@ msgstr "無法檢測可用更新：%s"
 msgid "Failed to install package %s: %s"
 msgstr "安裝套件 %s 失敗：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:122
+#: src/sysmanage_agent/collection/update_detection_bsd.py:125
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "無法檢測 pkg 更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:160
+#: src/sysmanage_agent/collection/update_detection_bsd.py:163
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "無法應用 pkg 更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:208
+#: src/sysmanage_agent/collection/update_detection_bsd.py:211
 msgid "OpenBSD upgrade failed"
 msgstr "OpenBSD 升級失敗"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:223
+#: src/sysmanage_agent/collection/update_detection_bsd.py:226
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "OpenBSD 升級在 30 分鐘後超時"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:322
+#: src/sysmanage_agent/collection/update_detection_bsd.py:325
 msgid "FreeBSD upgrade failed"
 msgstr "FreeBSD 升級失敗"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:335
+#: src/sysmanage_agent/collection/update_detection_bsd.py:338
 msgid "FreeBSD upgrade install failed"
 msgstr "FreeBSD 升級安裝失敗"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:341
+#: src/sysmanage_agent/collection/update_detection_bsd.py:344
 msgid "FreeBSD upgrade timed out"
 msgstr "FreeBSD 升級超時"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:407
+#: src/sysmanage_agent/collection/update_detection_bsd.py:410
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "syspatch 命令以結束碼 %d 失敗"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:410
+#: src/sysmanage_agent/collection/update_detection_bsd.py:413
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:413
+#: src/sysmanage_agent/collection/update_detection_bsd.py:416
 msgid "OpenBSD system update detection timed out"
 msgstr "OpenBSD 系統更新檢測超時"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:418
+#: src/sysmanage_agent/collection/update_detection_bsd.py:421
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "無法檢測 OpenBSD 系統更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:435
+#: src/sysmanage_agent/collection/update_detection_bsd.py:438
 msgid "Failed to get current OpenBSD version"
 msgstr "取得目前 OpenBSD 版本失敗"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:489
+#: src/sysmanage_agent/collection/update_detection_bsd.py:492
 msgid "Could not parse OpenBSD version from website"
 msgstr "無法從網站解析 OpenBSD 版本"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:493
+#: src/sysmanage_agent/collection/update_detection_bsd.py:496
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "無法檢查 OpenBSD 網站上的更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:499
+#: src/sysmanage_agent/collection/update_detection_bsd.py:502
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "無法檢測 OpenBSD 版本升級：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:697
+#: src/sysmanage_agent/collection/update_detection_bsd.py:700
 msgid "syspatch command failed"
 msgstr "syspatch 命令失敗"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:699
-#: src/sysmanage_agent/collection/update_detection_bsd.py:720
+#: src/sysmanage_agent/collection/update_detection_bsd.py:702
+#: src/sysmanage_agent/collection/update_detection_bsd.py:723
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "無法應用 syspatch 更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:710
+#: src/sysmanage_agent/collection/update_detection_bsd.py:713
 msgid "syspatch command timed out"
 msgstr "syspatch 指令超時"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:716
+#: src/sysmanage_agent/collection/update_detection_bsd.py:719
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch 超時，超過 10 分鐘"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:861
+#: src/sysmanage_agent/collection/update_detection_bsd.py:864
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "不支援的套件管理器: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:917
+#: src/sysmanage_agent/collection/update_detection_bsd.py:920
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
 msgstr "無法應用更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:236
+#: src/sysmanage_agent/collection/update_detection_linux.py:238
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
 msgstr "無法檢測 Linux 系統更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:262
+#: src/sysmanage_agent/collection/update_detection_linux.py:264
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "無法檢測 Linux 版本升級：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:329
+#: src/sysmanage_agent/collection/update_detection_linux.py:331
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr "套用 %s 更新失敗：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:373
+#: src/sysmanage_agent/collection/update_detection_linux.py:375
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "不支援的包管理器用於應用：%s"
@@ -2049,53 +2051,53 @@ msgstr "輪詢失敗（%s）；將在 %d 秒後重試"
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "重新測試此網路是否現在允許 WebSocket 連接"
 
-#: src/sysmanage_agent/communication/message_handler.py:214
+#: src/sysmanage_agent/communication/message_handler.py:230
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "將消息加入佇列失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:252
+#: src/sysmanage_agent/communication/message_handler.py:268
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "將命令確認消息加入佇列失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:260
+#: src/sysmanage_agent/communication/message_handler.py:276
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "將 %s 的命令確認放入隊列時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:299
+#: src/sysmanage_agent/communication/message_handler.py:315
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "伺服器錯誤 [%s]：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:352
+#: src/sysmanage_agent/communication/message_handler.py:368
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "無法解析消息時間戳以檢查過期：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:405
-#: src/sysmanage_agent/communication/message_handler.py:752
+#: src/sysmanage_agent/communication/message_handler.py:421
+#: src/sysmanage_agent/communication/message_handler.py:792
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr "主機註冊正在等待批准。將繼續定期嘗試。"
 
-#: src/sysmanage_agent/communication/message_handler.py:416
+#: src/sysmanage_agent/communication/message_handler.py:432
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "伺服器報告消息中缺少主機名。這是一個錯誤。"
 
-#: src/sysmanage_agent/communication/message_handler.py:419
+#: src/sysmanage_agent/communication/message_handler.py:435
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "伺服器無法將消息加入隊列：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:440
+#: src/sysmanage_agent/communication/message_handler.py:456
 #, python-format
 msgid ""
 "This host's registration was refused; asking the server again in %d seconds."
 msgstr "此主機的註冊遭到拒絕；將在 %d 秒後再次詢問伺服器。"
 
-#: src/sysmanage_agent/communication/message_handler.py:478
+#: src/sysmanage_agent/communication/message_handler.py:494
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -2105,64 +2107,64 @@ msgstr ""
 "伺服器報告主機未註冊 (第 %(n)d/%(limit)d 次警告) -- 重新連接而不丟棄 "
 "host_id，以便伺服器可以從其租戶索引中重新解析此主機；如果問題持續將重新註冊。"
 
-#: src/sysmanage_agent/communication/message_handler.py:491
+#: src/sysmanage_agent/communication/message_handler.py:507
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
 msgstr "主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 host_id 並重新註冊。"
 
-#: src/sysmanage_agent/communication/message_handler.py:502
+#: src/sysmanage_agent/communication/message_handler.py:518
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "清除存儲的 host_id 時出錯：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:558
+#: src/sysmanage_agent/communication/message_handler.py:574
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "廣播 %s：存貨刷新失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:568
+#: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "廣播 %s：未知操作 '%s' -- 忽略"
 
-#: src/sysmanage_agent/communication/message_handler.py:671
+#: src/sysmanage_agent/communication/message_handler.py:687
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "收到無效的 JSON： %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:673
+#: src/sysmanage_agent/communication/message_handler.py:689
 #, python-format
 msgid "Error processing message: %s"
 msgstr "處理消息時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:686
+#: src/sysmanage_agent/communication/message_handler.py:702
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: 訊息接收器錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:704
+#: src/sysmanage_agent/communication/message_handler.py:720
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr "消息接收器：WebSocket 由於並發斷開而清除；退出接收循環以允許重新連接"
 
-#: src/sysmanage_agent/communication/message_handler.py:762
+#: src/sysmanage_agent/communication/message_handler.py:755
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "未知消息類型：%s"
 
-#: src/sysmanage_agent/communication/message_handler.py:845
+#: src/sysmanage_agent/communication/message_handler.py:879
 msgid "Heartbeat failed, connection may be lost"
 msgstr "心跳失敗，連接可能已斷開"
 
-#: src/sysmanage_agent/communication/message_handler.py:854
+#: src/sysmanage_agent/communication/message_handler.py:888
 #, python-format
 msgid "Message sender error: %s"
 msgstr "訊息發送者錯誤: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:870
+#: src/sysmanage_agent/communication/message_handler.py:904
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "關閉消息處理程序時出錯：%s"
@@ -2201,53 +2203,53 @@ msgstr "無法傳送訊息：未連線至伺服器"
 msgid "Failed to send message directly: %s"
 msgstr "直接傳送消息失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:363
+#: src/sysmanage_agent/communication/message_handler_queue.py:334
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr "隊列處理器中發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:411
+#: src/sysmanage_agent/communication/message_handler_queue.py:413
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "處理佇列訊息 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:429
+#: src/sysmanage_agent/communication/message_handler_queue.py:431
 #, python-format
 msgid "The server did not confirm %d message(s); sending them again"
 msgstr "伺服器未確認 %d 則訊息；正在重新傳送"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:433
-#: src/sysmanage_agent/communication/message_handler_queue.py:472
+#: src/sysmanage_agent/communication/message_handler_queue.py:435
+#: src/sysmanage_agent/communication/message_handler_queue.py:474
 #, python-format
 msgid "Error requeuing unconfirmed messages: %s"
 msgstr "將未確認的訊息重新加入佇列時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:442
+#: src/sysmanage_agent/communication/message_handler_queue.py:444
 #, python-format
 msgid "The server refused message %s; it will not be sent again"
 msgstr "伺服器拒絕了訊息 %s；不會再次傳送"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:494
+#: src/sysmanage_agent/communication/message_handler_queue.py:496
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "恢復卡住的消息時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:525
+#: src/sysmanage_agent/communication/message_handler_queue.py:527
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "建立出站佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:543
+#: src/sysmanage_agent/communication/message_handler_queue.py:545
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "建立快速佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:561
+#: src/sysmanage_agent/communication/message_handler_queue.py:563
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "建立進階佇列處理任務失敗：%s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:652
+#: src/sysmanage_agent/communication/message_handler_queue.py:654
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "錯誤修剪已完成的隊列消息：%s"
@@ -2614,24 +2616,24 @@ msgstr "restate在此主機上不可用：%s"
 msgid "Could not install the backup jobs: %s"
 msgstr "無法安裝備份作業：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:420
+#: src/sysmanage_agent/operations/backup_operations.py:481
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 msgstr "此主機無法加密其備份：restate 找不到 gpg。安裝 GnuPG 後，備份策略會重新傳送。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:456
+#: src/sysmanage_agent/operations/backup_operations.py:500
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 msgstr "此主機沒有 NFSv4 用戶端，因此只能透過 restate-proxy 備份；它的目標使用 NFS。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:474
+#: src/sysmanage_agent/operations/backup_operations.py:518
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支援：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:616
+#: src/sysmanage_agent/operations/backup_operations.py:613
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 無法將 %s 作為工作執行；請升級 restate。"
@@ -3718,58 +3720,58 @@ msgstr "無法檢查重新啟動狀態：%s"
 msgid "Failed to send reboot status update: %s"
 msgstr "傳送重啟狀態更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:74
+#: src/sysmanage_agent/operations/update_operations.py:75
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "無法檢查更新：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:99
+#: src/sysmanage_agent/operations/update_operations.py:100
 msgid "No packages specified for update"
 msgstr "未指定要更新的套件"
 
-#: src/sysmanage_agent/operations/update_operations.py:112
+#: src/sysmanage_agent/operations/update_operations.py:113
 msgid "Updates started in background"
 msgstr "背景開始更新"
 
-#: src/sysmanage_agent/operations/update_operations.py:116
+#: src/sysmanage_agent/operations/update_operations.py:117
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "啟動更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:190
+#: src/sysmanage_agent/operations/update_operations.py:191
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "未為 %s 指定套件管理器"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:222
+#: src/sysmanage_agent/operations/update_operations.py:223
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "無法確定 %s 的套件管理員"
 
-#: src/sysmanage_agent/operations/update_operations.py:235
+#: src/sysmanage_agent/operations/update_operations.py:236
 msgid "Failed to send update results, will retry..."
 msgstr "發送更新結果失敗，將重試..."
 
-#: src/sysmanage_agent/operations/update_operations.py:245
+#: src/sysmanage_agent/operations/update_operations.py:246
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d 次嘗試後傳送更新結果失敗"
 
-#: src/sysmanage_agent/operations/update_operations.py:273
+#: src/sysmanage_agent/operations/update_operations.py:274
 msgid "Could not send fresh update list - not connected"
 msgstr "無法傳送新的更新清單 - 未連線"
 
-#: src/sysmanage_agent/operations/update_operations.py:308
+#: src/sysmanage_agent/operations/update_operations.py:318
 msgid "No valid packages found for update"
 msgstr "未找到有效的更新套件"
 
-#: src/sysmanage_agent/operations/update_operations.py:326
+#: src/sysmanage_agent/operations/update_operations.py:336
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "批次後重新掃描更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:330
+#: src/sysmanage_agent/operations/update_operations.py:340
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "背景更新過程失敗：%s"

@@ -54,6 +54,18 @@ REFUSAL_RETRY_SECONDS = (60, 120, 300, 600, 900)
 REGISTRATION_RETRY_SECONDS = 10
 
 
+def _boot_time():
+    """When this host last booted (UTC ISO), or None.  The server tells "the
+    host rebooted and came back" from "the agent never stopped" by it, after
+    an automatic update's reboot (ROADMAP 26.1)."""
+    try:
+        import psutil  # pylint: disable=import-outside-toplevel
+
+        return datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc).isoformat()
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+
+
 class MessageHandler(MessageHandlerQueueMixin):
     """
     Message handler that integrates persistent queues with WebSocket communication.
@@ -200,6 +212,9 @@ class MessageHandler(MessageHandlerQueueMixin):
         public_ip = public_ip_fetcher.get()
         if public_ip:
             payload["public_ip"] = public_ip
+        booted = _boot_time()
+        if booted:
+            payload["boot_time"] = booted
         return self.create_message("heartbeat", payload)
 
     async def send_message(self, message: Dict[str, Any]):

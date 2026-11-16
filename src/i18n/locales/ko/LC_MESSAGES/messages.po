@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 13:26-0800\n"
+"POT-Creation-Date: 2026-11-16 12:16-0800\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -65,7 +65,7 @@ msgstr "메시지 %s 역직렬화 실패: %s"
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr "메시지 %s (유형: %s)가 최대 재시도 횟수를 초과하여 실패로 표시됨"
 
-#: src/security/certificate_store.py:142
+#: src/security/certificate_store.py:164
 #, python-brace-format
 msgid "⚠️  Cannot access {config_dir}, falling back to {fallback_dir}"
 msgstr "⚠️  {config_dir}에 접근 불가, {fallback_dir}로 대체"
@@ -126,9 +126,7 @@ msgstr "에이전트를 다시 시작하십시오. 다음 연결 시 서버를 �
 msgid "The server identity request failed: HTTP %s"
 msgstr "서버 신원 요청이 실패했습니다: HTTP %s"
 
-#: src/security/server_identity.py:105 src/security/server_pinning.py:160
-#: src/security/server_pinning.py:164 src/security/server_pinning.py:169
-#: src/security/server_pinning.py:173 src/security/server_pinning.py:251
+#: src/security/server_identity.py:105 src/security/server_pinning.py:45
 msgid "The server identity response is incomplete"
 msgstr "서버 신원 응답이 불완전합니다"
 
@@ -175,7 +173,11 @@ msgstr "서버의 TLS 인증서가 변경되었습니다. 새 인증서는 이 �
 msgid "Could not re-pin this server's identity: %s"
 msgstr "이 서버의 신원을 다시 고정할 수 없습니다: %s"
 
-#: src/security/server_pinning.py:94
+#: src/security/server_pinning.py:46
+msgid "The server identity statement is not readable"
+msgstr "서버 신원 선언문을 읽을 수 없습니다"
+
+#: src/security/server_pinning.py:96
 #, python-format
 msgid ""
 "The server presented a TLS certificate this agent has not pinned (SPKI "
@@ -185,31 +187,26 @@ msgstr ""
 "서버가 이 에이전트가 고정하지 않은 TLS 인증서를 제시했습니다 (SPKI SHA-256 %s). 연결이 거부되었습니다. 에이전트가 "
 "서버가 새 인증서에 서명했는지 확인하고 있습니다."
 
-#: src/security/server_pinning.py:143 src/security/server_pinning.py:151
+#: src/security/server_pinning.py:145 src/security/server_pinning.py:153
 msgid "The server identity statement has no valid expiry"
 msgstr "서버 신원 선언문에 유효한 만료 시각이 없습니다"
 
-#: src/security/server_pinning.py:183
+#: src/security/server_pinning.py:185
 msgid "The server's identity certificate was not issued by the pinned CA"
 msgstr "서버의 신원 인증서가 고정된 CA에서 발급되지 않았습니다"
 
-#: src/security/server_pinning.py:187
+#: src/security/server_pinning.py:189
 msgid "The server's identity certificate is outside its validity period"
 msgstr "서버의 신원 인증서가 유효 기간을 벗어났습니다"
 
-#: src/security/server_pinning.py:206
+#: src/security/server_pinning.py:208
 msgid "The server's identity certificate uses an unsupported key type"
 msgstr "서버의 신원 인증서가 지원되지 않는 키 유형을 사용합니다"
 
-#: src/security/server_pinning.py:210
+#: src/security/server_pinning.py:212
 msgid ""
 "The server identity statement is not signed by its identity certificate"
 msgstr "서버 신원 선언문이 해당 신원 인증서로 서명되지 않았습니다"
-
-#: src/security/server_pinning.py:219 src/security/server_pinning.py:222
-#: src/security/server_pinning.py:227
-msgid "The server identity statement is not readable"
-msgstr "서버 신원 선언문을 읽을 수 없습니다"
 
 #: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
@@ -433,7 +430,15 @@ msgstr ""
 "바꾸고(예: %(path)s.old) 다시 준비한 뒤 root로 그 내용을 새 하위 볼륨에 복사하거나, 2) 해당 백업이 더 이상 필요 "
 "없으면 삭제하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:223
+#: src/sysmanage_agent/backup/storage_prepare.py:212
+msgid ""
+"FreeBSD exports whole filesystems, so each host's repository needs its own "
+"ZFS dataset. Put the storage path on ZFS, then prepare again."
+msgstr ""
+"FreeBSD는 파일 시스템 전체를 내보내므로 각 호스트의 저장소에는 자체 ZFS 데이터셋이 필요합니다. 스토리지 경로를 ZFS에 둔 "
+"다음 다시 준비하세요."
+
+#: src/sysmanage_agent/backup/storage_prepare.py:266
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
@@ -442,20 +447,12 @@ msgstr ""
 "서버가 아직 백업 대상 호스트의 IP 주소를 모르므로 해당 내보내기를 그 주소로 제한할 수 없습니다. 그 호스트가 네트워크 정보를 보고할"
 " 때까지 기다린 다음 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:234
+#: src/sysmanage_agent/backup/storage_prepare.py:277
 #, python-format
 msgid "Preparing storage is not supported on %(system)s."
 msgstr "%(system)s에서는 스토리지 준비가 지원되지 않습니다."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:242
-msgid ""
-"FreeBSD exports whole filesystems, so each host's repository needs its own "
-"ZFS dataset. Put the storage path on ZFS, then prepare again."
-msgstr ""
-"FreeBSD는 파일 시스템 전체를 내보내므로 각 호스트의 저장소에는 자체 ZFS 데이터셋이 필요합니다. 스토리지 경로를 ZFS에 둔 "
-"다음 다시 준비하세요."
-
-#: src/sysmanage_agent/backup/storage_prepare.py:345
+#: src/sysmanage_agent/backup/storage_prepare.py:367
 #, python-format
 msgid ""
 "The storage path %(path)s is not where a ZFS dataset is mounted, so a child "
@@ -465,7 +462,7 @@ msgstr ""
 "스토리지 경로 %(path)s에 ZFS 데이터셋이 마운트되어 있지 않아 하위 데이터셋이 저장소 위치에 만들어지지 않습니다. 그곳에 "
 "마운트되는 데이터셋을 만든 다음(zfs create -o mountpoint=%(path)s POOL/NAME) 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:372
+#: src/sysmanage_agent/backup/storage_prepare.py:394
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -743,7 +740,7 @@ msgstr "Windows 네트워크 구성 정보를 가져오는 데 실패했습니�
 msgid "Hardware event source %s stopped: %s"
 msgstr "하드웨어 이벤트 소스 %s 중지됨: %s"
 
-#: src/sysmanage_agent/collection/hardware_health.py:487
+#: src/sysmanage_agent/collection/hardware_health.py:531
 #, python-format
 msgid "Hardware health collection failed: %s"
 msgstr "하드웨어 상태 수집 실패: %s"
@@ -1138,9 +1135,14 @@ msgstr "Chocolatey API를 통한 Chocolatey 패키지 수집 오류: %s"
 msgid "No packages collected from Chocolatey community repository"
 msgstr "Chocolatey 커뮤니티 저장소에서 패키지가 수집되지 않음"
 
-#: src/sysmanage_agent/collection/package_manager_health.py:96
+#: src/sysmanage_agent/collection/package_manager_health.py:106
 msgid "dpkg was interrupted"
 msgstr "dpkg가 중단되었습니다"
+
+#: src/sysmanage_agent/collection/package_manager_health.py:116
+#, python-format
+msgid "Packages not fully installed: %s"
+msgstr "설치가 완료되지 않은 패키지: %s"
 
 #: src/sysmanage_agent/collection/process_collection.py:171
 #, python-format
@@ -1307,119 +1309,119 @@ msgstr "사용 가능한 업데이트 감지 실패: %s"
 msgid "Failed to install package %s: %s"
 msgstr "패키지 %s 설치 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:122
+#: src/sysmanage_agent/collection/update_detection_bsd.py:125
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "pkg 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:160
+#: src/sysmanage_agent/collection/update_detection_bsd.py:163
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "pkg 업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:208
+#: src/sysmanage_agent/collection/update_detection_bsd.py:211
 msgid "OpenBSD upgrade failed"
 msgstr "OpenBSD 업그레이드 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:223
+#: src/sysmanage_agent/collection/update_detection_bsd.py:226
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "OpenBSD 업그레이드 시간 초과 (30분 경과)"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:322
+#: src/sysmanage_agent/collection/update_detection_bsd.py:325
 msgid "FreeBSD upgrade failed"
 msgstr "FreeBSD 업그레이드 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:335
+#: src/sysmanage_agent/collection/update_detection_bsd.py:338
 msgid "FreeBSD upgrade install failed"
 msgstr "FreeBSD 업그레이드 설치 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:341
+#: src/sysmanage_agent/collection/update_detection_bsd.py:344
 msgid "FreeBSD upgrade timed out"
 msgstr "FreeBSD 업그레이드 시간 초과"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:407
+#: src/sysmanage_agent/collection/update_detection_bsd.py:410
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "syspatch 명령 종료 코드 %d로 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:410
+#: src/sysmanage_agent/collection/update_detection_bsd.py:413
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatchstderr:\\ %s\\"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:413
+#: src/sysmanage_agent/collection/update_detection_bsd.py:416
 msgid "OpenBSD system update detection timed out"
 msgstr "OpenBSD 시스템 업데이트 감지 시간 초과"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:418
+#: src/sysmanage_agent/collection/update_detection_bsd.py:421
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "OpenBSD 시스템 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:435
+#: src/sysmanage_agent/collection/update_detection_bsd.py:438
 msgid "Failed to get current OpenBSD version"
 msgstr "현재 OpenBSD 버전 가져오기 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:489
+#: src/sysmanage_agent/collection/update_detection_bsd.py:492
 msgid "Could not parse OpenBSD version from website"
 msgstr "웹사이트에서 OpenBSD 버전을 구문 분석할 수 없음"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:493
+#: src/sysmanage_agent/collection/update_detection_bsd.py:496
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "OpenBSD 웹사이트에서 업데이트 확인 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:499
+#: src/sysmanage_agent/collection/update_detection_bsd.py:502
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "OpenBSD 버전 업그레이드 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:697
+#: src/sysmanage_agent/collection/update_detection_bsd.py:700
 msgid "syspatch command failed"
 msgstr "syspatch 명령 실패"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:699
-#: src/sysmanage_agent/collection/update_detection_bsd.py:720
+#: src/sysmanage_agent/collection/update_detection_bsd.py:702
+#: src/sysmanage_agent/collection/update_detection_bsd.py:723
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "syspatch 업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:710
+#: src/sysmanage_agent/collection/update_detection_bsd.py:713
 msgid "syspatch command timed out"
 msgstr "syspatch 명령이 시간 초과되었습니다"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:716
+#: src/sysmanage_agent/collection/update_detection_bsd.py:719
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch가 10분 후 시간 초과됨"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:861
+#: src/sysmanage_agent/collection/update_detection_bsd.py:864
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "지원되지 않는 패키지 관리자: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:917
+#: src/sysmanage_agent/collection/update_detection_bsd.py:920
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
 msgstr "업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:236
+#: src/sysmanage_agent/collection/update_detection_linux.py:238
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
 msgstr "Linux 시스템 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:262
+#: src/sysmanage_agent/collection/update_detection_linux.py:264
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "Linux 버전 업그레이드 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:329
+#: src/sysmanage_agent/collection/update_detection_linux.py:331
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr "%s 업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:373
+#: src/sysmanage_agent/collection/update_detection_linux.py:375
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "지원되지 않는 패키지 매니저입니다: %s"
@@ -2070,53 +2072,53 @@ msgstr "폴링 실패(%s); %d초 후 다시 시도합니다"
 msgid "Re-testing whether this network now allows WebSocket connections"
 msgstr "웹소켓 연결이 허용되는지 재검사 중입니다"
 
-#: src/sysmanage_agent/communication/message_handler.py:214
+#: src/sysmanage_agent/communication/message_handler.py:230
 #, python-format
 msgid "Failed to queue message: %s"
 msgstr "메시지를 대기열에 추가하는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:252
+#: src/sysmanage_agent/communication/message_handler.py:268
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr "메시지에 대한 명령 인식을 대기열에 추가하는데 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:260
+#: src/sysmanage_agent/communication/message_handler.py:276
 #, python-format
 msgid "Error queueing command acknowledgment for %s: %s"
 msgstr "%s 명령 확인을 대기열에 추가하는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:299
+#: src/sysmanage_agent/communication/message_handler.py:315
 #, python-format
 msgid "Server error [%s]: %s"
 msgstr "서버 오류 [%s]: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:352
+#: src/sysmanage_agent/communication/message_handler.py:368
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr "메시지 타임스탬프 확인을 위한 메시지 타임스탬프 파싱 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:405
-#: src/sysmanage_agent/communication/message_handler.py:752
+#: src/sysmanage_agent/communication/message_handler.py:421
+#: src/sysmanage_agent/communication/message_handler.py:792
 msgid ""
 "Host registration is pending approval. Will continue periodic attempts."
 msgstr "호스트 등록이 승인 대기 중입니다. 주기적으로 다시 시도합니다."
 
-#: src/sysmanage_agent/communication/message_handler.py:416
+#: src/sysmanage_agent/communication/message_handler.py:432
 msgid "Server reports missing hostname in message. This is a bug."
 msgstr "서버가 메시지에서 호스트 이름이 누락됨을 보고합니다. 이는 버그입니다."
 
-#: src/sysmanage_agent/communication/message_handler.py:419
+#: src/sysmanage_agent/communication/message_handler.py:435
 #, python-format
 msgid "Server failed to queue message: %s"
 msgstr "서버가 메시지를 대기열에 추가하지 못했습니다: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:440
+#: src/sysmanage_agent/communication/message_handler.py:456
 #, python-format
 msgid ""
 "This host's registration was refused; asking the server again in %d seconds."
 msgstr "이 호스트의 등록이 거부되었습니다. %d초 후에 서버에 다시 요청합니다."
 
-#: src/sysmanage_agent/communication/message_handler.py:478
+#: src/sysmanage_agent/communication/message_handler.py:494
 #, python-format
 msgid ""
 "Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
@@ -2126,7 +2128,7 @@ msgstr ""
 "서버에서 host_not_registered (strike %(n)d/%(limit)d)을 보고했습니다 -- 호스트 ID를 제거하지 않고"
 " 재접속합니다. 서버가 해당 호스트를 테넌트 인덱스에서 다시 해결할 수 있도록 합니다; 문제가 지속되면 다시 등록됩니다."
 
-#: src/sysmanage_agent/communication/message_handler.py:491
+#: src/sysmanage_agent/communication/message_handler.py:507
 #, python-format
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
@@ -2135,57 +2137,57 @@ msgstr ""
 "host_not_registered이 계속 발생 (%(n)d 번째 스트라이크) -- 이 호스트를 실제로 사라진 것으로 처리합니다. 저장된"
 " host_id를 제거하고 재등록합니다."
 
-#: src/sysmanage_agent/communication/message_handler.py:502
+#: src/sysmanage_agent/communication/message_handler.py:518
 #, python-format
 msgid "Error clearing stored host_id: %s"
 msgstr "저장된 host_id 삭제 오류: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:558
+#: src/sysmanage_agent/communication/message_handler.py:574
 #, python-format
 msgid "Broadcast %s: inventory refresh failed: %s"
 msgstr "%s: 인벤토리 갱신 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:568
+#: src/sysmanage_agent/communication/message_handler.py:584
 #, python-format
 msgid "Broadcast %s: unknown action '%s' -- ignored"
 msgstr "%s: 알 수 없는 액션 '%s' -- 무시됨"
 
-#: src/sysmanage_agent/communication/message_handler.py:671
+#: src/sysmanage_agent/communication/message_handler.py:687
 #, python-format
 msgid "Invalid JSON received: %s"
 msgstr "잘못된 JSON이 수신되었습니다: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:673
+#: src/sysmanage_agent/communication/message_handler.py:689
 #, python-format
 msgid "Error processing message: %s"
 msgstr "메시지 처리 중 오류: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:686
+#: src/sysmanage_agent/communication/message_handler.py:702
 #, python-format
 msgid "WEBSOCKET_UNKNOWN_ERROR: Message receiver error: %s"
 msgstr "WEBSOCKET_UNKNOWN_ERROR: 메시지 수신 오류: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:704
+#: src/sysmanage_agent/communication/message_handler.py:720
 msgid ""
 "Message receiver: websocket cleared by concurrent disconnect; exiting "
 "receive loop to allow reconnect"
 msgstr "메시지 수신자: 웹소켓이 동시 연결 해제로 인해 비워졌습니다; 다시 연결을 허용하기 위해 수신 루프를 종료합니다"
 
-#: src/sysmanage_agent/communication/message_handler.py:762
+#: src/sysmanage_agent/communication/message_handler.py:755
 #, python-format
 msgid "Unknown message type: %s"
 msgstr "알 수 없는 메시지 유형: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:845
+#: src/sysmanage_agent/communication/message_handler.py:879
 msgid "Heartbeat failed, connection may be lost"
 msgstr "심장 박동 실패, 연결이 끊어질 수 있습니다"
 
-#: src/sysmanage_agent/communication/message_handler.py:854
+#: src/sysmanage_agent/communication/message_handler.py:888
 #, python-format
 msgid "Message sender error: %s"
 msgstr "메시지 송신 오류: %s"
 
-#: src/sysmanage_agent/communication/message_handler.py:870
+#: src/sysmanage_agent/communication/message_handler.py:904
 #, python-format
 msgid "Error closing message handler: %s"
 msgstr "메시지 핸들러 닫기 오류: %s"
@@ -2224,53 +2226,53 @@ msgstr "메시지를 보낼 수 없음: 서버에 연결되지 않음"
 msgid "Failed to send message directly: %s"
 msgstr "메시지를 직접 전송할 수 없습니다: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:363
+#: src/sysmanage_agent/communication/message_handler_queue.py:334
 #, python-format
 msgid "Error in queue processor: %s"
 msgstr " 대기열 프로세서에서 오류: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:411
+#: src/sysmanage_agent/communication/message_handler_queue.py:413
 #, python-format
 msgid "Error processing queued message %s: %s"
 msgstr "큐 메시지 %s 처리 중 오류 발생: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:429
+#: src/sysmanage_agent/communication/message_handler_queue.py:431
 #, python-format
 msgid "The server did not confirm %d message(s); sending them again"
 msgstr "서버가 메시지 %d개를 확인하지 않아 다시 보냅니다"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:433
-#: src/sysmanage_agent/communication/message_handler_queue.py:472
+#: src/sysmanage_agent/communication/message_handler_queue.py:435
+#: src/sysmanage_agent/communication/message_handler_queue.py:474
 #, python-format
 msgid "Error requeuing unconfirmed messages: %s"
 msgstr "확인되지 않은 메시지를 다시 대기열에 넣는 중 오류가 발생했습니다: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:442
+#: src/sysmanage_agent/communication/message_handler_queue.py:444
 #, python-format
 msgid "The server refused message %s; it will not be sent again"
 msgstr "서버가 메시지 %s을(를) 거부했습니다. 다시 보내지 않습니다"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:494
+#: src/sysmanage_agent/communication/message_handler_queue.py:496
 #, python-format
 msgid "Error recovering stuck messages: %s"
 msgstr "걸린 메시지 복구 중 오류: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:525
+#: src/sysmanage_agent/communication/message_handler_queue.py:527
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
 msgstr "아웃바운드 큐 처리 작업 생성 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:543
+#: src/sysmanage_agent/communication/message_handler_queue.py:545
 #, python-format
 msgid "Failed to create express queue processing task: %s"
 msgstr "익스프레스 큐 처리 작업 생성 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:561
+#: src/sysmanage_agent/communication/message_handler_queue.py:563
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
 msgstr "인바운드 큐 처리 작업 생성 실패: %s"
 
-#: src/sysmanage_agent/communication/message_handler_queue.py:652
+#: src/sysmanage_agent/communication/message_handler_queue.py:654
 #, python-format
 msgid "Error pruning completed queue messages: %s"
 msgstr "완료된 큐 메시지 정리 중 오류: %s"
@@ -2638,26 +2640,26 @@ msgstr "restate는 이 호스트에서 사용할 수 없습니다: %s"
 msgid "Could not install the backup jobs: %s"
 msgstr "백업 작업을 설치할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:420
+#: src/sysmanage_agent/operations/backup_operations.py:481
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 msgstr ""
 "이 호스트는 백업을 암호화할 수 없습니다: restate가 gpg를 찾지 못합니다. GnuPG를 설치하면 백업 정책이 다시 전송됩니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:456
+#: src/sysmanage_agent/operations/backup_operations.py:500
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 msgstr ""
 "이 호스트에는 NFSv4 클라이언트가 없으므로 restate-proxy를 통해서만 백업합니다. 이 호스트의 대상은 NFS를 사용합니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:474
+#: src/sysmanage_agent/operations/backup_operations.py:518
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:616
+#: src/sysmanage_agent/operations/backup_operations.py:613
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "이 restate는 %s을(를) 작업으로 실행할 수 없습니다. restate를 업그레이드하세요."
@@ -3745,58 +3747,58 @@ msgstr "리부팅 상태 확인 실패: %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "재부팅 상태 업데이트 전송 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:74
+#: src/sysmanage_agent/operations/update_operations.py:75
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "업데이트 확인 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:99
+#: src/sysmanage_agent/operations/update_operations.py:100
 msgid "No packages specified for update"
 msgstr "업데이트할 패키지가 지정되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:112
+#: src/sysmanage_agent/operations/update_operations.py:113
 msgid "Updates started in background"
 msgstr "백그라운드에서 업데이트가 시작되었습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:116
+#: src/sysmanage_agent/operations/update_operations.py:117
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "_업데이트_ 시작 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:190
+#: src/sysmanage_agent/operations/update_operations.py:191
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "패키지 매니저를 지정하지 않은 %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:222
+#: src/sysmanage_agent/operations/update_operations.py:223
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "%s에 대한 패키지 관리자를 확인할 수 없음"
 
-#: src/sysmanage_agent/operations/update_operations.py:235
+#: src/sysmanage_agent/operations/update_operations.py:236
 msgid "Failed to send update results, will retry..."
 msgstr "업데이트 결과 전송에 실패했습니다. 다시 시도합니다..."
 
-#: src/sysmanage_agent/operations/update_operations.py:245
+#: src/sysmanage_agent/operations/update_operations.py:246
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d번의 시도 후 업데이트 결과 전송 실패"
 
-#: src/sysmanage_agent/operations/update_operations.py:273
+#: src/sysmanage_agent/operations/update_operations.py:274
 msgid "Could not send fresh update list - not connected"
 msgstr "최신 업데이트 목록을 보낼 수 없음 - 연결되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:308
+#: src/sysmanage_agent/operations/update_operations.py:318
 msgid "No valid packages found for update"
 msgstr "업데이트할 유효한 패키지를 찾을 수 없습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:326
+#: src/sysmanage_agent/operations/update_operations.py:336
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "배치 후 업데이트 스캔 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:330
+#: src/sysmanage_agent/operations/update_operations.py:340
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "배경 업데이트 프로세스 실패: %s"

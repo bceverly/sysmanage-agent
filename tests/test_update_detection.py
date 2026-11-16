@@ -204,7 +204,9 @@ class TestUpdateDetector:
             returncode=0, stdout="test-package-1.0 < needs updating (remote has 2.0)"
         )
 
-        mock_run.side_effect = [mock_update, mock_version]
+        # 26.1: the scan also reads the locked packages (none here).
+        mock_locks = Mock(returncode=0, stdout="Currently locked packages:\n")
+        mock_run.side_effect = [mock_update, mock_version, mock_locks]
 
         with patch("platform.system", return_value="FreeBSD"):
             detector = UpdateDetector()
