@@ -55,6 +55,7 @@ _TYPE_A = 1
 _TYPE_PTR = 12
 _TYPE_AAAA = 28
 _TYPE_SRV = 33
+_TYPE_TXT = 16
 _TYPE_NB = 0x20
 
 _DHCP_MAGIC = b"\x63\x82\x53\x63"
@@ -259,6 +260,46 @@ def _mdns_record(found, payload, src, response, addresses, record) -> None:
             _add(found, target)
 
 
+# TXT keys that name a device's MODEL (ROADMAP 26.10): Apple's _device-info
+# ``model=`` (Macs, iPhones, iPads) and _companion-link ``rpMd=``.  Nothing
+# else from a TXT record leaves the agent.
+_MODEL_KEYS = ("model=", "rpmd=")
+MAX_MODEL = 48
+
+
+def _txt_strings(rdata: bytes) -> List[str]:
+    out, offset = [], 0
+    while offset < len(rdata):
+        length = rdata[offset]
+        value = rdata[offset + 1 : offset + 1 + length]
+        if len(value) != length:
+            break
+        out.append(value.decode("utf-8", "replace"))
+        offset += 1 + length
+    return out
+
+
+def mdns_models(payload: bytes) -> List[str]:
+    """``["model=iPhone15,2", ...]``: the model a device announces in mDNS TXT
+    records (26.10), printable and bounded.  Best effort; never raises."""
+    try:
+        _flags, records = _records(payload)
+    except (_Malformed, struct.error, ValueError, IndexError):
+        return []
+    found: List[str] = []
+    for _section, _name, rtype, _offset, rdata in records:
+        if rtype != _TYPE_TXT:
+            continue
+        for entry in _txt_strings(rdata):
+            key, _, value = entry.partition("=")
+            value = "".join(c for c in value if c.isprintable())[:MAX_MODEL].strip()
+            if f"{key.lower()}=" in _MODEL_KEYS and value:
+                item = f"{key}={value}"
+                if item not in found:
+                    found.append(item)
+    return found[:MAX_NAMES_PER_PACKET]
+
+
 def llmnr_names(payload: bytes, src: str) -> List[str]:
     """Names in an LLMNR RESPONSE whose address record is the sender's."""
     try:
@@ -360,9 +401,25 @@ def _client_fqdn(value: bytes) -> Optional[str]:
     return value[3:].decode("ascii", "replace")
 
 
+def dhcp_fingerprint(options: Dict[int, bytes]) -> List[str]:
+    """What a DHCP client says about itself (26.10): option 55, the
+    parameters it asks for in its own order (``prl:1,121,3,6,...``, which
+    differs by operating system), and option 60, its vendor class
+    (``vendor:android-dhcp-14``, ``vendor:MSFT 5.0``)."""
+    out: List[str] = []
+    if options.get(55):
+        out.append("prl:" + ",".join(str(b) for b in options[55][:64]))
+    vendor = options.get(60)
+    if vendor:
+        text = "".join(c for c in vendor.decode("ascii", "replace") if c.isprintable())
+        if text.strip():
+            out.append("vendor:" + text.strip()[:64])
+    return out
+
+
 def dhcp_client_names(payload: bytes) -> Optional[Dict[str, object]]:
-    """``{"mac", "ip", "names": [(name, source), ...]}`` from a client's
-    DISCOVER / REQUEST / INFORM, or None.
+    """``{"mac", "ip", "names": [(name, source), ...], "fingerprint": [...]}``
+    from a client's DISCOVER / REQUEST / INFORM, or None.
 
     ``ip`` is ``ciaddr`` (the address the client already holds) or None --
     never the requested address, which the server has not granted yet.
@@ -395,7 +452,8 @@ def _dhcp(payload: bytes) -> Optional[Dict[str, object]]:
             name = clean_name(decode(options[code]))
             if name:
                 names.append((name, source))
-    if not names:
+    fingerprint = dhcp_fingerprint(options)
+    if not names and not fingerprint:
         return None
     mac = ":".join(f"{b:02x}" for b in payload[28:34])
     # ciaddr is all-zero until the client holds a lease (DISCOVER, and a
@@ -405,6 +463,7 @@ def _dhcp(payload: bytes) -> Optional[Dict[str, object]]:
         "mac": mac,
         "ip": None if ciaddr == b"\x00\x00\x00\x00" else socket.inet_ntoa(ciaddr),
         "names": names,
+        "fingerprint": fingerprint,
     }
 
 

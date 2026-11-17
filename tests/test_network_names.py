@@ -216,7 +216,8 @@ class TestNetbios:
 class TestDhcp:
     def test_discover_host_name_keyed_by_chaddr(self):
         out = names.dhcp_client_names(_dhcp([(12, b"brians-iphone")]))
-        assert out == {"mac": MAC, "ip": None, "names": [("brians-iphone", "dhcp")]}
+        assert out == {"mac": MAC, "ip": None, "names": [("brians-iphone", "dhcp")],
+                       "fingerprint": []}  # fmt: skip
 
     def test_request_fqdn_ascii_and_host_name(self):
         fqdn = bytes([0x01, 0, 0]) + b"laptop.corp.example"
@@ -483,3 +484,58 @@ class TestReverseNames:
         again = MagicMock()
         ops.NetworkDiscoveryOperations(MagicMock(), collector=again).load_persisted()
         assert again.name_lookups is True
+
+
+# --------------------------------------------------------------------------
+# 26.10: what a device says it IS -- its model and its DHCP fingerprint
+# --------------------------------------------------------------------------
+
+
+def _txt(*entries):
+    return b"".join(bytes([len(e.encode())]) + e.encode() for e in entries)
+
+
+class TestModelsAndFingerprints:
+    def test_the_model_a_device_announces(self):
+        packet = _dns(RESPONSE, answers=[
+            _rr("Bryans-iPhone._device-info._tcp.local", 16, _txt("model=iPhone15,2", "osxvers=24")),
+            _rr("Bryans-iPhone._companion-link._tcp.local", 16, _txt("rpMd=iPhone15,2", "rpVr=550.1")),
+        ])  # fmt: skip
+        # Only model keys leave the agent, each once.
+        assert names.mdns_models(packet) == ["model=iPhone15,2", "rpMd=iPhone15,2"]
+
+    def test_other_txt_records_and_garbage_say_nothing(self):
+        packet = _dns(
+            RESPONSE, answers=[_rr("x._ipp._tcp.local", 16, _txt("ty=HP LaserJet"))]
+        )
+        assert names.mdns_models(packet) == []
+        assert names.mdns_models(b"\x00" * 5) == []
+
+    def test_dhcp_fingerprint_option_55_and_60(self):
+        packet = _dhcp([(12, b"Pixel-8"), (55, bytes([1, 3, 6, 15, 26, 28, 51, 58, 59, 43])),
+                        (60, b"android-dhcp-14")])  # fmt: skip
+        found = names.dhcp_client_names(packet)
+        assert found["fingerprint"] == ["prl:1,3,6,15,26,28,51,58,59,43",
+                                        "vendor:android-dhcp-14"]  # fmt: skip
+
+    def test_a_fingerprint_without_a_name_still_counts(self):
+        packet = _dhcp([(55, bytes([1, 121, 3, 6, 15, 119, 252]))])
+        found = names.dhcp_client_names(packet)
+        assert found["names"] == [] and found["fingerprint"] == [
+            "prl:1,121,3,6,15,119,252"
+        ]
+
+    def test_the_collector_reports_both(self):
+        sink = nd._Accumulator()
+        nd.parse_frame(
+            sink, _frame(MAC, "0.0.0.0", 68, 67, _dhcp([(60, b"MSFT 5.0")])), "eth0"
+        )
+        mdns = _dns(
+            RESPONSE,
+            answers=[_rr("m._device-info._tcp.local", 16, _txt("model=iPad13,1"))],
+        )
+        nd.parse_frame(sink, _frame(MAC, SRC, 5353, 5353, mdns, "224.0.0.251"), "eth0")
+        devices, _overflow = sink.drain()
+        observation = nd._observation(devices[MAC])
+        assert observation["evidence"]["dhcp"] == ["vendor:MSFT 5.0"]
+        assert observation["evidence"]["mdns_models"] == ["model=iPad13,1"]

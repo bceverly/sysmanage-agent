@@ -253,6 +253,8 @@ class _Accumulator:
         ssdp=None,
         searches=None,
         names=None,
+        models=None,
+        dhcp=None,
     ):
         with self._lock:
             row = self._devices.get(key)
@@ -262,14 +264,17 @@ class _Accumulator:
                     return
                 row = {"mac": mac, "ips": [], "interface": iface, "methods": set(),
                        "count": 0, "mdns": [], "ssdp": [],
-                       "ssdp_searches": [], "hostnames": []}  # fmt: skip
+                       "ssdp_searches": [], "hostnames": [],
+                       "mdns_models": [], "dhcp": []}  # fmt: skip
                 self._devices[key] = row
             if ip and ip not in row["ips"] and len(row["ips"]) < 10:
                 row["ips"].append(ip)
             row["methods"].add(method)
             row["count"] += 1
             _merge_evidence(
-                row, {"mdns": mdns, "ssdp": ssdp, "ssdp_searches": searches}
+                row,
+                {"mdns": mdns, "ssdp": ssdp, "ssdp_searches": searches,
+                 "mdns_models": models, "dhcp": dhcp},  # fmt: skip
             )
             if names:
                 note_names(row["hostnames"], names, _now_iso())
@@ -348,7 +353,8 @@ def _parse_udp(sink: "_Accumulator", body: bytes, mac: str, iface: str) -> None:
     if _MDNS[1] in (sport, dport):
         sink.note(mac, mac, src, iface, "mdns", mdns=mdns_services(payload),
                   names=_sourced(network_names.mdns_names(payload, src),
-                                 network_names.SOURCE_MDNS))  # fmt: skip
+                                 network_names.SOURCE_MDNS),
+                  models=network_names.mdns_models(payload))  # fmt: skip
     elif _SSDP[1] in (sport, dport):
         identity, searches = ssdp_parse(payload)
         sink.note(mac, mac, src, iface, "ssdp", ssdp=identity, searches=searches)
@@ -358,7 +364,7 @@ def _parse_udp(sink: "_Accumulator", body: bytes, mac: str, iface: str) -> None:
             # Keyed by the CLIENT's hardware address (chaddr): a DISCOVER
             # comes from 0.0.0.0, so it has no address to key by.
             sink.note(client["mac"], client["mac"], client["ip"], iface, "dhcp",
-                      names=client["names"])  # fmt: skip
+                      names=client["names"], dhcp=client["fingerprint"])  # fmt: skip
     elif _NETBIOS_NS_PORT in (sport, dport):
         _note_named(sink, mac, src, iface, "netbios",
                     network_names.netbios_names(payload, src))  # fmt: skip
@@ -438,6 +444,7 @@ class _MulticastListener(threading.Thread):
                         "mdns",
                         mdns=mdns_services(payload),
                         names=_sourced(names, network_names.SOURCE_MDNS),
+                        models=network_names.mdns_models(payload),
                     )
                 else:
                     identity, searches = ssdp_parse(payload)
@@ -693,7 +700,7 @@ def _fold(into, other) -> None:
     for ip in other["ips"]:
         if ip not in into["ips"]:
             into["ips"].append(ip)
-    for kind in ("mdns", "ssdp", "ssdp_searches"):
+    for kind in ("mdns", "ssdp", "ssdp_searches", "mdns_models", "dhcp"):
         mine = into.setdefault(kind, [])
         mine += [x for x in other.get(kind, []) if x not in mine]
     names = into.setdefault("hostnames", [])
@@ -715,5 +722,9 @@ def _observation(device: Dict[str, Any]) -> Dict[str, Any]:
             "ssdp": device["ssdp"],
             # What the device searched for -- never identity (see ssdp_parse).
             "ssdp_searches": device.get("ssdp_searches", []),
+            # 26.10: the model a device announces (``model=iPhone15,2``) and
+            # what its DHCP client says (``prl:...``, ``vendor:...``).
+            "mdns_models": device.get("mdns_models", []),
+            "dhcp": device.get("dhcp", []),
         },
     }
