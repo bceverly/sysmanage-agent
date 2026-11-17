@@ -430,7 +430,9 @@ def dhcp_client_names(payload: bytes) -> Optional[Dict[str, object]]:
         return None
 
 
-def _dhcp(payload: bytes) -> Optional[Dict[str, object]]:
+def _client_options(payload: bytes) -> Optional[Dict[int, bytes]]:
+    """The options of a client's own DISCOVER / REQUEST / INFORM on this
+    segment, or None for anything else."""
     if len(payload) < 240 or payload[0] != 1 or payload[236:240] != _DHCP_MAGIC:
         return None  # not a BOOTREQUEST
     if payload[1] != 1 or payload[2] != 6:
@@ -443,6 +445,10 @@ def _dhcp(payload: bytes) -> Optional[Dict[str, object]]:
     kind = options.get(53, b"")
     if len(kind) != 1 or kind[0] not in _DHCP_CLIENT_MESSAGES:
         return None
+    return options
+
+
+def _dhcp_names(options: Dict[int, bytes]) -> List[Tuple[str, str]]:
     names: List[Tuple[str, str]] = []
     for code, source, decode in (
         (81, SOURCE_DHCP_FQDN, _client_fqdn),
@@ -452,6 +458,14 @@ def _dhcp(payload: bytes) -> Optional[Dict[str, object]]:
             name = clean_name(decode(options[code]))
             if name:
                 names.append((name, source))
+    return names
+
+
+def _dhcp(payload: bytes) -> Optional[Dict[str, object]]:
+    options = _client_options(payload)
+    if options is None:
+        return None
+    names = _dhcp_names(options)
     fingerprint = dhcp_fingerprint(options)
     if not names and not fingerprint:
         return None
