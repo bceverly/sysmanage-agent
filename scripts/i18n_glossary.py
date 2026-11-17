@@ -164,8 +164,13 @@ GLOSSARY: Dict[str, str] = {
     "on; several hosts can share one (multi-boot). NOT machinery. In "
     "'machine translation' or 'machine-readable' it keeps its usual sense",
     "parent host": "the machine a child host runs on",
-    "fleet": "all the machines under management, taken as a group. NOT ships, "
-    "and NOT a convoy of vehicles",
+    "fleet": "all the machines under management, taken as a group -- or, in "
+    "a fleet-by-fleet rollout of updates, one named group of them (the hosts "
+    "carrying a tag) patched together before the next. NOT ships, and NOT a "
+    "convoy of vehicles",
+    "soak time": "how long a group of hosts that was just updated is watched "
+    "for problems before the next group is updated (an observation period). "
+    "NOT soaking in liquid",
     "agent": "the SysManage program installed on a managed host. NOT a person "
     "or a representative",
     "inventory": "a NAMED SET OF HOSTS selected for work. NOT warehouse "

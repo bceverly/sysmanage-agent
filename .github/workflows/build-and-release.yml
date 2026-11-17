@@ -4137,14 +4137,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     needs: release
-    env:
-      # snapcore/action-build@v1 is pinned on Node.js 20, which GitHub
-      # removes from runners on 2026-09-16.  This flag tells the runner
-      # to force-run JS actions on Node.js 24 until snapcore ships a
-      # Node 24-native release.  Drop this env once we bump to a
-      # snapcore action SHA that targets Node 24.
-      # See: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
     steps:
       - name: Checkout code
@@ -4178,11 +4170,46 @@ jobs:
           echo "Tarball created successfully"
           ls -lh installer/ubuntu-snap-strict/sysmanage-agent-src.tar.gz
 
+      - name: Install LXD and Snapcraft
+        run: |
+          # Replaces snapcore/action-build (2026-11-17): it installs LXD and
+          # Snapcraft with no retry, so one Snap Store timeout failed the
+          # release.  Same setup as the action, but each Snap Store call is
+          # retried with exponential back off: 15s, 30s, 60s, 120s, 240s
+          # between six tries (about 8 min).
+          retry() {
+            delay=15
+            for attempt in 1 2 3 4 5 6; do
+              if "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -eq 6 ]; then
+                echo "::error::'$*' failed 6 times; the Snap Store is unreachable"
+                return 1
+              fi
+              echo "::warning::'$*' failed (try $attempt of 6); retrying in ${delay}s"
+              sleep "$delay"
+              delay=$((delay * 2))
+            done
+          }
+          [ "$(stat -c %u:%g /)" = 0:0 ] || sudo chown root:root /
+          sudo groupadd --force --system lxd
+          sudo usermod --append --groups lxd "$(id -un)"
+          retry sudo snap install lxd
+          sudo lxd init --auto
+          sudo iptables -P FORWARD ACCEPT
+          retry sudo snap install --channel stable --classic snapcraft
+
       - name: Build snap with snapcraft
-        uses: snapcore/action-build@3bdaa03e1ba6bf59a65f84a751d943d549a54e79 # v1
-        id: build_snap
-        with:
-          path: installer/ubuntu-snap-strict
+        working-directory: installer/ubuntu-snap-strict
+        env:
+          SNAPCRAFT_BUILD_ENVIRONMENT: lxd
+          SNAPCRAFT_BUILD_INFO: '1'
+          SNAPCRAFT_IMAGE_INFO: '{"build_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+        run: |
+          # As the action ran it: sudo -u starts a fresh login for this user,
+          # so the lxd group added above applies.
+          sudo -u "$(id -un)" -E snapcraft
 
       - name: List built snap
         run: |
@@ -4194,15 +4221,6 @@ jobs:
           SNAP_FILE=$(ls installer/ubuntu-snap-strict/sysmanage-agent-strict_*.snap | head -1)
           echo "snap_file=$SNAP_FILE" >> $GITHUB_OUTPUT
           echo "Built snap: $SNAP_FILE"
-
-      - name: Install snapcraft
-        run: |
-          n=0; ok=0
-          until [ "$n" -ge 3 ]; do
-            if sudo snap install snapcraft --classic; then ok=1; break; fi
-            n=$((n+1)); echo "::warning::snap install snapcraft attempt $n/3 failed; retrying in $((n*20))s"; sleep $((n*20))
-          done
-          [ "$ok" = 1 ] || { echo "::error::snap install snapcraft failed after 3 attempts"; exit 1; }
 
       - name: Upload snap to edge channel
         env:
