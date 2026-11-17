@@ -12,12 +12,14 @@ update scan now marks its holds; the server leaves them out of automatic
 updates and never overrides them.
 
 dnf's versionlock needs nothing here: a locked version never appears in
-``dnf check-update`` at all.
+``dnf check-update`` at all.  zypper's locks (``zypper addlock``) can be
+patterns (``kernel*``), so they match as globs.
 
 Read-only and unprivileged; any failure is "no holds known", never a failed
 scan.
 """
 
+import fnmatch
 import logging
 import subprocess  # nosec B404
 
@@ -53,7 +55,37 @@ def pkg_locked() -> set:
     return names
 
 
+def zypper_locked() -> set:
+    """``zypper locks``: a table whose columns vary by version (``# | Name |
+    Matches | Type | Repository``, or without Matches); the Name column of
+    every package lock.  Names may be patterns."""
+    names, header = set(), None
+    for line in _run(["zypper", "--non-interactive", "locks"]).splitlines():
+        cells = [c.strip() for c in line.split("|")]
+        if len(cells) < 2:
+            continue
+        if header is None:
+            if "Name" in cells:
+                header = cells
+            continue
+        if set(line.strip()) <= set("-+"):
+            continue
+        row = dict(zip(header, cells))
+        if row.get("Name") and row.get("Type", "package") in ("package", ""):
+            names.add(row["Name"])
+    return names
+
+
+def is_held(name, held: set) -> bool:
+    """``name`` is held: named outright, or matched by a pattern lock."""
+    if not name:
+        return False
+    if name in held:
+        return True
+    return any(fnmatch.fnmatchcase(name, p) for p in held if any(c in p for c in "*?["))
+
+
 def mark(updates, held: set) -> None:
     """Set ``held`` on each update whose package is held."""
     for update in updates:
-        update["held"] = update.get("package_name") in held
+        update["held"] = is_held(update.get("package_name"), held)

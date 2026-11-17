@@ -117,7 +117,7 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
                             "package_manager": "pkg",
                             "is_security_update": False,
                             "is_system_update": False,
-                            "held": match.group(1) in locked,
+                            "held": package_holds.is_held(match.group(1), locked),
                         }
                         self.available_updates.append(update)
 

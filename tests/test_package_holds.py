@@ -41,3 +41,24 @@ def test_mark():
     updates = [{"package_name": "postgresql-16"}, {"package_name": "curl"}]
     package_holds.mark(updates, {"postgresql-16"})
     assert [u["held"] for u in updates] == [True, False]
+
+
+def test_zypper_locks_both_table_layouts_and_patterns():
+    with_matches = (
+        "\n# | Name    | Matches | Type    | Repository\n"
+        "--+---------+---------+---------+-----------\n"
+        "1 | kernel* | 3       | package | (any)\n"
+        "2 | vim     | 1       | package | (any)\n"
+        "3 | SUSE-2026-1 | 0   | patch   | (any)\n"
+    )
+    with patch("subprocess.run", return_value=_completed(with_matches)):
+        held = package_holds.zypper_locked()
+    assert held == {"kernel*", "vim"}
+    updates = [{"package_name": "kernel-default"}, {"package_name": "vim"},
+               {"package_name": "curl"}]  # fmt: skip
+    package_holds.mark(updates, held)
+    assert [u["held"] for u in updates] == [True, True, False]
+
+    plain = "# | Name | Type | Repository\n--+------+------+-----------\n1 | nginx | package | (any)\n"
+    with patch("subprocess.run", return_value=_completed(plain)):
+        assert package_holds.zypper_locked() == {"nginx"}

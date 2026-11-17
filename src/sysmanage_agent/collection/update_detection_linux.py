@@ -69,7 +69,9 @@ class LinuxUpdateDetector(UpdateDetectorBase):
 
     def _detect_zypper_updates(self):
         """Detect updates from Zypper (openSUSE)."""
-        self.available_updates.extend(self.pkg_detector.detect_zypper_updates())
+        updates = self.pkg_detector.detect_zypper_updates()
+        package_holds.mark(updates, package_holds.zypper_locked())
+        self.available_updates.extend(updates)
 
     def _detect_pacman_updates(self):
         """Detect updates from Pacman (Arch Linux)."""
