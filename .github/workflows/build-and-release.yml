@@ -688,11 +688,12 @@ jobs:
   # macOS .pkg Package Build
   build-macos:
     name: Build macOS .pkg Package
-    # Pinned to macos-15, not macos-latest (2026-11-04): macos-latest (the
-    # macos-26 arm64 pool) went short of capacity and jobs sat 15 minutes
-    # then were cancelled with "not acquired by Runner of type hosted".
-    # The Pro+ engine builds already run on macos-15.
-    runs-on: macos-15
+    # macos-latest (2026-11-18, Bryan).  It was pinned to macos-15 on
+    # 2026-11-04 after macos-latest jobs sat 15 minutes and were cancelled
+    # with "not acquired by Runner of type hosted"; on 2026-11-18 macos-15
+    # failed the same way, so that error is GitHub's macOS capacity (or an
+    # incident), not one image -- re-run it rather than re-pinning.
+    runs-on: macos-latest
     timeout-minutes: 60
     needs: wait-for-tests
 
