@@ -50,8 +50,12 @@ def _package_manager_health():
     # pylint: disable-next=import-outside-toplevel
     from src.sysmanage_agent.collection import package_manager_health
 
+    # pylint: disable-next=import-outside-toplevel
+    from src.sysmanage_agent.collection import boot_safety
+
     try:
-        return package_manager_health.check()
+        # ... and whether a reboot now would come back (2026-11-19).
+        return boot_safety.with_reboot_safety(package_manager_health.check())
     except Exception as error:  # pylint: disable=broad-except
         logger.warning("Package manager health check failed: %s", error)
         return None

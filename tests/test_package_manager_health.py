@@ -106,6 +106,38 @@ def test_a_failed_repair_says_so_with_its_output(monkeypatch):
     assert "error processing package snapd" in result["output"]
 
 
+def test_missing_dependencies_are_fetched_after_dpkg_gives_up(monkeypatch):
+    """Lab, 2026-11-19: ``dpkg --configure -a`` stops at "dependency
+    problems" when what an interrupted run was installing is missing; the
+    repair goes on to ``apt-get install -f``, which fetches it and finishes."""
+    monkeypatch.setattr(health.os, "geteuid", lambda: 1000, raising=False)
+    state = {"updates": ["0001"]}
+    tools = Tools(
+        {"dpkg"},
+        {
+            ("dpkg", "--configure", "-a"): (
+                1,
+                "dpkg: dependency problems - leaving unconfigured",
+            )
+        },
+    )
+
+    def run(argv, timeout):
+        if argv[-3:] == ["install", "-f", "-y"]:
+            state["updates"] = []
+        return tools.run(argv, timeout)
+
+    probe = {
+        "which": tools.which,
+        "listdir": lambda _p: state["updates"],
+        "system": "Linux",
+    }
+    result = health.repair(run=run, **probe)
+    assert result["success"] is True and result["reason"] is None
+    assert ["sudo", "-n", "apt-get", "install", "-f", "-y"] in tools.ran
+    assert "dependency problems" in result["output"]
+
+
 def test_nothing_is_checked_where_there_is_no_manager_it_knows():
     tools = Tools(set())
     assert (

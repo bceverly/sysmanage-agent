@@ -18,6 +18,9 @@ from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.operations.package_name_guard import package_name_problem
 
+# The agent's own package: upgraded last, on its own (2026-11-19).
+SELF_PACKAGE = "sysmanage-agent"
+
 
 class UpdateOperations:
     """Handles update-related operations for the agent."""
@@ -224,6 +227,35 @@ class UpdateOperations:
                     )
         return valid_packages
 
+    @staticmethod
+    def _split_own_package(packages: list):
+        """``(others, own)``: the agent's own package comes out of the batch.
+
+        Production, 2026-11-19: "update all" upgraded sysmanage-agent in the
+        same apt run as a new kernel.  Its postinst restarted the agent mid
+        run, which lost the result -- seven of nine hosts never answered --
+        and took the agent's private /var/tmp with it, so the kernel's
+        initramfs could not be built and three hosts were left one reboot
+        from not booting.  So everything else runs and is answered first,
+        and the agent upgrades itself after (:meth:`_upgrade_self_last`)."""
+        own = [p for p in packages if p.get("name") == SELF_PACKAGE]
+        return [p for p in packages if p.get("name") != SELF_PACKAGE], own
+
+    async def _upgrade_self_last(self) -> None:
+        """Upgrade the agent through "Update Agent"'s own path, after the
+        batch's result is sent; the agent restarts when it is done."""
+        self.logger.info("Upgrading the agent's own package after the batch")
+        try:
+            outcome = await self.agent.update_agent()
+        except Exception as error:  # pylint: disable=broad-except
+            self.logger.error(_("Failed to upgrade the agent after updates: %s"), error)
+            return
+        if not outcome.get("success"):
+            self.logger.error(
+                _("Failed to upgrade the agent after updates: %s"),
+                outcome.get("error"),
+            )
+
     async def _send_update_results_with_retry(self, update_message: dict) -> bool:
         """Send update results with retry logic."""
         max_retries = 30
@@ -303,6 +335,7 @@ class UpdateOperations:
                 )
 
             valid_packages, refused = self._drop_unsafe_names(valid_packages)
+            valid_packages, own = self._split_own_package(valid_packages)
             if valid_packages:
                 # Run update process in executor
                 loop = asyncio.get_event_loop()
@@ -311,13 +344,21 @@ class UpdateOperations:
                         executor,
                         lambda: update_detector.apply_updates(packages=valid_packages),
                     )
-            elif refused:
+            elif refused or own:
                 # Nothing to run, but the server is waiting on these: answer.
                 update_results = {"updated_packages": [], "failed_packages": []}
             else:
                 self.logger.error(_("No valid packages found for update"))
                 return
             update_results.setdefault("failed_packages", []).extend(refused)
+            # The agent's own package is upgraded last, below: answered as
+            # applied now, since the agent restarts when it is.  If that
+            # upgrade fails, the next update scan lists it again.
+            update_results.setdefault("updated_packages", []).extend(
+                {"package_name": pkg["name"], "package_manager": pkg["package_manager"],
+                 "old_version": None, "new_version": None, "deferred": True}
+                for pkg in own
+            )  # fmt: skip
 
             system_info = self.agent.registration.get_system_info()
             update_results["hostname"] = system_info["hostname"]
@@ -335,6 +376,8 @@ class UpdateOperations:
                     self.logger.error(
                         _("Failed to rescan for updates after batch: %s"), scan_error
                     )
+            if own:
+                await self._upgrade_self_last()
 
         except Exception as error:
             self.logger.error(_("Background update process failed: %s"), error)

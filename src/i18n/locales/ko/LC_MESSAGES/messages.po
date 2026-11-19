@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 12:16-0800\n"
+"POT-Creation-Date: 2026-11-19 14:35-0800\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -475,13 +475,35 @@ msgstr ""
 msgid "Error detecting antivirus: %s"
 msgstr "_ANTIVIRUS_ 감지 중 오류: %s"
 
+#: src/sysmanage_agent/collection/boot_safety.py:164
+#, python-format
+msgid ""
+"Not safe to reboot: %s is only partly installed, so the host may not boot. "
+"Repair the package manager first."
+msgstr "재부팅이 안전하지 않음: %s이(가) 일부만 설치되어 호스트가 부팅되지 않을 수 있습니다. 먼저 패키지 관리자를 복구하세요."
+
+#: src/sysmanage_agent/collection/boot_safety.py:169
+#, python-format
+msgid ""
+"Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
+"Repair the package manager first."
+msgstr ""
+"재부팅이 안전하지 않음: 커널 %s에 initramfs가 없어 호스트가 부팅되지 않을 수 있습니다. 먼저 패키지 관리자를 복구하세요."
+
+#: src/sysmanage_agent/collection/boot_safety.py:200
+#, python-format
+msgid ""
+"Not rebooting: a package manager (%s) is running. Reboot when it has "
+"finished."
+msgstr "재부팅되지 않음: 패키지 관리자 (%s)가 실행 중입니다. 완료하면 재부팅하세요."
+
 #: src/sysmanage_agent/collection/certificate_collection.py:55
 #, python-format
 msgid "Unsupported platform for certificate collection: %s"
 msgstr "서버 인증서 수집에 대한 지원되지 않는 플랫폼: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:546
+#: src/sysmanage_agent/communication/data_collector.py:550
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "인증서 수집 중 오류: %s"
@@ -623,7 +645,7 @@ msgstr "syslog-ng 구성 파일 읽는 중 오류: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:49
 #: src/sysmanage_agent/collection/hardware_collection.py:88
-#: src/sysmanage_agent/operations/system_control.py:348
+#: src/sysmanage_agent/operations/system_control.py:370
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
@@ -882,17 +904,17 @@ msgstr "fwupd 업데이트 처리 중 오류 발생: %s"
 msgid "Unknown Device"
 msgstr "알 수 없는 디바이스"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:304
+#: src/sysmanage_agent/collection/network_discovery_collection.py:309
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "네트워크 검색: 캡처가 중지되었습니다: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:561
+#: src/sysmanage_agent/collection/network_discovery_collection.py:568
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "네트워크 검색: 직접 캡처를 사용할 수 없습니다: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:587
+#: src/sysmanage_agent/collection/network_discovery_collection.py:594
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -1292,17 +1314,17 @@ msgstr "Microsoft Store 앱 수집 실패: %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "winget 패키지 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:81
+#: src/sysmanage_agent/collection/update_detection.py:85
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "업데이트 감지에 대한 지원되지 않는 플랫폼: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:152
+#: src/sysmanage_agent/collection/update_detection.py:156
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "사용 가능한 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:203
+#: src/sysmanage_agent/collection/update_detection.py:207
 #: src/sysmanage_agent/operations/package_installation_helpers.py:261
 #: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
@@ -1406,22 +1428,22 @@ msgstr "지원되지 않는 패키지 관리자: %s"
 msgid "Failed to apply updates: %s"
 msgstr "업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:238
+#: src/sysmanage_agent/collection/update_detection_linux.py:240
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
 msgstr "Linux 시스템 업데이트 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:264
+#: src/sysmanage_agent/collection/update_detection_linux.py:266
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "Linux 버전 업그레이드 감지 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:331
+#: src/sysmanage_agent/collection/update_detection_linux.py:333
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr "%s 업데이트 적용 실패: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:375
+#: src/sysmanage_agent/collection/update_detection_linux.py:377
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "지원되지 않는 패키지 매니저입니다: %s"
@@ -1705,7 +1727,7 @@ msgstr "자식 호스트 데이터 전송 실패"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:421
+#: src/sysmanage_agent/communication/data_collector.py:425
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "하위 호스트 데이터 수집/전송 중 오류: %s"
@@ -1872,27 +1894,32 @@ msgid "Error collecting/sending clock status: %s"
 msgstr "시계 상태 수집/전송 중 오류: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:413
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:470
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "하드웨어 상태 수집/전송 중 오류: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:417
 #, python-format
+msgid "Error collecting/sending package manager health: %s"
+msgstr "패키지 관리자 건강 수집/전송 오류: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:421
+#, python-format
 msgid "Error collecting/sending compliance evidence: %s"
 msgstr "규정 준수 증거 수집/전송 중 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:457
+#: src/sysmanage_agent/communication/data_collector.py:461
 #, python-format
 msgid "Data collector error: %s"
 msgstr "데이터 수집기 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:485
+#: src/sysmanage_agent/communication/data_collector.py:489
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "초기 데이터 수집 오류: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:592
+#: src/sysmanage_agent/communication/data_collector.py:596
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "역할 수집 중 오류: %s"
@@ -1996,19 +2023,23 @@ msgstr "호스트 승인 없음으로 시계 상태 전송 불가"
 msgid "Failed to send clock status"
 msgstr "시계 상태 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:455
+#: src/sysmanage_agent/communication/data_collector_senders.py:459
+msgid "Failed to send package manager health"
+msgstr "패키지 관리자 건강 전송 실패"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:484
 msgid "Cannot send hardware health: no host approval"
 msgstr "호스트 승인 없음으로 하드웨어 상태 전송 불가"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:475
+#: src/sysmanage_agent/communication/data_collector_senders.py:504
 msgid "Failed to send hardware health"
 msgstr "하드웨어 상태 전송 실패"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:487
+#: src/sysmanage_agent/communication/data_collector_senders.py:516
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "규정 준수 증거를 전송할 수 없음: 호스트 승인 없음"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:496
+#: src/sysmanage_agent/communication/data_collector_senders.py:525
 msgid "Failed to send compliance evidence"
 msgstr "규정 준수 증거 전송 실패"
 
@@ -3592,147 +3623,147 @@ msgstr "서비스 이름이 지정되지 않음"
 msgid "Failed to restart service %s: %s"
 msgstr "서비스 %s 재시작 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:232
+#: src/sysmanage_agent/operations/system_control.py:254
 msgid "System reboot scheduled in 1 minute"
 msgstr "1분 후 시스템 재부팅 예정"
 
-#: src/sysmanage_agent/operations/system_control.py:236
+#: src/sysmanage_agent/operations/system_control.py:258
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr "시스템 재부팅 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:256
+#: src/sysmanage_agent/operations/system_control.py:278
 msgid "System shutdown scheduled in 1 minute"
 msgstr "1분 후 시스템 종료 예정"
 
-#: src/sysmanage_agent/operations/system_control.py:260
+#: src/sysmanage_agent/operations/system_control.py:282
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr "시스템 종료 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:293
+#: src/sysmanage_agent/operations/system_control.py:315
 msgid "dnf-system-upgrade requires a target version"
 msgstr "dnf-system-upgrade는 대상 버전이 필요합니다"
 
-#: src/sysmanage_agent/operations/system_control.py:306
+#: src/sysmanage_agent/operations/system_control.py:328
 msgid "freebsd-update requires a target version"
 msgstr "freebsd-update는 대상 버전이 필요합니다"
 
-#: src/sysmanage_agent/operations/system_control.py:317
+#: src/sysmanage_agent/operations/system_control.py:339
 #, python-format
 msgid "Unknown release-upgrade method: %s"
 msgstr "알 수 없는 릴리즈 업그레이드 방법: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:339
+#: src/sysmanage_agent/operations/system_control.py:361
 msgid "Agent update not yet supported on Windows"
 msgstr "Windows에서의 에이전트 업데이트는 아직 지원되지 않습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:344
+#: src/sysmanage_agent/operations/system_control.py:366
 msgid "Agent update not yet supported on macOS"
 msgstr "macOS에서의 에이전트 업데이트는 아직 지원되지 않습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:351
+#: src/sysmanage_agent/operations/system_control.py:373
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "에이전트 업데이트 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:390
+#: src/sysmanage_agent/operations/system_control.py:412
 msgid "Cannot detect Linux distribution"
 msgstr "Linux 배포판을 감지할 수 없습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:409
+#: src/sysmanage_agent/operations/system_control.py:431
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "지원되지 않는 Linux 배포판: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:416
-#: src/sysmanage_agent/operations/system_control.py:427
+#: src/sysmanage_agent/operations/system_control.py:438
+#: src/sysmanage_agent/operations/system_control.py:449
 msgid "Agent updated successfully"
 msgstr "에이전트가 성공적으로 업데이트되었습니다"
 
-#: src/sysmanage_agent/operations/system_control.py:448
+#: src/sysmanage_agent/operations/system_control.py:470
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "_ANTIVIRUS_ 상태 업데이트 전송 실패: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:499
+#: src/sysmanage_agent/operations/system_control.py:521
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "_상업용_ANTIVIRUS_ 상태 업데이트 전송 실패: %s"
 
 # Ubuntu Pro functionality
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:65
 msgid "Ubuntu Pro token is required"
 msgstr "Ubuntu Pro 토큰이 필요합니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:87
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr "Ubuntu Pro 구독이 성공적으로 연결되었습니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:94
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:98
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 연결 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:103
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 연결 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr "Ubuntu Pro 구독이 성공적으로 분리되었습니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:162
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:166
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 분리 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:171
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr "Ubuntu Pro 분리 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:181
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:232
 msgid "Service name is required"
 msgstr "서비스 이름은 필수입니다"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:202
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr "Ubuntu Pro 서비스 %s 성공적으로 활성화됨"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:209
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 활성화 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 활성화 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:253
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr "Ubuntu Pro 서비스 %s 성공적으로 비활성화됨"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:260
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:266
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 비활성화 실패: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:272
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro 서비스 %s 비활성화 오류: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:303
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro 변경 후 OS 업데이트 전송 실패: %s"
@@ -3747,58 +3778,64 @@ msgstr "리부팅 상태 확인 실패: %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "재부팅 상태 업데이트 전송 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:75
+#: src/sysmanage_agent/operations/update_operations.py:78
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "업데이트 확인 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:100
+#: src/sysmanage_agent/operations/update_operations.py:103
 msgid "No packages specified for update"
 msgstr "업데이트할 패키지가 지정되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:113
+#: src/sysmanage_agent/operations/update_operations.py:116
 msgid "Updates started in background"
 msgstr "백그라운드에서 업데이트가 시작되었습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:117
+#: src/sysmanage_agent/operations/update_operations.py:120
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "_업데이트_ 시작 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:191
+#: src/sysmanage_agent/operations/update_operations.py:194
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "패키지 매니저를 지정하지 않은 %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:223
+#: src/sysmanage_agent/operations/update_operations.py:226
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "%s에 대한 패키지 관리자를 확인할 수 없음"
 
-#: src/sysmanage_agent/operations/update_operations.py:236
+#: src/sysmanage_agent/operations/update_operations.py:251
+#: src/sysmanage_agent/operations/update_operations.py:255
+#, python-format
+msgid "Failed to upgrade the agent after updates: %s"
+msgstr "업데이트 후 에이전트 업그레이드에 실패했습니다: %s"
+
+#: src/sysmanage_agent/operations/update_operations.py:268
 msgid "Failed to send update results, will retry..."
 msgstr "업데이트 결과 전송에 실패했습니다. 다시 시도합니다..."
 
-#: src/sysmanage_agent/operations/update_operations.py:246
+#: src/sysmanage_agent/operations/update_operations.py:278
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d번의 시도 후 업데이트 결과 전송 실패"
 
-#: src/sysmanage_agent/operations/update_operations.py:274
+#: src/sysmanage_agent/operations/update_operations.py:306
 msgid "Could not send fresh update list - not connected"
 msgstr "최신 업데이트 목록을 보낼 수 없음 - 연결되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:318
+#: src/sysmanage_agent/operations/update_operations.py:351
 msgid "No valid packages found for update"
 msgstr "업데이트할 유효한 패키지를 찾을 수 없습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:336
+#: src/sysmanage_agent/operations/update_operations.py:377
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "배치 후 업데이트 스캔 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:340
+#: src/sysmanage_agent/operations/update_operations.py:383
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "배경 업데이트 프로세스 실패: %s"

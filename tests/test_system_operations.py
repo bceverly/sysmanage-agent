@@ -407,12 +407,65 @@ class TestSystemOperations:  # pylint: disable=too-many-public-methods
             result = await self.system_ops.ubuntu_pro_attach(parameters)
 
             assert result["success"] is True
-            mock_execute.assert_called_once_with(
-                {
-                    "command": "sudo pro attach --no-auto-enable test-token-123",
-                    "timeout": 180,
-                }
-            )
+            commands = [c.args[0]["command"] for c in mock_execute.await_args_list]
+            assert commands[0] == "sudo pro attach --no-auto-enable test-token-123"
+            # A container here (systemd-detect-virt succeeded): no livepatch.
+            assert commands[1:] == [
+                "systemd-detect-virt --container --quiet",
+                "sudo -n pro enable esm-infra --assume-yes",
+                "sudo -n pro enable esm-apps --assume-yes",
+            ]
+            assert result["services"] == {"esm-infra": True, "esm-apps": True}
+
+    @pytest.mark.asyncio
+    async def test_attach_turns_on_what_a_plain_attach_would(self):
+        """2026-11-19: attached with --no-auto-enable and nothing turned on
+        after, a host got no ESM updates.  Outside a container, livepatch too;
+        a service that will not enable is reported, the attach still works."""
+
+        def answer(params):
+            command = params["command"]
+            if command.startswith("systemd-detect-virt"):
+                return {"success": False, "result": {"stdout": "", "stderr": ""}}
+            if "livepatch" in command:
+                return {"success": False,
+                        "result": {"stdout": "", "stderr": "snap install failed"}}  # fmt: skip
+            return {"success": True, "result": {"stdout": "ok", "stderr": ""}}
+
+        with patch.object(
+            self.system_ops, "execute_shell_command", new_callable=AsyncMock
+        ) as mock_execute, patch.object(
+            self.system_ops.ubuntu_pro_ops,
+            "_send_os_update_after_pro_change",
+            new_callable=AsyncMock,
+        ):
+            mock_execute.side_effect = answer
+            result = await self.system_ops.ubuntu_pro_attach({"token": "t"})
+
+        assert result["success"] is True
+        assert result["services"] == {
+            "esm-infra": True, "esm-apps": True, "livepatch": "snap install failed",
+        }  # fmt: skip
+
+    @pytest.mark.asyncio
+    async def test_an_already_enabled_service_counts_as_enabled(self):
+        def answer(params):
+            if params["command"].startswith("sudo -n pro enable"):
+                return {"success": False, "result": {
+                    "stdout": "ESM Apps is already enabled - nothing to do.",
+                    "stderr": ""}}  # fmt: skip
+            return {"success": True, "result": {"stdout": "", "stderr": ""}}
+
+        with patch.object(
+            self.system_ops, "execute_shell_command", new_callable=AsyncMock
+        ) as mock_execute, patch.object(
+            self.system_ops.ubuntu_pro_ops,
+            "_send_os_update_after_pro_change",
+            new_callable=AsyncMock,
+        ):
+            mock_execute.side_effect = answer
+            result = await self.system_ops.ubuntu_pro_attach({"token": "t"})
+        assert result["services"] == {"esm-infra": True, "esm-apps": True}
 
     @pytest.mark.asyncio
     async def test_ubuntu_pro_attach_no_token(self):

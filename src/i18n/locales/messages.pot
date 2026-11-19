@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 12:16-0800\n"
+"POT-Creation-Date: 2026-11-19 14:35-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -458,13 +458,34 @@ msgstr ""
 msgid "Error detecting antivirus: %s"
 msgstr ""
 
+#: src/sysmanage_agent/collection/boot_safety.py:164
+#, python-format
+msgid ""
+"Not safe to reboot: %s is only partly installed, so the host may not "
+"boot. Repair the package manager first."
+msgstr ""
+
+#: src/sysmanage_agent/collection/boot_safety.py:169
+#, python-format
+msgid ""
+"Not safe to reboot: kernel %s has no initramfs, so the host may not boot."
+" Repair the package manager first."
+msgstr ""
+
+#: src/sysmanage_agent/collection/boot_safety.py:200
+#, python-format
+msgid ""
+"Not rebooting: a package manager (%s) is running. Reboot when it has "
+"finished."
+msgstr ""
+
 #: src/sysmanage_agent/collection/certificate_collection.py:55
 #, python-format
 msgid "Unsupported platform for certificate collection: %s"
 msgstr ""
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:546
+#: src/sysmanage_agent/communication/data_collector.py:550
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr ""
@@ -606,7 +627,7 @@ msgstr ""
 
 #: src/sysmanage_agent/collection/hardware_collection.py:49
 #: src/sysmanage_agent/collection/hardware_collection.py:88
-#: src/sysmanage_agent/operations/system_control.py:348
+#: src/sysmanage_agent/operations/system_control.py:370
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
@@ -864,17 +885,17 @@ msgstr ""
 msgid "Unknown Device"
 msgstr ""
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:304
+#: src/sysmanage_agent/collection/network_discovery_collection.py:309
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:561
+#: src/sysmanage_agent/collection/network_discovery_collection.py:568
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:587
+#: src/sysmanage_agent/collection/network_discovery_collection.py:594
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were "
@@ -1272,17 +1293,17 @@ msgstr ""
 msgid "Failed to collect winget packages: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection.py:81
+#: src/sysmanage_agent/collection/update_detection.py:85
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection.py:152
+#: src/sysmanage_agent/collection/update_detection.py:156
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection.py:203
+#: src/sysmanage_agent/collection/update_detection.py:207
 #: src/sysmanage_agent/operations/package_installation_helpers.py:261
 #: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
@@ -1386,22 +1407,22 @@ msgstr ""
 msgid "Failed to apply updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:238
+#: src/sysmanage_agent/collection/update_detection_linux.py:240
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:264
+#: src/sysmanage_agent/collection/update_detection_linux.py:266
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:331
+#: src/sysmanage_agent/collection/update_detection_linux.py:333
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:375
+#: src/sysmanage_agent/collection/update_detection_linux.py:377
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr ""
@@ -1685,7 +1706,7 @@ msgstr ""
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:421
+#: src/sysmanage_agent/communication/data_collector.py:425
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr ""
@@ -1850,27 +1871,32 @@ msgid "Error collecting/sending clock status: %s"
 msgstr ""
 
 #: src/sysmanage_agent/communication/data_collector.py:413
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:470
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr ""
 
 #: src/sysmanage_agent/communication/data_collector.py:417
 #, python-format
+msgid "Error collecting/sending package manager health: %s"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector.py:421
+#, python-format
 msgid "Error collecting/sending compliance evidence: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:457
+#: src/sysmanage_agent/communication/data_collector.py:461
 #, python-format
 msgid "Data collector error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:485
+#: src/sysmanage_agent/communication/data_collector.py:489
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector.py:592
+#: src/sysmanage_agent/communication/data_collector.py:596
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr ""
@@ -1973,19 +1999,23 @@ msgstr ""
 msgid "Failed to send clock status"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:455
+#: src/sysmanage_agent/communication/data_collector_senders.py:459
+msgid "Failed to send package manager health"
+msgstr ""
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:484
 msgid "Cannot send hardware health: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:475
+#: src/sysmanage_agent/communication/data_collector_senders.py:504
 msgid "Failed to send hardware health"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:487
+#: src/sysmanage_agent/communication/data_collector_senders.py:516
 msgid "Cannot send compliance evidence: no host approval"
 msgstr ""
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:496
+#: src/sysmanage_agent/communication/data_collector_senders.py:525
 msgid "Failed to send compliance evidence"
 msgstr ""
 
@@ -3551,146 +3581,146 @@ msgstr ""
 msgid "Failed to restart service %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:232
+#: src/sysmanage_agent/operations/system_control.py:254
 msgid "System reboot scheduled in 1 minute"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:236
+#: src/sysmanage_agent/operations/system_control.py:258
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:256
+#: src/sysmanage_agent/operations/system_control.py:278
 msgid "System shutdown scheduled in 1 minute"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:260
+#: src/sysmanage_agent/operations/system_control.py:282
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:293
+#: src/sysmanage_agent/operations/system_control.py:315
 msgid "dnf-system-upgrade requires a target version"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:306
+#: src/sysmanage_agent/operations/system_control.py:328
 msgid "freebsd-update requires a target version"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:317
+#: src/sysmanage_agent/operations/system_control.py:339
 #, python-format
 msgid "Unknown release-upgrade method: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:339
+#: src/sysmanage_agent/operations/system_control.py:361
 msgid "Agent update not yet supported on Windows"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:344
+#: src/sysmanage_agent/operations/system_control.py:366
 msgid "Agent update not yet supported on macOS"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:351
+#: src/sysmanage_agent/operations/system_control.py:373
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:390
+#: src/sysmanage_agent/operations/system_control.py:412
 msgid "Cannot detect Linux distribution"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:409
+#: src/sysmanage_agent/operations/system_control.py:431
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:416
-#: src/sysmanage_agent/operations/system_control.py:427
+#: src/sysmanage_agent/operations/system_control.py:438
+#: src/sysmanage_agent/operations/system_control.py:449
 msgid "Agent updated successfully"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:448
+#: src/sysmanage_agent/operations/system_control.py:470
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/system_control.py:499
+#: src/sysmanage_agent/operations/system_control.py:521
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:65
 msgid "Ubuntu Pro token is required"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:87
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:94
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:98
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:103
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:162
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:166
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:171
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:181
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:232
 msgid "Service name is required"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:202
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:209
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:253
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:260
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:266
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:272
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:303
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr ""
@@ -3705,57 +3735,63 @@ msgstr ""
 msgid "Failed to send reboot status update: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:75
+#: src/sysmanage_agent/operations/update_operations.py:78
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:100
+#: src/sysmanage_agent/operations/update_operations.py:103
 msgid "No packages specified for update"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:113
+#: src/sysmanage_agent/operations/update_operations.py:116
 msgid "Updates started in background"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:117
+#: src/sysmanage_agent/operations/update_operations.py:120
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:191
+#: src/sysmanage_agent/operations/update_operations.py:194
 #, python-format
 msgid "No package manager specified for %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:223
+#: src/sysmanage_agent/operations/update_operations.py:226
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:236
+#: src/sysmanage_agent/operations/update_operations.py:251
+#: src/sysmanage_agent/operations/update_operations.py:255
+#, python-format
+msgid "Failed to upgrade the agent after updates: %s"
+msgstr ""
+
+#: src/sysmanage_agent/operations/update_operations.py:268
 msgid "Failed to send update results, will retry..."
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:246
+#: src/sysmanage_agent/operations/update_operations.py:278
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:274
+#: src/sysmanage_agent/operations/update_operations.py:306
 msgid "Could not send fresh update list - not connected"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:318
+#: src/sysmanage_agent/operations/update_operations.py:351
 msgid "No valid packages found for update"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:336
+#: src/sysmanage_agent/operations/update_operations.py:377
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/update_operations.py:340
+#: src/sysmanage_agent/operations/update_operations.py:383
 #, python-format
 msgid "Background update process failed: %s"
 msgstr ""

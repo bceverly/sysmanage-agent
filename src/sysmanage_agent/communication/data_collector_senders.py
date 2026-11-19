@@ -429,6 +429,35 @@ class DataCollectorSendersMixin:
         if not await self.agent.send_message(message):
             self.logger.warning(_("Failed to send clock status"))
 
+    async def _send_package_manager_health(self):
+        """Can the package manager install anything, and would a reboot come
+        back (collection/package_manager_health.py, boot_safety.py)?
+
+        Its own message since 2026-11-19: it rode only on the update scan,
+        which a reconnecting agent skips when one ran recently, so a host left
+        with a half-configured kernel showed healthy for hours.  This runs with
+        every periodic collection -- the first one right after connecting --
+        and send-on-change sends it only when it changes.
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.sysmanage_agent.collection import (  # noqa: PLC0415
+            boot_safety,
+            package_manager_health,
+        )
+
+        host_approval = self.agent.registration_manager.get_host_approval_from_db()
+        if not host_approval:
+            return
+        # dpkg --audit / dnf check are subprocesses; keep them off the loop.
+        found = await asyncio.to_thread(package_manager_health.check)
+        if not found.get("manager"):
+            return  # nothing checked on this platform
+        payload = await asyncio.to_thread(boot_safety.with_reboot_safety, found)
+        payload["host_id"] = str(host_approval.host_id)
+        message = self.agent.create_message("package_manager_health", payload)
+        if not await self.agent.send_message(message):
+            self.logger.warning(_("Failed to send package manager health"))
+
     async def send_requested_hardware_health(self):
         """Hardware health right now, sent changed or not: an operator asked
         for this host's data ("Request Host Data", which sends

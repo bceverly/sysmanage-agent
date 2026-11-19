@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 12:16-0800\n"
+"POT-Creation-Date: 2026-11-19 14:35-0800\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -458,13 +458,34 @@ msgstr "%(path)s 是空目錄，不是 btrfs 子磁碟區。請將其刪除（�
 msgid "Error detecting antivirus: %s"
 msgstr "檢測防病毒軟件時發生錯誤：%s"
 
+#: src/sysmanage_agent/collection/boot_safety.py:164
+#, python-format
+msgid ""
+"Not safe to reboot: %s is only partly installed, so the host may not boot. "
+"Repair the package manager first."
+msgstr "重新啟動不安全：%s 僅部分安裝，主機可能無法開機。請先修復套件管理員。"
+
+#: src/sysmanage_agent/collection/boot_safety.py:169
+#, python-format
+msgid ""
+"Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
+"Repair the package manager first."
+msgstr "重新啟動不安全：核心 %s 沒有 initramfs，主機可能無法開機。請先修復套件管理員。"
+
+#: src/sysmanage_agent/collection/boot_safety.py:200
+#, python-format
+msgid ""
+"Not rebooting: a package manager (%s) is running. Reboot when it has "
+"finished."
+msgstr "不重新啟動：套件管理員 (%s) 正在執行。請在它完成後再重新啟動。"
+
 #: src/sysmanage_agent/collection/certificate_collection.py:55
 #, python-format
 msgid "Unsupported platform for certificate collection: %s"
 msgstr "證書收集不支援的平台：%s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:546
+#: src/sysmanage_agent/communication/data_collector.py:550
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "收集憑證時發生錯誤：%s"
@@ -606,7 +627,7 @@ msgstr "讀取 syslog-ng 配置時發生錯誤：%s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:49
 #: src/sysmanage_agent/collection/hardware_collection.py:88
-#: src/sysmanage_agent/operations/system_control.py:348
+#: src/sysmanage_agent/operations/system_control.py:370
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
@@ -865,17 +886,17 @@ msgstr "處理fwupd更新時發生錯誤：%s"
 msgid "Unknown Device"
 msgstr "未知裝置"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:304
+#: src/sysmanage_agent/collection/network_discovery_collection.py:309
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "網路探索：擷取已停止：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:561
+#: src/sysmanage_agent/collection/network_discovery_collection.py:568
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "網路探索：無法進行原始擷取：%s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:587
+#: src/sysmanage_agent/collection/network_discovery_collection.py:594
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -1273,17 +1294,17 @@ msgstr "收集 Microsoft Store 應用程式失敗：%s"
 msgid "Failed to collect winget packages: %s"
 msgstr "收集 winget 套件失敗：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:81
+#: src/sysmanage_agent/collection/update_detection.py:85
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "更新檢測不支援的平台：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:152
+#: src/sysmanage_agent/collection/update_detection.py:156
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "無法檢測可用更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection.py:203
+#: src/sysmanage_agent/collection/update_detection.py:207
 #: src/sysmanage_agent/operations/package_installation_helpers.py:261
 #: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
@@ -1387,22 +1408,22 @@ msgstr "不支援的套件管理器: %s"
 msgid "Failed to apply updates: %s"
 msgstr "無法應用更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:238
+#: src/sysmanage_agent/collection/update_detection_linux.py:240
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
 msgstr "無法檢測 Linux 系統更新：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:264
+#: src/sysmanage_agent/collection/update_detection_linux.py:266
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "無法檢測 Linux 版本升級：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:331
+#: src/sysmanage_agent/collection/update_detection_linux.py:333
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr "套用 %s 更新失敗：%s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:375
+#: src/sysmanage_agent/collection/update_detection_linux.py:377
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "不支援的包管理器用於應用：%s"
@@ -1686,7 +1707,7 @@ msgstr "發送子主機數據失敗"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:421
+#: src/sysmanage_agent/communication/data_collector.py:425
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "收集/發送子主機數據時發生錯誤：%s"
@@ -1852,27 +1873,32 @@ msgid "Error collecting/sending clock status: %s"
 msgstr "收集/發送時鐘狀態時發生錯誤：%s"
 
 #: src/sysmanage_agent/communication/data_collector.py:413
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:470
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "收集/發送硬體健康狀況時發生錯誤：%s"
 
 #: src/sysmanage_agent/communication/data_collector.py:417
 #, python-format
+msgid "Error collecting/sending package manager health: %s"
+msgstr "收集/傳送包管理器健康狀態時發生錯誤: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:421
+#, python-format
 msgid "Error collecting/sending compliance evidence: %s"
 msgstr "收集/傳送合規證據時發生錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:457
+#: src/sysmanage_agent/communication/data_collector.py:461
 #, python-format
 msgid "Data collector error: %s"
 msgstr "數據收集器錯誤：%s"
 
-#: src/sysmanage_agent/communication/data_collector.py:485
+#: src/sysmanage_agent/communication/data_collector.py:489
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "初始數據收集錯誤: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:592
+#: src/sysmanage_agent/communication/data_collector.py:596
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "收集角色時發生錯誤：%s"
@@ -1975,19 +2001,23 @@ msgstr "無法發送時鐘狀態：沒有主機批准"
 msgid "Failed to send clock status"
 msgstr "無法發送時鐘狀態"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:455
+#: src/sysmanage_agent/communication/data_collector_senders.py:459
+msgid "Failed to send package manager health"
+msgstr "無法傳送包管理器健康狀態"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:484
 msgid "Cannot send hardware health: no host approval"
 msgstr "無法發送硬體健康狀況：沒有主機核准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:475
+#: src/sysmanage_agent/communication/data_collector_senders.py:504
 msgid "Failed to send hardware health"
 msgstr "發送硬體健康狀況失敗"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:487
+#: src/sysmanage_agent/communication/data_collector_senders.py:516
 msgid "Cannot send compliance evidence: no host approval"
 msgstr "無法傳送合規證據：主機未獲核准"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:496
+#: src/sysmanage_agent/communication/data_collector_senders.py:525
 msgid "Failed to send compliance evidence"
 msgstr "傳送合規證據失敗"
 
@@ -3565,147 +3595,147 @@ msgstr "未指定服務名稱"
 msgid "Failed to restart service %s: %s"
 msgstr "重新啟動服務 %s 失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:232
+#: src/sysmanage_agent/operations/system_control.py:254
 msgid "System reboot scheduled in 1 minute"
 msgstr "系統將在 1 分鐘後重新啟動"
 
-#: src/sysmanage_agent/operations/system_control.py:236
+#: src/sysmanage_agent/operations/system_control.py:258
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr "重新啟動系統失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:256
+#: src/sysmanage_agent/operations/system_control.py:278
 msgid "System shutdown scheduled in 1 minute"
 msgstr "系統將在 1 分鐘後關閉"
 
-#: src/sysmanage_agent/operations/system_control.py:260
+#: src/sysmanage_agent/operations/system_control.py:282
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr "關閉系統失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:293
+#: src/sysmanage_agent/operations/system_control.py:315
 msgid "dnf-system-upgrade requires a target version"
 msgstr "dnf-system-upgrade 需要指定目標版本"
 
-#: src/sysmanage_agent/operations/system_control.py:306
+#: src/sysmanage_agent/operations/system_control.py:328
 msgid "freebsd-update requires a target version"
 msgstr "freebsd-update 需要指定目標版本"
 
-#: src/sysmanage_agent/operations/system_control.py:317
+#: src/sysmanage_agent/operations/system_control.py:339
 #, python-format
 msgid "Unknown release-upgrade method: %s"
 msgstr "未知的版本升級方法：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:339
+#: src/sysmanage_agent/operations/system_control.py:361
 msgid "Agent update not yet supported on Windows"
 msgstr "尚不支援在 Windows 上更新代理"
 
-#: src/sysmanage_agent/operations/system_control.py:344
+#: src/sysmanage_agent/operations/system_control.py:366
 msgid "Agent update not yet supported on macOS"
 msgstr "尚不支援在 macOS 上更新代理"
 
-#: src/sysmanage_agent/operations/system_control.py:351
+#: src/sysmanage_agent/operations/system_control.py:373
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "更新代理失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:390
+#: src/sysmanage_agent/operations/system_control.py:412
 msgid "Cannot detect Linux distribution"
 msgstr "無法偵測 Linux 發行版"
 
-#: src/sysmanage_agent/operations/system_control.py:409
+#: src/sysmanage_agent/operations/system_control.py:431
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "不支援的 Linux 發行版：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:416
-#: src/sysmanage_agent/operations/system_control.py:427
+#: src/sysmanage_agent/operations/system_control.py:438
+#: src/sysmanage_agent/operations/system_control.py:449
 msgid "Agent updated successfully"
 msgstr "代理更新成功"
 
-#: src/sysmanage_agent/operations/system_control.py:448
+#: src/sysmanage_agent/operations/system_control.py:470
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "傳送防毒狀態更新失敗：%s"
 
-#: src/sysmanage_agent/operations/system_control.py:499
+#: src/sysmanage_agent/operations/system_control.py:521
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr "傳送商業防毒狀態更新失敗：%s"
 
 # Ubuntu Pro functionality
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:65
 msgid "Ubuntu Pro token is required"
 msgstr "需要 Ubuntu Pro 權杖"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:87
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr "Ubuntu Pro 訂閱附加成功"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:94
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:98
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr "附加 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:103
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr "附加 Ubuntu Pro 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr "Ubuntu Pro 訂閱分離成功"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:162
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:166
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr "分離 Ubuntu Pro 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:171
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr "分離 Ubuntu Pro 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:181
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:232
 msgid "Service name is required"
 msgstr "服務名稱是必需的"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:202
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr "Ubuntu Pro 服務 %s 已成功啟用"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:209
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr "啟用 Ubuntu Pro 服務 %s 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr "啟用 Ubuntu Pro 服務 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:253
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr "Ubuntu Pro 服務 %s 已成功停用"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:260
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:266
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr "停用 Ubuntu Pro 服務 %s 失敗：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:272
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr "停用 Ubuntu Pro 服務 %s 時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:303
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro 變更後傳送作業系統更新失敗：%s"
@@ -3720,58 +3750,64 @@ msgstr "無法檢查重新啟動狀態：%s"
 msgid "Failed to send reboot status update: %s"
 msgstr "傳送重啟狀態更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:75
+#: src/sysmanage_agent/operations/update_operations.py:78
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "無法檢查更新：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:100
+#: src/sysmanage_agent/operations/update_operations.py:103
 msgid "No packages specified for update"
 msgstr "未指定要更新的套件"
 
-#: src/sysmanage_agent/operations/update_operations.py:113
+#: src/sysmanage_agent/operations/update_operations.py:116
 msgid "Updates started in background"
 msgstr "背景開始更新"
 
-#: src/sysmanage_agent/operations/update_operations.py:117
+#: src/sysmanage_agent/operations/update_operations.py:120
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "啟動更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:191
+#: src/sysmanage_agent/operations/update_operations.py:194
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "未為 %s 指定套件管理器"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:223
+#: src/sysmanage_agent/operations/update_operations.py:226
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "無法確定 %s 的套件管理員"
 
-#: src/sysmanage_agent/operations/update_operations.py:236
+#: src/sysmanage_agent/operations/update_operations.py:251
+#: src/sysmanage_agent/operations/update_operations.py:255
+#, python-format
+msgid "Failed to upgrade the agent after updates: %s"
+msgstr "在更新後無法升級代理: %s"
+
+#: src/sysmanage_agent/operations/update_operations.py:268
 msgid "Failed to send update results, will retry..."
 msgstr "發送更新結果失敗，將重試..."
 
-#: src/sysmanage_agent/operations/update_operations.py:246
+#: src/sysmanage_agent/operations/update_operations.py:278
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d 次嘗試後傳送更新結果失敗"
 
-#: src/sysmanage_agent/operations/update_operations.py:274
+#: src/sysmanage_agent/operations/update_operations.py:306
 msgid "Could not send fresh update list - not connected"
 msgstr "無法傳送新的更新清單 - 未連線"
 
-#: src/sysmanage_agent/operations/update_operations.py:318
+#: src/sysmanage_agent/operations/update_operations.py:351
 msgid "No valid packages found for update"
 msgstr "未找到有效的更新套件"
 
-#: src/sysmanage_agent/operations/update_operations.py:336
+#: src/sysmanage_agent/operations/update_operations.py:377
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "批次後重新掃描更新失敗：%s"
 
-#: src/sysmanage_agent/operations/update_operations.py:340
+#: src/sysmanage_agent/operations/update_operations.py:383
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "背景更新過程失敗：%s"

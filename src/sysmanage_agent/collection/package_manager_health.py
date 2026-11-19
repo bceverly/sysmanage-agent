@@ -133,6 +133,12 @@ def _dpkg_unfinished(path: str) -> List[str]:
     return found
 
 
+def unfinished_packages(path: str = DPKG_STATUS) -> List[str]:
+    """dpkg's part-way installed or removed packages (collection/
+    boot_safety.py asks whether any of them is part of booting)."""
+    return _dpkg_unfinished(path)
+
+
 def _dnf_problem(run: Run, _listdir: Callable) -> Optional[str]:
     code, out = run(["dnf", "-q", "check"], CHECK_SECONDS)
     return _first_line(out) if code != 0 and out.strip() else None
@@ -184,21 +190,23 @@ def repair(run: Run = _run, **probe) -> Dict[str, Any]:
             "health": before,
             "output": "",
         }
-    steps_log = []
+    # Every step runs, whatever the one before it said: ``dpkg --configure
+    # -a`` stops at "dependency problems" when what an interrupted run was
+    # installing is missing, and ``apt-get install -f`` is what fetches it
+    # and finishes the job (lab, 2026-11-19).  The check afterwards decides.
+    steps_log, failed = [], False
     for argv in steps:
         code, out = run(_sudo(argv), REPAIR_SECONDS)
         steps_log.append(f"$ {' '.join(argv)}\n{out.strip()}")
-        if code != 0:
-            return {
-                "success": False,
-                "reason": "repair_failed",
-                "health": check(run=run, **probe),
-                "output": "\n".join(steps_log)[-2000:],
-            }
+        failed = failed or code != 0
     after = check(run=run, **probe)
+    if not after["needs_repair"]:
+        reason = None
+    else:
+        reason = "repair_failed" if failed else "still_broken"
     return {
         "success": not after["needs_repair"],
-        "reason": None if not after["needs_repair"] else "still_broken",
+        "reason": reason,
         "health": after,
         "output": "\n".join(steps_log)[-2000:],
     }

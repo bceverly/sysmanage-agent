@@ -261,6 +261,48 @@ class TestRestartService:
 class TestRebootSystem:
     """Tests for reboot_system method."""
 
+    @pytest.fixture(autouse=True)
+    def ready(self, system_control):
+        """The host is ready to reboot unless a test says otherwise (the
+        pre-reboot step itself: tests/test_boot_safety.py)."""
+        with patch.object(
+            system_control, "_ready_to_reboot", new_callable=AsyncMock
+        ) as mock_ready:
+            mock_ready.return_value = {
+                "ok": True, "reason": None, "repaired": False, "output": "",
+            }  # fmt: skip
+            yield mock_ready
+
+    @pytest.mark.asyncio
+    async def test_a_host_that_would_not_boot_is_not_rebooted(
+        self, system_control, ready
+    ):
+        """2026-11-19: a half-configured kernel -- the reboot is refused with
+        the reason, and nothing is scheduled."""
+        ready.return_value = {
+            "ok": False, "reason": "Not safe to reboot: linux-image-x",
+            "repaired": True, "output": "$ dpkg --configure -a",
+        }  # fmt: skip
+        with patch("platform.system", return_value="Linux"):
+            with patch.object(
+                system_control, "execute_shell_command", new_callable=AsyncMock
+            ) as mock_exec:
+                result = await system_control.reboot_system()
+        assert result["success"] is False
+        assert result["reboot_refused"] is True
+        assert "linux-image-x" in result["error"]
+        mock_exec.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_windows_skips_the_package_check(self, system_control, ready):
+        with patch("platform.system", return_value="Windows"):
+            with patch.object(
+                system_control, "execute_shell_command", new_callable=AsyncMock
+            ) as mock_exec:
+                mock_exec.return_value = {"success": True}
+                await system_control.reboot_system()
+        ready.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_reboot_system_linux_success(self, system_control):
         """Test successful Linux reboot."""

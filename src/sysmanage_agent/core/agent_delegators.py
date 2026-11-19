@@ -440,13 +440,17 @@ class MiscDelegator:
         grid); collection/package_manager_health.py decides how.  The
         server sends nothing but the request."""
         # pylint: disable=import-outside-toplevel
-        from src.sysmanage_agent.collection import (
+        from src.sysmanage_agent.collection import (  # noqa: PLC0415
+            boot_safety,
             package_manager_health,
-        )  # noqa: PLC0415
+        )
 
-        return await asyncio.get_running_loop().run_in_executor(
+        result = await asyncio.get_running_loop().run_in_executor(
             None, package_manager_health.repair
         )
+        # Whether a reboot is safe now, too: a repair is what makes it so.
+        result["health"] = boot_safety.with_reboot_safety(result.get("health"))
+        return result
 
     async def check_backup_storage(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Can this host reach its backup storage's NFS port?  The server

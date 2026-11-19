@@ -212,9 +212,31 @@ class SystemControl:
             )
             return {"success": False, "error": str(error)}
 
+    async def _ready_to_reboot(self) -> Dict[str, Any]:
+        """collection/boot_safety.prepare_for_reboot, off the event loop: no
+        package manager running, anything left part-way finished, and the
+        host able to boot (2026-11-19)."""
+        # pylint: disable-next=import-outside-toplevel
+        from src.sysmanage_agent.collection import boot_safety
+
+        return await asyncio.get_running_loop().run_in_executor(
+            None, boot_safety.prepare_for_reboot
+        )
+
     async def reboot_system(self) -> Dict[str, Any]:
-        """Reboot the system."""
+        """Reboot the system -- unless it would not come back."""
         try:
+            if platform.system().lower() != "windows":
+                ready = await self._ready_to_reboot()
+                if not ready["ok"]:
+                    self.logger.warning("Reboot refused: %s", ready["reason"])
+                    return {
+                        "success": False,
+                        "error": ready["reason"],
+                        "reboot_refused": True,
+                        "repaired": ready["repaired"],
+                        "output": ready["output"],
+                    }
             # Schedule reboot to allow response to be sent
             if platform.system().lower() == "windows":
                 # Windows: shutdown /r /t 60 (reboot in 60 seconds)

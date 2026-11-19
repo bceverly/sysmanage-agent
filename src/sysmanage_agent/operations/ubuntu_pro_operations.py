@@ -33,6 +33,16 @@ def _pro_output(result: Dict[str, Any]) -> str:
     return streams["stderr"] or streams["stdout"] or str(result.get("error") or "")
 
 
+# What ``pro attach`` turns on by itself: the agent attaches with
+# ``--no-auto-enable`` (livepatch's snap install hangs in LXD containers) and
+# so must turn them on afterwards -- it did not, and a host attached through
+# SysManage got no ESM security updates at all (milsurpmonitor, 2026-11-19:
+# "Expanded Security Maintenance for Applications is not enabled").
+DEFAULT_SERVICES = ("esm-infra", "esm-apps")
+# ... and livepatch, except in a container: the reason for --no-auto-enable.
+CONTAINER_SKIPPED = ("livepatch",)
+
+
 def _already_in_state(result: Dict[str, Any]) -> bool:
     """``pro enable``/``disable`` exits 1 with "... - nothing to do." when the
     service is already enabled/disabled; that is the requested outcome."""
@@ -67,6 +77,7 @@ class UbuntuProOperations:
 
             if result["success"]:
                 self.logger.info("Ubuntu Pro attached successfully")
+                services = await self._enable_default_services()
 
                 # After successful attach, send updated OS info to server
                 await self._send_os_update_after_pro_change()
@@ -75,6 +86,8 @@ class UbuntuProOperations:
                     "success": True,
                     "result": _("Ubuntu Pro subscription attached successfully"),
                     "output": result["result"]["stdout"],
+                    # Each default service: True enabled, else what pro said.
+                    "services": services,
                 }
 
             self.logger.error(
@@ -89,6 +102,38 @@ class UbuntuProOperations:
         except Exception as error:
             self.logger.error(_("Error attaching Ubuntu Pro: %s"), error)
             return {"success": False, "error": str(error)}
+
+    async def _in_container(self) -> bool:
+        result = await self.agent_instance.system_ops.execute_shell_command(
+            {"command": "systemd-detect-virt --container --quiet", "timeout": 30}
+        )
+        return bool(result.get("success"))
+
+    async def _enable_default_services(self) -> Dict[str, Any]:
+        """Turn on what a plain ``pro attach`` would: ESM Infra and ESM Apps,
+        and Livepatch outside containers.  Never fails the attach; a service
+        that would not enable is reported with ``pro``'s own words."""
+        wanted = list(DEFAULT_SERVICES)
+        if not await self._in_container():
+            wanted += CONTAINER_SKIPPED
+        outcome: Dict[str, Any] = {}
+        for service in wanted:
+            result = await self.agent_instance.system_ops.execute_shell_command(
+                {
+                    "command": f"sudo -n pro enable {service} --assume-yes",
+                    "timeout": 300,
+                }
+            )
+            if result.get("success") or _already_in_state(result):
+                outcome[service] = True
+            else:
+                outcome[service] = _pro_output(result)
+                self.logger.warning(
+                    "Ubuntu Pro attached, but %s did not enable: %s",
+                    service,
+                    outcome[service],
+                )
+        return outcome
 
     async def ubuntu_pro_detach(self, _parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Detach Ubuntu Pro subscription."""

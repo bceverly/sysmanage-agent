@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 12:16-0800\n"
+"POT-Creation-Date: 2026-11-19 14:35-0800\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -549,13 +549,40 @@ msgstr ""
 msgid "Error detecting antivirus: %s"
 msgstr "Fehler beim Erkennen des Antiviruses: %s"
 
+#: src/sysmanage_agent/collection/boot_safety.py:164
+#, python-format
+msgid ""
+"Not safe to reboot: %s is only partly installed, so the host may not boot. "
+"Repair the package manager first."
+msgstr ""
+"Neustart nicht sicher: %s ist nur teilweise installiert, daher startet der "
+"Host möglicherweise nicht. Reparieren Sie zuerst die Paketverwaltung."
+
+#: src/sysmanage_agent/collection/boot_safety.py:169
+#, python-format
+msgid ""
+"Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
+"Repair the package manager first."
+msgstr ""
+"Neustart nicht sicher: Kernel %s hat kein Initramfs, daher startet der Host "
+"möglicherweise nicht. Reparieren Sie zuerst die Paketverwaltung."
+
+#: src/sysmanage_agent/collection/boot_safety.py:200
+#, python-format
+msgid ""
+"Not rebooting: a package manager (%s) is running. Reboot when it has "
+"finished."
+msgstr ""
+"Kein Neustart: Eine Paketverwaltung (%s) läuft gerade. Starten Sie neu, wenn"
+" sie fertig ist."
+
 #: src/sysmanage_agent/collection/certificate_collection.py:55
 #, python-format
 msgid "Unsupported platform for certificate collection: %s"
 msgstr "Nicht unterstützte Plattform für Zertifikatsauflistung: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:62
-#: src/sysmanage_agent/communication/data_collector.py:546
+#: src/sysmanage_agent/communication/data_collector.py:550
 #, python-format
 msgid "Error collecting certificates: %s"
 msgstr "Fehler beim Sammeln von Zertifikaten: %s"
@@ -701,7 +728,7 @@ msgstr "Fehler beim Lesen der syslog-ng-Konfiguration: %s"
 
 #: src/sysmanage_agent/collection/hardware_collection.py:49
 #: src/sysmanage_agent/collection/hardware_collection.py:88
-#: src/sysmanage_agent/operations/system_control.py:348
+#: src/sysmanage_agent/operations/system_control.py:370
 #: src/sysmanage_agent/operations/user_account_operations.py:17
 #, python-format
 msgid "Unsupported platform: %s"
@@ -961,17 +988,17 @@ msgstr "Fehler beim Verarbeiten der fwupd-Updates: %s"
 msgid "Unknown Device"
 msgstr "Unbekanntes Gerät"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:304
+#: src/sysmanage_agent/collection/network_discovery_collection.py:309
 #, python-format
 msgid "Network discovery capture stopped: %s"
 msgstr "Netzwerkerkennung: Mitschnitt beendet: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:561
+#: src/sysmanage_agent/collection/network_discovery_collection.py:568
 #, python-format
 msgid "Network discovery raw capture unavailable: %s"
 msgstr "Netzwerkerkennung: direkter Mitschnitt nicht verfügbar: %s"
 
-#: src/sysmanage_agent/collection/network_discovery_collection.py:587
+#: src/sysmanage_agent/collection/network_discovery_collection.py:594
 #, python-format
 msgid ""
 "Network discovery saw more than %d devices in one window; the rest were not "
@@ -1375,17 +1402,17 @@ msgstr "Fehler beim Sammeln von Microsoft Store-Anwendungen: %s"
 msgid "Failed to collect winget packages: %s"
 msgstr "Fehler beim Sammeln von winget-Paketen: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:81
+#: src/sysmanage_agent/collection/update_detection.py:85
 #, python-format
 msgid "Unsupported platform for update detection: %s"
 msgstr "Nicht unterstützte Plattform für Aktualisierungserkennung: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:152
+#: src/sysmanage_agent/collection/update_detection.py:156
 #, python-format
 msgid "Failed to detect available updates: %s"
 msgstr "Fehler beim Erkennen verfügbarer Aktualisierungen: %s"
 
-#: src/sysmanage_agent/collection/update_detection.py:203
+#: src/sysmanage_agent/collection/update_detection.py:207
 #: src/sysmanage_agent/operations/package_installation_helpers.py:261
 #: src/sysmanage_agent/operations/package_operations.py:253
 #, python-format
@@ -1490,22 +1517,22 @@ msgstr "Nicht unterstützter Paketmanager: %s"
 msgid "Failed to apply updates: %s"
 msgstr "Fehlschlag beim Anwenden von Aktualisierungen: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:238
+#: src/sysmanage_agent/collection/update_detection_linux.py:240
 #, python-format
 msgid "Failed to detect Linux system updates: %s"
 msgstr "Fehler beim Erkennen von Linux-Systemaktualisierungen: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:264
+#: src/sysmanage_agent/collection/update_detection_linux.py:266
 #, python-format
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "Fehler beim Erkennen von Linux-Versionserhöhungen: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:331
+#: src/sysmanage_agent/collection/update_detection_linux.py:333
 #, python-format
 msgid "Failed to apply %s updates: %s"
 msgstr "%s-Updates konnten nicht angewendet werden: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:375
+#: src/sysmanage_agent/collection/update_detection_linux.py:377
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "Nicht unterstützter Paket-Manager für Anwendung: %s"
@@ -1790,7 +1817,7 @@ msgstr "Daten der untergeordneten Hosts senden fehlgeschlagen"
 
 #: src/sysmanage_agent/communication/child_host_collector.py:477
 #: src/sysmanage_agent/communication/child_host_reporter.py:388
-#: src/sysmanage_agent/communication/data_collector.py:421
+#: src/sysmanage_agent/communication/data_collector.py:425
 #, python-format
 msgid "Error collecting/sending child hosts data: %s"
 msgstr "Fehler beim Sammeln/Senden von Daten zu untergeordneten Hosts: %s"
@@ -1957,27 +1984,32 @@ msgid "Error collecting/sending clock status: %s"
 msgstr "Fehler beim Sammeln/Senden des Uhrstatus: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:413
-#: src/sysmanage_agent/communication/data_collector_senders.py:441
+#: src/sysmanage_agent/communication/data_collector_senders.py:470
 #, python-format
 msgid "Error collecting/sending hardware health: %s"
 msgstr "Fehler beim Sammeln/Senden des Hardwarezustands: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:417
 #, python-format
+msgid "Error collecting/sending package manager health: %s"
+msgstr "Fehler beim Sammeln/Senden der Paketmanager-Gesundheit: %s"
+
+#: src/sysmanage_agent/communication/data_collector.py:421
+#, python-format
 msgid "Error collecting/sending compliance evidence: %s"
 msgstr "Fehler beim Sammeln/Senden der Compliance-Nachweise: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:457
+#: src/sysmanage_agent/communication/data_collector.py:461
 #, python-format
 msgid "Data collector error: %s"
 msgstr "Fehler beim Datensammler: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:485
+#: src/sysmanage_agent/communication/data_collector.py:489
 #, python-format
 msgid "Initial data collection error: %s"
 msgstr "Fehler bei der Initialdatensammlung: %s"
 
-#: src/sysmanage_agent/communication/data_collector.py:592
+#: src/sysmanage_agent/communication/data_collector.py:596
 #, python-format
 msgid "Error collecting roles: %s"
 msgstr "Fehler beim Sammeln der Rollen: %s"
@@ -2084,20 +2116,24 @@ msgstr "Kann die Uhrstatusinformation nicht senden: keine Host-Freigabe"
 msgid "Failed to send clock status"
 msgstr "Uhrstatus konnte nicht gesendet werden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:455
+#: src/sysmanage_agent/communication/data_collector_senders.py:459
+msgid "Failed to send package manager health"
+msgstr "Es konnte die Paketmanager-Gesundheit nicht senden"
+
+#: src/sysmanage_agent/communication/data_collector_senders.py:484
 msgid "Cannot send hardware health: no host approval"
 msgstr "Hardwarezustand kann nicht gesendet werden: keine Host-Freigabe"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:475
+#: src/sysmanage_agent/communication/data_collector_senders.py:504
 msgid "Failed to send hardware health"
 msgstr "Hardwarezustand konnte nicht gesendet werden"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:487
+#: src/sysmanage_agent/communication/data_collector_senders.py:516
 msgid "Cannot send compliance evidence: no host approval"
 msgstr ""
 "Compliance-Nachweise können nicht gesendet werden: keine Host-Freigabe"
 
-#: src/sysmanage_agent/communication/data_collector_senders.py:496
+#: src/sysmanage_agent/communication/data_collector_senders.py:525
 msgid "Failed to send compliance evidence"
 msgstr "Compliance-Nachweise konnten nicht gesendet werden"
 
@@ -3741,148 +3777,148 @@ msgstr "Kein Dienstname angegeben"
 msgid "Failed to restart service %s: %s"
 msgstr "Dienst %s konnte nicht neu gestartet werden: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:232
+#: src/sysmanage_agent/operations/system_control.py:254
 msgid "System reboot scheduled in 1 minute"
 msgstr "Systemneustart in 1 Minute geplant"
 
-#: src/sysmanage_agent/operations/system_control.py:236
+#: src/sysmanage_agent/operations/system_control.py:258
 #, python-format
 msgid "Failed to reboot system: %s"
 msgstr "System konnte nicht neu gestartet werden: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:256
+#: src/sysmanage_agent/operations/system_control.py:278
 msgid "System shutdown scheduled in 1 minute"
 msgstr "Herunterfahren des Systems in 1 Minute geplant"
 
-#: src/sysmanage_agent/operations/system_control.py:260
+#: src/sysmanage_agent/operations/system_control.py:282
 #, python-format
 msgid "Failed to shutdown system: %s"
 msgstr "Fehler beim Herunterfahren des Systems: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:293
+#: src/sysmanage_agent/operations/system_control.py:315
 msgid "dnf-system-upgrade requires a target version"
 msgstr "dnf-system-upgrade erfordert eine Zielversion"
 
-#: src/sysmanage_agent/operations/system_control.py:306
+#: src/sysmanage_agent/operations/system_control.py:328
 msgid "freebsd-update requires a target version"
 msgstr "freebsd-update erfordert eine Zielversion"
 
-#: src/sysmanage_agent/operations/system_control.py:317
+#: src/sysmanage_agent/operations/system_control.py:339
 #, python-format
 msgid "Unknown release-upgrade method: %s"
 msgstr "Unbekannte Release-Upgrademethode: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:339
+#: src/sysmanage_agent/operations/system_control.py:361
 msgid "Agent update not yet supported on Windows"
 msgstr "Agent-Aktualisierung wird unter Windows noch nicht unterstützt"
 
-#: src/sysmanage_agent/operations/system_control.py:344
+#: src/sysmanage_agent/operations/system_control.py:366
 msgid "Agent update not yet supported on macOS"
 msgstr "Agent-Aktualisierung wird unter macOS noch nicht unterstützt"
 
-#: src/sysmanage_agent/operations/system_control.py:351
+#: src/sysmanage_agent/operations/system_control.py:373
 #, python-format
 msgid "Failed to update agent: %s"
 msgstr "Agent-Aktualisierung fehlgeschlagen: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:390
+#: src/sysmanage_agent/operations/system_control.py:412
 msgid "Cannot detect Linux distribution"
 msgstr "Linux-Distribution kann nicht erkannt werden"
 
-#: src/sysmanage_agent/operations/system_control.py:409
+#: src/sysmanage_agent/operations/system_control.py:431
 #, python-format
 msgid "Unsupported Linux distribution: %s"
 msgstr "Nicht unterstützte Linux-Distribution: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:416
-#: src/sysmanage_agent/operations/system_control.py:427
+#: src/sysmanage_agent/operations/system_control.py:438
+#: src/sysmanage_agent/operations/system_control.py:449
 msgid "Agent updated successfully"
 msgstr "Agent erfolgreich aktualisiert"
 
-#: src/sysmanage_agent/operations/system_control.py:448
+#: src/sysmanage_agent/operations/system_control.py:470
 #, python-format
 msgid "Failed to send antivirus status update: %s"
 msgstr "Fehler beim Senden der Antivirus-Status-Aktualisierung: %s"
 
-#: src/sysmanage_agent/operations/system_control.py:499
+#: src/sysmanage_agent/operations/system_control.py:521
 #, python-format
 msgid "Failed to send commercial antivirus status update: %s"
 msgstr ""
 "Fehler beim Senden der kommerziellen Antivirus-Status-Aktualisierung: %s"
 
 # Ubuntu Pro functionality
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:55
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:65
 msgid "Ubuntu Pro token is required"
 msgstr "Ubuntu Pro Token ist erforderlich"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:76
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:87
 msgid "Ubuntu Pro subscription attached successfully"
 msgstr "Ubuntu Pro Abonnement erfolgreich angehängt"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:81
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:85
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:94
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:98
 #, python-format
 msgid "Failed to attach Ubuntu Pro: %s"
 msgstr "Fehler beim Anhängen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:90
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:103
 #, python-format
 msgid "Error attaching Ubuntu Pro: %s"
 msgstr "Fehler beim Anhängen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:112
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
 msgid "Ubuntu Pro subscription detached successfully"
 msgstr "Ubuntu Pro Abonnement erfolgreich getrennt"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:117
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:121
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:162
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:166
 #, python-format
 msgid "Failed to detach Ubuntu Pro: %s"
 msgstr "Fehler beim Trennen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:126
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:171
 #, python-format
 msgid "Error detaching Ubuntu Pro: %s"
 msgstr "Fehler beim Trennen von Ubuntu Pro: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:136
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:187
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:181
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:232
 msgid "Service name is required"
 msgstr "Service-Name ist erforderlich"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:157
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:202
 #, python-format
 msgid "Ubuntu Pro service %s enabled successfully"
 msgstr "Ubuntu Pro-Dienst %s erfolgreich aktiviert"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:164
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:170
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:209
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
 #, python-format
 msgid "Failed to enable Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro-Dienst %s konnte nicht aktiviert werden: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:176
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
 #, python-format
 msgid "Error enabling Ubuntu Pro service %s: %s"
 msgstr "Fehler beim Aktivieren des Ubuntu Pro-Diensts %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:208
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:253
 #, python-format
 msgid "Ubuntu Pro service %s disabled successfully"
 msgstr "Ubuntu Pro-Dienst %s erfolgreich deaktiviert"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:215
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:221
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:260
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:266
 #, python-format
 msgid "Failed to disable Ubuntu Pro service %s: %s"
 msgstr "Ubuntu Pro-Dienst %s konnte nicht deaktiviert werden: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:227
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:272
 #, python-format
 msgid "Error disabling Ubuntu Pro service %s: %s"
 msgstr "Fehler beim Deaktivieren des Ubuntu Pro-Diensts %s: %s"
 
-#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:258
+#: src/sysmanage_agent/operations/ubuntu_pro_operations.py:303
 #, python-format
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Fehler beim Senden des OS-Updates nach Ubuntu Pro Änderung: %s"
@@ -3897,58 +3933,64 @@ msgstr "Fehlschlag beim Überprüfen des Neustarts: %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "Fehler beim Senden des Neustartstatus-Aktualisierungsberichts: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:75
+#: src/sysmanage_agent/operations/update_operations.py:78
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "Fehlschlag beim Überprüfen von Aktualisierungen: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:100
+#: src/sysmanage_agent/operations/update_operations.py:103
 msgid "No packages specified for update"
 msgstr "Keine Pakete für Update angegeben"
 
-#: src/sysmanage_agent/operations/update_operations.py:113
+#: src/sysmanage_agent/operations/update_operations.py:116
 msgid "Updates started in background"
 msgstr "Updates im Hintergrund gestartet"
 
-#: src/sysmanage_agent/operations/update_operations.py:117
+#: src/sysmanage_agent/operations/update_operations.py:120
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "Fehler beim Starten der Updates: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:191
+#: src/sysmanage_agent/operations/update_operations.py:194
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "Paketverwaltung für %s nicht angegeben"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:223
+#: src/sysmanage_agent/operations/update_operations.py:226
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "Paketmanager für %s konnte nicht ermittelt werden"
 
-#: src/sysmanage_agent/operations/update_operations.py:236
+#: src/sysmanage_agent/operations/update_operations.py:251
+#: src/sysmanage_agent/operations/update_operations.py:255
+#, python-format
+msgid "Failed to upgrade the agent after updates: %s"
+msgstr "Das Upgrade des Agents nach Updates fehlgeschlagen: %s"
+
+#: src/sysmanage_agent/operations/update_operations.py:268
 msgid "Failed to send update results, will retry..."
 msgstr "Senden der Update-Ergebnisse fehlgeschlagen, wird wiederholt..."
 
-#: src/sysmanage_agent/operations/update_operations.py:246
+#: src/sysmanage_agent/operations/update_operations.py:278
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "Update-Ergebnisse konnten nach %d Versuchen nicht gesendet werden"
 
-#: src/sysmanage_agent/operations/update_operations.py:274
+#: src/sysmanage_agent/operations/update_operations.py:306
 msgid "Could not send fresh update list - not connected"
 msgstr "Aktuelle Update-Liste konnte nicht gesendet werden - nicht verbunden"
 
-#: src/sysmanage_agent/operations/update_operations.py:318
+#: src/sysmanage_agent/operations/update_operations.py:351
 msgid "No valid packages found for update"
 msgstr "Keine gültigen Pakete für Update gefunden"
 
-#: src/sysmanage_agent/operations/update_operations.py:336
+#: src/sysmanage_agent/operations/update_operations.py:377
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "Fehler beim Nachscannen nach Updates nach Batch-Prozess: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:340
+#: src/sysmanage_agent/operations/update_operations.py:383
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "Hintergrundauftragsprozess fehlgeschlagen: %s"

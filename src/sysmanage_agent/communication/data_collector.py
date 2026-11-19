@@ -413,6 +413,10 @@ class DataCollector(DataCollectorCatalogMixin, DataCollectorSendersMixin):
                 _("Error collecting/sending hardware health: %s"),
             ),
             (
+                self._send_package_manager_health,
+                _("Error collecting/sending package manager health: %s"),
+            ),
+            (
                 self._send_compliance_evidence_update,
                 _("Error collecting/sending compliance evidence: %s"),
             ),
