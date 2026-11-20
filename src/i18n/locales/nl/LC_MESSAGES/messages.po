@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 14:35-0800\n"
+"POT-Creation-Date: 2026-11-20 10:43-0800\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -527,7 +527,7 @@ msgstr ""
 msgid "Error detecting antivirus: %s"
 msgstr "Fout bij detecteren van antivirussoftware: %s"
 
-#: src/sysmanage_agent/collection/boot_safety.py:164
+#: src/sysmanage_agent/collection/boot_safety.py:163
 #, python-format
 msgid ""
 "Not safe to reboot: %s is only partly installed, so the host may not boot. "
@@ -536,7 +536,7 @@ msgstr ""
 "Niet veilig om te herstarten: %s is slechts gedeeltelijk geïnstalleerd, dus "
 "de host kan mogelijk niet opstarten. Repareer eerst de pakketbeheerder."
 
-#: src/sysmanage_agent/collection/boot_safety.py:169
+#: src/sysmanage_agent/collection/boot_safety.py:168
 #, python-format
 msgid ""
 "Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
@@ -545,7 +545,7 @@ msgstr ""
 "Niet veilig om te herstarten: kernel %s heeft geen initramfs, dus de host "
 "kan mogelijk niet opstarten. Repareer eerst de pakketbeheerder."
 
-#: src/sysmanage_agent/collection/boot_safety.py:200
+#: src/sysmanage_agent/collection/boot_safety.py:199
 #, python-format
 msgid ""
 "Not rebooting: a package manager (%s) is running. Reboot when it has "
@@ -735,22 +735,22 @@ msgstr "Mislukt om BSD-opslaginformatie op te halen: %s"
 msgid "Failed to get BSD network info: %s"
 msgstr "Kon geen BSD netwerkinformatie ophalen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:171
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:201
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Mislukt om Linux-CPU-informatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:188
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:218
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Mislukt om Linux-geheugeninformatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:247
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:280
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Mislukt om Linux-opslaginformatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:454
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:487
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "Kon geen Linux netwerkinformatie ophalen: %s"
@@ -3879,6 +3879,17 @@ msgstr "Fout bij uitschakelen Ubuntu Pro-service %s: %s"
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Fout bij verzenden OS-update na Ubuntu Pro wijziging: %s"
 
+#: src/sysmanage_agent/operations/update_disk_preflight.py:86
+#, python-format
+msgid ""
+"Not enough disk space: %(path)s has %(free)s free and this update needs at "
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
+msgstr ""
+"Onvoldoende schijfruimte: %(path)s heeft %(free)s vrij en deze update heeft "
+"minstens %(need)s nodig.  Er is niets gewijzigd; maak ruimte vrij of "
+"vergroot de schijf en werk daarna opnieuw bij."
+
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
 msgid "Failed to check reboot status: %s"
@@ -3889,64 +3900,64 @@ msgstr "Mislukt om herstartstatus te controleren: %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "Mislukt om herstart status bijwerking te verzenden: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:78
+#: src/sysmanage_agent/operations/update_operations.py:79
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "Mislukt om updates te controleren: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:103
+#: src/sysmanage_agent/operations/update_operations.py:104
 msgid "No packages specified for update"
 msgstr "Geen pakketten opgegeven voor update"
 
-#: src/sysmanage_agent/operations/update_operations.py:116
+#: src/sysmanage_agent/operations/update_operations.py:117
 msgid "Updates started in background"
 msgstr "Updates gestart op de achtergrond"
 
-#: src/sysmanage_agent/operations/update_operations.py:120
+#: src/sysmanage_agent/operations/update_operations.py:121
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "Mislukt om updates opnieuw te starten: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:194
+#: src/sysmanage_agent/operations/update_operations.py:195
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "Geen pakketbeheernaam gespecificeerd voor %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:226
+#: src/sysmanage_agent/operations/update_operations.py:227
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "Kan pakketbeheerder voor %s niet bepalen"
 
-#: src/sysmanage_agent/operations/update_operations.py:251
-#: src/sysmanage_agent/operations/update_operations.py:255
+#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:256
 #, python-format
 msgid "Failed to upgrade the agent after updates: %s"
 msgstr "Kon de agent niet upgraden na updates: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:268
+#: src/sysmanage_agent/operations/update_operations.py:269
 msgid "Failed to send update results, will retry..."
 msgstr "Verzenden update-resultaten mislukt, opnieuw proberen..."
 
-#: src/sysmanage_agent/operations/update_operations.py:278
+#: src/sysmanage_agent/operations/update_operations.py:279
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "Kan update-resultaten niet verzenden na %d pogingen"
 
-#: src/sysmanage_agent/operations/update_operations.py:306
+#: src/sysmanage_agent/operations/update_operations.py:307
 msgid "Could not send fresh update list - not connected"
 msgstr "Kan nieuwe updatelijst niet verzenden - niet verbonden"
 
-#: src/sysmanage_agent/operations/update_operations.py:351
+#: src/sysmanage_agent/operations/update_operations.py:361
 msgid "No valid packages found for update"
 msgstr "Geen geldige pakketten gevonden voor update"
 
-#: src/sysmanage_agent/operations/update_operations.py:377
+#: src/sysmanage_agent/operations/update_operations.py:387
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "Mislukt om updates na batch opnieuw te scannen: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:383
+#: src/sysmanage_agent/operations/update_operations.py:393
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "Achtergrondupdateproces is mislukt: %s"

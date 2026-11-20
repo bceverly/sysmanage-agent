@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 14:35-0800\n"
+"POT-Creation-Date: 2026-11-20 10:43-0800\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -506,7 +506,7 @@ msgstr ""
 msgid "Error detecting antivirus: %s"
 msgstr "एंटीवायरस का पहचान करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/collection/boot_safety.py:164
+#: src/sysmanage_agent/collection/boot_safety.py:163
 #, python-format
 msgid ""
 "Not safe to reboot: %s is only partly installed, so the host may not boot. "
@@ -515,7 +515,7 @@ msgstr ""
 "रीबूट सुरक्षित नहीं है: %s केवल आंशिक रूप से इंस्टॉल है, इसलिए होस्ट शायद "
 "बूट न हो। पहले पैकेज मैनेजर की मरम्मत करें।"
 
-#: src/sysmanage_agent/collection/boot_safety.py:169
+#: src/sysmanage_agent/collection/boot_safety.py:168
 #, python-format
 msgid ""
 "Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
@@ -524,7 +524,7 @@ msgstr ""
 "रीबूट सुरक्षित नहीं है: कर्नेल %s का initramfs नहीं है, इसलिए होस्ट शायद बूट"
 " न हो। पहले पैकेज मैनेजर की मरम्मत करें।"
 
-#: src/sysmanage_agent/collection/boot_safety.py:200
+#: src/sysmanage_agent/collection/boot_safety.py:199
 #, python-format
 msgid ""
 "Not rebooting: a package manager (%s) is running. Reboot when it has "
@@ -713,22 +713,22 @@ msgstr "BSD स्टोरेज जानकारी प्राप्त �
 msgid "Failed to get BSD network info: %s"
 msgstr "बीएसडी नेटवर्क जानकारी प्राप्त करने में विफल रहा: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:171
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:201
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Linux CPU जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:188
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:218
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Linux मेमरी जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:247
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:280
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Linux स्टोरेज जानकारी प्राप्त विफल हो गई: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:454
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:487
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "लिनक्स नेटवर्क जानकारी प्राप्त करने में विफल रहा: %s"
@@ -3851,6 +3851,17 @@ msgstr "Ubuntu Pro सेवा %s अक्षम करने में त्
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro परिवर्तन के बाद OS अपडेट भेजने में विफल: %s"
 
+#: src/sysmanage_agent/operations/update_disk_preflight.py:86
+#, python-format
+msgid ""
+"Not enough disk space: %(path)s has %(free)s free and this update needs at "
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
+msgstr ""
+"डिस्क में पर्याप्त जगह नहीं है: %(path)s पर %(free)s खाली है और इस अपडेट को "
+"कम से कम %(need)s चाहिए।  कुछ भी नहीं बदला गया; कुछ जगह खाली करें या डिस्क "
+"बढ़ाएँ, फिर दोबारा अपडेट करें।"
+
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
 msgid "Failed to check reboot status: %s"
@@ -3861,64 +3872,64 @@ msgstr "पुनरारंभ की स्थिति जाँच कर�
 msgid "Failed to send reboot status update: %s"
 msgstr "रीबॉट स्थिति अद्ययन को भेजने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:78
+#: src/sysmanage_agent/operations/update_operations.py:79
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "अद्यतन खोज करने में विफल: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:103
+#: src/sysmanage_agent/operations/update_operations.py:104
 msgid "No packages specified for update"
 msgstr "अपडेट के लिए कोई पैकेज निर्दिष्ट नहीं"
 
-#: src/sysmanage_agent/operations/update_operations.py:116
+#: src/sysmanage_agent/operations/update_operations.py:117
 msgid "Updates started in background"
 msgstr "अपडेट बैकग्राउंड में शुरू हुए"
 
-#: src/sysmanage_agent/operations/update_operations.py:120
+#: src/sysmanage_agent/operations/update_operations.py:121
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "अपडेट्स को शुरू करने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:194
+#: src/sysmanage_agent/operations/update_operations.py:195
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "कोई पैकेज मैनेजर %s के लिए निर्दिष्ट नहीं किया गया"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:226
+#: src/sysmanage_agent/operations/update_operations.py:227
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "%s के लिए पैकेज मैनेजर निर्धारित नहीं किया जा सका"
 
-#: src/sysmanage_agent/operations/update_operations.py:251
-#: src/sysmanage_agent/operations/update_operations.py:255
+#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:256
 #, python-format
 msgid "Failed to upgrade the agent after updates: %s"
 msgstr "अपडेट के बाद एजेंट को अपग्रेड करने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:268
+#: src/sysmanage_agent/operations/update_operations.py:269
 msgid "Failed to send update results, will retry..."
 msgstr "अपडेट परिणाम भेजने में विफल, फिर से कोशिश करेंगे..."
 
-#: src/sysmanage_agent/operations/update_operations.py:278
+#: src/sysmanage_agent/operations/update_operations.py:279
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d प्रयासों के बाद अपडेट परिणाम भेजने में विफल"
 
-#: src/sysmanage_agent/operations/update_operations.py:306
+#: src/sysmanage_agent/operations/update_operations.py:307
 msgid "Could not send fresh update list - not connected"
 msgstr "नई अपडेट सूची नहीं भेजी जा सकी - कनेक्ट नहीं"
 
-#: src/sysmanage_agent/operations/update_operations.py:351
+#: src/sysmanage_agent/operations/update_operations.py:361
 msgid "No valid packages found for update"
 msgstr "अपडेट के लिए कोई वैध पैकेज नहीं मिला"
 
-#: src/sysmanage_agent/operations/update_operations.py:377
+#: src/sysmanage_agent/operations/update_operations.py:387
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "बैच के बाद अपडेट्स की पुनर्खोज में विफलता: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:383
+#: src/sysmanage_agent/operations/update_operations.py:393
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "पृष्ठभूमि अपडेट प्रक्रिया विफल हो गई: %s"

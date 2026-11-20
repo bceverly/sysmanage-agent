@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 14:35-0800\n"
+"POT-Creation-Date: 2026-11-20 10:43-0800\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -475,14 +475,14 @@ msgstr ""
 msgid "Error detecting antivirus: %s"
 msgstr "_ANTIVIRUS_ 감지 중 오류: %s"
 
-#: src/sysmanage_agent/collection/boot_safety.py:164
+#: src/sysmanage_agent/collection/boot_safety.py:163
 #, python-format
 msgid ""
 "Not safe to reboot: %s is only partly installed, so the host may not boot. "
 "Repair the package manager first."
 msgstr "재부팅이 안전하지 않음: %s이(가) 일부만 설치되어 호스트가 부팅되지 않을 수 있습니다. 먼저 패키지 관리자를 복구하세요."
 
-#: src/sysmanage_agent/collection/boot_safety.py:169
+#: src/sysmanage_agent/collection/boot_safety.py:168
 #, python-format
 msgid ""
 "Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
@@ -490,7 +490,7 @@ msgid ""
 msgstr ""
 "재부팅이 안전하지 않음: 커널 %s에 initramfs가 없어 호스트가 부팅되지 않을 수 있습니다. 먼저 패키지 관리자를 복구하세요."
 
-#: src/sysmanage_agent/collection/boot_safety.py:200
+#: src/sysmanage_agent/collection/boot_safety.py:199
 #, python-format
 msgid ""
 "Not rebooting: a package manager (%s) is running. Reboot when it has "
@@ -676,22 +676,22 @@ msgstr "BSD 스토리지 정보를 가져오는 데 실패했습니다: %s"
 msgid "Failed to get BSD network info: %s"
 msgstr "BSD 네트워크 정보 가져오기 실패: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:171
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:201
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Linux CPU 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:188
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:218
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Linux 메모리 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:247
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:280
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Linux 스토리지 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:454
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:487
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "Linux 네트워크 정보 가져오기 실패: %s"
@@ -3768,6 +3768,16 @@ msgstr "Ubuntu Pro 서비스 %s 비활성화 오류: %s"
 msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr "Ubuntu Pro 변경 후 OS 업데이트 전송 실패: %s"
 
+#: src/sysmanage_agent/operations/update_disk_preflight.py:86
+#, python-format
+msgid ""
+"Not enough disk space: %(path)s has %(free)s free and this update needs at "
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
+msgstr ""
+"디스크 공간이 부족합니다: %(path)s의 여유 공간은 %(free)s이며 이 업데이트에는 최소 %(need)s가 필요합니다.  "
+"아무것도 변경하지 않았습니다. 공간을 확보하거나 디스크를 늘린 후 다시 업데이트하세요."
+
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
 msgid "Failed to check reboot status: %s"
@@ -3778,64 +3788,64 @@ msgstr "리부팅 상태 확인 실패: %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "재부팅 상태 업데이트 전송 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:78
+#: src/sysmanage_agent/operations/update_operations.py:79
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "업데이트 확인 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:103
+#: src/sysmanage_agent/operations/update_operations.py:104
 msgid "No packages specified for update"
 msgstr "업데이트할 패키지가 지정되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:116
+#: src/sysmanage_agent/operations/update_operations.py:117
 msgid "Updates started in background"
 msgstr "백그라운드에서 업데이트가 시작되었습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:120
+#: src/sysmanage_agent/operations/update_operations.py:121
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "_업데이트_ 시작 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:194
+#: src/sysmanage_agent/operations/update_operations.py:195
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "패키지 매니저를 지정하지 않은 %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:226
+#: src/sysmanage_agent/operations/update_operations.py:227
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "%s에 대한 패키지 관리자를 확인할 수 없음"
 
-#: src/sysmanage_agent/operations/update_operations.py:251
-#: src/sysmanage_agent/operations/update_operations.py:255
+#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:256
 #, python-format
 msgid "Failed to upgrade the agent after updates: %s"
 msgstr "업데이트 후 에이전트 업그레이드에 실패했습니다: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:268
+#: src/sysmanage_agent/operations/update_operations.py:269
 msgid "Failed to send update results, will retry..."
 msgstr "업데이트 결과 전송에 실패했습니다. 다시 시도합니다..."
 
-#: src/sysmanage_agent/operations/update_operations.py:278
+#: src/sysmanage_agent/operations/update_operations.py:279
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "%d번의 시도 후 업데이트 결과 전송 실패"
 
-#: src/sysmanage_agent/operations/update_operations.py:306
+#: src/sysmanage_agent/operations/update_operations.py:307
 msgid "Could not send fresh update list - not connected"
 msgstr "최신 업데이트 목록을 보낼 수 없음 - 연결되지 않음"
 
-#: src/sysmanage_agent/operations/update_operations.py:351
+#: src/sysmanage_agent/operations/update_operations.py:361
 msgid "No valid packages found for update"
 msgstr "업데이트할 유효한 패키지를 찾을 수 없습니다"
 
-#: src/sysmanage_agent/operations/update_operations.py:377
+#: src/sysmanage_agent/operations/update_operations.py:387
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "배치 후 업데이트 스캔 실패: %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:383
+#: src/sysmanage_agent/operations/update_operations.py:393
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "배경 업데이트 프로세스 실패: %s"

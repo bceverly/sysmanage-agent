@@ -703,3 +703,48 @@ class TestProcessCpuinfoField:
             cpu_info, "processor", "2", processor_count
         )
         assert result == 4  # Keeps higher count
+
+
+# --- byte sizes and free space (2026-11-20) --------------------------------
+
+
+def test_space_reads_bytes_and_a_mounted_filesystems_free_space(monkeypatch):
+    from types import SimpleNamespace  # pylint: disable=import-outside-toplevel
+
+    from src.sysmanage_agent.collection import (  # pylint: disable=import-outside-toplevel
+        hardware_collector_linux as linux,
+    )
+
+    seen = []
+
+    def fake_statvfs(path):
+        seen.append(path)
+        return SimpleNamespace(f_blocks=1000, f_bfree=30, f_bavail=10, f_frsize=4096)
+
+    monkeypatch.setattr(linux.os, "statvfs", fake_statvfs)
+    root = linux._space({"size": 9_340_665_856, "mountpoint": "/", "fstype": "ext4"})
+    assert root == {
+        "capacity_bytes": 1000 * 4096,
+        "available_bytes": 10 * 4096,
+        "used_bytes": 970 * 4096,
+    }
+    # A raw disk: its size only.  A network or odd filesystem is never statvfs'd.
+    assert linux._space({"size": "9340665856", "mountpoint": None}) == {
+        "capacity_bytes": 9_340_665_856
+    }
+    assert linux._space({"size": 5, "mountpoint": "/mnt/nas", "fstype": "nfs4"}) == {
+        "capacity_bytes": 5
+    }
+    assert seen == ["/"]
+
+
+def test_space_survives_an_unreadable_mount(monkeypatch):
+    from src.sysmanage_agent.collection import (  # pylint: disable=import-outside-toplevel
+        hardware_collector_linux as linux,
+    )
+
+    def boom(_path):
+        raise OSError("stale")
+
+    monkeypatch.setattr(linux.os, "statvfs", boom)
+    assert linux._space({"size": "8.7G", "mountpoint": "/", "fstype": "ext4"}) == {}

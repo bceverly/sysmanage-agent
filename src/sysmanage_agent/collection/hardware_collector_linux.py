@@ -16,6 +16,36 @@ from typing import Any, Dict, List
 from src.i18n import _
 from .hardware_collector_base import HardwareCollectorBase
 
+# Filesystems whose free space is read with statvfs: local ones only -- a
+# statvfs of a hung network mount would block the collection.
+_LOCAL_FS = {"ext2", "ext3", "ext4", "xfs", "btrfs", "zfs", "f2fs", "vfat",
+             "exfat", "ntfs", "ntfs3", "jfs", "reiserfs", "bcachefs"}  # fmt: skip
+
+
+def _space(device: Dict[str, Any]) -> Dict[str, Any]:
+    """``capacity_bytes`` (and, for a mounted local filesystem, its
+    ``used_bytes`` / ``available_bytes``) as the server reads them.  Until
+    2026-11-20 the server got only lsblk's "8.7G", so no Linux host's disk
+    list had a size and a filling disk went unnoticed."""
+    found: Dict[str, Any] = {}
+    size = device.get("size")
+    if isinstance(size, int) or (isinstance(size, str) and size.isdigit()):
+        found["capacity_bytes"] = int(size)
+    mount = device.get("mountpoint")
+    fstype = (device.get("fstype") or "").lower()
+    if not mount or fstype not in _LOCAL_FS:
+        return found
+    try:
+        st = os.statvfs(mount)
+    except OSError:
+        return found
+    total = st.f_blocks * st.f_frsize
+    if total:
+        found["capacity_bytes"] = total  # the filesystem, not the partition
+        found["available_bytes"] = st.f_bavail * st.f_frsize
+        found["used_bytes"] = (st.f_blocks - st.f_bfree) * st.f_frsize
+    return found
+
 
 class HardwareCollectorLinux(HardwareCollectorBase):
     """Collects hardware information on Linux systems."""
@@ -200,6 +230,7 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                     [
                         "lsblk",
                         "-J",
+                        "-b",  # sizes in bytes (2026-11-20; was "8.7G")
                         "-o",
                         "NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE",
                     ],  # nosec B603, B607
@@ -224,6 +255,7 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                         "mount_point": device.get("mountpoint", ""),
                         "file_system": device.get("fstype", ""),
                         "is_physical": self._is_physical_volume_linux(device),
+                        **_space(device),
                     }
                     storage_devices.append(device_info)
 
@@ -239,6 +271,7 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                             "is_physical": self._is_physical_volume_linux(
                                 child, is_child=True
                             ),
+                            **_space(child),
                         }
                         storage_devices.append(child_info)
 

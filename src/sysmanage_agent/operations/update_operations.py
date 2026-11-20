@@ -14,6 +14,7 @@ from typing import Any, Dict
 
 from src.database import run_ledger
 from src.i18n import _
+from src.sysmanage_agent.operations import update_disk_preflight as disk_preflight
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.communication import send_on_change
 from src.sysmanage_agent.operations.package_name_guard import package_name_problem
@@ -335,6 +336,15 @@ class UpdateOperations:
                 )
 
             valid_packages, refused = self._drop_unsafe_names(valid_packages)
+            # Room on disk first (2026-11-20): a batch that runs out part-way
+            # leaves the package manager half-configured.  Refused whole, the
+            # agent's own upgrade too, before anything is touched.
+            # A few statvfs calls of local paths: quick enough inline.
+            short = disk_preflight.shortage(valid_packages)
+            if short:
+                self.logger.error(short)
+                refused.extend(disk_preflight.refused(valid_packages, short))
+                valid_packages = []
             valid_packages, own = self._split_own_package(valid_packages)
             if valid_packages:
                 # Run update process in executor

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-19 14:35-0800\n"
+"POT-Creation-Date: 2026-11-20 10:43-0800\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -538,7 +538,7 @@ msgstr ""
 msgid "Error detecting antivirus: %s"
 msgstr "Erreur de détection antivirus : %s"
 
-#: src/sysmanage_agent/collection/boot_safety.py:164
+#: src/sysmanage_agent/collection/boot_safety.py:163
 #, python-format
 msgid ""
 "Not safe to reboot: %s is only partly installed, so the host may not boot. "
@@ -547,7 +547,7 @@ msgstr ""
 "Non sûr de redémarrer : %s n'est installé qu'en partie, donc l'hôte pourrait"
 " ne pas démarrer. Réparez d'abord le gestionnaire de paquets."
 
-#: src/sysmanage_agent/collection/boot_safety.py:169
+#: src/sysmanage_agent/collection/boot_safety.py:168
 #, python-format
 msgid ""
 "Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
@@ -556,7 +556,7 @@ msgstr ""
 "Non sûr de redémarrer : le noyau %s n'a pas d'initramfs, donc l'hôte "
 "pourrait ne pas démarrer. Réparez d'abord le gestionnaire de paquets."
 
-#: src/sysmanage_agent/collection/boot_safety.py:200
+#: src/sysmanage_agent/collection/boot_safety.py:199
 #, python-format
 msgid ""
 "Not rebooting: a package manager (%s) is running. Reboot when it has "
@@ -752,22 +752,22 @@ msgstr "Échec de l’obtention des informations stockage BSD : %s"
 msgid "Failed to get BSD network info: %s"
 msgstr "Échec de la récupération des informations réseau BSD : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:171
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:201
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Échec de l’obtention des informations CPU Linux : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:188
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:218
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Échec de l’obtention des informations mémoire Linux : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:247
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:280
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Échec de l’obtention des informations stockage Linux : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:454
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:487
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "Échec de la récupération des informations réseau Linux : %s"
@@ -3930,6 +3930,17 @@ msgid "Failed to send OS update after Ubuntu Pro change: %s"
 msgstr ""
 "Échec de l'envoi de mise à jour du SO après changement Ubuntu Pro : %s"
 
+#: src/sysmanage_agent/operations/update_disk_preflight.py:86
+#, python-format
+msgid ""
+"Not enough disk space: %(path)s has %(free)s free and this update needs at "
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
+msgstr ""
+"Espace disque insuffisant : %(path)s a %(free)s de libre et cette mise à "
+"jour nécessite au moins %(need)s.  Rien n'a été modifié ; libérez de "
+"l'espace ou agrandissez le disque, puis relancez la mise à jour."
+
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
 msgid "Failed to check reboot status: %s"
@@ -3940,64 +3951,64 @@ msgstr "Échec lors de la vérification de l'état de redémarrage : %s"
 msgid "Failed to send reboot status update: %s"
 msgstr "Échec de l'envoi de l'état de redémarrage : %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:78
+#: src/sysmanage_agent/operations/update_operations.py:79
 #, python-format
 msgid "Failed to check updates: %s"
 msgstr "Échec lors de la vérification des mises à jour : %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:103
+#: src/sysmanage_agent/operations/update_operations.py:104
 msgid "No packages specified for update"
 msgstr "Aucun paquet spécifié pour la mise à jour"
 
-#: src/sysmanage_agent/operations/update_operations.py:116
+#: src/sysmanage_agent/operations/update_operations.py:117
 msgid "Updates started in background"
 msgstr "Mises à jour démarrées en arrière-plan"
 
-#: src/sysmanage_agent/operations/update_operations.py:120
+#: src/sysmanage_agent/operations/update_operations.py:121
 #, python-format
 msgid "Failed to start updates: %s"
 msgstr "Échec du démarrage des mises à jour : %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:194
+#: src/sysmanage_agent/operations/update_operations.py:195
 #, python-format
 msgid "No package manager specified for %s"
 msgstr "Aucun gestionnaire de paquets spécifié pour %s"
 
 # KVM/libvirt operations
-#: src/sysmanage_agent/operations/update_operations.py:226
+#: src/sysmanage_agent/operations/update_operations.py:227
 #, python-format
 msgid "Could not determine package manager for %s"
 msgstr "Impossible de déterminer le gestionnaire de paquets pour %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:251
-#: src/sysmanage_agent/operations/update_operations.py:255
+#: src/sysmanage_agent/operations/update_operations.py:252
+#: src/sysmanage_agent/operations/update_operations.py:256
 #, python-format
 msgid "Failed to upgrade the agent after updates: %s"
 msgstr "Échec de la mise à niveau de l'agent après les mises à jour : %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:268
+#: src/sysmanage_agent/operations/update_operations.py:269
 msgid "Failed to send update results, will retry..."
 msgstr "Échec de l'envoi des résultats de mise à jour, nouvelle tentative..."
 
-#: src/sysmanage_agent/operations/update_operations.py:278
+#: src/sysmanage_agent/operations/update_operations.py:279
 #, python-format
 msgid "Failed to send update results after %d attempts"
 msgstr "Échec de l'envoi des résultats de mise à jour après %d tentatives"
 
-#: src/sysmanage_agent/operations/update_operations.py:306
+#: src/sysmanage_agent/operations/update_operations.py:307
 msgid "Could not send fresh update list - not connected"
 msgstr "Impossible d'envoyer la nouvelle liste de mises à jour - non connecté"
 
-#: src/sysmanage_agent/operations/update_operations.py:351
+#: src/sysmanage_agent/operations/update_operations.py:361
 msgid "No valid packages found for update"
 msgstr "Aucun paquet valide trouvé pour la mise à jour"
 
-#: src/sysmanage_agent/operations/update_operations.py:377
+#: src/sysmanage_agent/operations/update_operations.py:387
 #, python-format
 msgid "Failed to rescan for updates after batch: %s"
 msgstr "Échec du rescannage pour les mises à jour après la série : %s"
 
-#: src/sysmanage_agent/operations/update_operations.py:383
+#: src/sysmanage_agent/operations/update_operations.py:393
 #, python-format
 msgid "Background update process failed: %s"
 msgstr "Échec du processus de mise à jour en arrière-plan : %s"
