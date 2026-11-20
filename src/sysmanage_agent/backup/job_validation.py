@@ -94,6 +94,9 @@ SERVER_KEYS = {
         "keep_monthly",
         "keep_yearly",
         "whole_packs",
+        # Legal hold (27.2, restate 3.4.0.0): snapshots kept whatever the
+        # keep-* rules say -- one line per held snapshot.
+        "keep_snapshot",
     },
     "check": {"read_all", "metadata_only"},
     "copy": {"copy_to", "snapshot"},
@@ -305,6 +308,8 @@ def check_value(key: str, value: Any) -> Any:
         return _bool(key, value)
     if key in COUNTS:
         return _count(key, value)
+    if key == "keep_snapshot":
+        return [check_snapshot(name) for name in _list(key, value)]
     return _string_value(key, value)
 
 

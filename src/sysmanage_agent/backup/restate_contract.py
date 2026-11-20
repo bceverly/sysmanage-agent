@@ -180,8 +180,12 @@ def features_usable(features: Optional[Dict[str, Any]]) -> bool:
 # ``hook_option`` (3.0.0.0): a hook's setting for one capture
 # (``postgresql.stop=never``); without it the hook runs on its own file's
 # settings, so the agent leaves it out for an older restate (backup_operations).
+# ``keep_snapshot`` (3.4.0.0): legal hold -- a prune keeps the named
+# snapshots too; the server places a hold only where the storage host's
+# restate lists it (``storage_abilities``), and an older restate refuses the
+# key outright rather than pruning a held snapshot.
 GATED_KEYS = frozenset(
-    {"create", "plan", "keep_yearly", "include_mount", "hook_option"}
+    {"create", "plan", "keep_yearly", "include_mount", "hook_option", "keep_snapshot"}
 )
 
 
@@ -287,6 +291,12 @@ def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     signer's key, so the server learns them from the trusted side; and
     ``proxy_bandwidth``, the proxy reads bandwidth lines in a grant."""
     found = ["keep_yearly"] if supports(features, "keep_yearly") else []
+    # Legal hold (27.2): restate 3.4.0.0 keeps named snapshots in a prune.
+    if (
+        supports(features, "keep_snapshot")
+        or (features or {}).get("keep_snapshot") is True
+    ):
+        found.append("keep_snapshot")
     if supports_job_command(features, "sign") and supports(features, "sign_with"):
         found.append("sign")
     if supports(features, "trusted_key"):
