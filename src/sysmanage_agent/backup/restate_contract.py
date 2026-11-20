@@ -289,7 +289,9 @@ def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     are signed on the storage host, between the capture and protect, and
     ``signatures``: this agent lists them there, checked against the
     signer's key, so the server learns them from the trusted side; and
-    ``proxy_bandwidth``, the proxy reads bandwidth lines in a grant."""
+    ``proxy_bandwidth``, the proxy reads bandwidth lines in a grant; and
+    ``replica_copy``, it copies snapshots into another storage host's
+    repository through that host's restate-proxy (``copies_remote``)."""
     found = ["keep_yearly"] if supports(features, "keep_yearly") else []
     # Legal hold (27.2): restate 3.4.0.0 keeps named snapshots in a prune.
     if (
@@ -306,7 +308,33 @@ def storage_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
     keys = (features or {}).get("grant_keys")
     if isinstance(keys, list) and "bandwidth" in keys:
         found.append("proxy_bandwidth")
+    if copies_remote(features):
+        # Off-site copies (27.3): the server sends this host its replicas
+        # and asks it to copy snapshots into them only then.
+        found.append(REPLICA_COPY)
     return found
+
+
+REPLICA_COPY = "replica_copy"
+
+
+def copies_remote(features: Optional[Dict[str, Any]]) -> bool:
+    """restate copies a snapshot INTO a repository behind restate-proxy, as
+    a job: ``copy`` is a job command taking ``copy_to`` and the token file,
+    and it writes through a proxy (``remote_capture``, restate 3.2.0.0:
+    "capture into one, and copy into one", with curl found)."""
+    if not (
+        supports_command(features, "copy")
+        and supports_job_command(features, "copy")
+        and supports(features, "copy_to")
+        and captures_remote(features)
+    ):
+        return False
+    per_command = (features or {}).get("job_command_keys")
+    if not isinstance(per_command, dict):
+        return True  # a restate that does not list keys per command
+    keys = per_command.get("copy")
+    return isinstance(keys, list) and {"copy_to", "repository_token_file"} <= set(keys)
 
 
 _HOOK = re.compile(r"^[a-z0-9_-]{1,32}$")

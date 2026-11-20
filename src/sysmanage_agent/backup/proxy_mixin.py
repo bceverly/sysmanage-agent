@@ -231,11 +231,11 @@ class BackupProxyMixin:
             return {}
         if proxy_binary() is None:
             return {"proxy_service": "not_installed"}
-        await self._run_proxy_as(account)
+        changed = await self._run_proxy_as(account)
         out: Dict[str, Any] = {}
-        changed = False
         if proxy.get("cert"):
-            changed, csr = await self._apply_proxy_cert(proxy["cert"], account)
+            renewed, csr = await self._apply_proxy_cert(proxy["cert"], account)
+            changed = changed or renewed
             if csr:
                 out["proxy_csr"] = csr
         if os.path.exists(access.PROXY_CERT) and os.path.exists(access.PROXY_KEY):
@@ -272,16 +272,27 @@ class BackupProxyMixin:
     def _proxy_systemd(self) -> bool:
         return platform.system() == "Linux" and host_mount.systemd_running()
 
-    async def _run_proxy_as(self, account: str) -> None:
+    async def _run_proxy_as(self, account: str) -> bool:
+        """Run the proxy as the repositories' account; True when that changed,
+        so a proxy already running (the package starts it as its own user)
+        is restarted -- ``start`` leaves a running one as it is, and it then
+        cannot read the repositories (lab, 2026-11-20: Permission denied on
+        an off-site copy, with an operator's CA and so no certificate change
+        to force the restart)."""
         if self._proxy_systemd():
             text = service.drop_in(account)
             if _read_text(service.DROP_IN) != text:
                 await self._install_root_file(text, service.DROP_IN)
                 await self._run(self._privileged(["systemctl", "daemon-reload"]))
+                return True
         elif platform.system() == "FreeBSD":
+            code, out, _err = await self._run(["sysrc", "-n", "restate_proxy_user"])
+            changed = code != 0 or out.strip() != account
             await self._run(
                 self._privileged(["sysrc", *service.freebsd_settings(account)])
             )
+            return changed
+        return False
 
     async def _start_proxy_service(self, restart: bool) -> None:
         if self._proxy_systemd():

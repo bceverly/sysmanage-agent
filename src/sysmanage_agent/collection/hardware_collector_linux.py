@@ -35,8 +35,11 @@ def _space(device: Dict[str, Any]) -> Dict[str, Any]:
     fstype = (device.get("fstype") or "").lower()
     if not mount or fstype not in _LOCAL_FS:
         return found
+    statvfs = getattr(os, "statvfs", None)  # POSIX only; never on Windows
+    if statvfs is None:
+        return found
     try:
-        st = os.statvfs(mount)
+        st = statvfs(mount)
     except OSError:
         return found
     total = st.f_blocks * st.f_frsize

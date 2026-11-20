@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 10:43-0800\n"
+"POT-Creation-Date: 2026-11-20 14:36-0800\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -370,6 +370,26 @@ msgstr "The backup storage at %s did not answer."
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Could not unmount the backup storage at %s: %s"
+
+#: src/sysmanage_agent/backup/replica_mixin.py:113
+#: src/sysmanage_agent/operations/backup_operations.py:526
+#, python-format
+msgid "This restate does not support: %s"
+msgstr "This restate does not support: %s"
+
+#: src/sysmanage_agent/backup/replica_mixin.py:133
+msgid ""
+"This backup policy has a copy job of its own, so an off-site copy cannot run "
+"for it."
+msgstr ""
+"This backup policy has a copy job of its own, so an off-site copy cannot run "
+"for it."
+
+#: src/sysmanage_agent/backup/replica_mixin.py:141
+msgid ""
+"This restate cannot copy a snapshot to another storage host; upgrade restate."
+msgstr ""
+"This restate cannot copy a snapshot to another storage host; upgrade restate."
 
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
@@ -2685,29 +2705,29 @@ msgstr "Error collecting agent logs: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Error collecting error logs: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:213
+#: src/sysmanage_agent/operations/backup_operations.py:215
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr "A Mac can only be a backed-up host, not a backup storage host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:214
+#: src/sysmanage_agent/operations/backup_operations.py:216
 msgid "This platform cannot take that backup role."
 msgstr "This platform cannot take that backup role."
 
-#: src/sysmanage_agent/operations/backup_operations.py:365
+#: src/sysmanage_agent/operations/backup_operations.py:368
 msgid "That backup action is not configured on this host."
 msgstr "That backup action is not configured on this host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:373
+#: src/sysmanage_agent/operations/backup_operations.py:376
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate is not usable on this host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:406
+#: src/sysmanage_agent/operations/backup_operations.py:409
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Could not install the backup jobs: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:481
+#: src/sysmanage_agent/operations/backup_operations.py:489
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
@@ -2715,7 +2735,7 @@ msgstr ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 
-#: src/sysmanage_agent/operations/backup_operations.py:500
+#: src/sysmanage_agent/operations/backup_operations.py:508
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2723,12 +2743,7 @@ msgstr ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 
-#: src/sysmanage_agent/operations/backup_operations.py:518
-#, python-format
-msgid "This restate does not support: %s"
-msgstr "This restate does not support: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:613
+#: src/sysmanage_agent/operations/backup_operations.py:623
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "This restate cannot run %s as a job; upgrade restate."

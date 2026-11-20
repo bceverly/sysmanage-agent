@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 10:43-0800\n"
+"POT-Creation-Date: 2026-11-20 14:36-0800\n"
 "Language: it\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -20,8 +20,7 @@ msgstr "Impossibile creare le tabelle del database: %s"
 #, python-format
 msgid "Failed to get database path from config: %s, using local fallback"
 msgstr ""
-"Errore nel recupero del percorso DB dalla configurazione: %s, fallback "
-"locale"
+"Errore nel recupero del percorso DB dalla configurazione: %s, fallback locale"
 
 #: src/database/init.py:241
 #, python-format
@@ -66,8 +65,8 @@ msgstr "Deserializzazione del messaggio %s fallita: %s"
 #, python-format
 msgid "Message %s (type: %s) exceeded max retries, marked as failed"
 msgstr ""
-"Messaggio %s (tipo: %s) ha superato i tentativi massimi, contrassegnato come"
-" fallito"
+"Messaggio %s (tipo: %s) ha superato i tentativi massimi, contrassegnato come "
+"fallito"
 
 #: src/security/certificate_store.py:164
 #, python-brace-format
@@ -89,8 +88,8 @@ msgstr ""
 
 #: src/security/client_tls.py:114
 msgid ""
-"server.tls_inspection is true: the server's TLS certificate is not pinned on"
-" this host. A TLS-inspecting proxy also removes this host's client "
+"server.tls_inspection is true: the server's TLS certificate is not pinned on "
+"this host. A TLS-inspecting proxy also removes this host's client "
 "certificate, so the server must accept this host without one."
 msgstr ""
 "server.tls_inspection è true: il certificato TLS del server non viene "
@@ -172,20 +171,20 @@ msgstr ""
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
-"(%s). The likely cause is a proxy, or another server, presenting a different"
-" certificate. If this server really was replaced, re-pin deliberately: "
-"delete %s or run the agent's reset command, then restart the agent."
+"(%s). The likely cause is a proxy, or another server, presenting a different "
+"certificate. If this server really was replaced, re-pin deliberately: delete "
+"%s or run the agent's reset command, then restart the agent."
 msgstr ""
 "Il certificato TLS del server è cambiato e la modifica non è stata "
 "verificata (%s). La causa probabile è un proxy, o un altro server, che "
 "presenta un certificato diverso. Se questo server è stato davvero "
-"sostituito, fissalo di nuovo deliberatamente: elimina %s o esegui il comando"
-" di reimpostazione dell'agente, quindi riavvia l'agente."
+"sostituito, fissalo di nuovo deliberatamente: elimina %s o esegui il comando "
+"di reimpostazione dell'agente, quindi riavvia l'agente."
 
 #: src/security/server_identity.py:176
 msgid ""
-"The server's TLS certificate changed; the new one is signed by this server's"
-" identity and is now trusted"
+"The server's TLS certificate changed; the new one is signed by this server's "
+"identity and is now trusted"
 msgstr ""
 "Il certificato TLS del server è cambiato; il nuovo è firmato dall'identità "
 "di questo server ed è ora considerato attendibile"
@@ -230,11 +229,10 @@ msgstr ""
 "Il certificato di identità del server usa un tipo di chiave non supportato"
 
 #: src/security/server_pinning.py:212
-msgid ""
-"The server identity statement is not signed by its identity certificate"
+msgid "The server identity statement is not signed by its identity certificate"
 msgstr ""
-"La dichiarazione di identità del server non è firmata dal suo certificato di"
-" identità"
+"La dichiarazione di identità del server non è firmata dal suo certificato di "
+"identità"
 
 #: src/security/server_pinning.py:224
 msgid "The server identity statement has expired"
@@ -285,12 +283,12 @@ msgstr "Impossibile avviare il processo di backup."
 #: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
 #, python-format
 msgid ""
-"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
-" is empty: it was stopped, or the machine restarted, while it ran"
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s "
+"is empty: it was stopped, or the machine restarted, while it ran"
 msgstr ""
 "restate si è fermato (codice di uscita %(code)s) prima di scrivere un "
-"risultato, e il suo log %(log)s è vuoto: è stato interrotto, o la macchina è"
-" stata riavviata, mentre era in esecuzione"
+"risultato, e il suo log %(log)s è vuoto: è stato interrotto, o la macchina è "
+"stata riavviata, mentre era in esecuzione"
 
 #: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
 #, python-format
@@ -334,8 +332,7 @@ msgstr "nessun motivo indicato"
 #: src/sysmanage_agent/backup/key_files.py:169
 msgid "This operating system has no RAM file system for backup keys"
 msgstr ""
-"Questo sistema operativo non ha un file system in RAM per le chiavi di "
-"backup"
+"Questo sistema operativo non ha un file system in RAM per le chiavi di backup"
 
 #: src/sysmanage_agent/backup/key_files.py:189
 #, python-format
@@ -406,6 +403,27 @@ msgstr "L'archiviazione dei backup su %s non ha risposto."
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Impossibile smontare l'archiviazione dei backup su %s: %s"
 
+#: src/sysmanage_agent/backup/replica_mixin.py:113
+#: src/sysmanage_agent/operations/backup_operations.py:526
+#, python-format
+msgid "This restate does not support: %s"
+msgstr "Questa versione di restate non supporta: %s"
+
+#: src/sysmanage_agent/backup/replica_mixin.py:133
+msgid ""
+"This backup policy has a copy job of its own, so an off-site copy cannot run "
+"for it."
+msgstr ""
+"Questo criterio di backup ha un proprio processo di copia, quindi non è "
+"possibile eseguire una copia fuori sede per esso."
+
+#: src/sysmanage_agent/backup/replica_mixin.py:141
+msgid ""
+"This restate cannot copy a snapshot to another storage host; upgrade restate."
+msgstr ""
+"Questo restate non può copiare uno snapshot su un altro host di "
+"archiviazione; aggiorni restate."
+
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
@@ -452,8 +470,8 @@ msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr ""
-"L'agente non può leggere %(path)s, quindi non può sapere se contiene backup."
-" Esegui l'agente come root o sposta altrove la directory, quindi prepara di "
+"L'agente non può leggere %(path)s, quindi non può sapere se contiene backup. "
+"Esegui l'agente come root o sposta altrove la directory, quindi prepara di "
 "nuovo."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:178
@@ -479,8 +497,8 @@ msgid ""
 msgstr ""
 "%(path)s contiene già dei file ma non è un proprio subvolume btrfs, e la "
 "preparazione non sposta mai i backup. 1) Rinominalo (ad esempio in "
-"%(path)s.old), prepara di nuovo e copia il suo contenuto nel nuovo subvolume"
-" come root; oppure 2) eliminalo se quei backup non servono più."
+"%(path)s.old), prepara di nuovo e copia il suo contenuto nel nuovo subvolume "
+"come root; oppure 2) eliminalo se quei backup non servono più."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:212
 msgid ""
@@ -488,8 +506,8 @@ msgid ""
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
 msgstr ""
 "FreeBSD esporta interi file system, quindi il repository di ogni host "
-"richiede un proprio dataset ZFS. Sposta il percorso di archiviazione su ZFS,"
-" quindi prepara di nuovo."
+"richiede un proprio dataset ZFS. Sposta il percorso di archiviazione su ZFS, "
+"quindi prepara di nuovo."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:266
 msgid ""
@@ -598,16 +616,14 @@ msgstr "Impossibile interrogare lo store di certificati Windows %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first "
-"%d"
+"Certificate bundle %s holds more than %d certificates; reporting the first %d"
 msgstr ""
 "Bundle di certificati %s contiene più di %d certificati; riporta i primi %d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
 msgid "Timeout extracting certificate info from: %s"
-msgstr ""
-"Timeout durante l'estrazione delle informazioni del certificato da: %s"
+msgstr "Timeout durante l'estrazione delle informazioni del certificato da: %s"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:709
 #, python-format
@@ -1125,8 +1141,8 @@ msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
 msgstr ""
-"Raccolta yum saltata su host con dnf disponibile (yum è un wrapper di dnf su"
-" RHEL/Fedora 8+)"
+"Raccolta yum saltata su host con dnf disponibile (yum è un wrapper di dnf su "
+"RHEL/Fedora 8+)"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:142
@@ -1938,8 +1954,7 @@ msgstr "Errore durante la raccolta/spedizione dello stato di riavvio: %s"
 #, python-format
 msgid "Error collecting/sending third-party repository data: %s"
 msgstr ""
-"Errore durante la raccolta/spedizione dei dati del repository terze parti: "
-"%s"
+"Errore durante la raccolta/spedizione dei dati del repository terze parti: %s"
 
 #: src/sysmanage_agent/communication/data_collector.py:392
 #, python-format
@@ -2167,8 +2182,8 @@ msgstr "Errore durante il trattamento del messaggio pollato %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
-" must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
+"must complete first."
 msgstr ""
 "Impossibile utilizzare il fallback HTTP: questo agente non ha un host_id "
 "memorizzato. La registrazione deve essere completata prima."
@@ -2203,8 +2218,8 @@ msgstr "Impossibile inserire il messaggio: %s"
 #, python-format
 msgid "Failed to queue command acknowledgment for message: %s"
 msgstr ""
-"Impossibile inserire la risposta alla richiesta di comando per il messaggio:"
-" %s"
+"Impossibile inserire la risposta alla richiesta di comando per il messaggio: "
+"%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:276
 #, python-format
@@ -2220,13 +2235,12 @@ msgstr "Errore del server [%s]: %s"
 #, python-format
 msgid "Could not parse message timestamp for stale check: %s"
 msgstr ""
-"Impossibile analizzare il timestamp del messaggio per il controllo obsoleto:"
-" %s"
+"Impossibile analizzare il timestamp del messaggio per il controllo obsoleto: "
+"%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:421
 #: src/sysmanage_agent/communication/message_handler.py:792
-msgid ""
-"Host registration is pending approval. Will continue periodic attempts."
+msgid "Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "La registrazione dell'host è in attesa di approvazione. Si continueranno le "
 "tentativi periodici."
@@ -2252,13 +2266,13 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:494
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
-" WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
+"WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "Il server ha segnalato host_not_registered (colpo %(n)d/%(limit)d) -- "
-"riaggancio SENZA scartare l'host_id in modo che il server possa risolvere di"
-" nuovo questa istanza dal suo indice tenant; ririgistrerò solo se la "
+"riaggancio SENZA scartare l'host_id in modo che il server possa risolvere di "
+"nuovo questa istanza dal suo indice tenant; ririgistrerò solo se la "
 "situazione persiste."
 
 #: src/sysmanage_agent/communication/message_handler.py:507
@@ -2396,8 +2410,7 @@ msgstr "Errore nel recupero dei messaggi bloccati: %s"
 #: src/sysmanage_agent/communication/message_handler_queue.py:527
 #, python-format
 msgid "Failed to create outbound queue processing task: %s"
-msgstr ""
-"Impossibile creare l'attività di elaborazione della coda in uscita: %s"
+msgstr "Impossibile creare l'attività di elaborazione della coda in uscita: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:545
 #, python-format
@@ -2582,8 +2595,7 @@ msgstr "Impossibile aggiornare i ruoli dopo il controllo del servizio: %s"
 
 #: src/sysmanage_agent/core/agent_utils.py:891
 msgid "Service status check requires privileged mode"
-msgstr ""
-"Il controllo dello stato dei servizi richiede la modalità privilegiata"
+msgstr "Il controllo dello stato dei servizi richiede la modalità privilegiata"
 
 #: src/sysmanage_agent/core/agent_utils.py:907
 #, python-format
@@ -2646,8 +2658,8 @@ msgid ""
 "enrollment_token found at '%s' is ignored; it must be under the top-level "
 "'security' section"
 msgstr ""
-"enrollment_token trovato in '%s' viene ignorato; deve trovarsi nella sezione"
-" 'security' di primo livello"
+"enrollment_token trovato in '%s' viene ignorato; deve trovarsi nella sezione "
+"'security' di primo livello"
 
 #: src/sysmanage_agent/core/inflight_reconcile.py:59
 #, python-format
@@ -2765,39 +2777,39 @@ msgstr "Errore durante la raccolta dei log dell'agente: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Errore durante la raccolta dei log di errore: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:213
+#: src/sysmanage_agent/operations/backup_operations.py:215
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr ""
 "Un Mac può essere solo un host sottoposto a backup, non un host di "
 "archiviazione dei backup."
 
-#: src/sysmanage_agent/operations/backup_operations.py:214
+#: src/sysmanage_agent/operations/backup_operations.py:216
 msgid "This platform cannot take that backup role."
 msgstr "Questa piattaforma non può assumere quel ruolo di backup."
 
-#: src/sysmanage_agent/operations/backup_operations.py:365
+#: src/sysmanage_agent/operations/backup_operations.py:368
 msgid "That backup action is not configured on this host."
 msgstr "Quell'azione di backup non è configurata su questo host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:373
+#: src/sysmanage_agent/operations/backup_operations.py:376
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate non è utilizzabile su questo host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:406
+#: src/sysmanage_agent/operations/backup_operations.py:409
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Impossibile installare i processi di backup: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:481
+#: src/sysmanage_agent/operations/backup_operations.py:489
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 msgstr ""
-"Questo host non può cifrare i propri backup: restate non trova gpg. Installa"
-" GnuPG e il criterio di backup verrà inviato di nuovo."
+"Questo host non può cifrare i propri backup: restate non trova gpg. Installa "
+"GnuPG e il criterio di backup verrà inviato di nuovo."
 
-#: src/sysmanage_agent/operations/backup_operations.py:500
+#: src/sysmanage_agent/operations/backup_operations.py:508
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2805,12 +2817,7 @@ msgstr ""
 "Questo host non ha un client NFSv4, quindi effettua il backup solo tramite "
 "restate-proxy; il suo target utilizza NFS."
 
-#: src/sysmanage_agent/operations/backup_operations.py:518
-#, python-format
-msgid "This restate does not support: %s"
-msgstr "Questa versione di restate non supporta: %s"
-
-#: src/sysmanage_agent/operations/backup_operations.py:613
+#: src/sysmanage_agent/operations/backup_operations.py:623
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Questo restate non può eseguire %s come processo; aggiorna restate."
@@ -3408,8 +3415,7 @@ msgstr "Il nome del gestore dei pacchetti è richiesto"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:126
 msgid "Enabling package managers requires privileged mode"
-msgstr ""
-"L'abilitazione dei gestori di pacchetti richiede modalità privilegiata"
+msgstr "L'abilitazione dei gestori di pacchetti richiede modalità privilegiata"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:142
 #, python-format
@@ -3463,13 +3469,13 @@ msgstr "Homebrew è già installato"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 msgstr ""
-"L'installazione di Homebrew richiede intervento manuale. Installare usando: "
-"/bin/bash -c \"$(curl -fsSL "
-"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+"L'installazione di Homebrew richiede intervento manuale. Installare usando: /"
+"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
+"install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:337
 msgid "The installer script is unexpectedly large"
@@ -3916,8 +3922,8 @@ msgstr ""
 #, python-format
 msgid ""
 "Not enough disk space: %(path)s has %(free)s free and this update needs at "
-"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
-" update again."
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then "
+"update again."
 msgstr ""
 "Spazio su disco insufficiente: %(path)s ha %(free)s liberi e questo "
 "aggiornamento richiede almeno %(need)s.  Non è stato modificato nulla; "
@@ -4198,8 +4204,8 @@ msgstr "Errore durante l'ascolto delle annunciate: %s"
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
-"The agent does not replace it on its own; an administrator should check this"
-" host on the server."
+"The agent does not replace it on its own; an administrator should check this "
+"host on the server."
 msgstr ""
 "Il server ha rifiutato il certificato di questo host perché non valido per "
 "questo host (%s). L'agente non lo sostituisce da solo; un amministratore "
@@ -4239,8 +4245,8 @@ msgstr "Il server ha emesso un certificato per una chiave diversa"
 #: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
-"changed server TLS certificate will not be accepted until the pins are reset"
-" deliberately."
+"changed server TLS certificate will not be accepted until the pins are reset "
+"deliberately."
 msgstr ""
 "Il nuovo certificato dell'host è stato emesso da una CA diversa da quella "
 "fissata. Un certificato TLS del server modificato non sarà accettato finché "
@@ -4259,9 +4265,9 @@ msgstr "Ancora nessun certificato: questo host non è approvato (%s)"
 #: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
-"The server says this host's certificate is still current but did not receive"
-" it (%s). Something between the agent and the server may be removing it; the"
-" agent keeps the certificate and asks again later."
+"The server says this host's certificate is still current but did not receive "
+"it (%s). Something between the agent and the server may be removing it; the "
+"agent keeps the certificate and asks again later."
 msgstr ""
 "Il server indica che il certificato di questo host è ancora valido, ma non "
 "lo ha ricevuto (%s). Qualcosa tra l'agente e il server potrebbe rimuoverlo; "
@@ -4320,8 +4326,7 @@ msgstr "Continuazione nonostante l'errore di pulizia..."
 #, python-format
 msgid "Found %d corrupt entries in host_approval table, cleaning up..."
 msgstr ""
-"Trovati %d elementi corrotti nella tabella host_approval, pulizia in "
-"corso..."
+"Trovati %d elementi corrotti nella tabella host_approval, pulizia in corso..."
 
 #: src/sysmanage_agent/registration/registration_manager.py:558
 #, python-format
@@ -4362,8 +4367,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #~ msgid "Certificate-based authentication requires manual host approval"
 #~ msgstr ""
-#~ "L'autenticazione basata su certificati richiede l'approvazione manuale del "
-#~ "host"
+#~ "L'autenticazione basata su certificati richiede l'approvazione manuale "
+#~ "del host"
 
 #~ msgid "Please approve this host in the SysManage web interface"
 #~ msgstr "Si prega di approvare questo host nell'interfaccia web SysManage"
@@ -4373,7 +4378,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ msgstr "Errore nella raccolta/invio dello stato del tempo: %s"
 
 #~ msgid "Cannot send time status: no host approval"
-#~ msgstr "Impossibile inviare lo stato del tempo: nessun approvazione dell'host"
+#~ msgstr ""
+#~ "Impossibile inviare lo stato del tempo: nessun approvazione dell'host"
 
 #~ msgid "Failed to send time status"
 #~ msgstr "Non è stato possibile inviare lo stato del tempo"
@@ -4381,8 +4387,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #, python-format
 #~ msgid "Error fetching winget page %d (collected %d packages so far): %s"
 #~ msgstr ""
-#~ "Errore nel recupero della pagina winget %d (%d pacchetti raccolti finora): "
-#~ "%s"
+#~ "Errore nel recupero della pagina winget %d (%d pacchetti raccolti "
+#~ "finora): %s"
 
 #, python-format
 #~ msgid "Error fetching page at skip %d: %s"
@@ -4393,8 +4399,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "Broadcast %s: richiesta di aggiornamento dell'inventario ma data_collector "
-#~ "manca send_software_inventory_update"
+#~ "Broadcast %s: richiesta di aggiornamento dell'inventario ma "
+#~ "data_collector manca send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -4525,13 +4531,15 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #~ msgid "Fetching Chocolatey catalog via community repository API"
 #~ msgstr ""
-#~ "Recupero del catalogo Chocolatey tramite API del repository della community"
+#~ "Recupero del catalogo Chocolatey tramite API del repository della "
+#~ "community"
 
 #, python-format
 #~ msgid ""
 #~ "Successfully collected %d packages from Chocolatey community repository"
 #~ msgstr ""
-#~ "%d pacchetti raccolti con successo dal repository della community Chocolatey"
+#~ "%d pacchetti raccolti con successo dal repository della community "
+#~ "Chocolatey"
 
 #, python-format
 #~ msgid "Process snapshot truncated from %d to %d (cap)"
@@ -4550,7 +4558,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ msgstr "Trovato pacchetto %s: %s v%s"
 
 #, python-format
-#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid ""
+#~ "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Salto ruolo duplicato: %s con servizio %s (giá ho il pacchetto %s)"
 
 #, python-format
@@ -4806,18 +4815,19 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #, python-format
 #~ msgid "Sent batch with %d packages from %s (batch %s, packages %d-%d)"
-#~ msgstr "Inviata una serie con %d pacchetti da %s (batch %s, pacchetti %d-%d)"
+#~ msgstr ""
+#~ "Inviata una serie con %d pacchetti da %s (batch %s, pacchetti %d-%d)"
 
 #, python-format
 #~ msgid "Completed packages batch %s"
 #~ msgstr "Batch pacchetti completati %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates may "
-#~ "not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates "
+#~ "may not be accessible"
 #~ msgstr ""
-#~ "Esecuzione della raccolta certificati in modalità non privilegiata - alcuni "
-#~ "certificati potrebbero non essere accessibili"
+#~ "Esecuzione della raccolta certificati in modalità non privilegiata - "
+#~ "alcuni certificati potrebbero non essere accessibili"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Raccolta di certificati SSL dal sistema"
@@ -4851,7 +4861,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ msgstr "Ignorata vecchia messaggio d'errore [%s] da %s (registrazione a %s)"
 
 #~ msgid "Stored host_id cleared from database"
-#~ msgstr "Record di approvazione host e dati correlati cancellati dal database"
+#~ msgstr ""
+#~ "Record di approvazione host e dati correlati cancellati dal database"
 
 #~ msgid "Disconnecting to trigger re-registration..."
 #~ msgstr "Disconnessione per attivare la ririchiesta..."
@@ -4915,7 +4926,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "%d messaggi bloccati recuperati"
 
-#~ msgid "Creating outbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Creazione della task di elaborazione coda in uscita da "
 #~ "on_connection_established"
@@ -4928,7 +4940,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ msgstr ""
 #~ "Processore della coda in uscita già in esecuzione, non ne avvio un altro"
 
-#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgid ""
+#~ "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Creazione della task di elaborazione coda in entrata da "
 #~ "on_connection_established"
@@ -5131,11 +5144,13 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #, python-format
 #~ msgid "Synced custom metrics: %d active, %d skipped (invalid)"
 #~ msgstr ""
-#~ "Sincronizzazione metriche personalizzate: %d attive, %d saltate (non valide)"
+#~ "Sincronizzazione metriche personalizzate: %d attive, %d saltate (non "
+#~ "valide)"
 
 #, python-format
 #~ msgid "Loaded %d persisted custom metric(s) at startup"
-#~ msgstr "Caricate %d metrica\\(e\\) personalizzate persistente\\(i\\) all'avvio"
+#~ msgstr ""
+#~ "Caricate %d metrica\\(e\\) personalizzate persistente\\(i\\) all'avvio"
 
 #, python-format
 #~ msgid "Deployed file: %s"
@@ -5143,7 +5158,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #, python-format
 #~ msgid "Importing GPG key %s (fingerprint %s) for target=%s"
-#~ msgstr "Importazione della chiave GPG %s (impronta digitale %s) per target=%s"
+#~ msgstr ""
+#~ "Importazione della chiave GPG %s (impronta digitale %s) per target=%s"
 
 #, python-format
 #~ msgid "Removing GPG key %s (fingerprint %s) for target=%s, has_private=%s"
@@ -5446,10 +5462,11 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ msgstr "Registrazione ricevuta ma in attesa di approvazione"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come separately"
+#~ "Registration success but no host_id provided - approval may come "
+#~ "separately"
 #~ msgstr ""
-#~ "Registrazione riuscita ma nessun host_id fornito - l'approvazione potrebbe "
-#~ "arrivare separatamente"
+#~ "Registrazione riuscita ma nessun host_id fornito - l'approvazione "
+#~ "potrebbe arrivare separatamente"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -5474,10 +5491,12 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #, python-format
 #~ msgid "Host approval record stored in database: host_id=%s, status=%s"
 #~ msgstr ""
-#~ "Record di approvazione host memorizzato nel database: host_id=%s, status=%s"
+#~ "Record di approvazione host memorizzato nel database: host_id=%s, "
+#~ "status=%s"
 
 #~ msgid "Host approval records and related data cleared from database"
-#~ msgstr "Record di approvazione host e dati correlati cancellati dal database"
+#~ msgstr ""
+#~ "Record di approvazione host e dati correlati cancellati dal database"
 
 #~ msgid "Corrupt database entries cleaned up"
 #~ msgstr "Eliminazione delle voci del database corrotte"
@@ -5604,11 +5623,11 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
-#~ " licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
+#~ "%s, licensed: %s)"
 #~ msgstr ""
-#~ "Microsoft Defender for Endpoint rilevato su macOS (versione: %s, abilitato: "
-#~ "%s, con licenza: %s)"
+#~ "Microsoft Defender for Endpoint rilevato su macOS (versione: %s, "
+#~ "abilitato: %s, con licenza: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5656,14 +5675,16 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #, python-format
 #~ msgid "Found %d OpenBSD system patches (combined into single update)"
 #~ msgstr ""
-#~ "Trovate %d patch di sistema OpenBSD (combinate in un singolo aggiornamento)"
+#~ "Trovate %d patch di sistema OpenBSD (combinate in un singolo "
+#~ "aggiornamento)"
 
 #, python-format
 #~ msgid "Current OpenBSD version: %s"
 #~ msgstr "Versione corrente di OpenBSD: %s"
 
 #~ msgid "Fetching https://www.openbsd.org/ to check for updates"
-#~ msgstr "Recupero di https://www.openbsd.org/ per verificare gli aggiornamenti"
+#~ msgstr ""
+#~ "Recupero di https://www.openbsd.org/ per verificare gli aggiornamenti"
 
 #, python-format
 #~ msgid "OpenBSD upgrade available: %s -> %s"
@@ -5698,7 +5719,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr "Risultato comando Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr ""
+#~ "Risultato comando Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -6014,8 +6036,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
 #~ msgstr ""
-#~ "KVM non è disponibile su questo sistema. Assicurarsi che /dev/kvm esista e "
-#~ "che la virtualizzazione CPU sia abilitata nel BIOS."
+#~ "KVM non è disponibile su questo sistema. Assicurarsi che /dev/kvm esista "
+#~ "e che la virtualizzazione CPU sia abilitata nel BIOS."
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM è già inizializzato e pronto all'uso"
@@ -6108,7 +6130,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #~ msgid "Error configuring persistent nested virtualization: %s"
 #~ msgstr ""
-#~ "Errore nella configurazione persistente della virtualizzazione annidata: %s"
+#~ "Errore nella configurazione persistente della virtualizzazione annidata: "
+#~ "%s"
 
 #~ msgid "KVM kernel modules loaded with nested virtualization enabled"
 #~ msgstr "Moduli kernel KVM caricati con virtualizzazione annidata abilitata"
@@ -6188,7 +6211,8 @@ msgstr "Errore durante il controllo del supporto WSL: %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Aggiornamento dello stato di virtualizzazione in coda per l'invio al server"
+#~ "Aggiornamento dello stato di virtualizzazione in coda per l'invio al "
+#~ "server"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img non trovato, tentativo di installazione: %s"

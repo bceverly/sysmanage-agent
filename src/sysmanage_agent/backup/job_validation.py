@@ -282,6 +282,8 @@ def _string_value(key: str, value: Any) -> Any:
     if key == "tmpdir":
         return confined_path(value, TMP_ROOTS, key)
     if key == "copy_to":
+        # A configured copy stays on this host.  Only the agent's own
+        # off-site copy job names an https:// replica (replicas.check_url).
         return confined_path(value, BACKUP_ROOTS, key)
     if key == "snapshot":
         return check_snapshot(value)
@@ -590,6 +592,9 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         # restate-proxy (25.5): where a host reads its repository over HTTPS,
         # or the grants a storage host writes for one host.
         "proxy": _check_proxy(role, proxy),
+        # Off-site copies (27.3): the storage host's replicas, or None when
+        # the server sent none (an older server).
+        "replicas": _check_replicas(role, params.get("replicas")),
         "encrypt_key": check_key(params.get("encrypt_key")),
         # The snapshot signer's public key (Pro+ 24.6): restores check it,
         # and the storage side's ``signatures`` listing.
@@ -611,3 +616,17 @@ def _check_proxy(role: str, proxy: Any) -> Optional[Dict[str, Any]]:
     if role == "storage":
         return proxy_access.check_storage_proxy(proxy)
     return None
+
+
+def _check_replicas(role: str, value: Any) -> Optional[List[Dict[str, Any]]]:
+    """A storage policy's off-site replicas -- or the storage host's own
+    backup's (``self``, 24.13: the server's backup is the one a lost site
+    needs most); refused for any other role."""
+    if value is None:
+        return None
+    if role not in ("storage", SELF):
+        raise PolicyError("only a storage policy may have replicas")
+    # pylint: disable-next=import-outside-toplevel  # it imports PolicyError
+    from src.sysmanage_agent.backup import replicas  # noqa: PLC0415
+
+    return replicas.check_replicas(value)

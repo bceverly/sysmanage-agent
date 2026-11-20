@@ -721,7 +721,7 @@ def test_space_reads_bytes_and_a_mounted_filesystems_free_space(monkeypatch):
         seen.append(path)
         return SimpleNamespace(f_blocks=1000, f_bfree=30, f_bavail=10, f_frsize=4096)
 
-    monkeypatch.setattr(linux.os, "statvfs", fake_statvfs)
+    monkeypatch.setattr(linux.os, "statvfs", fake_statvfs, raising=False)
     root = linux._space({"size": 9_340_665_856, "mountpoint": "/", "fstype": "ext4"})
     assert root == {
         "capacity_bytes": 1000 * 4096,
@@ -746,5 +746,5 @@ def test_space_survives_an_unreadable_mount(monkeypatch):
     def boom(_path):
         raise OSError("stale")
 
-    monkeypatch.setattr(linux.os, "statvfs", boom)
+    monkeypatch.setattr(linux.os, "statvfs", boom, raising=False)
     assert linux._space({"size": "8.7G", "mountpoint": "/", "fstype": "ext4"}) == {}

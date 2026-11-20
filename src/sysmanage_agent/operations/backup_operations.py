@@ -45,6 +45,7 @@ from src.sysmanage_agent.backup.keys_mixin import BackupKeysMixin
 from src.sysmanage_agent.backup.mount_mixin import BackupMountMixin
 from src.sysmanage_agent.backup.network_rules_mixin import NetworkRulesMixin
 from src.sysmanage_agent.backup.proxy_mixin import BackupProxyMixin
+from src.sysmanage_agent.backup.replica_mixin import BackupReplicaMixin
 from src.sysmanage_agent.backup.self_backup_mixin import SelfBackupMixin
 from src.sysmanage_agent.backup.storage_actions_mixin import (
     BackupStorageActionsMixin,
@@ -52,6 +53,7 @@ from src.sysmanage_agent.backup.storage_actions_mixin import (
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import storage_prepare
+from src.sysmanage_agent.backup import replicas
 from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_probe
 from src.sysmanage_agent.backup import self_backup
@@ -235,6 +237,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
     BackupJobLifecycleMixin,
     BackupStorageActionsMixin,
     BackupProxyMixin,
+    BackupReplicaMixin,
 ):
     """The agent's half of Phase 24: the restate driver."""
 
@@ -424,6 +427,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         self_points = await self._apply_self_rules(policy)
         # restate-proxy first (25.5): a capture through it needs the token.
         proxy_state = await self._apply_proxy(policy, features)
+        replica_state = await self._apply_replicas(policy)
         jobs = job_builder.build_jobs(
             policy,
             state_dir=self.state_dir,
@@ -450,6 +454,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         policies[policy_id] = _saved_policy(
             policy, network_rules, network, proxy_state, remote_jobs
         )
+        policies[policy_id].update(replica_state)
         self._save(POLICIES_FILE, policies)
         reply = {
             "success": True,
@@ -461,6 +466,9 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             "restate_version": features.get("version"),
             **proxy_state,
         }
+        if policy.get("replicas") is not None:
+            # Off-site copies (27.3): only the hashes of the copy tokens.
+            reply["copy_tokens"] = replica_state["copy_tokens"]
         return await self._configure_reply(
             policy, policies[policy_id], reply, network, self_points
         )
@@ -566,6 +574,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         action = parameters.get("action")
         policy = self._policy(policy_id)
         role = (policy or {}).get("role")
+        if action == replicas.COPY_ACTION and "replica_id" in parameters:
+            return await self._start_replica_copy(run_id, policy_id, policy, parameters)
         if action not in _allowed_actions(policy):
             return self._not_configured()
         if action == "seal":

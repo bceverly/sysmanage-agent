@@ -156,6 +156,24 @@ async def test_an_unchanged_certificate_does_not_restart_it(storage):
 
 
 @pytest.mark.asyncio
+async def test_a_new_run_as_account_restarts_a_running_proxy(storage):
+    """An operator's own CA (no certificate block): the package started the
+    proxy as its own user, so the account the agent sets only takes effect
+    on a restart -- ``start`` left it unable to read the repositories (lab,
+    2026-11-20).  Once the drop-in is in place, a plain start."""
+    for path in (access.PROXY_CERT, access.PROXY_KEY):
+        with open(path, "w", encoding="ascii") as handle:
+            handle.write("operator's own\n")
+    answer = await storage._apply_proxy_service(_policy(None))
+    assert answer["proxy_service"] == "started"
+    assert storage.fake.ran("systemctl", "restart", service.UNIT)
+    storage.fake.calls.clear()
+    await storage._apply_proxy_service(_policy(None))
+    assert storage.fake.ran("systemctl", "start", service.UNIT)
+    assert not storage.fake.ran("systemctl", "restart", service.UNIT)
+
+
+@pytest.mark.asyncio
 async def test_a_certificate_for_a_key_this_host_lacks_asks_again(storage):
     # The server holds a certificate, but not for any key here: a request for
     # the key this host does hold (the server then issues it again).
