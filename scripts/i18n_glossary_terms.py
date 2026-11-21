@@ -682,6 +682,18 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
         "canonical": {"ru": "движок"},
         "forbid": {"ru": ["двигатель", "двигателя", "двигатели", "двигателей"]},
     },
+    "off-site": {
+        # 2026-11-20 and again 2026-11-21: "off-site copy" came back as an
+        # OFFLINE copy -- a different thing (a copy that is not connected).
+        "forbid": {
+            "nl": ["offline"],
+            "it": ["offline"],
+            "de": ["offline", "Offline"],
+            "pt": ["offline"],
+            "es": ["fuera de línea", "offline"],
+            "fr": ["hors ligne", "offline"],
+        },
+    },
     "cascade": {"forbid": {"ko": ["폭포수"]}},  # a waterfall
     "reconciliation": {
         "canonical": {"ko": "조정"},
@@ -737,6 +749,7 @@ ALIASES: Dict[str, Tuple[str, ...]] = {
     "reconciliation": ("reconcile", "reconciled", "reconciles"),
     "marked down": ("mark down", "marks down"),
     "pruning": ("prune", "pruned", "prunes"),
+    "off-site": ("offsite", "off site"),
     "polling": ("poll", "polled", "polls"),
     "jitter": ("jittered",),
     "privileged": ("privilege", "privileges"),

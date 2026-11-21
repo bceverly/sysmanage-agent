@@ -268,6 +268,8 @@ GLOSSARY: Dict[str, str] = {
     "for the vault, locked. NOT closed in an envelope",
     "prune": "delete old backup snapshots beyond the retention count. NOT "
     "cutting plants",
+    "off-site": "kept at another site, in another building or city. NOT "
+    "offline (disconnected)",
     "also back up": "a label: include these paths in the backup as well. A "
     "short noun-like label, NOT an instruction to the reader, NOT 'briefly', "
     "NOT 'or'",

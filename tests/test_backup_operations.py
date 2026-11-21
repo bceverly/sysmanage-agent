@@ -478,19 +478,27 @@ async def test_seal_snapshots_the_dataset(ops, agent):
 
 
 @pytest.mark.asyncio
-async def test_seal_takes_a_read_only_btrfs_snapshot(ops, agent):
+async def test_seal_takes_a_read_only_btrfs_snapshot(ops, agent, monkeypatch):
+    """A seal directory: the target's subvolume and each repository
+    subvolume inside it, each read-only (a btrfs snapshot leaves nested
+    subvolumes out -- lab, 2026-11-21, a 0-byte seal of a 470 MB repository)."""
     await ops.backup_configure(
         _storage_policy({"mode": "btrfs_snapshot", "subvolume": "/srv/backups/restate",
                          "snapshot_dir": "/srv/backups/.snapshots"})
     )  # fmt: skip
+    monkeypatch.setattr(ops, "_subvolumes_in", lambda path: ["web-1", "db-2"])
     await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
     await _drain(ops)
-    snap = ops.fake.ran("snapshot")
-    assert snap and snap[0][-5:] == [
-        "subvolume", "snapshot", "-r", "/srv/backups/restate",
-        f"/srv/backups/.snapshots/sysmanage-{RID}",
-    ]  # fmt: skip
-    assert snap[0][-6].endswith("/btrfs")
+    seal = f"/srv/backups/.snapshots/sysmanage-{RID}"
+    assert ops.fake.ran("mkdir")[0][-1] == seal
+    snaps = [c[-3:] for c in ops.fake.ran("snapshot")]
+    assert snaps == [
+        ["-r", "/srv/backups/restate", f"{seal}/target"],
+        ["-r", "/srv/backups/restate/db-2", f"{seal}/db-2"],
+        ["-r", "/srv/backups/restate/web-1", f"{seal}/web-1"],
+    ]
+    assert ops.fake.ran("snapshot")[0][-6].endswith("/btrfs")
+    assert seal in ops._load("seals.json")
     report = _sent(agent, "backup_result")[0]
     assert (report["action"], report["status"], report["exit"]) == ("seal", "ok", 0)
 

@@ -162,6 +162,18 @@ def test_btrfs_creates_a_subvolume_and_plain_creates_a_directory():
     assert again["commands"] == [] and again["protect"] == PROTECT  # export + perms
 
 
+def test_an_existing_subvolume_the_agent_cannot_list_is_prepared_again():
+    """An off-site copy started again into its own 0770 subvolume (lab,
+    2026-11-21): the agent's account cannot list it, but a subvolume there
+    is one a prepare made -- it is re-protected, never refused."""
+
+    def unreadable(_path):
+        raise PermissionError("Permission denied")
+
+    again = _plan("Linux", "btrfs", listdir=unreadable, subvolume=True)
+    assert again["commands"] == [] and again["protect"] == PROTECT
+
+
 @pytest.mark.parametrize(
     "kwargs,code",
     [

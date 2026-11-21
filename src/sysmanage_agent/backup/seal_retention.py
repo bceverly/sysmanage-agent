@@ -12,13 +12,22 @@ keeping the newest -- and nothing else:
 
 * ZFS: ``<dataset>@sysmanage-<uuid>`` snapshots of the sealed dataset, aged by
   ZFS's own ``creation`` property.
-* btrfs: snapshots this agent made, recorded with their time in a ledger in
+* btrfs: seals this agent made, recorded with their time in a ledger in
   its state directory; one it has no record of is never removed.
+
+A btrfs seal is a DIRECTORY ``<snapshot_dir>/sysmanage-<run id>`` holding a
+read-only snapshot of the target's subvolume (``target``) and one of each
+repository subvolume inside it, by its own name.  A btrfs snapshot leaves
+nested subvolumes out -- and each host's repository is its own subvolume
+(storage_prepare) -- so a single snapshot of the target sealed only empty
+directories where the repositories were (lab, 2026-11-21: a 0-byte seal of a
+470 MB repository).  Seals made before then are one snapshot, and are still
+removed as one.
 """
 
 import posixpath
 import re
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 SEAL_PREFIX = "sysmanage-"
 _UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -92,6 +101,47 @@ def btrfs_seals(ledger: Dict[str, float], snapshot_dir: str) -> List[Tuple[str, 
 
 def btrfs_delete_argv(btrfs: str, path: str) -> List[str]:
     return [btrfs, "subvolume", "delete", path]
+
+
+# The target subvolume's own snapshot inside a btrfs seal directory.
+SEAL_ROOT = "target"
+
+
+def btrfs_seal_argvs(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    btrfs: str, subvolume: str, snapshot_dir: str, run_id: str, children: Iterable[str]
+) -> Tuple[str, List[List[str]]]:
+    """``(seal directory, commands)``: make the directory, snapshot the
+    target's subvolume into it, then each repository subvolume in it."""
+    seal = posixpath.join(snapshot_dir, f"{SEAL_PREFIX}{run_id}")
+    argvs = [
+        ["mkdir", "-m", "0755", "--", seal],
+        [
+            btrfs,
+            "subvolume",
+            "snapshot",
+            "-r",
+            subvolume,
+            posixpath.join(seal, SEAL_ROOT),
+        ],
+    ]
+    for name in sorted(set(children) - {SEAL_ROOT}):
+        argvs.append([btrfs, "subvolume", "snapshot", "-r",
+                      posixpath.join(subvolume, name), posixpath.join(seal, name)])  # fmt: skip
+    return seal, argvs
+
+
+def btrfs_seal_delete_argvs(
+    btrfs: str, path: str, entries: Optional[Iterable[str]]
+) -> List[List[str]]:
+    """The commands that remove one btrfs seal: a seal directory's snapshots
+    and then the directory, or (``entries`` None) a seal made as a single
+    snapshot before 2026-11-21."""
+    if entries is None:
+        return [btrfs_delete_argv(btrfs, path)]
+    argvs = [
+        btrfs_delete_argv(btrfs, posixpath.join(path, name)) for name in sorted(entries)
+    ]
+    return argvs + [["rm", "-r", "--", path]]
 
 
 def delete_argv(mode: str, tool: str, name: str) -> List[str]:

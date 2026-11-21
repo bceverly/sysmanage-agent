@@ -13,7 +13,7 @@ import platform
 import posixpath
 import shutil
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.i18n import _
 from src.sysmanage_agent.backup import host_mount
@@ -54,14 +54,13 @@ class BackupStorageActionsMixin:
         started = _ops()._now()
         code: Optional[int] = 0
         message = ""
-        argv = _ops().seal_argv(seal, run_id)
         result: Dict[str, Any] = {}
-        if argv:
-            code, _out, message = await self._run(self._privileged(argv))
-        if code == 0 and argv and seal.get("mode") == "btrfs_snapshot":
-            ledger = self._load(_ops().SEALS_FILE)
-            ledger[argv[-1]] = time.time()
-            self._save(_ops().SEALS_FILE, ledger)
+        if seal.get("mode") == "btrfs_snapshot":
+            code, message = await self._seal_btrfs(seal, run_id)
+        else:
+            argv = _ops().seal_argv(seal, run_id)
+            if argv:
+                code, _out, message = await self._run(self._privileged(argv))
         if code == 0 and seal.get("keep_days"):
             result = await self._expire_seals(seal)
             message = message or "; ".join(result.get("errors", []))
@@ -73,6 +72,57 @@ class BackupStorageActionsMixin:
              "status": status, "exit": code, "result": result or None,
              "started_at": started, "finished_at": _ops()._now()}  # fmt: skip
         )
+
+    def _subvolumes_in(self, path: str) -> List[str]:
+        """The names of the subvolumes directly inside ``path`` -- each
+        host's repository (storage_prepare makes them)."""
+        try:
+            entries = list(os.scandir(path))
+        except OSError:
+            return []
+        return [
+            entry.name
+            for entry in entries
+            if entry.is_dir(follow_symlinks=False) and self._is_subvolume(entry.path)
+        ]
+
+    async def _seal_btrfs(self, seal: Dict[str, Any], run_id: str):
+        """A seal directory with a read-only snapshot of the target and of
+        each repository subvolume (seal_retention); recorded in the ledger
+        once the directory exists, so a seal left half made still expires.
+        ``(exit code, message)``."""
+        btrfs = _ops()._first(_ops().BTRFS_PATHS)
+        path, argvs = seal_retention.btrfs_seal_argvs(
+            btrfs, seal["subvolume"], seal["snapshot_dir"], run_id,
+            self._subvolumes_in(seal["subvolume"]),
+        )  # fmt: skip
+        for index, argv in enumerate(argvs):
+            code, _out, message = await self._run(self._privileged(argv))
+            if index == 0 and code == 0:
+                ledger = self._load(_ops().SEALS_FILE)
+                ledger[path] = time.time()
+                self._save(_ops().SEALS_FILE, ledger)
+            if code != 0:
+                return code, message
+        return 0, ""
+
+    async def _remove_btrfs_seal(self, btrfs: str, path: str) -> Tuple[int, str]:
+        """Remove one btrfs seal: a seal directory's snapshots then the
+        directory, or a single-snapshot seal from before 2026-11-21."""
+        if self._is_subvolume(path):
+            entries = None
+        else:
+            try:
+                entries = os.listdir(path)
+            except FileNotFoundError:
+                return 0, ""  # gone already
+            except OSError as error:
+                return 1, str(error)
+        for argv in seal_retention.btrfs_seal_delete_argvs(btrfs, path, entries):
+            code, _out, err = await self._run(self._privileged(argv))
+            if code != 0:
+                return code, err
+        return 0, ""
 
     async def _expire_seals(self, seal: Dict[str, Any]) -> Dict[str, Any]:
         """Remove this agent's seals older than ``keep_days`` (never the
@@ -93,9 +143,14 @@ class BackupStorageActionsMixin:
             tool = _ops()._first(_ops().BTRFS_PATHS)
         removed, errors = [], []
         for name in seal_retention.expired(seals, keep, now):
-            code, _out, err = await self._run(
-                self._privileged(seal_retention.delete_argv(seal["mode"], tool, name))
-            )
+            if seal["mode"] == "btrfs_snapshot":
+                code, err = await self._remove_btrfs_seal(tool, name)
+            else:
+                code, _out, err = await self._run(
+                    self._privileged(
+                        seal_retention.delete_argv(seal["mode"], tool, name)
+                    )
+                )
             if code == 0:
                 removed.append(name)
             else:

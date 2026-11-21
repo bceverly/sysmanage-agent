@@ -431,8 +431,54 @@ async def test_btrfs_seals_are_recorded_and_only_recorded_ones_expire(ops, monke
     await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
     await _drain(ops)
     deleted = [c for c in ops.fake.calls if "delete" in c]
-    assert [c[-1] for c in deleted] == [f"/srv/backups/.snapshots/sysmanage-{first}"]
+    # The seal directory was not there to list (no real btrfs in the test):
+    # gone already, nothing to remove -- and the ledger forgets it.
+    assert deleted == []
     assert list(ops._load("seals.json")) == [f"/srv/backups/.snapshots/sysmanage-{RID}"]
+
+
+@pytest.mark.asyncio
+async def test_an_expired_btrfs_seal_directory_loses_its_snapshots_then_itself(
+    ops, monkeypatch
+):
+    clock = {"t": 1_800_000_000.0}
+    monkeypatch.setattr(storage_actions_mixin.time, "time", lambda: clock["t"])
+    seal = {"mode": "btrfs_snapshot", "subvolume": "/srv/backups/restate",
+            "snapshot_dir": "/srv/backups/.snapshots", "keep_days": 1}  # fmt: skip
+    await ops.backup_configure(_storage_policy(seal))
+    first = "11111111-1111-4111-8111-111111111111"
+    old = f"/srv/backups/.snapshots/sysmanage-{first}"
+    ops._save("seals.json", {old: clock["t"]})
+    clock["t"] += 3 * 86400
+    monkeypatch.setattr(
+        storage_actions_mixin.os, "listdir", lambda path: ["target", "web-1"]
+    )
+    monkeypatch.setattr(ops, "_is_subvolume", lambda path: False)
+    await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    bare = [c[2:] if c[:2] == ["sudo", "-n"] else c for c in ops.fake.calls]
+    gone = [c[-1] for c in bare if "delete" in c] + [
+        c[-1] for c in bare if c[:2] == ["rm", "-r"]
+    ]
+    assert gone == [f"{old}/target", f"{old}/web-1", old]
+
+
+@pytest.mark.asyncio
+async def test_a_seal_made_as_one_snapshot_is_still_removed_as_one(ops, monkeypatch):
+    clock = {"t": 1_800_000_000.0}
+    monkeypatch.setattr(storage_actions_mixin.time, "time", lambda: clock["t"])
+    seal = {"mode": "btrfs_snapshot", "subvolume": "/srv/backups/restate",
+            "snapshot_dir": "/srv/backups/.snapshots", "keep_days": 1}  # fmt: skip
+    await ops.backup_configure(_storage_policy(seal))
+    old = "/srv/backups/.snapshots/sysmanage-11111111-1111-4111-8111-111111111111"
+    ops._save("seals.json", {old: clock["t"]})
+    clock["t"] += 3 * 86400
+    monkeypatch.setattr(ops, "_is_subvolume", lambda path: path == old)
+    await ops.backup_run({"run_id": RID, "policy_id": PID, "action": "seal"})
+    await _drain(ops)
+    deleted = [c[-1] for c in ops.fake.calls if "delete" in c]
+    assert deleted == [old]
+    assert not [c for c in ops.fake.calls if "rm" in c and old in c]
 
 
 @pytest.mark.asyncio

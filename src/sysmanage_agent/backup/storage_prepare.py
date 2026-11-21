@@ -381,6 +381,12 @@ def _zfs_steps(
 def _btrfs_steps(
     repository: str, listdir: Callable, is_subvolume: Callable[[str], bool]
 ) -> Dict[str, Any]:
+    # Already its own subvolume (a prepare made it): only re-protected --
+    # without listing it, which the agent's account cannot (it is 0770 to
+    # the repository's account; lab, 2026-11-21: an off-site copy started
+    # again into its own subvolume was refused as unreadable).
+    if is_subvolume(repository):
+        return {"kind": BTRFS, "commands": [], "exists": True}
     empty = _empty(repository, listdir)
     if empty is None:
         return {"kind": BTRFS, "exists": False,

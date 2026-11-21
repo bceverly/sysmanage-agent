@@ -73,3 +73,24 @@ def test_keep_days_is_optional_and_carried():
         ]
         == 14
     )
+
+
+def test_a_btrfs_seal_is_a_directory_of_read_only_snapshots():
+    seal, argvs = r.btrfs_seal_argvs(
+        "/usr/bin/btrfs", "/srv/b", "/srv/s", "x", ["web-1", "target"]
+    )
+    assert seal == "/srv/s/sysmanage-x"
+    assert argvs[0] == ["mkdir", "-m", "0755", "--", seal]
+    assert [a[-2:] for a in argvs[1:]] == [["/srv/b", f"{seal}/target"],
+                                           ["/srv/b/web-1", f"{seal}/web-1"]]  # fmt: skip
+    assert all(a[1:4] == ["subvolume", "snapshot", "-r"] for a in argvs[1:])
+
+
+def test_removing_a_btrfs_seal_directory_or_an_old_single_snapshot():
+    argvs = r.btrfs_seal_delete_argvs("/usr/bin/btrfs", "/srv/s/x", ["web-1", "target"])
+    assert argvs == [["/usr/bin/btrfs", "subvolume", "delete", "/srv/s/x/target"],
+                     ["/usr/bin/btrfs", "subvolume", "delete", "/srv/s/x/web-1"],
+                     ["rm", "-r", "--", "/srv/s/x"]]  # fmt: skip
+    assert r.btrfs_seal_delete_argvs("/usr/bin/btrfs", "/srv/s/x", None) == [
+        ["/usr/bin/btrfs", "subvolume", "delete", "/srv/s/x"]
+    ]
