@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 15:45-0800\n"
+"POT-Creation-Date: 2026-11-21 05:57-0800\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -403,7 +403,7 @@ msgstr ""
 "अपग्रेड करें।"
 
 #: src/sysmanage_agent/backup/replica_mixin.py:129
-#: src/sysmanage_agent/operations/backup_operations.py:531
+#: src/sysmanage_agent/operations/backup_operations.py:538
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "restate का यह संस्करण इनका समर्थन नहीं करता: %s"
@@ -423,6 +423,11 @@ msgid ""
 msgstr ""
 "यह restate किसी अन्य स्टोरेज होस्ट पर स्नैपशॉट कॉपी नहीं कर सकता; restate को"
 " अपग्रेड करें।"
+
+#: src/sysmanage_agent/backup/retire_mixin.py:101
+#, python-format
+msgid "Could not remove the old repository %s: %s"
+msgstr "पुराने रिपॉजिटरी %s को नहीं हटाया जा सकता: %s"
 
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
@@ -542,6 +547,40 @@ msgid ""
 msgstr ""
 "%(path)s एक खाली डायरेक्टरी है, btrfs सबवॉल्यूम नहीं। इसे हटाएँ (root के रूप"
 " में rmdir), फिर दोबारा तैयार करें।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:74
+msgid "The repository must be an absolute path."
+msgstr "रिपॉजिटरी एक निरपेक्ष पथ होना चाहिए।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:77
+msgid "The repository path is not normalized."
+msgstr "रिपॉजिटरी पथ सामान्यीकृत नहीं है।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:79
+msgid "That path is not a repository."
+msgstr "वह पथ एक रिपॉजिटरी नहीं है।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:114
+#, python-format
+msgid "%s is in use by a backup policy on this storage host."
+msgstr "%s एक बैकअप नीति द्वारा इस स्टोरेज होस्ट में उपयोग किया जा रहा है।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:128
+msgid "This storage host does not keep a repository for that policy."
+msgstr "यह स्टोरेज होस्ट उस नीति के लिए कोई रिपॉजिटरी नहीं रखता है।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:133
+msgid "That is not the repository this policy uses here."
+msgstr "यह वह रिपॉजिटरी नहीं है जिसका उपयोग यह नीति यहाँ करती है।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:138
+msgid "This storage host never kept that repository for this policy."
+msgstr "इस स्टोरेज होस्ट ने कभी भी उस नीति के लिए वह रिपॉजिटरी नहीं रखी है।"
+
+#: src/sysmanage_agent/backup/storage_retire.py:190
+#, python-format
+msgid "%s does not hold a restate repository; it was left alone."
+msgstr "%s में कोई restate रिपॉजिटरी नहीं है; इसे बिना बदले छोड़ दिया गया।"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2757,30 +2796,30 @@ msgstr "एजेंट लॉग एकलेक्ट करने में �
 msgid "Error collecting error logs: %s"
 msgstr "अंतर्रेखा लॉग एकत्र करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:215
+#: src/sysmanage_agent/operations/backup_operations.py:217
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr ""
 "Mac केवल बैकअप लिया जाने वाला होस्ट हो सकता है, बैकअप स्टोरेज होस्ट नहीं।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:216
+#: src/sysmanage_agent/operations/backup_operations.py:218
 msgid "This platform cannot take that backup role."
 msgstr "यह प्लेटफ़ॉर्म बैकअप की वह भूमिका नहीं निभा सकता।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:368
+#: src/sysmanage_agent/operations/backup_operations.py:371
 msgid "That backup action is not configured on this host."
 msgstr "यह बैकअप एक्शन इस होस्ट पर कॉन्फ़िगर नहीं है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:376
+#: src/sysmanage_agent/operations/backup_operations.py:379
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate इस होस्ट पर उपयोगी नहीं है: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:409
+#: src/sysmanage_agent/operations/backup_operations.py:412
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "बैकअप जॉब्स इंस्टॉल नहीं किए जा सके: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:494
+#: src/sysmanage_agent/operations/backup_operations.py:501
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
@@ -2788,7 +2827,7 @@ msgstr ""
 "यह होस्ट अपने बैकअप एन्क्रिप्ट नहीं कर सकता: restate को gpg नहीं मिलता। "
 "GnuPG इंस्टॉल करें, फिर बैकअप नीति दोबारा भेजी जाएगी।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:513
+#: src/sysmanage_agent/operations/backup_operations.py:520
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2796,7 +2835,7 @@ msgstr ""
 "इस होस्ट पर NFSv4 क्लाइंट नहीं है, इसलिए यह केवल restate-proxy के माध्यम से "
 "बैकअप लेता है; इसका टारगेट NFS का उपयोग करता है।"
 
-#: src/sysmanage_agent/operations/backup_operations.py:628
+#: src/sysmanage_agent/operations/backup_operations.py:639
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "यह restate %s को जॉब के रूप में नहीं चला सकता; restate अपग्रेड करें।"
@@ -4319,6 +4358,9 @@ msgstr "WSL स्थिति जाँच में समयबाहुल�
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL समर्थन की जाँच में त्रुटि: %s"
+
+#~ msgid "The repository path is not plain."
+#~ msgstr "रिपॉजिटरी पथ साधारण नहीं है।"
 
 #~ msgid "This platform can only be a backup storage host."
 #~ msgstr "यह प्लेटफ़ॉर्म केवल बैकअप स्टोरेज होस्ट हो सकता है।"

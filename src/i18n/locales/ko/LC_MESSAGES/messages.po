@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 15:45-0800\n"
+"POT-Creation-Date: 2026-11-21 05:57-0800\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -377,7 +377,7 @@ msgid ""
 msgstr "이 restate는 restate-proxy를 통해 오프사이트 복사본을 읽을 수 없습니다. restate를 업그레이드하세요."
 
 #: src/sysmanage_agent/backup/replica_mixin.py:129
-#: src/sysmanage_agent/operations/backup_operations.py:531
+#: src/sysmanage_agent/operations/backup_operations.py:538
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "이 restate 버전은 다음을 지원하지 않습니다: %s"
@@ -393,6 +393,11 @@ msgid ""
 "This restate cannot copy a snapshot to another storage host; upgrade "
 "restate."
 msgstr "이 restate는 다른 스토리지 호스트로 스냅샷을 복사할 수 없습니다. restate를 업그레이드하십시오."
+
+#: src/sysmanage_agent/backup/retire_mixin.py:101
+#, python-format
+msgid "Could not remove the old repository %s: %s"
+msgstr "이전 저장소 %s을(를) 제거할 수 없습니다: %s"
 
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
@@ -503,6 +508,40 @@ msgid ""
 "root), then prepare again."
 msgstr ""
 "%(path)s은(는) 빈 디렉터리이며 btrfs 하위 볼륨이 아닙니다. 삭제한 다음(root로 rmdir) 다시 준비하세요."
+
+#: src/sysmanage_agent/backup/storage_retire.py:74
+msgid "The repository must be an absolute path."
+msgstr "저장소는 절대 경로여야 합니다."
+
+#: src/sysmanage_agent/backup/storage_retire.py:77
+msgid "The repository path is not normalized."
+msgstr "저장소 경로가 정규화되어 있지 않습니다."
+
+#: src/sysmanage_agent/backup/storage_retire.py:79
+msgid "That path is not a repository."
+msgstr "그 경로는 저장소가 아닙니다."
+
+#: src/sysmanage_agent/backup/storage_retire.py:114
+#, python-format
+msgid "%s is in use by a backup policy on this storage host."
+msgstr "%s는 이 스토리지 호스트에서 백업 정책에 의해 사용 중입니다."
+
+#: src/sysmanage_agent/backup/storage_retire.py:128
+msgid "This storage host does not keep a repository for that policy."
+msgstr "이 스토리지 호스트는 해당 정책에 대한 저장소를 유지하지 않습니다."
+
+#: src/sysmanage_agent/backup/storage_retire.py:133
+msgid "That is not the repository this policy uses here."
+msgstr "그것은 이 정책이 여기서 사용하는 저장소가 아닙니다."
+
+#: src/sysmanage_agent/backup/storage_retire.py:138
+msgid "This storage host never kept that repository for this policy."
+msgstr "이 스토리지 호스트는 이 정책에 대해 그런 저장소를 한 번도 유지한 적이 없습니다."
+
+#: src/sysmanage_agent/backup/storage_retire.py:190
+#, python-format
+msgid "%s does not hold a restate repository; it was left alone."
+msgstr "%s은 restate 저장소를 포함하고 있지 않습니다. 그대로 두었습니다."
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2683,43 +2722,43 @@ msgstr "Agent 로그 수집 중 오류: %s"
 msgid "Error collecting error logs: %s"
 msgstr "에러 로그 수집 중 오류: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:215
+#: src/sysmanage_agent/operations/backup_operations.py:217
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr "Mac은 백업 대상 호스트로만 사용할 수 있으며, 백업 스토리지 호스트로는 사용할 수 없습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:216
+#: src/sysmanage_agent/operations/backup_operations.py:218
 msgid "This platform cannot take that backup role."
 msgstr "이 플랫폼은 해당 백업 역할을 맡을 수 없습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:368
+#: src/sysmanage_agent/operations/backup_operations.py:371
 msgid "That backup action is not configured on this host."
 msgstr "이 호스트에는 해당 백업 동작이 구성되어 있지 않습니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:376
+#: src/sysmanage_agent/operations/backup_operations.py:379
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate는 이 호스트에서 사용할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:409
+#: src/sysmanage_agent/operations/backup_operations.py:412
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "백업 작업을 설치할 수 없습니다: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:494
+#: src/sysmanage_agent/operations/backup_operations.py:501
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 msgstr ""
 "이 호스트는 백업을 암호화할 수 없습니다: restate가 gpg를 찾지 못합니다. GnuPG를 설치하면 백업 정책이 다시 전송됩니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:513
+#: src/sysmanage_agent/operations/backup_operations.py:520
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 msgstr ""
 "이 호스트에는 NFSv4 클라이언트가 없으므로 restate-proxy를 통해서만 백업합니다. 이 호스트의 대상은 NFS를 사용합니다."
 
-#: src/sysmanage_agent/operations/backup_operations.py:628
+#: src/sysmanage_agent/operations/backup_operations.py:639
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "이 restate는 %s을(를) 작업으로 실행할 수 없습니다. restate를 업그레이드하세요."
@@ -4214,6 +4253,9 @@ msgstr "WSL 상태 확인이 시간 초과되었습니다"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "WSL 지원 확인 오류: %s"
+
+#~ msgid "The repository path is not plain."
+#~ msgstr "저장소 경로는 단순하지 않습니다."
 
 #~ msgid "This platform can only be a backup storage host."
 #~ msgstr "이 플랫폼은 백업 스토리지 호스트로만 사용할 수 있습니다."

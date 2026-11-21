@@ -487,6 +487,12 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/local/sbin/restate init *
 # there alone left NFS exporting the empty directory beneath it.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- /usr/sbin/zfs create *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- /usr/sbin/zfs mount *
+# A moved host's old repository, removed once its keep date passes (server
+# ROADMAP 27.3): its own dataset is destroyed where it is mounted, in the
+# host's mount namespace.  The agent removes only a repository it served
+# itself for that policy; ``rm`` and ``chattr -a`` (append-only and
+# immutable flags, ``chattr -a -i -R``) are granted above and below.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/nsenter --mount=/proc/1/ns/mnt -- /usr/sbin/zfs destroy -r *
 # Equip for backup: the install steps run in the host's mount namespace
 # (the agent's unit has its own, with /root read-only: add-apt-repository
 # failed writing /root/.launchpadlib).  The same commands as above, through

@@ -177,6 +177,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/setfacl ^-a 0 (group@:D::deny|owner@:d:
 # ``zfs destroy -r <dataset>@sysmanage-<run id>`` (recursive: every host's
 # child dataset was sealed too), and nothing else can be destroyed.
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^destroy -r [A-Za-z0-9_.:/-]+@sysmanage-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+# A moved host's old repository, removed once its keep date passes (server
+# ROADMAP 27.3): exactly ``zfs destroy -r <dataset>/<fqdn>-<8 hex>`` (or its
+# ``-enc`` repository), a host repository's own dataset and never a
+# snapshot name; the agent removes only a repository it served itself.
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^destroy -r [A-Za-z0-9_.:/-]+/[A-Za-z0-9_.-]+-[0-9a-f]{8}(-[a-z]+)?$
 # iCloud Photos to local (server ROADMAP 24.12), started by an administrator
 # from the Backups page ("Enable iCloud backup", then each account's first
 # download): the cloud root and each account's place become ZFS child

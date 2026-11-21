@@ -46,6 +46,7 @@ from src.sysmanage_agent.backup.mount_mixin import BackupMountMixin
 from src.sysmanage_agent.backup.network_rules_mixin import NetworkRulesMixin
 from src.sysmanage_agent.backup.proxy_mixin import BackupProxyMixin
 from src.sysmanage_agent.backup.replica_mixin import BackupReplicaMixin
+from src.sysmanage_agent.backup.retire_mixin import BackupRetireMixin
 from src.sysmanage_agent.backup.self_backup_mixin import SelfBackupMixin
 from src.sysmanage_agent.backup.storage_actions_mixin import (
     BackupStorageActionsMixin,
@@ -53,6 +54,7 @@ from src.sysmanage_agent.backup.storage_actions_mixin import (
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup import storage_fs
 from src.sysmanage_agent.backup import storage_prepare
+from src.sysmanage_agent.backup import storage_retire
 from src.sysmanage_agent.backup import replicas
 from src.sysmanage_agent.backup import repository_choice
 from src.sysmanage_agent.backup import restate_probe
@@ -238,6 +240,7 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
     BackupStorageActionsMixin,
     BackupProxyMixin,
     BackupReplicaMixin,
+    BackupRetireMixin,
 ):
     """The agent's half of Phase 24: the restate driver."""
 
@@ -453,9 +456,13 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             )
         removed = await self._remove_stale(policy_id, set(jobs))
         policies = self._load(POLICIES_FILE)
-        policies[policy_id] = _saved_policy(
-            policy, network_rules, network, proxy_state, remote_jobs
-        )
+        saved = _saved_policy(policy, network_rules, network, proxy_state, remote_jobs)
+        # A storage policy given another repository here remembers the old
+        # one, the only kind it will later remove (27.3 moves).
+        former = storage_retire.former(policies.get(policy_id), saved)
+        if former:
+            saved["former"] = former
+        policies[policy_id] = saved
         policies[policy_id].update(replica_state)
         self._save(POLICIES_FILE, policies)
         reply = {
@@ -581,6 +588,10 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         role = (policy or {}).get("role")
         if action == replicas.COPY_ACTION and "replica_id" in parameters:
             return await self._start_replica_copy(run_id, policy_id, policy, parameters)
+        if action == storage_retire.ACTION:
+            # A moved host's old repository (27.3); checked against what
+            # this agent itself served for the policy.
+            return self._start_retire(run_id, policy_id, parameters)
         if action not in _allowed_actions(policy):
             return self._not_configured()
         if action == "seal":

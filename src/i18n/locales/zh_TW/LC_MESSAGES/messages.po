@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 15:45-0800\n"
+"POT-Creation-Date: 2026-11-21 05:57-0800\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -370,7 +370,7 @@ msgid ""
 msgstr "此 restate 無法透過 restate-proxy 讀取異地副本；請升級 restate。"
 
 #: src/sysmanage_agent/backup/replica_mixin.py:129
-#: src/sysmanage_agent/operations/backup_operations.py:531
+#: src/sysmanage_agent/operations/backup_operations.py:538
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支援：%s"
@@ -386,6 +386,11 @@ msgid ""
 "This restate cannot copy a snapshot to another storage host; upgrade "
 "restate."
 msgstr "此 restate 無法將快照複製到另一台儲存主機；請升級 restate。"
+
+#: src/sysmanage_agent/backup/retire_mixin.py:101
+#, python-format
+msgid "Could not remove the old repository %s: %s"
+msgstr "無法刪除舊的存儲庫 %s: %s"
 
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
@@ -486,6 +491,40 @@ msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
 "root), then prepare again."
 msgstr "%(path)s 是空目錄，不是 btrfs 子磁碟區。請將其刪除（以 root 身分執行 rmdir），然後重新準備。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:74
+msgid "The repository must be an absolute path."
+msgstr "存儲庫必須是絕對路徑。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:77
+msgid "The repository path is not normalized."
+msgstr "存儲庫路徑未正規化。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:79
+msgid "That path is not a repository."
+msgstr "該路徑並非存儲庫。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:114
+#, python-format
+msgid "%s is in use by a backup policy on this storage host."
+msgstr "%s 正在被備份策略使用於此儲存主機上。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:128
+msgid "This storage host does not keep a repository for that policy."
+msgstr "此儲存主機未為該策略保存存儲庫。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:133
+msgid "That is not the repository this policy uses here."
+msgstr "這並不是該策略在此處使用的存儲庫。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:138
+msgid "This storage host never kept that repository for this policy."
+msgstr "此儲存主機從未為該策略保存過這個存儲庫。"
+
+#: src/sysmanage_agent/backup/storage_retire.py:190
+#, python-format
+msgid "%s does not hold a restate repository; it was left alone."
+msgstr "%s 不包含 restate 存儲庫；已保持原樣。"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2658,41 +2697,41 @@ msgstr "收集代理日誌時發生錯誤：%s"
 msgid "Error collecting error logs: %s"
 msgstr "收集錯誤日誌時發生錯誤：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:215
+#: src/sysmanage_agent/operations/backup_operations.py:217
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr "Mac 只能作為受備份主機，不能作為備份儲存主機。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:216
+#: src/sysmanage_agent/operations/backup_operations.py:218
 msgid "This platform cannot take that backup role."
 msgstr "此平台無法擔任該備份角色。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:368
+#: src/sysmanage_agent/operations/backup_operations.py:371
 msgid "That backup action is not configured on this host."
 msgstr "此主機上未設定該備份操作。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:376
+#: src/sysmanage_agent/operations/backup_operations.py:379
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate在此主機上不可用：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:409
+#: src/sysmanage_agent/operations/backup_operations.py:412
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "無法安裝備份作業：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:494
+#: src/sysmanage_agent/operations/backup_operations.py:501
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 msgstr "此主機無法加密其備份：restate 找不到 gpg。安裝 GnuPG 後，備份策略會重新傳送。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:513
+#: src/sysmanage_agent/operations/backup_operations.py:520
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 msgstr "此主機沒有 NFSv4 用戶端，因此只能透過 restate-proxy 備份；它的目標使用 NFS。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:628
+#: src/sysmanage_agent/operations/backup_operations.py:639
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 無法將 %s 作為工作執行；請升級 restate。"
@@ -4179,6 +4218,9 @@ msgstr "WSL 狀態檢查超時"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "檢查 WSL 支持時出錯：%s"
+
+#~ msgid "The repository path is not plain."
+#~ msgstr "存儲庫路徑不簡單。"
 
 #~ msgid "This platform can only be a backup storage host."
 #~ msgstr "此平台只能作為備份儲存主機。"

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 15:45-0800\n"
+"POT-Creation-Date: 2026-11-21 05:57-0800\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -82,12 +82,12 @@ msgstr "This host's certificate could not be loaded and is not presented: %s"
 
 #: src/security/client_tls.py:114
 msgid ""
-"server.tls_inspection is true: the server's TLS certificate is not pinned on "
-"this host. A TLS-inspecting proxy also removes this host's client "
+"server.tls_inspection is true: the server's TLS certificate is not pinned on"
+" this host. A TLS-inspecting proxy also removes this host's client "
 "certificate, so the server must accept this host without one."
 msgstr ""
-"server.tls_inspection is true: the server's TLS certificate is not pinned on "
-"this host. A TLS-inspecting proxy also removes this host's client "
+"server.tls_inspection is true: the server's TLS certificate is not pinned on"
+" this host. A TLS-inspecting proxy also removes this host's client "
 "certificate, so the server must accept this host without one."
 
 #: src/security/pin_reset.py:33
@@ -156,22 +156,22 @@ msgstr ""
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
-"(%s). The likely cause is a proxy, or another server, presenting a different "
-"certificate. If this server really was replaced, re-pin deliberately: delete "
-"%s or run the agent's reset command, then restart the agent."
+"(%s). The likely cause is a proxy, or another server, presenting a different"
+" certificate. If this server really was replaced, re-pin deliberately: "
+"delete %s or run the agent's reset command, then restart the agent."
 msgstr ""
 "The server's TLS certificate changed and the change could not be verified "
-"(%s). The likely cause is a proxy, or another server, presenting a different "
-"certificate. If this server really was replaced, re-pin deliberately: delete "
-"%s or run the agent's reset command, then restart the agent."
+"(%s). The likely cause is a proxy, or another server, presenting a different"
+" certificate. If this server really was replaced, re-pin deliberately: "
+"delete %s or run the agent's reset command, then restart the agent."
 
 #: src/security/server_identity.py:176
 msgid ""
-"The server's TLS certificate changed; the new one is signed by this server's "
-"identity and is now trusted"
+"The server's TLS certificate changed; the new one is signed by this server's"
+" identity and is now trusted"
 msgstr ""
-"The server's TLS certificate changed; the new one is signed by this server's "
-"identity and is now trusted"
+"The server's TLS certificate changed; the new one is signed by this server's"
+" identity and is now trusted"
 
 #: src/security/server_identity.py:204
 #, python-format
@@ -210,7 +210,8 @@ msgid "The server's identity certificate uses an unsupported key type"
 msgstr "The server's identity certificate uses an unsupported key type"
 
 #: src/security/server_pinning.py:212
-msgid "The server identity statement is not signed by its identity certificate"
+msgid ""
+"The server identity statement is not signed by its identity certificate"
 msgstr ""
 "The server identity statement is not signed by its identity certificate"
 
@@ -260,11 +261,11 @@ msgstr "The backup job could not be started."
 #: src/sysmanage_agent/backup/job_lifecycle_mixin.py:237
 #, python-format
 msgid ""
-"restate stopped (exit %(code)s) before writing a result, and its log %(log)s "
-"is empty: it was stopped, or the machine restarted, while it ran"
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
 msgstr ""
-"restate stopped (exit %(code)s) before writing a result, and its log %(log)s "
-"is empty: it was stopped, or the machine restarted, while it ran"
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
 
 #: src/sysmanage_agent/backup/job_lifecycle_mixin.py:246
 #, python-format
@@ -298,7 +299,8 @@ msgstr "This host is not approved yet"
 #: src/sysmanage_agent/backup/key_files.py:137
 #, python-format
 msgid "The server did not release the backup key: HTTP %(status)s, %(detail)s"
-msgstr "The server did not release the backup key: HTTP %(status)s, %(detail)s"
+msgstr ""
+"The server did not release the backup key: HTTP %(status)s, %(detail)s"
 
 #: src/sysmanage_agent/backup/key_files.py:148
 msgid "no reason given"
@@ -373,11 +375,11 @@ msgstr "Could not unmount the backup storage at %s: %s"
 
 #: src/sysmanage_agent/backup/offsite.py:116
 msgid ""
-"An off-site copy holds the current repository only; it cannot be read as the "
-"previous one."
+"An off-site copy holds the current repository only; it cannot be read as the"
+" previous one."
 msgstr ""
-"An off-site copy holds the current repository only; it cannot be read as the "
-"previous one."
+"An off-site copy holds the current repository only; it cannot be read as the"
+" previous one."
 
 #: src/sysmanage_agent/backup/offsite.py:129
 msgid "That off-site copy is not configured for this backup policy."
@@ -392,24 +394,31 @@ msgstr ""
 "restate."
 
 #: src/sysmanage_agent/backup/replica_mixin.py:129
-#: src/sysmanage_agent/operations/backup_operations.py:531
+#: src/sysmanage_agent/operations/backup_operations.py:538
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "This restate does not support: %s"
 
 #: src/sysmanage_agent/backup/replica_mixin.py:149
 msgid ""
-"This backup policy has a copy job of its own, so an off-site copy cannot run "
-"for it."
+"This backup policy has a copy job of its own, so an off-site copy cannot run"
+" for it."
 msgstr ""
-"This backup policy has a copy job of its own, so an off-site copy cannot run "
-"for it."
+"This backup policy has a copy job of its own, so an off-site copy cannot run"
+" for it."
 
 #: src/sysmanage_agent/backup/replica_mixin.py:157
 msgid ""
-"This restate cannot copy a snapshot to another storage host; upgrade restate."
+"This restate cannot copy a snapshot to another storage host; upgrade "
+"restate."
 msgstr ""
-"This restate cannot copy a snapshot to another storage host; upgrade restate."
+"This restate cannot copy a snapshot to another storage host; upgrade "
+"restate."
+
+#: src/sysmanage_agent/backup/retire_mixin.py:101
+#, python-format
+msgid "Could not remove the old repository %s: %s"
+msgstr "Could not remove the old repository %s: %s"
 
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
@@ -527,6 +536,40 @@ msgstr ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
 "root), then prepare again."
 
+#: src/sysmanage_agent/backup/storage_retire.py:74
+msgid "The repository must be an absolute path."
+msgstr "The repository must be an absolute path."
+
+#: src/sysmanage_agent/backup/storage_retire.py:77
+msgid "The repository path is not normalized."
+msgstr "The repository path is not normalized."
+
+#: src/sysmanage_agent/backup/storage_retire.py:79
+msgid "That path is not a repository."
+msgstr "That path is not a repository."
+
+#: src/sysmanage_agent/backup/storage_retire.py:114
+#, python-format
+msgid "%s is in use by a backup policy on this storage host."
+msgstr "%s is in use by a backup policy on this storage host."
+
+#: src/sysmanage_agent/backup/storage_retire.py:128
+msgid "This storage host does not keep a repository for that policy."
+msgstr "This storage host does not keep a repository for that policy."
+
+#: src/sysmanage_agent/backup/storage_retire.py:133
+msgid "That is not the repository this policy uses here."
+msgstr "That is not the repository this policy uses here."
+
+#: src/sysmanage_agent/backup/storage_retire.py:138
+msgid "This storage host never kept that repository for this policy."
+msgstr "This storage host never kept that repository for this policy."
+
+#: src/sysmanage_agent/backup/storage_retire.py:190
+#, python-format
+msgid "%s does not hold a restate repository; it was left alone."
+msgstr "%s does not hold a restate repository; it was left alone."
+
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
 msgid "Error detecting antivirus: %s"
@@ -598,9 +641,11 @@ msgstr "Failed to query Windows certificate store %s: %s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
 #, python-format
@@ -2147,11 +2192,11 @@ msgstr "Error handling polled message %s"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 
 #: src/sysmanage_agent/communication/http_polling.py:232
 #, python-format
@@ -2200,7 +2245,8 @@ msgstr "Could not parse message timestamp for stale check: %s"
 
 #: src/sysmanage_agent/communication/message_handler.py:421
 #: src/sysmanage_agent/communication/message_handler.py:792
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Host registration is pending approval. Will continue periodic attempts."
 
@@ -2223,12 +2269,12 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:494
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 
 #: src/sysmanage_agent/communication/message_handler.py:507
@@ -2725,29 +2771,29 @@ msgstr "Error collecting agent logs: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Error collecting error logs: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:215
+#: src/sysmanage_agent/operations/backup_operations.py:217
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr "A Mac can only be a backed-up host, not a backup storage host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:216
+#: src/sysmanage_agent/operations/backup_operations.py:218
 msgid "This platform cannot take that backup role."
 msgstr "This platform cannot take that backup role."
 
-#: src/sysmanage_agent/operations/backup_operations.py:368
+#: src/sysmanage_agent/operations/backup_operations.py:371
 msgid "That backup action is not configured on this host."
 msgstr "That backup action is not configured on this host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:376
+#: src/sysmanage_agent/operations/backup_operations.py:379
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate is not usable on this host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:409
+#: src/sysmanage_agent/operations/backup_operations.py:412
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "Could not install the backup jobs: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:494
+#: src/sysmanage_agent/operations/backup_operations.py:501
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
@@ -2755,7 +2801,7 @@ msgstr ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 
-#: src/sysmanage_agent/operations/backup_operations.py:513
+#: src/sysmanage_agent/operations/backup_operations.py:520
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2763,7 +2809,7 @@ msgstr ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
 
-#: src/sysmanage_agent/operations/backup_operations.py:628
+#: src/sysmanage_agent/operations/backup_operations.py:639
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "This restate cannot run %s as a job; upgrade restate."
@@ -3408,13 +3454,13 @@ msgstr "Homebrew is already installed"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:337
 msgid "The installer script is unexpectedly large"
@@ -3850,12 +3896,12 @@ msgstr "Failed to send OS update after Ubuntu Pro change: %s"
 #, python-format
 msgid ""
 "Not enough disk space: %(path)s has %(free)s free and this update needs at "
-"least %(need)s.  Nothing was changed; free some space or grow the disk, then "
-"update again."
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
 msgstr ""
 "Not enough disk space: %(path)s has %(free)s free and this update needs at "
-"least %(need)s.  Nothing was changed; free some space or grow the disk, then "
-"update again."
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
 
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
@@ -4131,12 +4177,12 @@ msgstr "Error listening for announcements: %s"
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
-"The agent does not replace it on its own; an administrator should check this "
-"host on the server."
+"The agent does not replace it on its own; an administrator should check this"
+" host on the server."
 msgstr ""
 "The server refused this host's certificate as not valid for this host (%s). "
-"The agent does not replace it on its own; an administrator should check this "
-"host on the server."
+"The agent does not replace it on its own; an administrator should check this"
+" host on the server."
 
 #: src/sysmanage_agent/registration/host_certificate.py:180
 #, python-format
@@ -4172,12 +4218,12 @@ msgstr "The server issued a certificate for a different key"
 #: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
-"changed server TLS certificate will not be accepted until the pins are reset "
-"deliberately."
+"changed server TLS certificate will not be accepted until the pins are reset"
+" deliberately."
 msgstr ""
 "The new host certificate was issued by a CA other than the pinned one. A "
-"changed server TLS certificate will not be accepted until the pins are reset "
-"deliberately."
+"changed server TLS certificate will not be accepted until the pins are reset"
+" deliberately."
 
 #: src/sysmanage_agent/registration/host_certificate.py:294
 #, python-format
@@ -4192,13 +4238,13 @@ msgstr "No certificate yet: this host is not approved (%s)"
 #: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
-"The server says this host's certificate is still current but did not receive "
-"it (%s). Something between the agent and the server may be removing it; the "
-"agent keeps the certificate and asks again later."
+"The server says this host's certificate is still current but did not receive"
+" it (%s). Something between the agent and the server may be removing it; the"
+" agent keeps the certificate and asks again later."
 msgstr ""
-"The server says this host's certificate is still current but did not receive "
-"it (%s). Something between the agent and the server may be removing it; the "
-"agent keeps the certificate and asks again later."
+"The server says this host's certificate is still current but did not receive"
+" it (%s). Something between the agent and the server may be removing it; the"
+" agent keeps the certificate and asks again later."
 
 #: src/sysmanage_agent/registration/host_certificate.py:323
 #, python-format
@@ -4271,6 +4317,9 @@ msgstr "WSL status check timed out"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Error checking WSL support: %s"
+
+#~ msgid "The repository path is not plain."
+#~ msgstr "The repository path is not plain."
 
 #~ msgid "This platform can only be a backup storage host."
 #~ msgstr "This platform can only be a backup storage host."
@@ -4365,8 +4414,7 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
-#~ msgstr ""
-#~ "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
+#~ msgstr "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -4491,10 +4539,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Found %s package: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
-#~ msgstr ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgstr "Skipping duplicate role: %s with service %s (already have package %s)"
 
 #, python-format
 #~ msgid "Found PostgreSQL %s in %s"
@@ -4756,11 +4802,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Completed packages batch %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Collecting SSL certificates from system"
@@ -4858,8 +4904,7 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "Recovered %d stuck messages on connection establishment"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Creating outbound queue processing task from on_connection_established"
 
@@ -4870,10 +4915,8 @@ msgstr "Error checking WSL support: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Outbound queue processor already running, not starting another"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
-#~ msgstr ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
+#~ msgstr "Creating inbound queue processing task from on_connection_established"
 
 #, python-format
 #~ msgid "Inbound queue processing task created successfully: %s"
@@ -5035,8 +5078,7 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Windows %s Event Log collected in %.2f seconds"
 
 #~ msgid "Collecting Windows System Event Log (this may take 10-30 seconds)..."
-#~ msgstr ""
-#~ "Collecting Windows System Event Log (this may take 10-30 seconds)..."
+#~ msgstr "Collecting Windows System Event Log (this may take 10-30 seconds)..."
 
 #~ msgid ""
 #~ "Collecting Windows Security Event Log (may require admin privileges)..."
@@ -5370,11 +5412,9 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Registration received but approval pending"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -5538,11 +5578,11 @@ msgstr "Error checking WSL support: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -6239,11 +6279,11 @@ msgstr "Error checking WSL support: %s"
 #~ msgstr "Installing sshpass via apk..."
 
 #~ msgid ""
-#~ "Could not detect package manager to install sshpass. Please install "
-#~ "sshpass manually."
+#~ "Could not detect package manager to install sshpass. Please install sshpass "
+#~ "manually."
 #~ msgstr ""
-#~ "Could not detect package manager to install sshpass. Please install "
-#~ "sshpass manually."
+#~ "Could not detect package manager to install sshpass. Please install sshpass "
+#~ "manually."
 
 #~ msgid "Timeout while installing sshpass"
 #~ msgstr "Timeout while installing sshpass"

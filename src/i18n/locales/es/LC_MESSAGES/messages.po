@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 15:45-0800\n"
+"POT-Creation-Date: 2026-11-21 05:57-0800\n"
 "Language: es\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -429,7 +429,7 @@ msgstr ""
 "actualice restate."
 
 #: src/sysmanage_agent/backup/replica_mixin.py:129
-#: src/sysmanage_agent/operations/backup_operations.py:531
+#: src/sysmanage_agent/operations/backup_operations.py:538
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Esta versión de restate no admite: %s"
@@ -449,6 +449,11 @@ msgid ""
 msgstr ""
 "Este restate no puede copiar una instantánea a otro host de almacenamiento; "
 "actualice restate."
+
+#: src/sysmanage_agent/backup/retire_mixin.py:101
+#, python-format
+msgid "Could not remove the old repository %s: %s"
+msgstr "No se pudo eliminar el antiguo repositorio %s: %s"
 
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
 #, python-format
@@ -572,6 +577,45 @@ msgid ""
 msgstr ""
 "%(path)s es un directorio vacío, no un subvolumen btrfs. Elimínelo (rmdir "
 "como root) y vuelva a preparar."
+
+#: src/sysmanage_agent/backup/storage_retire.py:74
+msgid "The repository must be an absolute path."
+msgstr "El repositorio debe ser una ruta absoluta."
+
+#: src/sysmanage_agent/backup/storage_retire.py:77
+msgid "The repository path is not normalized."
+msgstr "La ruta del repositorio no está normalizada."
+
+#: src/sysmanage_agent/backup/storage_retire.py:79
+msgid "That path is not a repository."
+msgstr "Esa ruta no es un repositorio."
+
+#: src/sysmanage_agent/backup/storage_retire.py:114
+#, python-format
+msgid "%s is in use by a backup policy on this storage host."
+msgstr ""
+"%s está en uso por una política de copia de seguridad en este host de "
+"almacenamiento."
+
+#: src/sysmanage_agent/backup/storage_retire.py:128
+msgid "This storage host does not keep a repository for that policy."
+msgstr ""
+"Este host de almacenamiento no mantiene un repositorio para esa política."
+
+#: src/sysmanage_agent/backup/storage_retire.py:133
+msgid "That is not the repository this policy uses here."
+msgstr "Eso no es el repositorio que usa esta política aquí."
+
+#: src/sysmanage_agent/backup/storage_retire.py:138
+msgid "This storage host never kept that repository for this policy."
+msgstr ""
+"Este host de almacenamiento nunca mantuvo ese repositorio para esta "
+"política."
+
+#: src/sysmanage_agent/backup/storage_retire.py:190
+#, python-format
+msgid "%s does not hold a restate repository; it was left alone."
+msgstr "%s no contiene un repositorio de restate; se dejó intacto."
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -2805,31 +2849,31 @@ msgstr "Error recopilando registros del agente: %s"
 msgid "Error collecting error logs: %s"
 msgstr "Error recopilando registros de error: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:215
+#: src/sysmanage_agent/operations/backup_operations.py:217
 msgid "A Mac can only be a backed-up host, not a backup storage host."
 msgstr ""
 "Un Mac solo puede ser un host respaldado, no un host de almacenamiento de "
 "copias de seguridad."
 
-#: src/sysmanage_agent/operations/backup_operations.py:216
+#: src/sysmanage_agent/operations/backup_operations.py:218
 msgid "This platform cannot take that backup role."
 msgstr "Esta plataforma no puede asumir esa función de copia de seguridad."
 
-#: src/sysmanage_agent/operations/backup_operations.py:368
+#: src/sysmanage_agent/operations/backup_operations.py:371
 msgid "That backup action is not configured on this host."
 msgstr "Esa acción de copia de seguridad no está configurada en este host."
 
-#: src/sysmanage_agent/operations/backup_operations.py:376
+#: src/sysmanage_agent/operations/backup_operations.py:379
 #, python-format
 msgid "restate is not usable on this host: %s"
 msgstr "restate no es utilizable en este host: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:409
+#: src/sysmanage_agent/operations/backup_operations.py:412
 #, python-format
 msgid "Could not install the backup jobs: %s"
 msgstr "No se pudieron instalar las tareas de copia de seguridad: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:494
+#: src/sysmanage_agent/operations/backup_operations.py:501
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
@@ -2837,7 +2881,7 @@ msgstr ""
 "Este host no puede cifrar sus copias de seguridad: restate no encuentra gpg."
 " Instale GnuPG y la política de copia de seguridad se envía nuevamente."
 
-#: src/sysmanage_agent/operations/backup_operations.py:513
+#: src/sysmanage_agent/operations/backup_operations.py:520
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2845,7 +2889,7 @@ msgstr ""
 "Este host no tiene cliente NFSv4, por lo que solo realiza copias de "
 "seguridad a través de restate-proxy; su objetivo utiliza NFS."
 
-#: src/sysmanage_agent/operations/backup_operations.py:628
+#: src/sysmanage_agent/operations/backup_operations.py:639
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Este restate no puede ejecutar %s como tarea; actualice restate."
@@ -4370,6 +4414,9 @@ msgstr "Comprobación de estado de WSL con tiempo de espera excedido"
 #, python-format
 msgid "Error checking WSL support: %s"
 msgstr "Error al comprobar el soporte WSL: %s"
+
+#~ msgid "The repository path is not plain."
+#~ msgstr "La ruta del repositorio no es simple."
 
 #~ msgid "This platform can only be a backup storage host."
 #~ msgstr ""
