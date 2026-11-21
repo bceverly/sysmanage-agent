@@ -428,6 +428,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         # restate-proxy first (25.5): a capture through it needs the token.
         proxy_state = await self._apply_proxy(policy, features)
         replica_state = await self._apply_replicas(policy)
+        # A backed-up host's off-site copies and its read tokens (27.3).
+        replica_state.update(await self._apply_offsite(policy))
         jobs = job_builder.build_jobs(
             policy,
             state_dir=self.state_dir,
@@ -469,6 +471,9 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         if policy.get("replicas") is not None:
             # Off-site copies (27.3): only the hashes of the copy tokens.
             reply["copy_tokens"] = replica_state["copy_tokens"]
+        if policy.get("offsite") is not None:
+            # A backed-up host's off-site read tokens: only their hashes.
+            reply["offsite_tokens"] = replica_state["offsite_tokens"]
         return await self._configure_reply(
             policy, policies[policy_id], reply, network, self_points
         )
@@ -623,24 +628,33 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 _("This restate cannot run %s as a job; upgrade restate.") % action,
             )
         keys: List[str] = []
-        remote = repository_choice.reads_remote(policy, params, self._features())
         try:
-            repository, _source, previous = repository_choice.choose(
-                policy, params, remote
+            # Its own repository, through the proxy (25.5), or an off-site copy.
+            target = repository_choice.read_target(
+                policy_id, policy, params, self._features()
             )
             keys = await self._decrypt_keys(run_id, params)
-            common = {"repository": repository, "decrypt_with": keys,
+            common = {"repository": target["repository"], "decrypt_with": keys,
                       "state_dir": self.state_dir, "group": _agent_group()}  # fmt: skip
             job = build(params, **common)
-            if remote:  # restate-proxy (25.5): the token file, CA or pin
-                job.update(proxy_access.job_keys(policy_id, policy["proxy"], previous))
+            job.update(target["keys"])  # the token file, CA or pin
             await self._install_root_file(
                 contract.render_job(job), contract.job_path(policy_id, action)
             )
         except (validation.PolicyError, key_files.KeyFetchError, OSError) as error:
             await key_files.remove(keys, self._run, self._privileged)
             return self._refusal(key_files.refusal_code(error), str(error))
-        return await self._start_job(run_id, policy_id, action, previous, keys, remote)
+        return await self._start_read(run_id, policy_id, action, target, keys)
+
+    async def _start_read(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self, run_id: str, policy_id: str, action: str,
+        target: Dict[str, Any], keys: List[str],
+    ) -> Dict[str, Any]:  # fmt: skip
+        """Start a read job against ``target`` (repository_choice.read_target)."""
+        return await self._start_job(
+            run_id, policy_id, action, target["previous"], keys, target["remote"],
+            offsite=target["offsite"],
+        )  # fmt: skip
 
     async def backup_restore(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Restore from a snapshot into a staging directory, or into place
@@ -655,23 +669,22 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
             policy = self._policy(policy_id)
             if not policy or policy.get("role") not in validation.CAPTURING_ROLES:
                 return self._not_configured()
-            remote = repository_choice.reads_remote(policy, params, self._features())
-            repository, _source, previous = repository_choice.choose(
-                policy, params, remote
+            # Its own repository, through the proxy (25.5), or an off-site copy.
+            target = repository_choice.read_target(
+                policy_id, policy, params, self._features()
             )
             run_id = validation.check_uuid(params.get("run_id"), "run_id")
             keys = await self._decrypt_keys(run_id, params)
             job = job_builder.build_restore_job(
                 params,
-                repository=repository,
+                repository=target["repository"],
                 state_dir=self.state_dir,
                 group=_agent_group(),
                 can_plan=contract.supports(self._features(), "plan"),
                 decrypt_with=keys,
                 trusted_key=self._trusted_key(policy_id),
             )
-            if remote:  # restate-proxy (25.5): the token file, CA or pin
-                job.update(proxy_access.job_keys(policy_id, policy["proxy"], previous))
+            job.update(target["keys"])  # the token file, CA or pin
             if job["restore_root"] != "/":
                 os.makedirs(job["restore_root"], mode=0o700, exist_ok=True)
             await self._install_root_file(
@@ -681,8 +694,8 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
         except (validation.PolicyError, key_files.KeyFetchError, OSError) as error:
             await key_files.remove(keys, self._run, self._privileged)
             return self._refusal(key_files.refusal_code(error), str(error))
-        return await self._start_job(
-            run_id, policy_id, job_builder.RESTORE_ACTION, previous, keys, remote
+        return await self._start_read(
+            run_id, policy_id, job_builder.RESTORE_ACTION, target, keys
         )
 
 

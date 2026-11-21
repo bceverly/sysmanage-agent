@@ -96,11 +96,13 @@ class BackupJobLifecycleMixin:
     async def _start_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, run_id: str, policy_id: str, action: str, previous: bool = False,
         keys: Optional[List[str]] = None, remote: bool = False,
+        offsite: Optional[str] = None,
     ) -> Dict[str, Any]:  # fmt: skip
         """Start the job; a job that does not start leaves no key behind.
-        ``remote``: it reads through restate-proxy, so nothing is mounted."""
+        ``remote``: it reads through restate-proxy, so nothing is mounted;
+        ``offsite``: the off-site copy it reads (27.3), kept in its record."""
         answer = await self._launch_job(
-            run_id, policy_id, action, previous, keys, remote
+            run_id, policy_id, action, previous, keys, remote, offsite
         )
         if not answer.get("success"):
             await key_files.remove(keys or [], self._run, self._privileged)
@@ -109,12 +111,15 @@ class BackupJobLifecycleMixin:
     async def _launch_job(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self, run_id: str, policy_id: str, action: str, previous: bool,
         keys: Optional[List[str]], remote: bool = False,
+        offsite: Optional[str] = None,
     ) -> Dict[str, Any]:  # fmt: skip
         record = self._new_record(policy_id, action)
         if previous:
             record["previous"] = True  # the repository before an encrypted one
         if remote:
             record["remote"] = True  # through restate-proxy: no mount
+        if offsite:
+            record["offsite"] = offsite  # an off-site copy's URL, not the path
         if keys:
             record["key_files"] = list(keys)  # removed when the run ends
         if (await self._job_state(record))[0]:

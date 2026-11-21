@@ -165,13 +165,15 @@ def stale_ids(
     wanted: Iterable[str],
     known: Iterable[str],
     listdir: Callable[[str], List[str]],
+    infix: str = REPLICA_INFIX,
 ) -> List[str]:
     """The replica ids this policy has files for -- the ones the agent
     recorded (``known``) and any it finds in the token and CA directories --
-    that the server no longer lists."""
+    that the server no longer lists.  ``infix`` names the kind of file: a
+    backed-up host's off-site read tokens use the same scheme (``offsite``)."""
     found = set(known)
     pattern = re.compile(
-        re.escape(policy_id + REPLICA_INFIX) + f"({_UUID})" + r"\.(?:token|pem)\Z"
+        re.escape(policy_id + infix) + f"({_UUID})" + r"\.(?:token|pem)\Z"
     )
     for directory in (access.TOKEN_DIR, access.CA_DIR):
         try:

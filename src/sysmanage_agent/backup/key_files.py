@@ -288,4 +288,8 @@ def refusal_code(error: Exception) -> str:
     """The agent's refusal reason for a job that could not be set up."""
     if isinstance(error, KeyFetchError):
         return "key_unavailable"
-    return "install_failed" if isinstance(error, OSError) else "invalid_request"
+    if isinstance(error, OSError):
+        return "install_failed"
+    reason = getattr(error, "reason", None)
+    # A refusal that names its own code (backup.offsite.OffsiteRefused).
+    return reason if isinstance(reason, str) else "invalid_request"

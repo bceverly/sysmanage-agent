@@ -595,6 +595,9 @@ def check_policy(params: Any, *, mountinfo: Callable[[], str], **fs) -> Dict[str
         # Off-site copies (27.3): the storage host's replicas, or None when
         # the server sent none (an older server).
         "replicas": _check_replicas(role, params.get("replicas")),
+        # And the off-site copies a backed-up host may read (restore and
+        # browse) when its own storage host is lost; None when not sent.
+        "offsite": _check_offsite(role, params.get("offsite")),
         "encrypt_key": check_key(params.get("encrypt_key")),
         # The snapshot signer's public key (Pro+ 24.6): restores check it,
         # and the storage side's ``signatures`` listing.
@@ -630,3 +633,12 @@ def _check_replicas(role: str, value: Any) -> Optional[List[Dict[str, Any]]]:
     from src.sysmanage_agent.backup import replicas  # noqa: PLC0415
 
     return replicas.check_replicas(value)
+
+
+def _check_offsite(role: str, value: Any) -> Optional[List[Dict[str, Any]]]:
+    """A host policy's off-site copies (backup.offsite); refused for any
+    other role."""
+    # pylint: disable-next=import-outside-toplevel  # it imports PolicyError
+    from src.sysmanage_agent.backup import offsite  # noqa: PLC0415
+
+    return offsite.check_offsite(role, value)

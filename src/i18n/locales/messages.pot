@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: sysmanage-agent VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 14:36-0800\n"
+"POT-Creation-Date: 2026-11-20 15:45-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -245,29 +245,29 @@ msgstr ""
 msgid "restate is not installed on this host."
 msgstr ""
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:122
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:127
 msgid "That backup job is already running."
 msgstr ""
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:144
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:149
 msgid "The backup job could not be started."
 msgstr ""
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:237
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result, and its log "
 "%(log)s is empty: it was stopped, or the machine restarted, while it ran"
 msgstr ""
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:246
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl "
 "-u %(unit)s on this host"
 msgstr ""
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:285
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:290
 msgid "Could not queue the backup report"
 msgstr ""
 
@@ -353,24 +353,40 @@ msgstr ""
 msgid "The backup storage at %s did not answer."
 msgstr ""
 
-#: src/sysmanage_agent/backup/mount_mixin.py:166
+#: src/sysmanage_agent/backup/mount_mixin.py:170
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr ""
 
-#: src/sysmanage_agent/backup/replica_mixin.py:113
-#: src/sysmanage_agent/operations/backup_operations.py:526
+#: src/sysmanage_agent/backup/offsite.py:116
+msgid ""
+"An off-site copy holds the current repository only; it cannot be read as "
+"the previous one."
+msgstr ""
+
+#: src/sysmanage_agent/backup/offsite.py:129
+msgid "That off-site copy is not configured for this backup policy."
+msgstr ""
+
+#: src/sysmanage_agent/backup/offsite.py:146
+msgid ""
+"This restate cannot read an off-site copy through restate-proxy; upgrade "
+"restate."
+msgstr ""
+
+#: src/sysmanage_agent/backup/replica_mixin.py:129
+#: src/sysmanage_agent/operations/backup_operations.py:531
 #, python-format
 msgid "This restate does not support: %s"
 msgstr ""
 
-#: src/sysmanage_agent/backup/replica_mixin.py:133
+#: src/sysmanage_agent/backup/replica_mixin.py:149
 msgid ""
 "This backup policy has a copy job of its own, so an off-site copy cannot "
 "run for it."
 msgstr ""
 
-#: src/sysmanage_agent/backup/replica_mixin.py:141
+#: src/sysmanage_agent/backup/replica_mixin.py:157
 msgid ""
 "This restate cannot copy a snapshot to another storage host; upgrade "
 "restate."
@@ -676,22 +692,22 @@ msgstr ""
 msgid "Failed to get BSD network info: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:201
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:204
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:218
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:221
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:280
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:283
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr ""
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:487
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:490
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr ""
@@ -2653,19 +2669,19 @@ msgstr ""
 msgid "Could not install the backup jobs: %s"
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:489
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:508
+#: src/sysmanage_agent/operations/backup_operations.py:513
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy;"
 " its target uses NFS."
 msgstr ""
 
-#: src/sysmanage_agent/operations/backup_operations.py:623
+#: src/sysmanage_agent/operations/backup_operations.py:628
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr ""

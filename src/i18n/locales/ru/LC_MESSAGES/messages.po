@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 14:36-0800\n"
+"POT-Creation-Date: 2026-11-20 15:45-0800\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -86,8 +86,8 @@ msgstr "Не удалось загрузить сертификат этого �
 
 #: src/security/client_tls.py:114
 msgid ""
-"server.tls_inspection is true: the server's TLS certificate is not pinned on "
-"this host. A TLS-inspecting proxy also removes this host's client "
+"server.tls_inspection is true: the server's TLS certificate is not pinned on"
+" this host. A TLS-inspecting proxy also removes this host's client "
 "certificate, so the server must accept this host without one."
 msgstr ""
 "server.tls_inspection равно true: TLS-сертификат сервера на этом хосте не "
@@ -139,21 +139,21 @@ msgstr "Ответ с идентификационными данными сер
 #: src/security/server_identity.py:128
 msgid "The server cannot state its TLS identity yet; pinning will be retried"
 msgstr ""
-"Сервер пока не может сообщить свои идентификационные данные TLS; закрепление "
-"будет повторено"
+"Сервер пока не может сообщить свои идентификационные данные TLS; закрепление"
+" будет повторено"
 
 #: src/security/server_identity.py:133
 #, python-format
 msgid "Could not pin this server's identity: %s. Pinning will be retried."
 msgstr ""
-"Не удалось закрепить идентификационные данные этого сервера: %s. Закрепление "
-"будет повторено."
+"Не удалось закрепить идентификационные данные этого сервера: %s. Закрепление"
+" будет повторено."
 
 #: src/security/server_identity.py:138
 msgid "Pinned this server's identity; its TLS certificate is now checked"
 msgstr ""
-"Идентификационные данные этого сервера закреплены; теперь его TLS-сертификат "
-"проверяется"
+"Идентификационные данные этого сервера закреплены; теперь его TLS-сертификат"
+" проверяется"
 
 #: src/security/server_identity.py:154
 msgid ""
@@ -161,27 +161,27 @@ msgid ""
 "identity right now; keeping the current pins and trying again later"
 msgstr ""
 "TLS-сертификат сервера изменился, но сервер сейчас не может сообщить свои "
-"идентификационные данные TLS; текущие закрепления сохраняются, попытка будет "
-"повторена позже"
+"идентификационные данные TLS; текущие закрепления сохраняются, попытка будет"
+" повторена позже"
 
 #: src/security/server_identity.py:163
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
-"(%s). The likely cause is a proxy, or another server, presenting a different "
-"certificate. If this server really was replaced, re-pin deliberately: delete "
-"%s or run the agent's reset command, then restart the agent."
+"(%s). The likely cause is a proxy, or another server, presenting a different"
+" certificate. If this server really was replaced, re-pin deliberately: "
+"delete %s or run the agent's reset command, then restart the agent."
 msgstr ""
-"TLS-сертификат сервера изменился, и это изменение не удалось проверить (%s). "
-"Вероятная причина: прокси или другой сервер предъявляет другой сертификат. "
+"TLS-сертификат сервера изменился, и это изменение не удалось проверить (%s)."
+" Вероятная причина: прокси или другой сервер предъявляет другой сертификат. "
 "Если этот сервер действительно заменён, выполните повторное закрепление "
 "намеренно: удалите %s или запустите команду сброса агента, затем "
 "перезапустите агент."
 
 #: src/security/server_identity.py:176
 msgid ""
-"The server's TLS certificate changed; the new one is signed by this server's "
-"identity and is now trusted"
+"The server's TLS certificate changed; the new one is signed by this server's"
+" identity and is now trusted"
 msgstr ""
 "TLS-сертификат сервера изменился; новый подписан идентификационными данными "
 "этого сервера и теперь считается доверенным"
@@ -227,7 +227,8 @@ msgstr ""
 "Идентификационный сертификат сервера использует неподдерживаемый тип ключа"
 
 #: src/security/server_pinning.py:212
-msgid "The server identity statement is not signed by its identity certificate"
+msgid ""
+"The server identity statement is not signed by its identity certificate"
 msgstr ""
 "Заявление об идентификационных данных сервера не подписано его "
 "идентификационным сертификатом"
@@ -250,7 +251,8 @@ msgstr "Сертификата этого подключения нет в по�
 #, python-format
 msgid "The backup storage at %(where)s is nearly full (%(free)d MB free)."
 msgstr ""
-"Хранилище резервных копий в %(where)s почти заполнено (свободно %(free)d МБ)."
+"Хранилище резервных копий в %(where)s почти заполнено (свободно %(free)d "
+"МБ)."
 
 #: src/sysmanage_agent/backup/host_mount.py:173
 #, python-format
@@ -268,24 +270,24 @@ msgstr ""
 msgid "restate is not installed on this host."
 msgstr "restate не установлен на этом хосте."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:122
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:127
 msgid "That backup job is already running."
 msgstr "Это задание резервного копирования уже выполняется."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:144
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:149
 msgid "The backup job could not be started."
 msgstr "Не удалось запустить задание резервного копирования."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:237
 #, python-format
 msgid ""
-"restate stopped (exit %(code)s) before writing a result, and its log %(log)s "
-"is empty: it was stopped, or the machine restarted, while it ran"
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
 msgstr ""
 "restate остановился (код выхода %(code)s), не записав результат, и его "
 "журнал %(log)s пуст: его остановили или машину перезапустили во время работы"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:246
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -294,7 +296,7 @@ msgstr ""
 "restate остановился (код выхода %(code)s), не записав результат; см. "
 "journalctl -u %(unit)s на этом хосте"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:285
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:290
 msgid "Could not queue the backup report"
 msgstr "Не удалось поставить отчет о резервном копировании в очередь"
 
@@ -394,28 +396,50 @@ msgstr ""
 msgid "The backup storage at %s did not answer."
 msgstr "Хранилище резервных копий в %s не ответило."
 
-#: src/sysmanage_agent/backup/mount_mixin.py:166
+#: src/sysmanage_agent/backup/mount_mixin.py:170
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "Не удалось отмонтировать хранилище резервных копий в %s: %s"
 
-#: src/sysmanage_agent/backup/replica_mixin.py:113
-#: src/sysmanage_agent/operations/backup_operations.py:526
+#: src/sysmanage_agent/backup/offsite.py:116
+msgid ""
+"An off-site copy holds the current repository only; it cannot be read as the"
+" previous one."
+msgstr ""
+"Внешняя копия содержит только текущий репозиторий; её нельзя прочитать как "
+"предыдущий."
+
+#: src/sysmanage_agent/backup/offsite.py:129
+msgid "That off-site copy is not configured for this backup policy."
+msgstr ""
+"Эта внешняя копия не настроена для данной политики резервного копирования."
+
+#: src/sysmanage_agent/backup/offsite.py:146
+msgid ""
+"This restate cannot read an off-site copy through restate-proxy; upgrade "
+"restate."
+msgstr ""
+"Этот restate не может читать внешнюю копию через restate-proxy; обновите "
+"restate."
+
+#: src/sysmanage_agent/backup/replica_mixin.py:129
+#: src/sysmanage_agent/operations/backup_operations.py:531
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "Эта версия restate не поддерживает: %s"
 
-#: src/sysmanage_agent/backup/replica_mixin.py:133
+#: src/sysmanage_agent/backup/replica_mixin.py:149
 msgid ""
-"This backup policy has a copy job of its own, so an off-site copy cannot run "
-"for it."
+"This backup policy has a copy job of its own, so an off-site copy cannot run"
+" for it."
 msgstr ""
-"У этой политики резервного копирования есть собственное задание копирования, "
-"поэтому внешнее копирование для неё запустить нельзя."
+"У этой политики резервного копирования есть собственное задание копирования,"
+" поэтому внешнее копирование для неё запустить нельзя."
 
-#: src/sysmanage_agent/backup/replica_mixin.py:141
+#: src/sysmanage_agent/backup/replica_mixin.py:157
 msgid ""
-"This restate cannot copy a snapshot to another storage host; upgrade restate."
+"This restate cannot copy a snapshot to another storage host; upgrade "
+"restate."
 msgstr ""
 "Эта версия restate не может скопировать снимок на другой хост хранения; "
 "обновите restate."
@@ -464,8 +488,8 @@ msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
 msgstr ""
-"Агент не может прочитать %(path)s и поэтому не может определить, есть ли там "
-"резервные копии. Запустите агент от root или переместите каталог в другое "
+"Агент не может прочитать %(path)s и поэтому не может определить, есть ли там"
+" резервные копии. Запустите агент от root или переместите каталог в другое "
 "место, затем повторите подготовку."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:178
@@ -478,9 +502,9 @@ msgid ""
 msgstr ""
 "%(path)s уже содержит файлы, но не является отдельным набором данных ZFS, а "
 "подготовка никогда не перемещает резервные копии. Либо 1) переименуйте его "
-"(например, в %(path)s.old), повторите подготовку и скопируйте его содержимое "
-"в новый набор данных от root; либо 2) удалите его, если эти резервные копии "
-"больше не нужны."
+"(например, в %(path)s.old), повторите подготовку и скопируйте его содержимое"
+" в новый набор данных от root; либо 2) удалите его, если эти резервные копии"
+" больше не нужны."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:186
 #, python-format
@@ -492,9 +516,9 @@ msgid ""
 msgstr ""
 "%(path)s уже содержит файлы, но не является отдельным подтомом btrfs, а "
 "подготовка никогда не перемещает резервные копии. Либо 1) переименуйте его "
-"(например, в %(path)s.old), повторите подготовку и скопируйте его содержимое "
-"в новый подтом от root; либо 2) удалите его, если эти резервные копии больше "
-"не нужны."
+"(например, в %(path)s.old), повторите подготовку и скопируйте его содержимое"
+" в новый подтом от root; либо 2) удалите его, если эти резервные копии "
+"больше не нужны."
 
 #: src/sysmanage_agent/backup/storage_prepare.py:212
 msgid ""
@@ -612,7 +636,8 @@ msgstr "Не удалось запросить хранилище сертифи
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr ""
 "Бундл сертификатов %s содержит более %d сертификатов; отчитывается первый %d"
 
@@ -752,22 +777,22 @@ msgstr "Не удалось получить информацию о храни�
 msgid "Failed to get BSD network info: %s"
 msgstr "Не удалось получить информацию о сети BSD: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:201
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:204
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Не удалось получить информацию о процессоре Linux: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:218
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:221
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Не удалось получить информацию о оперативной памяти Linux: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:280
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:283
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Не удалось получить информацию о хранилище Linux: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:487
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:490
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "Не удалось получить информацию о сети Linux: %s"
@@ -1429,8 +1454,8 @@ msgstr "Не удалось обновить OpenBSD"
 #: src/sysmanage_agent/collection/update_detection_bsd.py:226
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr ""
-"Обновление OpenBSD завершилось ошибкой из-за превышения времени ожидания (30 "
-"минут)"
+"Обновление OpenBSD завершилось ошибкой из-за превышения времени ожидания (30"
+" минут)"
 
 #: src/sysmanage_agent/collection/update_detection_bsd.py:325
 msgid "FreeBSD upgrade failed"
@@ -2175,8 +2200,8 @@ msgstr "Ошибка при обработке опрошенного сообщ
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr ""
 "Невозможно использовать HTTP-резервное соединение: у этого агента нет "
 "сохраненного host_id. Регистрация должна быть завершена сначала."
@@ -2232,7 +2257,8 @@ msgstr ""
 
 #: src/sysmanage_agent/communication/message_handler.py:421
 #: src/sysmanage_agent/communication/message_handler.py:792
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr ""
 "Регистрация узла ожидает одобрения. Будут продолжены периодические попытки."
 
@@ -2255,12 +2281,12 @@ msgstr ""
 #: src/sysmanage_agent/communication/message_handler.py:494
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
-"Сервер сообщил о ошибке host_not_registered (недействительно %(n)d/%(limit)d "
-"раза) -- переподключаюсь БЕЗ сброса host_id, чтобы сервер мог повторно "
+"Сервер сообщил о ошибке host_not_registered (недействительно %(n)d/%(limit)d"
+" раза) -- переподключаюсь БЕЗ сброса host_id, чтобы сервер мог повторно "
 "определить этот хост из индекса его арендатора; перезарегистрирую только "
 "если ошибка сохранится."
 
@@ -2412,7 +2438,8 @@ msgstr "Не удалось создать задачу обработки эк�
 #: src/sysmanage_agent/communication/message_handler_queue.py:563
 #, python-format
 msgid "Failed to create inbound queue processing task: %s"
-msgstr "Не удалось создать задачу для обработки входящей очереди сообщений: %s"
+msgstr ""
+"Не удалось создать задачу для обработки входящей очереди сообщений: %s"
 
 #: src/sysmanage_agent/communication/message_handler_queue.py:654
 #, python-format
@@ -2792,7 +2819,7 @@ msgstr "restate не может использоваться на этом хо�
 msgid "Could not install the backup jobs: %s"
 msgstr "Не удалось установить задания резервного копирования: %s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:489
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
@@ -2800,7 +2827,7 @@ msgstr ""
 "Этот хост не может шифровать свои резервные копии: restate не находит gpg. "
 "Установите GnuPG, и политика резервного копирования будет отправлена снова."
 
-#: src/sysmanage_agent/operations/backup_operations.py:508
+#: src/sysmanage_agent/operations/backup_operations.py:513
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
@@ -2808,7 +2835,7 @@ msgstr ""
 "На этом хосте нет клиента NFSv4, поэтому он создаёт резервные копии только "
 "через restate-proxy; его цель резервного копирования использует NFS."
 
-#: src/sysmanage_agent/operations/backup_operations.py:623
+#: src/sysmanage_agent/operations/backup_operations.py:628
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "Этот restate не может выполнить %s как задание; обновите restate."
@@ -2987,7 +3014,8 @@ msgstr "Файлы не предоставлены"
 #: src/sysmanage_agent/operations/generic_deployment.py:540
 #, python-format
 msgid "Rolled back %s from backup %s after failed deployment"
-msgstr "Восстановление %s из резервной копии %s после неудачного развертывания"
+msgstr ""
+"Восстановление %s из резервной копии %s после неудачного развертывания"
 
 #: src/sysmanage_agent/operations/generic_deployment.py:547
 #, python-format
@@ -3453,13 +3481,13 @@ msgstr "Homebrew уже установлен"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
-"Установка Homebrew требует ручного вмешательства. Установите с помощью: /bin/"
-"bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/"
-"HEAD/install.sh)\""
+"Установка Homebrew требует ручного вмешательства. Установите с помощью: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:337
 msgid "The installer script is unexpectedly large"
@@ -3895,8 +3923,8 @@ msgstr "Ошибка отправки обновления ОС после из�
 #, python-format
 msgid ""
 "Not enough disk space: %(path)s has %(free)s free and this update needs at "
-"least %(need)s.  Nothing was changed; free some space or grow the disk, then "
-"update again."
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
 msgstr ""
 "Недостаточно места на диске: на %(path)s свободно %(free)s, а этому "
 "обновлению нужно не менее %(need)s.  Ничего не изменено; освободите место "
@@ -3982,7 +4010,8 @@ msgstr "Пользователь %s и группа по умолчанию ус
 #: src/sysmanage_agent/operations/user_account_operations.py:19
 #, python-format
 msgid "User %s deleted but default group deletion failed: %s"
-msgstr "Пользователь %s удалён, но удаление по умолчанию группы не удалось: %s"
+msgstr ""
+"Пользователь %s удалён, но удаление по умолчанию группы не удалось: %s"
 
 #: src/sysmanage_agent/operations/user_account_operations.py:38
 #: src/sysmanage_agent/operations/user_account_operations.py:124
@@ -4176,12 +4205,12 @@ msgstr "Ошибка при прослушивании объявлений: %s"
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
-"The agent does not replace it on its own; an administrator should check this "
-"host on the server."
+"The agent does not replace it on its own; an administrator should check this"
+" host on the server."
 msgstr ""
 "Сервер отклонил сертификат этого хоста как недействительный для этого хоста "
-"(%s). Агент не заменяет его самостоятельно; администратору следует проверить "
-"этот хост на сервере."
+"(%s). Агент не заменяет его самостоятельно; администратору следует проверить"
+" этот хост на сервере."
 
 #: src/sysmanage_agent/registration/host_certificate.py:180
 #, python-format
@@ -4217,8 +4246,8 @@ msgstr "Сервер выпустил сертификат для другого
 #: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
-"changed server TLS certificate will not be accepted until the pins are reset "
-"deliberately."
+"changed server TLS certificate will not be accepted until the pins are reset"
+" deliberately."
 msgstr ""
 "Новый сертификат хоста выпущен не тем CA, который закреплён. Изменённый TLS-"
 "сертификат сервера не будет принят, пока закрепления не будут намеренно "
@@ -4237,9 +4266,9 @@ msgstr "Сертификата пока нет: этот хост не одоб�
 #: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
-"The server says this host's certificate is still current but did not receive "
-"it (%s). Something between the agent and the server may be removing it; the "
-"agent keeps the certificate and asks again later."
+"The server says this host's certificate is still current but did not receive"
+" it (%s). Something between the agent and the server may be removing it; the"
+" agent keeps the certificate and asks again later."
 msgstr ""
 "Сервер сообщает, что сертификат этого хоста ещё действителен, но он его не "
 "получил (%s). Возможно, что-то между агентом и сервером удаляет его; агент "
@@ -4364,8 +4393,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
 #~ msgstr ""
-#~ "Рассылка %s: запрос на обновление инвентаря, но data_collector "
-#~ "отсутствует send_software_inventory_update"
+#~ "Рассылка %s: запрос на обновление инвентаря, но data_collector отсутствует "
+#~ "send_software_inventory_update"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -4394,8 +4423,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "Message %s failed (attempt %d/%d), scheduled for retry in %d seconds"
 #~ msgstr ""
-#~ "Сообщение %s не удалось (попытка %d/%d), повтор запланирован через %d "
-#~ "секунд"
+#~ "Сообщение %s не удалось (попытка %d/%d), повтор запланирован через %d секунд"
 
 #, python-format
 #~ msgid "Cleaned up %d old messages"
@@ -4520,8 +4548,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Обнаружен пакет %s: %s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "Пропуск повторяющейся роли: %s с сервисом %s (уже имеем пакет %s)"
 
 #, python-format
@@ -4581,8 +4608,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ "Update detection completed: %d updates found (%d security, %d system, %d "
 #~ "application)"
 #~ msgstr ""
-#~ "Обнаружение обновлений завершено: найдено %d обновлений (%d безопасности, "
-#~ "%d системных, %d приложений)"
+#~ "Обнаружение обновлений завершено: найдено %d обновлений (%d безопасности, %d"
+#~ " системных, %d приложений)"
 
 #, python-format
 #~ msgid "Detected package managers: %s"
@@ -4675,14 +4702,13 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid ".wslconfig not found, creating to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ ".wslconfig не найден, создание для предотвращения автоматического "
-#~ "выключения WSL в %s"
+#~ ".wslconfig не найден, создание для предотвращения автоматического выключения"
+#~ " WSL в %s"
 
 #, python-format
 #~ msgid "Updating .wslconfig to prevent WSL auto-shutdown at %s"
 #~ msgstr ""
-#~ "Обновление .wslconfig для предотвращения автоматического отключения WSL в "
-#~ "%s"
+#~ "Обновление .wslconfig для предотвращения автоматического отключения WSL в %s"
 
 #~ msgid ".wslconfig saved successfully"
 #~ msgstr ".wslconfig успешно сохранен"
@@ -4708,8 +4734,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "WSL distribution %s no longer exists, stopping keep-alive"
 #~ msgstr ""
-#~ "Распределение WSL %s больше не существует, остановка поддержания "
-#~ "активности"
+#~ "Распределение WSL %s больше не существует, остановка поддержания активности"
 
 #~ msgid "Initial data updates sent successfully"
 #~ msgstr "Начальные обновления данных успешно отправлены"
@@ -4726,8 +4751,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Отправка начальных данных доступа пользователей..."
 
 #~ msgid "Sending initial software inventory data..."
-#~ msgstr ""
-#~ "Отправка начальных данных инвентаризации программного обеспечения..."
+#~ msgstr "Отправка начальных данных инвентаризации программного обеспечения..."
 
 # OS Version Update Messages
 #~ msgid "Sending initial update check..."
@@ -4746,8 +4770,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Found and sent %d certificates during initial collection"
-#~ msgstr ""
-#~ "Найдено и отправлено %d сертификатов во время первичной сборки данных"
+#~ msgstr "Найдено и отправлено %d сертификатов во время первичной сборки данных"
 
 #~ msgid "No certificates found during initial collection"
 #~ msgstr "В системе не найдено сертификатов"
@@ -4793,11 +4816,11 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Завершено выполнение пакета команд %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr ""
-#~ "Сбор сертификатов в непривилегированном режиме - некоторые сертификаты "
-#~ "могут быть недоступны"
+#~ "Сбор сертификатов в непривилегированном режиме - некоторые сертификаты могут"
+#~ " быть недоступны"
 
 #~ msgid "Collecting SSL certificates from system"
 #~ msgstr "Сбор SSL-сертификатов с системы"
@@ -4829,8 +4852,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "Ignoring stale error message [%s] from %s (registration at %s)"
 #~ msgstr ""
-#~ "Игнорирование устаревшего сообщения об ошибке [%s] от %s (регистрация в "
-#~ "%s)"
+#~ "Игнорирование устаревшего сообщения об ошибке [%s] от %s (регистрация в %s)"
 
 #~ msgid "Stored host_id cleared from database"
 #~ msgstr "Записи одобрения узла и связанные данные удалены из БД"
@@ -4897,8 +4919,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "Восстановлено %d зависших сообщений"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Создание задачи обработки исходящей очереди из on_connection_established"
 
@@ -4909,8 +4930,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "Выходящий обработчик очереди уже запущен, не начинать новый"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr ""
 #~ "Создание задачи обработки входящей очереди из on_connection_established"
 
@@ -4954,8 +4974,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Queued script execution result for execution_id: %s"
-#~ msgstr ""
-#~ "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
+#~ msgstr "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
 
 #, python-format
 #~ msgid "Stored execution UUID %s for tracking"
@@ -5135,8 +5154,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Правила NAT уже настроены в before.rules"
 
 #~ msgid "UFW not installed; skipping LXD bridge firewall config"
-#~ msgstr ""
-#~ "UFW не установлен; пропускаем конфигурацию брандмауэра для моста LXD"
+#~ msgstr "UFW не установлен; пропускаем конфигурацию брандмауэра для моста LXD"
 
 #, python-format
 #~ msgid "Configuring UFW firewall for LXD bridge: %s"
@@ -5236,8 +5254,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "Updated OS information sent to server after Ubuntu Pro change"
 #~ msgstr ""
-#~ "Обновленная информация об ОС отправлена на сервер после изменения Ubuntu "
-#~ "Pro"
+#~ "Обновленная информация об ОС отправлена на сервер после изменения Ubuntu Pro"
 
 #, python-format
 #~ msgid "Sending reboot status update: %s"
@@ -5249,8 +5266,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Received update request: package='%s', manager='%s', bundle_id='%s'"
-#~ msgstr ""
-#~ "Получен запрос обновления: package='%s', manager='%s', bundle_id='%s'"
+#~ msgstr "Получен запрос обновления: package='%s', manager='%s', bundle_id='%s'"
 
 #, python-format
 #~ msgid "Using detected package manager '%s' for %s"
@@ -5262,8 +5278,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #, python-format
 #~ msgid "Waiting for reconnection to send update results (attempt %d/%d)"
 #~ msgstr ""
-#~ "Ожидание переподключения для отправки результатов обновления (попытка %d/"
-#~ "%d)"
+#~ "Ожидание переподключения для отправки результатов обновления (попытка %d/%d)"
 
 #~ msgid "Rescanning for available updates after batch completion"
 #~ msgstr "Повторное сканирование доступных обновлений после завершения пакета"
@@ -5331,8 +5346,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Script execution enabled from config: %s"
-#~ msgstr ""
-#~ "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
+#~ msgstr "Результат выполнения скрипта поставлен в очередь для execution_id: %s"
 
 #, python-format
 #~ msgid "Basic info script_execution_enabled: %s"
@@ -5400,8 +5414,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "No valid certificates found, checking host approval status..."
 #~ msgstr ""
-#~ "Не найдено действительных сертификатов, проверка статуса одобрения "
-#~ "хоста..."
+#~ "Не найдено действительных сертификатов, проверка статуса одобрения хоста..."
 
 #, python-format
 #~ msgid "Retrieved server fingerprint for validation: %s"
@@ -5418,18 +5431,16 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Запрошено одобрение узла для host_id: %s"
 
 #~ msgid "Registration confirmed, sending initial inventory data..."
-#~ msgstr ""
-#~ "Отправка начальных данных инвентаризации программного обеспечения..."
+#~ msgstr "Отправка начальных данных инвентаризации программного обеспечения..."
 
 #~ msgid "Registration received but approval pending"
 #~ msgstr "Регистрация получена, но ожидается одобрение"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr ""
-#~ "Успешная регистрация, но не предоставлен ID хоста - одобрение может "
-#~ "прийти отдельно"
+#~ "Успешная регистрация, но не предоставлен ID хоста - одобрение может прийти "
+#~ "отдельно"
 
 #, python-format
 #~ msgid "Received host approval notification: host_id=%s, status=%s"
@@ -5441,8 +5452,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "Queued system_info after approval to update backend connection"
 #~ msgstr ""
-#~ "Системная информация отправлена после одобрения для обновления соединения "
-#~ "с сервером"
+#~ "Системная информация отправлена после одобрения для обновления соединения с "
+#~ "сервером"
 
 #, python-format
 #~ msgid "Deleted %d old host approval record(s) before storing new approval"
@@ -5472,8 +5483,8 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ "Server reports host is not registered. Clearing stored host_id and "
 #~ "triggering re-registration..."
 #~ msgstr ""
-#~ "Сервер сообщает, что хост не зарегистрирован. Очищаю сохраненный host_id "
-#~ "и запускаю перерегистрацию..."
+#~ "Сервер сообщает, что хост не зарегистрирован. Очищаю сохраненный host_id и "
+#~ "запускаю перерегистрацию..."
 
 #, python-format
 #~ msgid "[BANNER] %s"
@@ -5584,11 +5595,11 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
 #~ msgstr ""
-#~ "Обнаружен Microsoft Defender for Endpoint на macOS (версия: %s, включен: "
-#~ "%s, лицензирован: %s)"
+#~ "Обнаружен Microsoft Defender for Endpoint на macOS (версия: %s, включен: %s,"
+#~ " лицензирован: %s)"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5677,8 +5688,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #, python-format
 #~ msgid "Chocolatey command result: returncode=%d, stdout='%s', stderr='%s'"
-#~ msgstr ""
-#~ "Результат команды Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
+#~ msgstr "Результат команды Chocolatey: returncode=%d, stdout='%s', stderr='%s'"
 
 #, python-format
 #~ msgid "Windows Update command result: returncode=%d, output='%s'"
@@ -5837,8 +5847,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 #~ msgstr "Обнаружение обновлений прошивки fwupd"
 
 #~ msgid "Could not refresh fwupd metadata (may need privileges)"
-#~ msgstr ""
-#~ "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
+#~ msgstr "Не удалось обновить метаданные fwupd (могут потребоваться привилегии)"
 
 #~ msgid "No firmware updates available"
 #~ msgstr "Обновления прошивки недоступны"
@@ -6092,8 +6101,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid " - configuration saved to /etc/modprobe.d/kvm.conf for persistence"
 #~ msgstr ""
-#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения "
-#~ "настроек"
+#~ " - конфигурация сохранена в /etc/modprobe.d/kvm.conf для сохранения настроек"
 
 # FreeBSD KVM Support
 #~ msgid "Decompressing xz archive: %s"
@@ -6166,8 +6174,7 @@ msgstr "Ошибка проверки поддержки WSL: %s"
 
 #~ msgid "Virtualization status update queued for sending to server"
 #~ msgstr ""
-#~ "Обновление статуса виртуализации добавлено в очередь для отправки на "
-#~ "сервер"
+#~ "Обновление статуса виртуализации добавлено в очередь для отправки на сервер"
 
 #~ msgid "qemu-img not found, will try to install: %s"
 #~ msgstr "qemu-img не найден, попытка установки: %s"

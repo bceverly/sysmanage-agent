@@ -242,6 +242,10 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
         # the server then sends the proxy's address, and this agent makes
         # its own token for it.
         found.append(REMOTE_ABILITY)
+        # ...and so an off-site copy of its repository, on another storage
+        # host, when its own is lost (27.3): restore and browse take
+        # ``offsite``.
+        found.append(OFFSITE_READ)
     if captures_remote(features):
         # Captures through it too (restate 3.2.0.0): the server then has
         # this host back up through the proxy, with no NFS mount at all.
@@ -251,6 +255,7 @@ def host_abilities(features: Optional[Dict[str, Any]]) -> List[str]:
 
 REMOTE_ABILITY = "remote_repository"
 REMOTE_CAPTURE = "remote_capture"
+OFFSITE_READ = "offsite_read"
 
 
 def reads_remote(features: Optional[Dict[str, Any]]) -> bool:

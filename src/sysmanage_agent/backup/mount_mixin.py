@@ -143,7 +143,11 @@ class BackupMountMixin:
     async def _release_mount(
         self, run_id: str, policy_id: str, record: Optional[Dict[str, Any]] = None
     ) -> None:
-        """This run is done with the export; unmount after the last one."""
+        """This run is done with the export; unmount after the last one.
+        A job through restate-proxy (its own repository's or an off-site
+        copy's) mounted nothing, so it never touches a mount."""
+        if (record or {}).get("remote"):
+            return
         policy = self._policy(policy_id) or {}
         try:
             where = repository_choice.for_record(policy, record or {})[0]

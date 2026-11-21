@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 14:36-0800\n"
+"POT-Creation-Date: 2026-11-20 15:45-0800\n"
 "Language: zh_TW\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -82,13 +82,12 @@ msgstr "無法載入此主機的憑證，因此不會出示：%s"
 
 #: src/security/client_tls.py:114
 msgid ""
-"server.tls_inspection is true: the server's TLS certificate is not pinned on "
-"this host. A TLS-inspecting proxy also removes this host's client "
+"server.tls_inspection is true: the server's TLS certificate is not pinned on"
+" this host. A TLS-inspecting proxy also removes this host's client "
 "certificate, so the server must accept this host without one."
 msgstr ""
-"server.tls_inspection 為 true：此主機不固定伺服器的 TLS 憑證。執行 TLS 檢查的"
-"代理伺服器也會移除此主機的用戶端憑證，因此伺服器必須在沒有憑證的情況下接受此"
-"主機。"
+"server.tls_inspection 為 true：此主機不固定伺服器的 TLS 憑證。執行 TLS "
+"檢查的代理伺服器也會移除此主機的用戶端憑證，因此伺服器必須在沒有憑證的情況下接受此主機。"
 
 #: src/security/pin_reset.py:33
 msgid "Forget the server identity this agent has pinned."
@@ -148,26 +147,24 @@ msgstr "已固定此伺服器的身分；現在會檢查其 TLS 憑證"
 msgid ""
 "The server's TLS certificate changed, but the server cannot state its TLS "
 "identity right now; keeping the current pins and trying again later"
-msgstr ""
-"伺服器的 TLS 憑證已變更，但伺服器目前無法聲明其 TLS 身分；保留目前的固定資"
-"訊，稍後重試"
+msgstr "伺服器的 TLS 憑證已變更，但伺服器目前無法聲明其 TLS 身分；保留目前的固定資訊，稍後重試"
 
 #: src/security/server_identity.py:163
 #, python-format
 msgid ""
 "The server's TLS certificate changed and the change could not be verified "
-"(%s). The likely cause is a proxy, or another server, presenting a different "
-"certificate. If this server really was replaced, re-pin deliberately: delete "
-"%s or run the agent's reset command, then restart the agent."
+"(%s). The likely cause is a proxy, or another server, presenting a different"
+" certificate. If this server really was replaced, re-pin deliberately: "
+"delete %s or run the agent's reset command, then restart the agent."
 msgstr ""
-"伺服器的 TLS 憑證已變更，且無法驗證此變更（%s）。可能的原因是代理伺服器或另一"
-"台伺服器出示了不同的憑證。如果此伺服器確實已被更換，請刻意重新固定：刪除 %s "
+"伺服器的 TLS "
+"憑證已變更，且無法驗證此變更（%s）。可能的原因是代理伺服器或另一台伺服器出示了不同的憑證。如果此伺服器確實已被更換，請刻意重新固定：刪除 %s "
 "或執行代理的重設指令，然後重新啟動代理。"
 
 #: src/security/server_identity.py:176
 msgid ""
-"The server's TLS certificate changed; the new one is signed by this server's "
-"identity and is now trusted"
+"The server's TLS certificate changed; the new one is signed by this server's"
+" identity and is now trusted"
 msgstr "伺服器的 TLS 憑證已變更；新憑證由此伺服器的身分簽署，現已受信任"
 
 #: src/security/server_identity.py:204
@@ -185,9 +182,7 @@ msgid ""
 "The server presented a TLS certificate this agent has not pinned (SPKI "
 "SHA-256 %s). The connection was refused. The agent is checking whether the "
 "server has signed the new certificate."
-msgstr ""
-"伺服器出示了此代理未固定的 TLS 憑證（SPKI SHA-256 %s）。連線已被拒絕。代理正"
-"在檢查伺服器是否已簽署新憑證。"
+msgstr "伺服器出示了此代理未固定的 TLS 憑證（SPKI SHA-256 %s）。連線已被拒絕。代理正在檢查伺服器是否已簽署新憑證。"
 
 #: src/security/server_pinning.py:145 src/security/server_pinning.py:153
 msgid "The server identity statement has no valid expiry"
@@ -206,7 +201,8 @@ msgid "The server's identity certificate uses an unsupported key type"
 msgstr "伺服器的身分憑證使用了不受支援的金鑰類型"
 
 #: src/security/server_pinning.py:212
-msgid "The server identity statement is not signed by its identity certificate"
+msgid ""
+"The server identity statement is not signed by its identity certificate"
 msgstr "伺服器身分聲明未由其身分憑證簽署"
 
 #: src/security/server_pinning.py:224
@@ -242,33 +238,29 @@ msgstr "%(where)s 處的備份儲存上鎖定無法運作：%(error)s"
 msgid "restate is not installed on this host."
 msgstr "此主機上未安裝restate。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:122
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:127
 msgid "That backup job is already running."
 msgstr "該備份作業已在執行中。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:144
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:149
 msgid "The backup job could not be started."
 msgstr "無法啟動備份作業。"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:232
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:237
 #, python-format
 msgid ""
-"restate stopped (exit %(code)s) before writing a result, and its log %(log)s "
-"is empty: it was stopped, or the machine restarted, while it ran"
-msgstr ""
-"restate 在寫入結果之前停止（結束代碼 %(code)s），其記錄檔 %(log)s 為空：它在"
-"執行時被停止，或者機器重新啟動了"
+"restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
+" is empty: it was stopped, or the machine restarted, while it ran"
+msgstr "restate 在寫入結果之前停止（結束代碼 %(code)s），其記錄檔 %(log)s 為空：它在執行時被停止，或者機器重新啟動了"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:241
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:246
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
 "%(unit)s on this host"
-msgstr ""
-"restate 在寫入結果之前已停止（結束代碼 %(code)s）；請在此主機上查看 "
-"journalctl -u %(unit)s"
+msgstr "restate 在寫入結果之前已停止（結束代碼 %(code)s）；請在此主機上查看 journalctl -u %(unit)s"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:285
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:290
 msgid "Could not queue the backup report"
 msgstr "無法將備份報告加入佇列"
 
@@ -331,8 +323,8 @@ msgid ""
 "Equip for backup, or install it (nfs-common on Debian and Ubuntu, nfs-utils "
 "on RHEL and Fedora)."
 msgstr ""
-"此主機沒有 NFS 用戶端，因此無法掛載其備份儲存空間。請按一下「準備備份」，或安"
-"裝用戶端（Debian 和 Ubuntu 上為 nfs-common，RHEL 和 Fedora 上為 nfs-utils）。"
+"此主機沒有 NFS 用戶端，因此無法掛載其備份儲存空間。請按一下「準備備份」，或安裝用戶端（Debian 和 Ubuntu 上為 nfs-"
+"common，RHEL 和 Fedora 上為 nfs-utils）。"
 
 #: src/sysmanage_agent/backup/mount_mixin.py:101
 #, python-format
@@ -356,26 +348,43 @@ msgstr "掛載後，備份儲存仍未掛載在 %(where)s。"
 msgid "The backup storage at %s did not answer."
 msgstr "%s 處的備份儲存沒有回應。"
 
-#: src/sysmanage_agent/backup/mount_mixin.py:166
+#: src/sysmanage_agent/backup/mount_mixin.py:170
 #, python-format
 msgid "Could not unmount the backup storage at %s: %s"
 msgstr "無法卸載 %s 處的備份儲存：%s"
 
-#: src/sysmanage_agent/backup/replica_mixin.py:113
-#: src/sysmanage_agent/operations/backup_operations.py:526
+#: src/sysmanage_agent/backup/offsite.py:116
+msgid ""
+"An off-site copy holds the current repository only; it cannot be read as the"
+" previous one."
+msgstr "異地副本僅保存目前的存放庫；無法將其作為先前的存放庫讀取。"
+
+#: src/sysmanage_agent/backup/offsite.py:129
+msgid "That off-site copy is not configured for this backup policy."
+msgstr "該異地副本未針對此備份策略進行設定。"
+
+#: src/sysmanage_agent/backup/offsite.py:146
+msgid ""
+"This restate cannot read an off-site copy through restate-proxy; upgrade "
+"restate."
+msgstr "此 restate 無法透過 restate-proxy 讀取異地副本；請升級 restate。"
+
+#: src/sysmanage_agent/backup/replica_mixin.py:129
+#: src/sysmanage_agent/operations/backup_operations.py:531
 #, python-format
 msgid "This restate does not support: %s"
 msgstr "此版本的 restate 不支援：%s"
 
-#: src/sysmanage_agent/backup/replica_mixin.py:133
+#: src/sysmanage_agent/backup/replica_mixin.py:149
 msgid ""
-"This backup policy has a copy job of its own, so an off-site copy cannot run "
-"for it."
+"This backup policy has a copy job of its own, so an off-site copy cannot run"
+" for it."
 msgstr "此備份策略有自己的複製工作，因此無法為其執行異地複製。"
 
-#: src/sysmanage_agent/backup/replica_mixin.py:141
+#: src/sysmanage_agent/backup/replica_mixin.py:157
 msgid ""
-"This restate cannot copy a snapshot to another storage host; upgrade restate."
+"This restate cannot copy a snapshot to another storage host; upgrade "
+"restate."
 msgstr "此 restate 無法將快照複製到另一台儲存主機；請升級 restate。"
 
 #: src/sysmanage_agent/backup/storage_actions_mixin.py:87
@@ -412,18 +421,14 @@ msgstr "無法執行儲存稽核：%s"
 msgid ""
 "The backup service account %(account)s (user and group) does not exist on "
 "this storage host. Create it, then prepare again."
-msgstr ""
-"此儲存主機上不存在備份服務帳戶 %(account)s（使用者與群組）。請建立它，然後重"
-"新準備。"
+msgstr "此儲存主機上不存在備份服務帳戶 %(account)s（使用者與群組）。請建立它，然後重新準備。"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:167
 #, python-format
 msgid ""
 "The agent cannot read %(path)s, so it cannot tell whether it holds backups. "
 "Run the agent as root, or move the directory aside, then prepare again."
-msgstr ""
-"代理程式無法讀取 %(path)s，因此無法判斷其中是否有備份。請以 root 身分執行代理"
-"程式，或將該目錄移到別處，然後重新準備。"
+msgstr "代理程式無法讀取 %(path)s，因此無法判斷其中是否有備份。請以 root 身分執行代理程式，或將該目錄移到別處，然後重新準備。"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:178
 #, python-format
@@ -433,9 +438,8 @@ msgid ""
 "prepare again, and copy its contents into the new dataset as root; or 2) "
 "remove it if those backups are no longer needed."
 msgstr ""
-"%(path)s 中已有檔案，但它不是獨立的 ZFS 資料集，而準備作業從不移動備份。請 "
-"1) 將其重新命名（例如改為 %(path)s.old），重新準備，再以 root 身分將其內容複"
-"製到新資料集中；或 2) 若不再需要這些備份，則將其刪除。"
+"%(path)s 中已有檔案，但它不是獨立的 ZFS 資料集，而準備作業從不移動備份。請 1) 將其重新命名（例如改為 "
+"%(path)s.old），重新準備，再以 root 身分將其內容複製到新資料集中；或 2) 若不再需要這些備份，則將其刪除。"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:186
 #, python-format
@@ -445,26 +449,21 @@ msgid ""
 "%(path)s.old), prepare again, and copy its contents into the new subvolume "
 "as root; or 2) remove it if those backups are no longer needed."
 msgstr ""
-"%(path)s 中已有檔案，但它不是獨立的 btrfs 子磁碟區，而準備作業從不移動備份。"
-"請 1) 將其重新命名（例如改為 %(path)s.old），重新準備，再以 root 身分將其內容"
-"複製到新子磁碟區中；或 2) 若不再需要這些備份，則將其刪除。"
+"%(path)s 中已有檔案，但它不是獨立的 btrfs 子磁碟區，而準備作業從不移動備份。請 1) 將其重新命名（例如改為 "
+"%(path)s.old），重新準備，再以 root 身分將其內容複製到新子磁碟區中；或 2) 若不再需要這些備份，則將其刪除。"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:212
 msgid ""
 "FreeBSD exports whole filesystems, so each host's repository needs its own "
 "ZFS dataset. Put the storage path on ZFS, then prepare again."
-msgstr ""
-"FreeBSD 匯出的是整個檔案系統，因此每台主機的存放庫都需要獨立的 ZFS 資料集。請"
-"將儲存路徑放在 ZFS 上，然後重新準備。"
+msgstr "FreeBSD 匯出的是整個檔案系統，因此每台主機的存放庫都需要獨立的 ZFS 資料集。請將儲存路徑放在 ZFS 上，然後重新準備。"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:266
 msgid ""
 "The server does not know the backed-up host's IP address yet, so its export "
 "cannot be limited to it. Wait for that host to report its network details, "
 "then prepare again."
-msgstr ""
-"伺服器尚不知道受備份主機的 IP 位址，因此無法將其匯出限制為該位址。請等待該主"
-"機回報其網路資訊，然後重新準備。"
+msgstr "伺服器尚不知道受備份主機的 IP 位址，因此無法將其匯出限制為該位址。請等待該主機回報其網路資訊，然後重新準備。"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:277
 #, python-format
@@ -478,18 +477,15 @@ msgid ""
 "dataset would not land at the repository. Create a dataset mounted there "
 "(zfs create -o mountpoint=%(path)s POOL/NAME), then prepare again."
 msgstr ""
-"儲存路徑 %(path)s 處未掛載 ZFS 資料集，因此子資料集不會位於存放庫所在位置。請"
-"在該處建立一個掛載的資料集（zfs create -o mountpoint=%(path)s POOL/NAME），然"
-"後重新準備。"
+"儲存路徑 %(path)s 處未掛載 ZFS 資料集，因此子資料集不會位於存放庫所在位置。請在該處建立一個掛載的資料集（zfs create -o "
+"mountpoint=%(path)s POOL/NAME），然後重新準備。"
 
 #: src/sysmanage_agent/backup/storage_prepare.py:394
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
 "root), then prepare again."
-msgstr ""
-"%(path)s 是空目錄，不是 btrfs 子磁碟區。請將其刪除（以 root 身分執行 "
-"rmdir），然後重新準備。"
+msgstr "%(path)s 是空目錄，不是 btrfs 子磁碟區。請將其刪除（以 root 身分執行 rmdir），然後重新準備。"
 
 #: src/sysmanage_agent/collection/antivirus_collection.py:72
 #, python-format
@@ -508,9 +504,7 @@ msgstr "重新啟動不安全：%s 僅部分安裝，主機可能無法開機。
 msgid ""
 "Not safe to reboot: kernel %s has no initramfs, so the host may not boot. "
 "Repair the package manager first."
-msgstr ""
-"重新啟動不安全：核心 %s 沒有 initramfs，主機可能無法開機。請先修復套件管理"
-"員。"
+msgstr "重新啟動不安全：核心 %s 沒有 initramfs，主機可能無法開機。請先修復套件管理員。"
 
 #: src/sysmanage_agent/collection/boot_safety.py:199
 #, python-format
@@ -558,7 +552,8 @@ msgstr "查詢Windows憑證庫 %s 失敗：%s"
 #: src/sysmanage_agent/collection/certificate_collection.py:640
 #, python-format
 msgid ""
-"Certificate bundle %s holds more than %d certificates; reporting the first %d"
+"Certificate bundle %s holds more than %d certificates; reporting the first "
+"%d"
 msgstr "證書捆綁 %s 包含超過 %d 個證書；報告前 %d 個"
 
 #: src/sysmanage_agent/collection/certificate_collection.py:704
@@ -697,22 +692,22 @@ msgstr "無法取得BSD儲存裝置資訊：%s"
 msgid "Failed to get BSD network info: %s"
 msgstr "無法取得 BSD 網路資訊：%s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:201
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:204
 #, python-format
 msgid "Failed to get Linux CPU info: %s"
 msgstr "無法取得Linux CPU資訊：%s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:218
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:221
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "無法取得Linux記憶體資訊：%s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:280
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:283
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "無法取得Linux儲存裝置資訊：%s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:487
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:490
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "無法取得 Linux 網路資訊：%s"
@@ -1074,9 +1069,7 @@ msgstr "收集 pkgin 套件時發生錯誤：%s"
 msgid ""
 "Skipping yum collection on host with dnf available (yum is a dnf wrapper on "
 "RHEL/Fedora 8+)"
-msgstr ""
-"在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝"
-"器）"
+msgstr "在有 dnf 可用的主機上跳過 yum 收集（在 RHEL/Fedora 8+ 上，yum 是 dnf 的包裝器）"
 
 #: src/sysmanage_agent/collection/package_collector_linux.py:64
 #: src/sysmanage_agent/collection/package_collector_windows.py:142
@@ -1199,9 +1192,7 @@ msgstr "沒有 PID 為 %d 的程序"
 msgid ""
 "PID %(pid)d is now '%(actual)s', not '%(expected)s' (process may have been "
 "recycled); kill refused"
-msgstr ""
-"PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已"
-"拒絕終止"
+msgstr "PID %(pid)d 現在是 '%(actual)s'，而非 '%(expected)s'（程序可能已被重用）；已拒絕終止"
 
 #: src/sysmanage_agent/collection/process_collection.py:202
 #, python-format
@@ -2101,8 +2092,8 @@ msgstr "處理輪詢消息 %s 時發生錯誤"
 
 #: src/sysmanage_agent/communication/http_polling.py:222
 msgid ""
-"Cannot use the HTTP fallback: this agent has no stored host_id. Registration "
-"must complete first."
+"Cannot use the HTTP fallback: this agent has no stored host_id. Registration"
+" must complete first."
 msgstr "無法使用 HTTP 回退：此代理程式沒有存儲的 host_id。註冊必須先完成。"
 
 #: src/sysmanage_agent/communication/http_polling.py:232
@@ -2112,8 +2103,8 @@ msgid ""
 "WebSocket upgrade. Commands will arrive with up to a few seconds of delay. "
 "Allow WebSocket upgrades to %s to restore immediate delivery."
 msgstr ""
-"使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾"
-"秒的延遲到達。允許 WebSocket 升級至 %s 以恢復即時交付。"
+"使用 HTTP 輪詢而不是 WebSocket：此網路拒絕了 WebSocket 升級。命令將會以最多幾秒的延遲到達。允許 WebSocket 升級至 "
+"%s 以恢復即時交付。"
 
 #: src/sysmanage_agent/communication/http_polling.py:254
 #, python-format
@@ -2151,7 +2142,8 @@ msgstr "無法解析消息時間戳以檢查過期：%s"
 
 #: src/sysmanage_agent/communication/message_handler.py:421
 #: src/sysmanage_agent/communication/message_handler.py:792
-msgid "Host registration is pending approval. Will continue periodic attempts."
+msgid ""
+"Host registration is pending approval. Will continue periodic attempts."
 msgstr "主機註冊正在等待批准。將繼續定期嘗試。"
 
 #: src/sysmanage_agent/communication/message_handler.py:432
@@ -2172,8 +2164,8 @@ msgstr "此主機的註冊遭到拒絕；將在 %d 秒後再次詢問伺服器�
 #: src/sysmanage_agent/communication/message_handler.py:494
 #, python-format
 msgid ""
-"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting "
-"WITHOUT discarding host_id so the server can re-resolve this host from its "
+"Server reported host_not_registered (strike %(n)d/%(limit)d) -- reconnecting"
+" WITHOUT discarding host_id so the server can re-resolve this host from its "
 "tenant index; will re-register only if it persists."
 msgstr ""
 "伺服器報告主機未註冊 (第 %(n)d/%(limit)d 次警告) -- 重新連接而不丟棄 "
@@ -2184,9 +2176,7 @@ msgstr ""
 msgid ""
 "host_not_registered persisted (%(n)d strikes) -- treating this host as "
 "genuinely gone; clearing stored host_id and re-registering."
-msgstr ""
-"主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 "
-"host_id 並重新註冊。"
+msgstr "主機未註冊狀態持續 (%(n)d 次警告) -- 視為該主機確實已離線；清除存儲的 host_id 並重新註冊。"
 
 #: src/sysmanage_agent/communication/message_handler.py:518
 #, python-format
@@ -2333,8 +2323,7 @@ msgstr "錯誤修剪已完成的隊列消息：%s"
 msgid ""
 ">>> [CREATE_CHILD_HOST_DUPLICATE] Skipping duplicate vm_name=%s "
 "queue_message_id=%s"
-msgstr ""
-">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
+msgstr ">>> [CREATE_CHILD_HOST_DUPLICATE] 略過重複 vm_name=%s queue_message_id=%s"
 
 # KVM/libvirt operations
 #: src/sysmanage_agent/communication/network_utils.py:161
@@ -2554,8 +2543,7 @@ msgstr "載入配置文件失敗：%s"
 msgid ""
 "enrollment_token found at '%s' is ignored; it must be under the top-level "
 "'security' section"
-msgstr ""
-"位於 '%s' 的 enrollment_token 已被忽略；它必須位於最上層 'security' 區段下"
+msgstr "位於 '%s' 的 enrollment_token 已被忽略；它必須位於最上層 'security' 區段下"
 
 #: src/sysmanage_agent/core/inflight_reconcile.py:59
 #, python-format
@@ -2577,8 +2565,8 @@ msgid ""
 "Edit %s: set server.url to your SysManage server and, for a multi-tenant "
 "server, security.enrollment_token; then restart the sysmanage-agent service."
 msgstr ""
-"請編輯 %s：將 server.url 設定為您的 SysManage 伺服器；如果是多租戶伺服器，還"
-"要設定 security.enrollment_token；然後重新啟動 sysmanage-agent 服務。"
+"請編輯 %s：將 server.url 設定為您的 SysManage 伺服器；如果是多租戶伺服器，還要設定 "
+"security.enrollment_token；然後重新啟動 sysmanage-agent 服務。"
 
 #: src/sysmanage_agent/core/unconfigured.py:91
 #, python-format
@@ -2692,21 +2680,19 @@ msgstr "restate在此主機上不可用：%s"
 msgid "Could not install the backup jobs: %s"
 msgstr "無法安裝備份作業：%s"
 
-#: src/sysmanage_agent/operations/backup_operations.py:489
+#: src/sysmanage_agent/operations/backup_operations.py:494
 msgid ""
 "This host cannot encrypt its backups: restate does not find gpg. Install "
 "GnuPG, and the backup policy is sent again."
-msgstr ""
-"此主機無法加密其備份：restate 找不到 gpg。安裝 GnuPG 後，備份策略會重新傳送。"
+msgstr "此主機無法加密其備份：restate 找不到 gpg。安裝 GnuPG 後，備份策略會重新傳送。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:508
+#: src/sysmanage_agent/operations/backup_operations.py:513
 msgid ""
 "This host has no NFSv4 client, so it backs up only through restate-proxy; "
 "its target uses NFS."
-msgstr ""
-"此主機沒有 NFSv4 用戶端，因此只能透過 restate-proxy 備份；它的目標使用 NFS。"
+msgstr "此主機沒有 NFSv4 用戶端，因此只能透過 restate-proxy 備份；它的目標使用 NFS。"
 
-#: src/sysmanage_agent/operations/backup_operations.py:623
+#: src/sysmanage_agent/operations/backup_operations.py:628
 #, python-format
 msgid "This restate cannot run %s as a job; upgrade restate."
 msgstr "此 restate 無法將 %s 作為工作執行；請升級 restate。"
@@ -2986,8 +2972,7 @@ msgstr "gpg 刪除失敗 (rc=%s)：%s"
 msgid ""
 "Running gpg as a specific Windows user is not supported by the agent; "
 "imported into the current keyring instead."
-msgstr ""
-"代理不支援在 Windows 上以特定用戶身份運行 gpg；金鑰將被導入當前的金鑰環中"
+msgstr "代理不支援在 Windows 上以特定用戶身份運行 gpg；金鑰將被導入當前的金鑰環中"
 
 #: src/sysmanage_agent/operations/gpg_operations.py:446
 #, python-format
@@ -3349,9 +3334,9 @@ msgstr "Homebrew 已安裝"
 
 #: src/sysmanage_agent/operations/package_manager_operations.py:318
 msgid ""
-"Homebrew installation requires manual intervention. Please install using: /"
-"bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/"
-"install/HEAD/install.sh)\""
+"Homebrew installation requires manual intervention. Please install using: "
+"/bin/bash -c \"$(curl -fsSL "
+"https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 msgstr ""
 "Homebrew 安裝需要手動介入。請使用以下命令安裝：/bin/bash -c \"$(curl -fsSL "
 "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
@@ -3571,9 +3556,7 @@ msgstr "重新掃描第三方存儲庫時發生錯誤：%s"
 msgid ""
 "This host requires approval for scripts, and this script was not approved. "
 "Run it from a saved script that goes through approval."
-msgstr ""
-"此主機的腳本需要經過批准，而此腳本尚未獲得批准。請從會經過批准流程的已儲存腳"
-"本執行它。"
+msgstr "此主機的腳本需要經過批准，而此腳本尚未獲得批准。請從會經過批准流程的已儲存腳本執行它。"
 
 #: src/sysmanage_agent/operations/script_operations.py:75
 msgid "Missing required parameter 'script_content'"
@@ -3790,11 +3773,10 @@ msgstr "Ubuntu Pro 變更後傳送作業系統更新失敗：%s"
 #, python-format
 msgid ""
 "Not enough disk space: %(path)s has %(free)s free and this update needs at "
-"least %(need)s.  Nothing was changed; free some space or grow the disk, then "
-"update again."
+"least %(need)s.  Nothing was changed; free some space or grow the disk, then"
+" update again."
 msgstr ""
-"磁碟空間不足：%(path)s 僅剩 %(free)s 可用，而此更新至少需要 %(need)s。未做任"
-"何變更；請釋出空間或擴大磁碟，然後再次更新。"
+"磁碟空間不足：%(path)s 僅剩 %(free)s 可用，而此更新至少需要 %(need)s。未做任何變更；請釋出空間或擴大磁碟，然後再次更新。"
 
 #: src/sysmanage_agent/operations/update_manager.py:79
 #, python-format
@@ -4070,19 +4052,16 @@ msgstr "監聽公告期間發生錯誤：%s"
 #, python-format
 msgid ""
 "The server refused this host's certificate as not valid for this host (%s). "
-"The agent does not replace it on its own; an administrator should check this "
-"host on the server."
-msgstr ""
-"伺服器拒絕了此主機的憑證，認為它對此主機無效（%s）。代理不會自行更換它；管理"
-"員應在伺服器上檢查此主機。"
+"The agent does not replace it on its own; an administrator should check this"
+" host on the server."
+msgstr "伺服器拒絕了此主機的憑證，認為它對此主機無效（%s）。代理不會自行更換它；管理員應在伺服器上檢查此主機。"
 
 #: src/sysmanage_agent/registration/host_certificate.py:180
 #, python-format
 msgid ""
 "The server requires a certificate from this host and refused the connection "
 "without one (%s); requesting a certificate now."
-msgstr ""
-"伺服器要求此主機提供憑證，並拒絕了沒有憑證的連線（%s）；現在正在請求憑證。"
+msgstr "伺服器要求此主機提供憑證，並拒絕了沒有憑證的連線（%s）；現在正在請求憑證。"
 
 #: src/sysmanage_agent/registration/host_certificate.py:188
 #, python-format
@@ -4107,11 +4086,9 @@ msgstr "伺服器為另一個金鑰簽發了憑證"
 #: src/sysmanage_agent/registration/host_certificate.py:285
 msgid ""
 "The new host certificate was issued by a CA other than the pinned one. A "
-"changed server TLS certificate will not be accepted until the pins are reset "
-"deliberately."
-msgstr ""
-"新的主機憑證由已固定 CA 以外的 CA 簽發。在刻意重設固定資訊之前，不會接受已變"
-"更的伺服器 TLS 憑證。"
+"changed server TLS certificate will not be accepted until the pins are reset"
+" deliberately."
+msgstr "新的主機憑證由已固定 CA 以外的 CA 簽發。在刻意重設固定資訊之前，不會接受已變更的伺服器 TLS 憑證。"
 
 #: src/sysmanage_agent/registration/host_certificate.py:294
 #, python-format
@@ -4126,12 +4103,10 @@ msgstr "尚無憑證：此主機未獲核准（%s）"
 #: src/sysmanage_agent/registration/host_certificate.py:314
 #, python-format
 msgid ""
-"The server says this host's certificate is still current but did not receive "
-"it (%s). Something between the agent and the server may be removing it; the "
-"agent keeps the certificate and asks again later."
-msgstr ""
-"伺服器表示此主機的憑證仍然有效，但未收到該憑證（%s）。代理與伺服器之間可能有"
-"東西正在移除它；代理會保留該憑證，稍後再次請求。"
+"The server says this host's certificate is still current but did not receive"
+" it (%s). Something between the agent and the server may be removing it; the"
+" agent keeps the certificate and asks again later."
+msgstr "伺服器表示此主機的憑證仍然有效，但未收到該憑證（%s）。代理與伺服器之間可能有東西正在移除它；代理會保留該憑證，稍後再次請求。"
 
 #: src/sysmanage_agent/registration/host_certificate.py:323
 #, python-format
@@ -4251,9 +4226,7 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "Broadcast %s: inventory refresh requested but data_collector lacks "
 #~ "send_software_inventory_update"
-#~ msgstr ""
-#~ "廣播 %s：存貨刷新請求，但 data_collector 欠缺 "
-#~ "send_software_inventory_update 功能"
+#~ msgstr "廣播 %s：存貨刷新請求，但 data_collector 欠缺 send_software_inventory_update 功能"
 
 #, python-format
 #~ msgid "Alembic %s timed out after 60 seconds"
@@ -4405,8 +4378,7 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "找到%s包：%s v%s"
 
 #, python-format
-#~ msgid ""
-#~ "Skipping duplicate role: %s with service %s (already have package %s)"
+#~ msgid "Skipping duplicate role: %s with service %s (already have package %s)"
 #~ msgstr "跳過重複的角色：%s，服務為 %s（已安裝套件 %s）"
 
 #, python-format
@@ -4667,8 +4639,8 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "完成包批次 %s"
 
 #~ msgid ""
-#~ "Running certificate collection in unprivileged mode - some certificates "
-#~ "may not be accessible"
+#~ "Running certificate collection in unprivileged mode - some certificates may "
+#~ "not be accessible"
 #~ msgstr "在非特權模式下執行憑證收集 - 某些憑證可能無法存取"
 
 #~ msgid "Collecting SSL certificates from system"
@@ -4767,8 +4739,7 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid "Recovered %d stuck messages on connection establishment"
 #~ msgstr "已恢復 %d 條卡住的訊息"
 
-#~ msgid ""
-#~ "Creating outbound queue processing task from on_connection_established"
+#~ msgid "Creating outbound queue processing task from on_connection_established"
 #~ msgstr "從 on_connection_established 建立出去消息處理任務"
 
 #, python-format
@@ -4778,8 +4749,7 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid "Outbound queue processor already running, not starting another"
 #~ msgstr "進程中的出站隊列處理器正在運行，不再啟動新的"
 
-#~ msgid ""
-#~ "Creating inbound queue processing task from on_connection_established"
+#~ msgid "Creating inbound queue processing task from on_connection_established"
 #~ msgstr "從 on_connection_established 建立進來消息處理任務"
 
 #, python-format
@@ -5276,8 +5246,7 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgstr "收到的註冊數據但批准待定"
 
 #~ msgid ""
-#~ "Registration success but no host_id provided - approval may come "
-#~ "separately"
+#~ "Registration success but no host_id provided - approval may come separately"
 #~ msgstr "註冊成功但未提供 host_id - 批准可能會單獨來到"
 
 #, python-format
@@ -5428,11 +5397,9 @@ msgstr "檢查 WSL 支持時出錯：%s"
 
 #, python-format
 #~ msgid ""
-#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: "
-#~ "%s, licensed: %s)"
-#~ msgstr ""
-#~ "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，"
-#~ "已授權：%s）"
+#~ "Detected Microsoft Defender for Endpoint on macOS (version: %s, enabled: %s,"
+#~ " licensed: %s)"
+#~ msgstr "在 macOS 上偵測到 Microsoft Defender for Endpoint（版本：%s，已啟用：%s，已授權：%s）"
 
 #, python-format
 #~ msgid "ip -j addr show failed, falling back to sysfs: %s"
@@ -5701,9 +5668,7 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "OpenBSD autoinstall in progress. The VM will automatically install and "
 #~ "reboot. This may take 10-15 minutes."
-#~ msgstr ""
-#~ "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分"
-#~ "鐘。"
+#~ msgstr "OpenBSD 自動安裝進行中。虛擬機將自動安裝並重新啟動。這可能需要 10-15 分鐘。"
 
 #~ msgid "Autoinstall HTTP request: %s from %s"
 #~ msgstr "自動安裝 HTTP 請求: %s 來自 %s"
@@ -5829,8 +5794,7 @@ msgstr "檢查 WSL 支持時出錯：%s"
 #~ msgid ""
 #~ "KVM is not available on this system. Ensure /dev/kvm exists and CPU "
 #~ "virtualization is enabled in BIOS."
-#~ msgstr ""
-#~ "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
+#~ msgstr "此系統上無法使用 KVM。請確保 /dev/kvm 存在且 BIOS 中已啟用 CPU 虛擬化。"
 
 #~ msgid "KVM is already initialized and ready to use"
 #~ msgstr "KVM 已初始化並可使用"

@@ -18,10 +18,15 @@ through one, and the host has made its token for that repository.  The
 capture and its snapshot listing go the same way once ``captures_remote``
 (restate 3.2.0.0 captures through a proxy, and the server says so): their
 job files name the URL from the start, and nothing is ever mounted.
+
+A read job may instead name one of the host's off-site copies (27.3,
+``offsite``): that copy's URL, through the far side's proxy with the host's
+read token for it, and nothing mounted either.
 """
 
 from typing import Any, Dict, Optional, Tuple
 
+from src.sysmanage_agent.backup import offsite
 from src.sysmanage_agent.backup import proxy_access as access
 from src.sysmanage_agent.backup import restate_contract as contract
 from src.sysmanage_agent.backup.job_validation import PolicyError
@@ -33,7 +38,11 @@ def choose(
     policy: Dict[str, Any], params: Dict[str, Any], remote: bool = False
 ) -> Choice:
     """``(repository, nfs source or None, previous)`` for this request:
-    through the proxy (a URL, no source) when ``remote``."""
+    through the proxy (a URL, no source) when ``remote``, and an off-site
+    copy's URL when the request names one."""
+    offsite_id = offsite.requested(params)
+    if offsite_id:
+        return offsite.find(policy.get("offsite"), offsite_id)["url"], None, False
     wanted = params.get("previous", False)
     if not isinstance(wanted, bool):
         raise PolicyError("previous must be true or false")
@@ -52,9 +61,31 @@ def for_record(policy: Dict[str, Any], record: Dict[str, Any]) -> Choice:
     """The repository a running job was started against (its record says)."""
     return choose(
         policy,
-        {"previous": bool(record.get("previous"))},
+        {"previous": bool(record.get("previous")), "offsite": record.get("offsite")},
         remote=bool(record.get("remote")),
     )
+
+
+def read_target(
+    policy_id: str,
+    policy: Dict[str, Any],
+    params: Dict[str, Any],
+    features: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Where a read job (a restore or a browse job) reads: ``repository``,
+    ``previous``, ``remote`` (nothing mounted), the ``keys`` it adds to reach
+    a repository through a proxy, and the ``offsite`` copy it reads or
+    None.  A request without ``offsite`` reads exactly as before."""
+    offsite_id = offsite.requested(params)
+    if offsite_id:
+        found = offsite.source(policy_id, policy, offsite_id, features)
+        return {"repository": found["repository"], "previous": False,
+                "remote": True, "keys": found["keys"], "offsite": offsite_id}  # fmt: skip
+    remote = reads_remote(policy, params, features)
+    repository, _source, previous = choose(policy, params, remote)
+    keys = access.job_keys(policy_id, policy["proxy"], previous) if remote else {}
+    return {"repository": repository, "previous": previous, "remote": remote,
+            "keys": keys, "offsite": None}  # fmt: skip
 
 
 # The configured host jobs that name the repository: through the proxy

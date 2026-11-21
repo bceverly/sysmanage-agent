@@ -2,13 +2,16 @@
 # Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 # See the LICENSE file in the project root for the full terms.
 
-"""Off-site copies on the storage host (server ROADMAP 27.3).
+"""Off-site copies on the storage host, and the backed-up host's read
+tokens for them (server ROADMAP 27.3).
 
 A mixin for :class:`BackupOperations`; see ``replicas`` for what is sent and
 why.  At configure the storage host makes a copy token of its own for each
 replica (once: it is kept and reused), installs the replica's CA, removes
 what belonged to replicas no longer listed and reports the tokens' hashes.
-A ``copy`` run writes that run's job and starts it.  Nothing here ever logs
+A backed-up host does the same for its off-site copies (``offsite``): a
+read token of its own for each.  A ``copy`` run writes that run's job and
+starts it.  Nothing here ever logs
 or reports a token.
 """
 
@@ -17,11 +20,14 @@ from typing import Any, Dict, Optional
 
 from src.i18n import _
 from src.sysmanage_agent.backup import job_validation as validation
+from src.sysmanage_agent.backup import offsite
 from src.sysmanage_agent.backup import proxy_access as access
 from src.sysmanage_agent.backup import replicas
 from src.sysmanage_agent.backup import restate_contract as contract
 
 POLICIES_FILE = "policies.json"
+# What a policy lists -> (the tokens it reports, the module naming its files).
+_FAR = {"replicas": ("copy_tokens", replicas), "offsite": ("offsite_tokens", offsite)}
 
 
 class BackupReplicaMixin:
@@ -32,36 +38,46 @@ class BackupReplicaMixin:
         ``{"replicas", "copy_tokens"}`` for the saved policy, the reply
         carrying ``copy_tokens`` only.  When the server sent no replicas (an
         older server) what was saved before is kept and nothing changes."""
+        return await self._apply_far_tokens(policy, "replicas")
+
+    async def _apply_offsite(self, policy: Dict[str, Any]) -> Dict[str, Any]:
+        """The same for a backed-up host's off-site copies (``offsite``):
+        one read token each, ``{"offsite", "offsite_tokens"}``."""
+        return await self._apply_far_tokens(policy, "offsite")
+
+    async def _apply_far_tokens(
+        self, policy: Dict[str, Any], kind: str
+    ) -> Dict[str, Any]:
+        """Tokens of this host's own for the repositories behind another
+        storage host's restate-proxy that ``policy[kind]`` lists, made once
+        and kept; the CA files installed; what belonged to entries no longer
+        listed removed."""
+        tokens_key, module = _FAR[kind]
         policy_id = policy["policy_id"]
         before = self._load(POLICIES_FILE).get(policy_id) or {}
-        wanted = policy.get("replicas")
+        wanted = policy.get(kind)
         if wanted is None:
-            return {key: before.get(key) for key in ("replicas", "copy_tokens")}
-        known = before.get("copy_tokens") or {}
+            return {key: before.get(key) for key in (kind, tokens_key)}
+        known = before.get(tokens_key) or {}
         tokens: Dict[str, str] = {}
-        for replica in wanted:
-            tokens[replica["id"]] = await self._copy_token(
-                policy_id, replica["id"], known.get(replica["id"])
+        for entry in wanted:
+            tokens[entry["id"]] = await self._far_token(
+                module.token_path(policy_id, entry["id"]), known.get(entry["id"])
             )
-            ca_file = replicas.ca_path(policy_id, replica["id"])
-            if replica.get("ca"):
-                await self._install_root_file(replica["ca"], ca_file)
+            ca_file = module.ca_path(policy_id, entry["id"])
+            if entry.get("ca"):
+                await self._install_root_file(entry["ca"], ca_file)
             elif os.path.exists(ca_file):
                 await self._remove_root_file(ca_file)
-        for stale in replicas.stale_ids(
-            policy_id, tokens, list(known), os.listdir
-        ):  # fmt: skip
-            for path in replicas.files_of(policy_id, stale):
+        for stale in module.stale_ids(policy_id, tokens, list(known), os.listdir):
+            for path in module.files_of(policy_id, stale):
                 if os.path.exists(path):
                     await self._remove_root_file(path)
-        return {"replicas": replicas.saved(wanted), "copy_tokens": tokens}
+        return {kind: replicas.saved(wanted), tokens_key: tokens}
 
-    async def _copy_token(
-        self, policy_id: str, replica_id: str, known: Optional[str]
-    ) -> str:
-        """The hash of this host's copy token for one replica: the one made
-        before when its file is still there, else a new one, made now."""
-        path = replicas.token_path(policy_id, replica_id)
+    async def _far_token(self, path: str, known: Optional[str]) -> str:
+        """The hash of one of this host's tokens: the one made before when
+        its file is still there, else a new one, made now (root's, 0600)."""
         if known and os.path.exists(path):
             return known
         token = access.new_token()
