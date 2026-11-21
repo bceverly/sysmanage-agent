@@ -47,7 +47,7 @@ def _paths(packages: List[Dict[str, Any]]) -> Dict[str, int]:
     """``{path: free bytes needed}`` for this batch on this platform."""
     if os.name == "nt":
         return {os.environ.get("SystemDrive", "C:") + "\\": MIN_FREE}
-    wanted = {path: MIN_FREE for path in _UNIX_PATHS}
+    wanted = dict.fromkeys(_UNIX_PATHS, MIN_FREE)
     if _has_kernel(packages):
         wanted["/boot"] = MIN_FREE_BOOT
     return wanted
