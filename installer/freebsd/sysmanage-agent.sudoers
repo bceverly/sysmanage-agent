@@ -199,3 +199,8 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/dd ^bs=1048576 count=(1024|2048|3072|40
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/swapon ^-aL$
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/swapoff ^/dev/md99$
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/mdconfig ^-d -u 99$
+
+# Compliance evidence (2026-11-23): the SysManage BSD baseline reads the
+# EFFECTIVE sshd settings, and sshd -T needs root (it loads the host keys).
+# Exactly this argv; nothing else of sshd.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/sshd ^-T$

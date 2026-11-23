@@ -50,3 +50,8 @@ permit nopass _sysmanage as root cmd /sbin/pfctl
 permit nopass _sysmanage as root cmd /sbin/shutdown
 permit nopass _sysmanage as root cmd /sbin/reboot
 permit nopass _sysmanage as root cmd /sbin/halt
+
+# Compliance evidence (2026-11-23): the SysManage BSD baseline reads the
+# EFFECTIVE sshd settings, and sshd -T needs root (it loads the host keys).
+# pfctl -s info (pf running) is covered by the pfctl rule above.
+permit nopass _sysmanage as root cmd /usr/sbin/sshd args -T

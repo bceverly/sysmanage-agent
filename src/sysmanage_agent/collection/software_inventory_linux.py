@@ -26,6 +26,53 @@ logger = logging.getLogger(__name__)
 _OCI_NONE = "<none>"
 
 
+APK_INSTALLED_DB = "/lib/apk/db/installed"
+
+
+def rpm_source_name(source_rpm: str):
+    """``openssl`` from ``openssl-3.0.7-27.el9.src.rpm``; None for none."""
+    text = (source_rpm or "").strip()
+    if not text or text == "(none)" or not text.endswith(".rpm"):
+        return None
+    parts = text.rsplit("-", 2)
+    return parts[0] if len(parts) == 3 else None
+
+
+def rpm_sources() -> dict:
+    """{package: source package} from rpm's database (``rpm -qa``)."""
+    try:
+        result = subprocess.run(  # nosec B603, B607
+            ["rpm", "-qa", "--queryformat", "%{NAME}\t%{SOURCERPM}\n"],
+            capture_output=True, text=True, timeout=60, check=False,
+        )  # fmt: skip
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    found = {}
+    for line in result.stdout.splitlines() if result.returncode == 0 else []:
+        name, _tab, source_rpm = line.partition("\t")
+        source = rpm_source_name(source_rpm)
+        if name and source:
+            found[name] = source
+    return found
+
+
+def apk_origins(path: str = APK_INSTALLED_DB) -> dict:
+    """{package: origin} from apk's installed database (``P:`` and ``o:``)."""
+    found, name = {}, None
+    try:
+        with open(path, encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                if line.startswith("P:"):
+                    name = line[2:].strip()
+                elif line.startswith("o:") and name:
+                    found[name] = line[2:].strip()
+                elif not line.strip():
+                    name = None
+    except OSError:
+        return {}
+    return found
+
+
 class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
     """Collects software inventory from Linux package managers."""
 
@@ -112,6 +159,8 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         # Convert size from KB to bytes if available
         if len(parts) >= 5 and parts[4].isdigit():
             package["size_bytes"] = int(parts[4]) * 1024
+        if len(parts) >= 6 and parts[5].strip():
+            package["source_package"] = parts[5].strip()
 
         return package
 
@@ -125,7 +174,11 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                 [
                     "dpkg-query",
                     "-W",
-                    "--showformat=${Package}\t${Version}\t${Architecture}\t${Description}\t${Installed-Size}\n",
+                    # One line per package: ${Description} is the FULL
+                    # multi-line text, which pushed every later field onto the
+                    # next line; ${binary:Summary} is its first line.  The
+                    # source package is what Debian's advisories name.
+                    "--showformat=${Package}\t${Version}\t${Architecture}\t${binary:Summary}\t${Installed-Size}\t${source:Package}\n",
                 ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
@@ -385,7 +438,9 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             logger.debug("Collecting DNF packages")
 
             result = subprocess.run(
-                ["dnf", "list", "installed"],  # nosec B603, B607
+                # ``--installed``: dnf5 reads ``installed`` as a package NAME
+                # ("No matching packages to list"); dnf4 takes both forms.
+                ["dnf", "list", "--installed"],  # nosec B603, B607
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -395,9 +450,13 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             if result.returncode == 0:
                 lines = result.stdout.strip().split("\n")
                 in_packages = False
+                sources = rpm_sources()
 
                 for line in lines:
-                    if line.startswith("Installed Packages"):
+                    # dnf4 prints "Installed Packages", dnf5 (Fedora 41+)
+                    # "Installed packages": a Fedora 42 host reported no
+                    # packages at all (2026-11-23).
+                    if line.strip().lower() == "installed packages":
                         in_packages = True
                         continue
 
@@ -405,6 +464,11 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                         parts = line.split()
                         package = self._parse_dnf_package_line(parts)
                         if package:
+                            if sources.get(package["package_name"]):
+                                # What Fedora's advisories name.
+                                package["source_package"] = sources[
+                                    package["package_name"]
+                                ]
                             self.collected_packages.append(package)
 
         except Exception as error:
@@ -482,6 +546,9 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
         # Add size if available
         if len(parts) >= 5 and parts[4].isdigit():
             package["size_bytes"] = int(parts[4])
+        source = rpm_source_name(parts[5]) if len(parts) >= 6 else None
+        if source:
+            package["source_package"] = source
 
         return package
 
@@ -496,7 +563,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     "rpm",
                     "-qa",
                     "--queryformat",
-                    "%{NAME}\t%{VERSION}-%{RELEASE}\t%{ARCH}\t%{SUMMARY}\t%{SIZE}\n",
+                    "%{NAME}\t%{VERSION}-%{RELEASE}\t%{ARCH}\t%{SUMMARY}\t%{SIZE}\t%{SOURCERPM}\n",
                 ],  # nosec B603, B607
                 capture_output=True,
                 text=True,
@@ -577,6 +644,7 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             if result.returncode != 0:
                 return
 
+            origins = apk_origins()
             for line in result.stdout.strip().split("\n"):
                 if not line:
                     continue
@@ -588,6 +656,12 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
                     "version": version,
                     "package_manager": "apk",
                     "source": "alpine_repository",
+                    # The origin is what Alpine's secdb names.
+                    **(
+                        {"source_package": origins[package_name]}
+                        if origins.get(package_name)
+                        else {}
+                    ),
                     "is_system_package": self._is_system_package_linux(package_name),
                     "is_user_installed": True,
                 }

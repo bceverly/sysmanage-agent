@@ -30,8 +30,8 @@ three reads need root, and the sudoers allowlists name exactly these forms:
 login.defs, PAM, modprobe and chrony files, /proc, ``stat`` of the catalog's
 paths, ``systemctl is-enabled`` -- is world-readable and read directly.
 
-Linux only in this slice: elsewhere nothing is sent and every rule stays
-"not collected".
+Windows (``compliance_evidence_windows``), macOS and the BSDs report their
+own sections since 2026-11-23; see ``_sections_for``.
 """
 
 from __future__ import annotations
@@ -112,6 +112,8 @@ FILE_PATHS = (
     "/etc/issue",
     "/etc/issue.net",
     "/etc/motd",
+    "/etc/shells",
+    "/etc/security/opasswd",
 )
 # Where non-Debian distributions keep the file a catalog path names.
 _PATH_ALIASES = {"/boot/grub/grub.cfg": ("/boot/grub2/grub.cfg",)}
@@ -425,17 +427,39 @@ def _one(name: str, collect: Callable[[], Section]) -> Section:
         return None, FAILED
 
 
+def _sections_for(system: str) -> Optional[Dict[str, Callable[[], Section]]]:
+    """Each OS's collectors (Windows, macOS and the BSDs since 2026-11-23)."""
+    # pylint: disable=import-outside-toplevel
+    if system == "Linux":
+        return SECTIONS
+    if system == "Windows":
+        from src.sysmanage_agent.collection import compliance_evidence_windows
+
+        return compliance_evidence_windows.SECTIONS
+    if system == "Darwin":
+        from src.sysmanage_agent.collection import compliance_evidence_macos
+
+        return compliance_evidence_macos.SECTIONS
+    if system in ("FreeBSD", "OpenBSD", "NetBSD"):
+        from src.sysmanage_agent.collection import compliance_evidence_bsd
+
+        return compliance_evidence_bsd.SECTIONS
+    return None
+
+
 def collect_compliance_evidence(
     system: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    """The report, or None on an OS this slice does not collect for."""
-    if (system or platform.system()) != "Linux":
+    """The report, or None on an OS nothing is collected for."""
+    system = system or platform.system()
+    collectors = _sections_for(system)
+    if collectors is None:
         return None
     sections, sources = {}, {}
-    for name, collect in SECTIONS.items():
+    for name, collect in collectors.items():
         sections[name], sources[name] = _one(name, collect)
     return {
-        "platform": "Linux",
+        "platform": system,
         "sections": sections,
         "sources": sources,
         "collected_at": datetime.now(timezone.utc).isoformat(),

@@ -306,9 +306,8 @@ def test_one_failing_section_does_not_lose_the_rest(host, monkeypatch):
     assert report["platform"] == "Linux"
 
 
-def test_nothing_is_collected_off_linux():
-    assert ce.collect_compliance_evidence("FreeBSD") is None
-    assert ce.collect_compliance_evidence("Windows") is None
+def test_nothing_is_collected_on_an_os_without_collectors():
+    assert ce.collect_compliance_evidence("SunOS") is None
 
 
 def test_newer_sudo_refusal_wording_is_recognized():
