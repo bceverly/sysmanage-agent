@@ -201,9 +201,17 @@ def local_steps(kind: str, proxy: bool = False) -> Optional[List[List[str]]]:
     repository (macOS: Homebrew's formula comes from the internet)."""
     extra = [PROXY_PACKAGE] if proxy else []
     steps = {
-        UBUNTU: [["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra]],
+        # apt and apk install from their cached indexes only: refresh first,
+        # or a package the site's repository gained since the host's last
+        # refresh is "Unable to locate" (isolated-network lab, 2026-11-23).
+        # dnf, zypper and pkg refresh stale metadata themselves.
+        UBUNTU: [
+            ["apt-get", "update"],
+            ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra],
+        ],
         release.DEBIAN: [
-            ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra]
+            ["apt-get", "update"],
+            ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra],
         ],
         FEDORA: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
         release.EL: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
@@ -213,7 +221,7 @@ def local_steps(kind: str, proxy: bool = False) -> Optional[List[List[str]]]:
         release.TUMBLEWEED: [
             ["zypper", "--non-interactive", "install", "restate", "nfs-client"]
         ],
-        release.ALPINE: [["apk", "add", "restate", "nfs-utils"]],
+        release.ALPINE: [["apk", "update"], ["apk", "add", "restate", "nfs-utils"]],
         release.FREEBSD: [["pkg", "install", "-y", "restate", *extra]],
         release.NETBSD: [["pkgin", "-y", "install", "restate"]],
         release.OPENBSD: [["pkg_add", "restate"]],

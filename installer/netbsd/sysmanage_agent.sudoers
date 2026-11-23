@@ -14,11 +14,15 @@
 # When the operator runs the agent as root no sudo is needed.
 
 # Package Management (pkgin / pkg_add).
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin update
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin install *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin remove *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin upgrade *
-sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin full-upgrade
+#
+# pkgin is granted as a bare binary, as apt-get is on Ubuntu: sudo matches
+# arguments POSITIONALLY, and the agent runs ``pkgin -y install ...`` and
+# ``pkgin -n upgrade`` -- an option before the command -- which the old
+# per-command rules (``pkgin install *``) never matched, so a packaged
+# (non-root) agent could neither detect nor install pkgin updates
+# (2026-11-23; the lab's agent ran as root and never showed it).  The agent's
+# own code decides the arguments; "install *" was already root-equivalent.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/bin/pkgin *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg_add *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/pkg_delete *
 

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 14:26-0800\n"
+"POT-Creation-Date: 2026-11-23 11:04-0500\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -251,19 +251,19 @@ msgstr "%(where)s पर बैकअप स्टोरेज नई फ़ा�
 msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr "%(where)s पर बैकअप स्टोरेज में लॉकिंग काम नहीं करती: %(error)s"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:83
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:97
 msgid "restate is not installed on this host."
 msgstr "इस होस्ट पर restate इंस्टॉल नहीं है।"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:127
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:134
 msgid "That backup job is already running."
 msgstr "यह बैकअप जॉब पहले से चल रहा है।"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:149
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:150
 msgid "The backup job could not be started."
 msgstr "बैकअप जॉब शुरू नहीं किया जा सका।"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:237
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:248
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
@@ -272,7 +272,7 @@ msgstr ""
 "restate परिणाम लिखने से पहले रुक गया (निकास कोड %(code)s), और इसका लॉग "
 "%(log)s खाली है: चलते समय इसे रोका गया, या मशीन फिर से शुरू हुई"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:246
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:257
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -281,7 +281,7 @@ msgstr ""
 "restate परिणाम लिखने से पहले रुक गया (निकास कोड %(code)s); इस होस्ट पर "
 "journalctl -u %(unit)s देखें"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:290
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:301
 msgid "Could not queue the backup report"
 msgstr "बैकअप रिपोर्ट को क्यू में नहीं डाला जा सका"
 
@@ -429,31 +429,31 @@ msgstr ""
 msgid "Could not remove the old repository %s: %s"
 msgstr "पुराने रिपॉजिटरी %s को नहीं हटाया जा सकता: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:137
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:136
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "सील किए गए स्नैपशॉट की सूची नहीं बन सकी: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:157
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:163
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "पुराना सील किया गया स्नैपशॉट %(name)s हटाया नहीं जा सका: %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:237
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:243
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s इस होस्ट पर %(path)s पर माउंट नहीं है"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:252
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
 msgid "restate is not installed on this storage host"
 msgstr "restate इस स्टोरेज होस्ट पर इंस्टॉल नहीं है"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:295
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:301
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "नीति %s के लिए बैकअप स्टोरेज तैयार नहीं किया जा सका: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:341
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:347
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "स्टोरेज ऑडिट नहीं चल सका: %s"
@@ -922,105 +922,110 @@ msgstr "फेडोरा संस्करण अपग्रेड की �
 msgid "Failed to detect openSUSE version upgrades: %s"
 msgstr "openSUSE संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:94
+#: src/sysmanage_agent/collection/linux_update_applicators.py:96
 #, python-format
 msgid "Failed to apply APT updates: %s"
 msgstr "APT अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:227
+#: src/sysmanage_agent/collection/linux_update_applicators.py:229
 #, python-format
 msgid "Failed to apply DNF updates: %s"
 msgstr "DNF अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:247
+#: src/sysmanage_agent/collection/linux_update_applicators.py:249
 #, python-format
 msgid "No device ID found for firmware package: %s"
 msgstr "फर्मवेयर पैकेज के लिए कोई डिवाइस ID नहीं मिला: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:253
+#: src/sysmanage_agent/collection/linux_update_applicators.py:255
 msgid "No device ID available for firmware update"
 msgstr "फर्मवेयर अपडेट के लिए कोई डिवाइस ID उपलब्ध नहीं"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:285
+#: src/sysmanage_agent/collection/linux_update_applicators.py:287
 msgid "Firmware update failed"
 msgstr "फर्मवेयर अपडेट विफल"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:288
+#: src/sysmanage_agent/collection/linux_update_applicators.py:290
 #, python-format
 msgid "Failed to update firmware for %s: %s"
 msgstr "%s के लिए फर्मवेयर अपडेट विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:302
+#: src/sysmanage_agent/collection/linux_update_applicators.py:304
 #, python-format
 msgid "Exception during firmware update for %s: %s"
 msgstr "फ़रवरी अद्यतन के लिए %s के लिए त्रुटि: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:351
+#: src/sysmanage_agent/collection/linux_update_applicators.py:353
 #, python-format
 msgid "Failed to apply Ubuntu release upgrade: %s"
 msgstr "Ubuntu जारी अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:404
+#: src/sysmanage_agent/collection/linux_update_applicators.py:406
 #, python-format
 msgid "Failed to apply Fedora release upgrade: %s"
 msgstr "फ़ेडोरा जारी अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:442
+#: src/sysmanage_agent/collection/linux_update_applicators.py:444
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
 msgstr "ओपनएसयूएस रिलीज़ अपग्रेड लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:62
+#: src/sysmanage_agent/collection/linux_update_detectors.py:63
 #, python-format
 msgid "Failed to detect APT updates: %s"
 msgstr "APT की अपडेट्स पता नहीं चल सके: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:123
+#: src/sysmanage_agent/collection/linux_update_detectors.py:124
 #, python-format
 msgid "Failed to detect Snap updates: %s"
 msgstr "Snap अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:164
+#: src/sysmanage_agent/collection/linux_update_detectors.py:165
 #, python-format
 msgid "Failed to detect Flatpak updates: %s"
 msgstr "Flatpak की अपडेट्स पता नहीं चल सके: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:204
+#: src/sysmanage_agent/collection/linux_update_detectors.py:205
 #, python-format
 msgid "Failed to detect DNF updates: %s"
 msgstr "DNF की अपडेट्स का पता नहीं चल सका: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:226
+#: src/sysmanage_agent/collection/linux_update_detectors.py:227
 #, python-format
 msgid "Failed to detect Zypper updates: %s"
 msgstr "Zypper अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:296
+#: src/sysmanage_agent/collection/linux_update_detectors.py:297
 #, python-format
 msgid "Failed to detect Pacman updates: %s"
 msgstr "Pacman अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:323
+#: src/sysmanage_agent/collection/linux_update_detectors.py:319
+#, python-format
+msgid "Failed to detect apk updates: %s"
+msgstr "एपीके अपडेट का पता लगाने में विफल रहा: %s"
+
+#: src/sysmanage_agent/collection/linux_update_detectors.py:363
 msgid "fwupd daemon not running or no permissions"
 msgstr "fwupd डेमन चल नहीं रहा या अनुमतियां नहीं हैं"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:345
+#: src/sysmanage_agent/collection/linux_update_detectors.py:385
 #, python-format
 msgid "Failed to detect fwupd updates: %s"
 msgstr "fwupd अपडेट का पता लगाना विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:379
+#: src/sysmanage_agent/collection/linux_update_detectors.py:419
 #, python-format
 msgid "Failed to parse fwupd JSON output: %s"
 msgstr "fwupd JSON आउटपुट पार्स करना विफल: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:381
+#: src/sysmanage_agent/collection/linux_update_detectors.py:421
 #, python-format
 msgid "Error processing fwupd updates: %s"
 msgstr "fwupd अपडेट प्रोसेसिंग में त्रुटि: %s"
 
 # Firmware update messages
-#: src/sysmanage_agent/collection/linux_update_detectors.py:398
+#: src/sysmanage_agent/collection/linux_update_detectors.py:438
 msgid "Unknown Device"
 msgstr "अज्ञात डिवाइस"
 
@@ -1437,6 +1442,13 @@ msgstr "Microsoft Store ऐप्स का संकलन फ़ैल गय�
 msgid "Failed to collect winget packages: %s"
 msgstr "विंगेट पैकेज एकत्र करने में विफल हो गए: %s"
 
+#: src/sysmanage_agent/collection/update_apply_batch.py:33
+#: src/sysmanage_agent/collection/update_detection_linux.py:333
+#: src/sysmanage_agent/collection/update_detection_macos_apply.py:157
+#, python-format
+msgid "Failed to apply %s updates: %s"
+msgstr "%s अपडेट लागू करने में विफल: %s"
+
 #: src/sysmanage_agent/collection/update_detection.py:85
 #, python-format
 msgid "Unsupported platform for update detection: %s"
@@ -1454,98 +1466,98 @@ msgstr "उपलब्ध अपडेट का निहितार्थ �
 msgid "Failed to install package %s: %s"
 msgstr "पैकेज %s इंस्टॉल करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:125
+#: src/sysmanage_agent/collection/update_detection_bsd.py:130
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "pkg अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:163
+#: src/sysmanage_agent/collection/update_detection_bsd.py:168
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "पैकेज अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:211
+#: src/sysmanage_agent/collection/update_detection_bsd.py:216
 msgid "OpenBSD upgrade failed"
 msgstr "OpenBSD अपग्रेड विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:226
+#: src/sysmanage_agent/collection/update_detection_bsd.py:231
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr "OpenBSD अपग्रेड 30 मिनट के बाद टाइमआउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:325
+#: src/sysmanage_agent/collection/update_detection_bsd.py:330
 msgid "FreeBSD upgrade failed"
 msgstr "FreeBSD अपग्रेड विफल हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:338
+#: src/sysmanage_agent/collection/update_detection_bsd.py:343
 msgid "FreeBSD upgrade install failed"
 msgstr "FreeBSD अपग्रेड इंस्टॉल विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:344
+#: src/sysmanage_agent/collection/update_detection_bsd.py:349
 msgid "FreeBSD upgrade timed out"
 msgstr "FreeBSD अपग्रेड की समय सीमा समाप्त हो गई"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:410
+#: src/sysmanage_agent/collection/update_detection_bsd.py:415
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "syspatch कमांड एक्ज़िट कोड %d के साथ विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:413
+#: src/sysmanage_agent/collection/update_detection_bsd.py:418
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:416
+#: src/sysmanage_agent/collection/update_detection_bsd.py:421
 msgid "OpenBSD system update detection timed out"
 msgstr "OpenBSD सिस्टम अपडेशन डिटेक्शन 30 मिनट के बाद टाइमआउट हो गई"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:421
+#: src/sysmanage_agent/collection/update_detection_bsd.py:426
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "OpenBSD प्रणाली अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:438
+#: src/sysmanage_agent/collection/update_detection_bsd.py:443
 msgid "Failed to get current OpenBSD version"
 msgstr "वर्तमान OpenBSD संस्करण प्राप्त करने में विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:492
+#: src/sysmanage_agent/collection/update_detection_bsd.py:497
 msgid "Could not parse OpenBSD version from website"
 msgstr "वेबसाइट से OpenBSD संस्करण पार्स नहीं हो सका"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:496
+#: src/sysmanage_agent/collection/update_detection_bsd.py:501
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "OpenBSD वेबसाइट से अद्यतन खोजने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:502
+#: src/sysmanage_agent/collection/update_detection_bsd.py:507
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "OpenBSD संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:700
+#: src/sysmanage_agent/collection/update_detection_bsd.py:706
 msgid "syspatch command failed"
 msgstr "syspatch कमांड विफल"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:702
-#: src/sysmanage_agent/collection/update_detection_bsd.py:723
+#: src/sysmanage_agent/collection/update_detection_bsd.py:708
+#: src/sysmanage_agent/collection/update_detection_bsd.py:729
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "सिसपैच अद्यतन लागू करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:713
+#: src/sysmanage_agent/collection/update_detection_bsd.py:719
 msgid "syspatch command timed out"
 msgstr "syspatch कमांड टाईम-आउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:719
+#: src/sysmanage_agent/collection/update_detection_bsd.py:725
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch 10 मिनटों के बाद टाइमआउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:864
+#: src/sysmanage_agent/collection/update_detection_bsd.py:874
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "असमर्थित पैकेज प्रबंधक: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:920
+#: src/sysmanage_agent/collection/update_detection_bsd.py:930
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -1561,57 +1573,66 @@ msgstr "Linux प्रणाली अपडेट का निहितार
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "Linux संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:333
-#, python-format
-msgid "Failed to apply %s updates: %s"
-msgstr "%s अपडेट लागू करने में विफल: %s"
-
-#: src/sysmanage_agent/collection/update_detection_linux.py:377
+#: src/sysmanage_agent/collection/update_detection_linux.py:380
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "प्रयोग के लिए समर्थित नहीं है कि पैकेज मैनेजर: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:165
+#: src/sysmanage_agent/collection/update_detection_macos.py:168
 #, python-format
 msgid "Homebrew update failed: %s"
 msgstr "Homebrew अपडेट विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:213
+#: src/sysmanage_agent/collection/update_detection_macos.py:216
 msgid "Failed to parse Homebrew JSON output"
 msgstr "Homebrew JSON आउटपुट पार्स करने में विफल"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:216
+#: src/sysmanage_agent/collection/update_detection_macos.py:219
 #, python-format
 msgid "Failed to detect Homebrew updates: %s"
 msgstr "Homebrew की अपडेट्स पता नहीं चल सके: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:345
+#: src/sysmanage_agent/collection/update_detection_macos.py:350
 #, python-format
 msgid "Failed to detect Mac App Store updates: %s"
 msgstr "Mac App Store अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:376
+#: src/sysmanage_agent/collection/update_detection_macos.py:381
 #, python-format
 msgid "Failed to detect MacPorts updates: %s"
 msgstr "MacPorts अपडेट का निहितार्थ नहीं पता चल सका: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:432
+#: src/sysmanage_agent/collection/update_detection_macos.py:437
 #, python-format
 msgid "Failed to update package %s: %s"
 msgstr "पैकेज %s अपडेट करने में विफल: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:488
+#: src/sysmanage_agent/collection/update_detection_macos.py:493
 msgid "macOS upgrade failed"
 msgstr "macOS अपग्रेड विफल हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:503
+#: src/sysmanage_agent/collection/update_detection_macos.py:508
 msgid "macOS upgrade timed out after 2 hours"
 msgstr "macOS अपग्रेड 2 घंटों के बाद टाइमआउट हो गया"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:603
+#: src/sysmanage_agent/collection/update_detection_macos.py:608
 #, python-format
 msgid "Failed to detect macOS version upgrades: %s"
 msgstr "macOS संस्करण अपग्रेड का निहितार्थ नहीं पता चल सका: %s"
+
+#: src/sysmanage_agent/collection/update_detection_macos_apply.py:71
+#, python-format
+msgid "Failed to detect App Store updates: %s"
+msgstr "ऐप स्टोर अपडेट का पता लगाने में विफल रहा: %s"
+
+#: src/sysmanage_agent/collection/update_detection_macos_apply.py:106
+msgid "Software Update no longer lists this update."
+msgstr "सॉफ्टवेयर अपडेट इस अपडेट को अब सूचीबद्ध नहीं करता है।"
+
+#: src/sysmanage_agent/collection/update_detection_openbsd_pkg.py:95
+#, python-format
+msgid "Failed to detect OpenBSD package updates: %s"
+msgstr "OpenBSD पैकेज अपडेट का पता लगाने में विफल रहा: %s"
 
 #: src/sysmanage_agent/collection/update_detection_pkgin.py:103
 #, python-format
@@ -3051,21 +3072,21 @@ msgstr "खाली wait_condition कमांड"
 msgid "Failed to send progress message: %s"
 msgstr "उग्र प्रगति संदेश को भेजने में विफल होगया: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:143
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:144
 #: src/sysmanage_agent/operations/script_operations.py:69
 msgid "Refused a script that was not approved"
 msgstr "एक स्क्रिप्ट अस्वीकार की गई जो अनुमोदित नहीं थी"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:372
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:381
 msgid "no argv"
 msgstr "argv नहीं"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:415
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:424
 #, python-format
 msgid "FileNotFoundError: %s"
 msgstr "FileNotFoundError: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:587
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:596
 msgid "timeout"
 msgstr "टाइमआउट"
 
@@ -3556,72 +3577,72 @@ msgstr "इनस्टॉलेशन पूर्णता को सर्व
 msgid "No packages specified for uninstallation"
 msgstr "अनइंस्टॉलेशन के लिए कोई पैकेज निर्दिष्ट नहीं"
 
-#: src/sysmanage_agent/operations/package_operations.py:495
+#: src/sysmanage_agent/operations/package_operations.py:497
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "इनस्टॉलेशन पूर्णता को सर्वर को भेजने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:504
+#: src/sysmanage_agent/operations/package_operations.py:506
 msgid "No packages to install"
 msgstr "इनस्टॉल करने के लिए कोई पैकेज नहीं है"
 
-#: src/sysmanage_agent/operations/package_operations.py:548
+#: src/sysmanage_agent/operations/package_operations.py:550
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get install विफल: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:553
+#: src/sysmanage_agent/operations/package_operations.py:555
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "apt-get से पैकेजज़ इनस्टॉल करने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:556
+#: src/sysmanage_agent/operations/package_operations.py:558
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "apt-get install के दौरान अपवाद: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:563
+#: src/sysmanage_agent/operations/package_operations.py:565
 msgid "No packages to uninstall"
 msgstr "उनइनस्टॉल करने के लिए कोई पैकेज नहीं है"
 
-#: src/sysmanage_agent/operations/package_operations.py:593
+#: src/sysmanage_agent/operations/package_operations.py:595
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove विफल: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:598
+#: src/sysmanage_agent/operations/package_operations.py:600
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "apt-get का उपयोग करके पैकेजों को अनइंस्टॉल करने में विफल रहा: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:601
+#: src/sysmanage_agent/operations/package_operations.py:603
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "apt-get remove के दौरान अपवाद: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:647
+#: src/sysmanage_agent/operations/package_operations.py:649
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr ""
 "अनुरोध %s के लिए इंस्टॉलेशन पूर्ण होने की सूचना कतार में डालने में विफल"
 
-#: src/sysmanage_agent/operations/package_operations.py:652
+#: src/sysmanage_agent/operations/package_operations.py:654
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "स्थापना पूर्णता कतार में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:709
+#: src/sysmanage_agent/operations/package_operations.py:711
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "पैकेज इनस्टॉलेशन स्थिति अद्ययन को भेजने में विफलता: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:782
+#: src/sysmanage_agent/operations/package_operations.py:784
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "पैकेज अद्यतन चलाने में त्रुटि: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:791
+#: src/sysmanage_agent/operations/package_operations.py:793
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3766,17 +3787,17 @@ msgstr ""
 msgid "Could not update /etc/fstab: %s"
 msgstr " /etc/fstab को अपडेट नहीं किया जा सकता: %s"
 
-#: src/sysmanage_agent/operations/swap_file.py:293
+#: src/sysmanage_agent/operations/swap_file.py:290
 msgid "Swap files are added only on Linux and the BSDs."
 msgstr "स्वैप फ़ाइलें केवल लिनक्स और BSDs पर जोड़ी जाती हैं।"
 
-#: src/sysmanage_agent/operations/swap_file.py:299
+#: src/sysmanage_agent/operations/swap_file.py:296
 msgid "On OpenBSD a swap file is added only by an agent running as root."
 msgstr ""
 "OpenBSD पर स्वैप फ़ाइल केवल एक एजेंट द्वारा जोड़ी जाती है जो रूट के रूप में "
 "चल रहा है।"
 
-#: src/sysmanage_agent/operations/swap_file.py:304
+#: src/sysmanage_agent/operations/swap_file.py:301
 msgid "This host is a container; its swap is the host machine's."
 msgstr "यह होस्ट एक कंटेनर है; इसका स्वैप होस्ट मशीन का है।"
 

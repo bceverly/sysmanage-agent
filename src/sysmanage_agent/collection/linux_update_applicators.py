@@ -17,6 +17,8 @@ from typing import Dict, List
 
 from src.i18n import _
 
+from .update_apply_batch import run_batch
+
 logger = logging.getLogger(__name__)
 
 
@@ -444,3 +446,51 @@ class LinuxUpdateApplicator:
             results.setdefault("errors", []).append(
                 f"openSUSE release upgrade error: {str(error)}"
             )
+
+    # zypper, pacman and apk (2026-11-23, Bryan: "updates are applied on the
+    # Debian, Ubuntu, RHEL and Fedora families" was all the docs could say --
+    # openSUSE and Arch updates were detected and never applied, and Alpine's
+    # were not even detected).
+
+    @staticmethod
+    def _run_batch(manager, steps, packages, results, timeout=1800, note=None):
+        """See ``update_apply_batch.run_batch``."""
+        run_batch(manager, steps, packages, results, timeout=timeout, note=note)
+
+    @staticmethod
+    def apply_zypper_updates(packages: List[Dict], results: Dict):
+        """Apply zypper updates (openSUSE / SLE): only the packages asked for."""
+        names = [pkg["package_name"] for pkg in packages]
+        LinuxUpdateApplicator._run_batch(
+            "zypper",
+            [[*_sudo_prefix(), "zypper", "--non-interactive", "update",
+              "--auto-agree-with-licenses", *names]],
+            packages, results,
+        )  # fmt: skip
+
+    @staticmethod
+    def apply_pacman_updates(packages: List[Dict], results: Dict):
+        """Apply pacman updates (Arch).  Arch does not support partial
+        upgrades -- upgrading some packages against a newer sync database
+        can break the rest -- so this is the whole system, and the result
+        says so.  The keyring goes first, as the Arch wiki says: a host not
+        updated for months does not trust the newer packagers' signatures,
+        and a plain ``-Syu`` fails on them (lab, 2026-11-23: 109 pending,
+        "signature ... is unknown trust"; keyring then ``-Su``: 0 pending)."""
+        LinuxUpdateApplicator._run_batch(
+            "pacman",
+            [[*_sudo_prefix(), "pacman", "-Sy", "--noconfirm", "--needed",
+              "archlinux-keyring"],
+             [*_sudo_prefix(), "pacman", "-Su", "--noconfirm"]],
+            packages, results,
+            note="Arch upgrades the whole system together (partial upgrades are unsupported)",
+        )  # fmt: skip
+
+    @staticmethod
+    def apply_apk_updates(packages: List[Dict], results: Dict):
+        """Apply apk updates (Alpine): only the packages asked for."""
+        names = [pkg["package_name"] for pkg in packages]
+        LinuxUpdateApplicator._run_batch(
+            "apk", [[*_sudo_prefix(), "apk", "add", "--upgrade", *names]],
+            packages, results,
+        )  # fmt: skip

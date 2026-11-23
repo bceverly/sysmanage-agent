@@ -283,37 +283,48 @@ def _install_fstab(text: str) -> None:
             os.unlink(staged)
 
 
+def _refuse_unsupported(system: str) -> None:
+    """SwapRefused where SysManage does not add a swap file at all."""
+    if system not in SUPPORTED_FS:
+        raise SwapRefused(
+            "unsupported_os", _("Swap files are added only on Linux and the BSDs.")
+        )
+    if system == "OpenBSD" and not _root():
+        # doas cannot limit dd's arguments, and an unlimited dd is root.
+        raise SwapRefused(
+            "needs_root",
+            _("On OpenBSD a swap file is added only by an agent running as root."),
+        )
+    if system == "Linux" and in_container():
+        raise SwapRefused(
+            "container",
+            _("This host is a container; its swap is the host machine's."),
+        )
+
+
+def _run_plan(system: str, path: str, size: int, existing: Optional[str]) -> None:
+    """Make (or turn back on) the swap file; SwapRefused on a failed step."""
+    for argv in plan(system, path, size, exists=existing is not None):
+        if argv[0] in ("swapon", "swapctl") and system != "Linux":
+            _add_to_fstab(system, path, _install_fstab)  # BSD swapon reads it
+        code, err = _run(argv)
+        if code != 0 and not (existing and "busy" in err.lower()):
+            raise SwapRefused("command_failed", f"{' '.join(argv)}: {err or code}")
+
+
 def ensure_swap(parameters: Dict[str, Any]) -> Dict[str, Any]:
     """Add (or turn back on) SysManage's swap file of ``size_mb`` MB."""
     system = platform.system()
     try:
         size = check_size((parameters or {}).get("size_mb"))
-        if system not in SUPPORTED_FS:
-            raise SwapRefused(
-                "unsupported_os", _("Swap files are added only on Linux and the BSDs.")
-            )
-        if system == "OpenBSD" and not _root():
-            # doas cannot limit dd's arguments, and an unlimited dd is root.
-            raise SwapRefused(
-                "needs_root",
-                _("On OpenBSD a swap file is added only by an agent running as root."),
-            )
-        if system == "Linux" and in_container():
-            raise SwapRefused(
-                "container",
-                _("This host is a container; its swap is the host machine's."),
-            )
-        mounts = _mounts(system)
+        _refuse_unsupported(system)
         existing = next(
             (swap_path(m) for m in CANDIDATES if os.path.exists(swap_path(m))), None
         )
-        path = existing or swap_path(choose_mount(system, size, mounts, _space))
-        for argv in plan(system, path, size, exists=existing is not None):
-            if argv[0] in ("swapon", "swapctl") and system != "Linux":
-                _add_to_fstab(system, path, _install_fstab)  # BSD swapon reads it
-            code, err = _run(argv)
-            if code != 0 and not (existing and "busy" in err.lower()):
-                raise SwapRefused("command_failed", f"{' '.join(argv)}: {err or code}")
+        path = existing or swap_path(
+            choose_mount(system, size, _mounts(system), _space)
+        )
+        _run_plan(system, path, size, existing)
         added = _add_to_fstab(system, path, _install_fstab)
         return {"success": True, "path": path, "size_mb": size,
                 "created": existing is None, "fstab_added": added}  # fmt: skip

@@ -33,6 +33,20 @@ def _ops():
     return backup_operations
 
 
+def _record_flags(previous, remote, offsite, keys) -> Dict[str, Any]:
+    """What a job's in-flight record says about how it runs."""
+    flags: Dict[str, Any] = {}
+    if previous:
+        flags["previous"] = True  # the repository before an encrypted one
+    if remote:
+        flags["remote"] = True  # through restate-proxy: no mount
+    if offsite:
+        flags["offsite"] = offsite  # an off-site copy's URL, not the path
+    if keys:
+        flags["key_files"] = list(keys)  # removed when the run ends
+    return flags
+
+
 class BackupJobLifecycleMixin:
     """Launch, watch, finish and report runs; needs BackupOperations' state
     files, privileged helpers and mount handling."""
@@ -114,24 +128,11 @@ class BackupJobLifecycleMixin:
         offsite: Optional[str] = None,
     ) -> Dict[str, Any]:  # fmt: skip
         record = self._new_record(policy_id, action)
-        if previous:
-            record["previous"] = True  # the repository before an encrypted one
-        if remote:
-            record["remote"] = True  # through restate-proxy: no mount
-        if offsite:
-            record["offsite"] = offsite  # an off-site copy's URL, not the path
-        if keys:
-            record["key_files"] = list(keys)  # removed when the run ends
+        record.update(_record_flags(previous, remote, offsite, keys))
         if (await self._job_state(record))[0]:
             return {"success": False, "run_id": run_id, "reason": "busy",
                     "error": _("That backup job is already running.")}  # fmt: skip
-        for path in (
-            job_builder.result_path(self.state_dir, policy_id, action),
-            job_builder.progress_path(self.state_dir, policy_id, action),
-            record.get("log"),
-        ):
-            if path and os.path.exists(path):
-                os.unlink(path)
+        self._clear_last_outputs(policy_id, action, record)
         error = await self._ensure_mount(run_id, policy_id, record)
         if error:
             return {"success": False, "run_id": run_id, "reason": "mount_failed",
@@ -152,6 +153,16 @@ class BackupJobLifecycleMixin:
         self._save(_ops().INFLIGHT_FILE, inflight)
         self._spawn(self._watch(run_id, record, resumed=False))
         return {"success": True, "run_id": run_id, "status": "started"}
+
+    def _clear_last_outputs(self, policy_id: str, action: str, record) -> None:
+        """The last run's result, progress and log: this run writes its own."""
+        for path in (
+            job_builder.result_path(self.state_dir, policy_id, action),
+            job_builder.progress_path(self.state_dir, policy_id, action),
+            record.get("log"),
+        ):
+            if path and os.path.exists(path):
+                os.unlink(path)
 
     def _spawn(self, coroutine) -> None:
         task = asyncio.ensure_future(coroutine)

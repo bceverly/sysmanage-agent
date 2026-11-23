@@ -48,6 +48,9 @@ from src.i18n import _
 
 logger = logging.getLogger(__name__)
 
+from .update_detection_macos_apply import (  # pylint: disable=wrong-import-position
+    MacOSApplyMixin,
+)
 from .update_detection_base import (  # pylint: disable=wrong-import-position
     UpdateDetectorBase,
 )
@@ -55,7 +58,7 @@ from .update_detection_base import (  # pylint: disable=wrong-import-position
 logger = logging.getLogger(__name__)
 
 
-class MacOSUpdateDetector(UpdateDetectorBase):
+class MacOSUpdateDetector(MacOSApplyMixin, UpdateDetectorBase):
     """macOS-specific update detection methods."""
 
     def _is_macos_major_upgrade(self, title, version):
@@ -298,6 +301,8 @@ class MacOSUpdateDetector(UpdateDetectorBase):
                 "mac_app_store" if not is_major_upgrade else "macos-upgrade"
             ),
             "label": label,
+            # Kept by the server and sent back on apply: softwareupdate's label.
+            "bundle_id": label,
             "size_kb": details["size_kb"],
             "is_security_update": "Security" in label,
             "is_system_update": ("macOS" in title or "Safari" in title)
@@ -648,3 +653,5 @@ class MacOSUpdateDetector(UpdateDetectorBase):
             self._detect_homebrew_updates()
         if "macports" in managers:
             self._detect_macports_updates()
+        if self._command_exists("mas"):
+            self._detect_mas_updates()

@@ -12,6 +12,7 @@ across different package managers.
 
 import json
 import logging
+import re
 import subprocess  # nosec B404
 from typing import Optional
 
@@ -295,6 +296,45 @@ class LinuxUpdateDetector:
         except Exception as error:
             logger.exception(_("Failed to detect Pacman updates: %s"), str(error))
 
+        return updates
+
+    # ``apk version -l '<'`` (after ``apk update``): one line per package
+    # with an update, "<name>-<version>-r<N>  <  <new version>".
+    _APK_LINE = re.compile(r"^(\S+?)-(\d[^\s-]*-r\d+)\s+<\s+(\S+)")
+
+    def detect_apk_updates(self):
+        """Detect updates from apk (Alpine) -- 2026-11-23: never detected."""
+        updates = []
+        try:
+            subprocess.run(  # nosec B603, B607
+                ["apk", "update", "-q"], capture_output=True, timeout=120, check=False
+            )
+            result = subprocess.run(  # nosec B603, B607
+                ["apk", "version", "-l", "<"],
+                capture_output=True, text=True, timeout=60, check=False,
+            )  # fmt: skip
+            if result.returncode == 0:
+                updates = self.parse_apk_version(result.stdout)
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            logger.exception(_("Failed to detect apk updates: %s"), str(error))
+        return updates
+
+    def parse_apk_version(self, stdout: str) -> list:
+        """Update records from ``apk version -l '<'`` output."""
+        updates = []
+        for line in (stdout or "").splitlines():
+            match = self._APK_LINE.match(line.strip())
+            if not match:
+                continue
+            name = match.group(1)
+            updates.append({
+                "package_name": name,
+                "current_version": match.group(2),
+                "available_version": match.group(3),
+                "package_manager": "apk",
+                "is_security_update": False,
+                "is_system_update": self.is_system_package_linux(name),
+            })  # fmt: skip
         return updates
 
     @staticmethod

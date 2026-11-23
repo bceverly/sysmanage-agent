@@ -49,6 +49,9 @@ from . import package_holds  # pylint: disable=wrong-import-position
 from .update_detection_base import (  # pylint: disable=wrong-import-position
     UpdateDetectorBase,
 )
+from .update_detection_openbsd_pkg import (  # pylint: disable=wrong-import-position
+    OpenBSDPackageUpdateMixin,
+)
 from .update_detection_pkgin import (  # pylint: disable=wrong-import-position
     PkginUpdateMixin,
 )
@@ -64,7 +67,9 @@ def _release_tuple(version: str) -> tuple:
         return ()
 
 
-class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
+class BSDUpdateDetector(
+    PkginUpdateMixin, OpenBSDPackageUpdateMixin, UpdateDetectorBase
+):
     """BSD-specific update detection methods."""
 
     def _detect_pkg_updates(self):
@@ -555,6 +560,7 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
 
             logger.info("Calling _detect_openbsd_version_upgrades")
             self._detect_openbsd_version_upgrades()
+            self._detect_openbsd_pkg_updates()
 
         # FreeBSD-specific detection
         if platform.system() == "FreeBSD":
@@ -856,6 +862,10 @@ class BSDUpdateDetector(PkginUpdateMixin, UpdateDetectorBase):
             self._apply_pkg_updates(pkg_list, results)
         elif pkg_manager == "syspatch":
             self._apply_syspatch_updates(pkg_list, results)
+        elif pkg_manager == "pkgin":
+            self._apply_pkgin_updates(pkg_list, results)
+        elif pkg_manager == "pkg_add":
+            self._apply_pkg_add_updates(pkg_list, results)
         elif pkg_manager == "openbsd-upgrade":
             self._apply_openbsd_upgrade_updates(pkg_list, results)
         elif pkg_manager == "freebsd-upgrade":

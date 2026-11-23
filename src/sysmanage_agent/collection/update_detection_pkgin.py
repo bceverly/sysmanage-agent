@@ -240,3 +240,13 @@ class PkginUpdateMixin:
             logger.debug("=== PKGIN DETECTION END ===")
         except Exception as error:
             logger.exception(_("Failed to detect pkgin updates: %s"), str(error))
+
+    def _apply_pkgin_updates(self, packages, results):
+        """Apply pkgin updates (NetBSD): ``pkgin -y install`` of the packages
+        asked for upgrades just those (2026-11-23: detected, never applied)."""
+        # pylint: disable-next=import-outside-toplevel
+        from .update_apply_batch import run_batch
+
+        names = [p["package_name"] for p in packages]
+        run_batch("pkgin", [self._pkgin_privileged(["-y", "install", *names])],
+                  packages, results)  # fmt: skip

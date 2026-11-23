@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 14:26-0800\n"
+"POT-Creation-Date: 2026-11-23 11:04-0500\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -266,19 +266,19 @@ msgid "Locking does not work on the backup storage at %(where)s: %(error)s"
 msgstr ""
 "Блокировки не работают в хранилище резервных копий в %(where)s: %(error)s"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:83
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:97
 msgid "restate is not installed on this host."
 msgstr "restate не установлен на этом хосте."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:127
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:134
 msgid "That backup job is already running."
 msgstr "Это задание резервного копирования уже выполняется."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:149
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:150
 msgid "The backup job could not be started."
 msgstr "Не удалось запустить задание резервного копирования."
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:237
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:248
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result, and its log %(log)s"
@@ -287,7 +287,7 @@ msgstr ""
 "restate остановился (код выхода %(code)s), не записав результат, и его "
 "журнал %(log)s пуст: его остановили или машину перезапустили во время работы"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:246
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:257
 #, python-format
 msgid ""
 "restate stopped (exit %(code)s) before writing a result; see journalctl -u "
@@ -296,7 +296,7 @@ msgstr ""
 "restate остановился (код выхода %(code)s), не записав результат; см. "
 "journalctl -u %(unit)s на этом хосте"
 
-#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:290
+#: src/sysmanage_agent/backup/job_lifecycle_mixin.py:301
 msgid "Could not queue the backup report"
 msgstr "Не удалось поставить отчет о резервном копировании в очередь"
 
@@ -449,31 +449,31 @@ msgstr ""
 msgid "Could not remove the old repository %s: %s"
 msgstr "Не удалось удалить старый репозиторий %s: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:137
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:136
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Не удалось получить список запечатанных снимков: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:157
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:163
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Не удалось удалить старый запечатанный снимок %(name)s: %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:237
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:243
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s не подключён в %(path)s на этом хосте"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:252
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:258
 msgid "restate is not installed on this storage host"
 msgstr "restate не установлен на этом хосте хранения"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:295
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:301
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "Не удалось подготовить хранилище резервных копий для политики %s: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:341
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:347
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "Не удалось выполнить проверку хранилища: %s"
@@ -945,105 +945,110 @@ msgstr "Не удалось обнаружить обновление верси
 msgid "Failed to detect openSUSE version upgrades: %s"
 msgstr "Не удалось обнаружить обновление версии openSUSE: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:94
+#: src/sysmanage_agent/collection/linux_update_applicators.py:96
 #, python-format
 msgid "Failed to apply APT updates: %s"
 msgstr "Не удалось применить APT обновления: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:227
+#: src/sysmanage_agent/collection/linux_update_applicators.py:229
 #, python-format
 msgid "Failed to apply DNF updates: %s"
 msgstr "Не удалось применить DNF обновления: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:247
+#: src/sysmanage_agent/collection/linux_update_applicators.py:249
 #, python-format
 msgid "No device ID found for firmware package: %s"
 msgstr "Не найден ID устройства для пакета прошивки: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:253
+#: src/sysmanage_agent/collection/linux_update_applicators.py:255
 msgid "No device ID available for firmware update"
 msgstr "Нет доступного ID устройства для обновления прошивки"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:285
+#: src/sysmanage_agent/collection/linux_update_applicators.py:287
 msgid "Firmware update failed"
 msgstr "Обновление прошивки не удалось"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:288
+#: src/sysmanage_agent/collection/linux_update_applicators.py:290
 #, python-format
 msgid "Failed to update firmware for %s: %s"
 msgstr "Не удалось обновить прошивку для %s: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:302
+#: src/sysmanage_agent/collection/linux_update_applicators.py:304
 #, python-format
 msgid "Exception during firmware update for %s: %s"
 msgstr "Исключение при обновлении прошивки для %s: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:351
+#: src/sysmanage_agent/collection/linux_update_applicators.py:353
 #, python-format
 msgid "Failed to apply Ubuntu release upgrade: %s"
 msgstr "Не удалось применить обновление выпуска Ubuntu: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:404
+#: src/sysmanage_agent/collection/linux_update_applicators.py:406
 #, python-format
 msgid "Failed to apply Fedora release upgrade: %s"
 msgstr "Не удалось применить обновление выпуска Fedora: %s"
 
-#: src/sysmanage_agent/collection/linux_update_applicators.py:442
+#: src/sysmanage_agent/collection/linux_update_applicators.py:444
 #, python-format
 msgid "Failed to apply openSUSE release upgrade: %s"
 msgstr "Не удалось применить обновление релиза openSUSE: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:62
+#: src/sysmanage_agent/collection/linux_update_detectors.py:63
 #, python-format
 msgid "Failed to detect APT updates: %s"
 msgstr "Не удалось обнаружить обновления APT: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:123
+#: src/sysmanage_agent/collection/linux_update_detectors.py:124
 #, python-format
 msgid "Failed to detect Snap updates: %s"
 msgstr "Не удалось обнаружить обновления Snap: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:164
+#: src/sysmanage_agent/collection/linux_update_detectors.py:165
 #, python-format
 msgid "Failed to detect Flatpak updates: %s"
 msgstr "Не удалось обнаружить обновления Flatpak: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:204
+#: src/sysmanage_agent/collection/linux_update_detectors.py:205
 #, python-format
 msgid "Failed to detect DNF updates: %s"
 msgstr "Не удалось обнаружить обновления DNF: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:226
+#: src/sysmanage_agent/collection/linux_update_detectors.py:227
 #, python-format
 msgid "Failed to detect Zypper updates: %s"
 msgstr "Не удалось обнаружить обновления Zypper: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:296
+#: src/sysmanage_agent/collection/linux_update_detectors.py:297
 #, python-format
 msgid "Failed to detect Pacman updates: %s"
 msgstr "Не удалось обнаружить обновления Pacman: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:323
+#: src/sysmanage_agent/collection/linux_update_detectors.py:319
+#, python-format
+msgid "Failed to detect apk updates: %s"
+msgstr "Не удалось обнаружить обновления apk: %s"
+
+#: src/sysmanage_agent/collection/linux_update_detectors.py:363
 msgid "fwupd daemon not running or no permissions"
 msgstr "Демон fwupd не запущен или нет разрешений"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:345
+#: src/sysmanage_agent/collection/linux_update_detectors.py:385
 #, python-format
 msgid "Failed to detect fwupd updates: %s"
 msgstr "Не удалось обнаружить обновления fwupd: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:379
+#: src/sysmanage_agent/collection/linux_update_detectors.py:419
 #, python-format
 msgid "Failed to parse fwupd JSON output: %s"
 msgstr "Не удалось разобрать JSON вывод fwupd: %s"
 
-#: src/sysmanage_agent/collection/linux_update_detectors.py:381
+#: src/sysmanage_agent/collection/linux_update_detectors.py:421
 #, python-format
 msgid "Error processing fwupd updates: %s"
 msgstr "Ошибка обработки обновлений fwupd: %s"
 
 # Firmware update messages
-#: src/sysmanage_agent/collection/linux_update_detectors.py:398
+#: src/sysmanage_agent/collection/linux_update_detectors.py:438
 msgid "Unknown Device"
 msgstr "Неизвестное Устройство"
 
@@ -1462,6 +1467,13 @@ msgstr "Не удалось собрать приложения Microsoft Store:
 msgid "Failed to collect winget packages: %s"
 msgstr "Не удалось собрать пакеты winget: %s"
 
+#: src/sysmanage_agent/collection/update_apply_batch.py:33
+#: src/sysmanage_agent/collection/update_detection_linux.py:333
+#: src/sysmanage_agent/collection/update_detection_macos_apply.py:157
+#, python-format
+msgid "Failed to apply %s updates: %s"
+msgstr "Не удалось применить обновления %s: %s"
+
 #: src/sysmanage_agent/collection/update_detection.py:85
 #, python-format
 msgid "Unsupported platform for update detection: %s"
@@ -1479,102 +1491,102 @@ msgstr "Не удалось обнаружить доступные обновл
 msgid "Failed to install package %s: %s"
 msgstr "Не удалось установить пакет %s: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:125
+#: src/sysmanage_agent/collection/update_detection_bsd.py:130
 #, python-format
 msgid "Failed to detect pkg updates: %s"
 msgstr "Не удалось обнаружить обновления pkg: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:163
+#: src/sysmanage_agent/collection/update_detection_bsd.py:168
 #, python-format
 msgid "Failed to apply pkg updates: %s"
 msgstr "Не удалось применить обновления pkg: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:211
+#: src/sysmanage_agent/collection/update_detection_bsd.py:216
 msgid "OpenBSD upgrade failed"
 msgstr "Не удалось обновить OpenBSD"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:226
+#: src/sysmanage_agent/collection/update_detection_bsd.py:231
 msgid "OpenBSD upgrade timed out after 30 minutes"
 msgstr ""
 "Обновление OpenBSD завершилось ошибкой из-за превышения времени ожидания (30"
 " минут)"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:325
+#: src/sysmanage_agent/collection/update_detection_bsd.py:330
 msgid "FreeBSD upgrade failed"
 msgstr "Обновление FreeBSD не удалось"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:338
+#: src/sysmanage_agent/collection/update_detection_bsd.py:343
 msgid "FreeBSD upgrade install failed"
 msgstr "Не удалось установить обновление FreeBSD"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:344
+#: src/sysmanage_agent/collection/update_detection_bsd.py:349
 msgid "FreeBSD upgrade timed out"
 msgstr "Обновление FreeBSD завершилось ошибкой по таймауту"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:410
+#: src/sysmanage_agent/collection/update_detection_bsd.py:415
 #, python-format
 msgid "syspatch command failed with exit code %d"
 msgstr "Команда syspatch не выполнена с кодом %d"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:413
+#: src/sysmanage_agent/collection/update_detection_bsd.py:418
 #, python-format
 msgid "syspatch stderr: %s"
 msgstr "syspatch stderr: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:416
+#: src/sysmanage_agent/collection/update_detection_bsd.py:421
 msgid "OpenBSD system update detection timed out"
 msgstr ""
 "Обнаружение обновления OpenBSD завершилось ошибкой из-за превышения времени "
 "ожидания"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:421
+#: src/sysmanage_agent/collection/update_detection_bsd.py:426
 #, python-format
 msgid "Failed to detect OpenBSD system updates: %s"
 msgstr "Не удалось обнаружить обновления системы OpenBSD: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:438
+#: src/sysmanage_agent/collection/update_detection_bsd.py:443
 msgid "Failed to get current OpenBSD version"
 msgstr "Не удалось получить текущую версию OpenBSD"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:492
+#: src/sysmanage_agent/collection/update_detection_bsd.py:497
 msgid "Could not parse OpenBSD version from website"
 msgstr "Не удалось разобрать версию OpenBSD с сайта"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:496
+#: src/sysmanage_agent/collection/update_detection_bsd.py:501
 #, python-format
 msgid "Failed to check OpenBSD website for updates: %s"
 msgstr "Не удалось проверить сайт OpenBSD на наличие обновлений: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:502
+#: src/sysmanage_agent/collection/update_detection_bsd.py:507
 #, python-format
 msgid "Failed to detect OpenBSD version upgrades: %s"
 msgstr "Не удалось обнаружить обновление версии OpenBSD: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:700
+#: src/sysmanage_agent/collection/update_detection_bsd.py:706
 msgid "syspatch command failed"
 msgstr "Команда syspatch не выполнена"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:702
-#: src/sysmanage_agent/collection/update_detection_bsd.py:723
+#: src/sysmanage_agent/collection/update_detection_bsd.py:708
+#: src/sysmanage_agent/collection/update_detection_bsd.py:729
 #, python-format
 msgid "Failed to apply syspatch updates: %s"
 msgstr "Не удалось применить обновления syspatch: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:713
+#: src/sysmanage_agent/collection/update_detection_bsd.py:719
 msgid "syspatch command timed out"
 msgstr "команда syspatch истекла"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:719
+#: src/sysmanage_agent/collection/update_detection_bsd.py:725
 msgid "syspatch timed out after 10 minutes"
 msgstr "syspatch истек после 10 минут"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:864
+#: src/sysmanage_agent/collection/update_detection_bsd.py:874
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:653
 #, python-format
 msgid "Unsupported package manager: %s"
 msgstr "Неподдерживаемый менеджер пакетов: %s"
 
-#: src/sysmanage_agent/collection/update_detection_bsd.py:920
+#: src/sysmanage_agent/collection/update_detection_bsd.py:930
 #: src/sysmanage_agent/collection/update_detection_windows_apply.py:711
 #, python-format
 msgid "Failed to apply updates: %s"
@@ -1590,57 +1602,68 @@ msgstr "Не удалось обнаружить обновления систе
 msgid "Failed to detect Linux version upgrades: %s"
 msgstr "Не удалось обнаружить обновление версии Linux: %s"
 
-#: src/sysmanage_agent/collection/update_detection_linux.py:333
-#, python-format
-msgid "Failed to apply %s updates: %s"
-msgstr "Не удалось применить обновления %s: %s"
-
-#: src/sysmanage_agent/collection/update_detection_linux.py:377
+#: src/sysmanage_agent/collection/update_detection_linux.py:380
 #, python-format
 msgid "Unsupported package manager for apply: %s"
 msgstr "Неподдерживаемый менеджер пакетов для применения: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:165
+#: src/sysmanage_agent/collection/update_detection_macos.py:168
 #, python-format
 msgid "Homebrew update failed: %s"
 msgstr "Не удалось обновить Homebrew: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:213
+#: src/sysmanage_agent/collection/update_detection_macos.py:216
 msgid "Failed to parse Homebrew JSON output"
 msgstr "Не удалось разобрать JSON-вывод Homebrew"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:216
+#: src/sysmanage_agent/collection/update_detection_macos.py:219
 #, python-format
 msgid "Failed to detect Homebrew updates: %s"
 msgstr "Не удалось обнаружить обновления Homebrew: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:345
+#: src/sysmanage_agent/collection/update_detection_macos.py:350
 #, python-format
 msgid "Failed to detect Mac App Store updates: %s"
 msgstr "Не удалось обнаружить обновления в Mac App Store: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:376
+#: src/sysmanage_agent/collection/update_detection_macos.py:381
 #, python-format
 msgid "Failed to detect MacPorts updates: %s"
 msgstr "Не удалось обнаружить обновления MacPorts: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:432
+#: src/sysmanage_agent/collection/update_detection_macos.py:437
 #, python-format
 msgid "Failed to update package %s: %s"
 msgstr "Не удалось обновить пакет %s: %s"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:488
+#: src/sysmanage_agent/collection/update_detection_macos.py:493
 msgid "macOS upgrade failed"
 msgstr "обновление macOS не удалось"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:503
+#: src/sysmanage_agent/collection/update_detection_macos.py:508
 msgid "macOS upgrade timed out after 2 hours"
 msgstr "обновление macOS истекло после 2 часов"
 
-#: src/sysmanage_agent/collection/update_detection_macos.py:603
+#: src/sysmanage_agent/collection/update_detection_macos.py:608
 #, python-format
 msgid "Failed to detect macOS version upgrades: %s"
 msgstr "Не удалось обнаружить обновление версии macOS: %s"
+
+#: src/sysmanage_agent/collection/update_detection_macos_apply.py:71
+#, python-format
+msgid "Failed to detect App Store updates: %s"
+msgstr "Не удалось обнаружить обновления App Store: %s"
+
+#: src/sysmanage_agent/collection/update_detection_macos_apply.py:106
+msgid "Software Update no longer lists this update."
+msgstr ""
+"Плагин «Обновление программного обеспечения» больше не отображает этот "
+"обновление."
+
+#: src/sysmanage_agent/collection/update_detection_openbsd_pkg.py:95
+#, python-format
+msgid "Failed to detect OpenBSD package updates: %s"
+msgstr "Не удалось обнаружить обновления пакетов OpenBSD: %s"
 
 #: src/sysmanage_agent/collection/update_detection_pkgin.py:103
 #, python-format
@@ -3091,21 +3114,21 @@ msgstr "Пустая команда wait_condition"
 msgid "Failed to send progress message: %s"
 msgstr "Не удалось отправить сообщение о прогрессе: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:143
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:144
 #: src/sysmanage_agent/operations/script_operations.py:69
 msgid "Refused a script that was not approved"
 msgstr "Отклонён скрипт, который не был одобрен"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:372
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:381
 msgid "no argv"
 msgstr "нет argv"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:415
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:424
 #, python-format
 msgid "FileNotFoundError: %s"
 msgstr "FileNotFoundError: %s"
 
-#: src/sysmanage_agent/operations/generic_deployment_plan.py:587
+#: src/sysmanage_agent/operations/generic_deployment_plan.py:596
 msgid "timeout"
 msgstr "тайм-аут"
 
@@ -3592,71 +3615,71 @@ msgstr "Не удалось отправить завершение устано
 msgid "No packages specified for uninstallation"
 msgstr "Не указаны пакеты для удаления"
 
-#: src/sysmanage_agent/operations/package_operations.py:495
+#: src/sysmanage_agent/operations/package_operations.py:497
 #, python-format
 msgid "Failed to send uninstall completion to server: %s"
 msgstr "Не удалось отправить завершение удаления на сервер: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:504
+#: src/sysmanage_agent/operations/package_operations.py:506
 msgid "No packages to install"
 msgstr "Нет пакетов для установки"
 
-#: src/sysmanage_agent/operations/package_operations.py:548
+#: src/sysmanage_agent/operations/package_operations.py:550
 #, python-format
 msgid "apt-get install failed: %s"
 msgstr "apt-get install завершился с ошибкой: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:553
+#: src/sysmanage_agent/operations/package_operations.py:555
 #, python-format
 msgid "Failed to install packages with apt-get: %s"
 msgstr "Не удалось установить пакеты с помощью apt-get: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:556
+#: src/sysmanage_agent/operations/package_operations.py:558
 #, python-format
 msgid "Exception during apt-get install: %s"
 msgstr "Исключение при apt-get install: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:563
+#: src/sysmanage_agent/operations/package_operations.py:565
 msgid "No packages to uninstall"
 msgstr "Нет пакетов для удаления"
 
-#: src/sysmanage_agent/operations/package_operations.py:593
+#: src/sysmanage_agent/operations/package_operations.py:595
 #, python-format
 msgid "apt-get remove failed: %s"
 msgstr "apt-get remove завершился с ошибкой: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:598
+#: src/sysmanage_agent/operations/package_operations.py:600
 #, python-format
 msgid "Failed to uninstall packages with apt-get: %s"
 msgstr "Не удалось удалить пакеты с помощью apt-get: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:601
+#: src/sysmanage_agent/operations/package_operations.py:603
 #, python-format
 msgid "Exception during apt-get remove: %s"
 msgstr "Исключение при apt-get remove: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:647
+#: src/sysmanage_agent/operations/package_operations.py:649
 #, python-format
 msgid "Failed to queue installation completion for request %s"
 msgstr "Не удалось добавить завершение установки для запроса %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:652
+#: src/sysmanage_agent/operations/package_operations.py:654
 #, python-format
 msgid "Error queueing installation completion: %s"
 msgstr "Ошибка при добавлении установки в очередь завершения: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:709
+#: src/sysmanage_agent/operations/package_operations.py:711
 #, python-format
 msgid "Failed to send package installation status update: %s"
 msgstr "Не удалось отправить статус установки пакета: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:782
+#: src/sysmanage_agent/operations/package_operations.py:784
 #: src/sysmanage_agent/operations/repository_operations.py:422
 #, python-format
 msgid "Error running package update: %s"
 msgstr "Ошибка при выполнении обновления пакетов: %s"
 
-#: src/sysmanage_agent/operations/package_operations.py:791
+#: src/sysmanage_agent/operations/package_operations.py:793
 #: src/sysmanage_agent/operations/repository_operations.py:430
 #, python-format
 msgid "Error triggering update detection: %s"
@@ -3800,16 +3823,16 @@ msgstr "Для файла обмена объемом %d МБ не хватае�
 msgid "Could not update /etc/fstab: %s"
 msgstr "Не удалось обновить /etc/fstab: %s"
 
-#: src/sysmanage_agent/operations/swap_file.py:293
+#: src/sysmanage_agent/operations/swap_file.py:290
 msgid "Swap files are added only on Linux and the BSDs."
 msgstr "Файлы обмена добавляются только на Linux и BSD-системах."
 
-#: src/sysmanage_agent/operations/swap_file.py:299
+#: src/sysmanage_agent/operations/swap_file.py:296
 msgid "On OpenBSD a swap file is added only by an agent running as root."
 msgstr ""
 "На OpenBSD файл обмена добавляется только агентом, работающим как root."
 
-#: src/sysmanage_agent/operations/swap_file.py:304
+#: src/sysmanage_agent/operations/swap_file.py:301
 msgid "This host is a container; its swap is the host machine's."
 msgstr "Этот хост является контейнером; его обмен относится к хост-машине."
 

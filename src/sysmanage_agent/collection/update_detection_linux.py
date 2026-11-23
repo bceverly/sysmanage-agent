@@ -371,6 +371,9 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             "ubuntu_release": self._apply_ubuntu_release_updates,
             "fedora_release": self._apply_fedora_release_updates,
             "opensuse_release": self._apply_opensuse_release_updates,
+            "zypper": self.applicator.apply_zypper_updates,
+            "pacman": self.applicator.apply_pacman_updates,
+            "apk": self.applicator.apply_apk_updates,
         }
         handler = dispatch.get(pkg_manager)
         if handler is None:
@@ -610,5 +613,7 @@ class LinuxUpdateDetector(UpdateDetectorBase):
             self._detect_pacman_updates()
         if "zypper" in managers:
             self._detect_zypper_updates()
+        if "apk" in managers:
+            self.available_updates.extend(self.pkg_detector.detect_apk_updates())
         if "fwupd" in managers:
             self._detect_fwupd_updates()

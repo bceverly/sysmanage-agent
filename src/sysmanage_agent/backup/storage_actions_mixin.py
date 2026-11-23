@@ -124,33 +124,39 @@ class BackupStorageActionsMixin:
                 return code, err
         return 0, ""
 
-    async def _expire_seals(self, seal: Dict[str, Any]) -> Dict[str, Any]:
-        """Remove this agent's seals older than ``keep_days`` (never the
-        newest).  A failure is reported but never fails the seal itself."""
-        keep, now = seal["keep_days"], time.time()
+    async def _list_seals(self, seal: Dict[str, Any]):
+        """``(seals, tool, error)`` -- this agent's seals and the tool that
+        removes them, or an error when they could not be listed."""
         if seal["mode"] == "zfs_snapshot":
             zfs = _ops()._first(_ops().ZFS_PATHS)
             code, out, err = await self._run(
                 seal_retention.zfs_list_argv(zfs, seal["dataset"])
             )
             if code != 0:
-                return {"errors": [_("Could not list the sealed snapshots: %s") % err]}
-            seals = seal_retention.zfs_seals(out, seal["dataset"])
-            tool = zfs
-        else:
-            ledger = self._load(_ops().SEALS_FILE)
-            seals = seal_retention.btrfs_seals(ledger, seal["snapshot_dir"])
-            tool = _ops()._first(_ops().BTRFS_PATHS)
+                return None, zfs, _("Could not list the sealed snapshots: %s") % err
+            return seal_retention.zfs_seals(out, seal["dataset"]), zfs, None
+        ledger = self._load(_ops().SEALS_FILE)
+        seals = seal_retention.btrfs_seals(ledger, seal["snapshot_dir"])
+        return seals, _ops()._first(_ops().BTRFS_PATHS), None
+
+    async def _remove_seal(self, mode: str, tool: str, name: str):
+        """``(code, error)`` of removing one sealed snapshot."""
+        if mode == "btrfs_snapshot":
+            return await self._remove_btrfs_seal(tool, name)
+        code, _out, err = await self._run(
+            self._privileged(seal_retention.delete_argv(mode, tool, name))
+        )
+        return code, err
+
+    async def _expire_seals(self, seal: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove this agent's seals older than ``keep_days`` (never the
+        newest).  A failure is reported but never fails the seal itself."""
+        seals, tool, error = await self._list_seals(seal)
+        if error:
+            return {"errors": [error]}
         removed, errors = [], []
-        for name in seal_retention.expired(seals, keep, now):
-            if seal["mode"] == "btrfs_snapshot":
-                code, err = await self._remove_btrfs_seal(tool, name)
-            else:
-                code, _out, err = await self._run(
-                    self._privileged(
-                        seal_retention.delete_argv(seal["mode"], tool, name)
-                    )
-                )
+        for name in seal_retention.expired(seals, seal["keep_days"], time.time()):
+            code, err = await self._remove_seal(seal["mode"], tool, name)
             if code == 0:
                 removed.append(name)
             else:
