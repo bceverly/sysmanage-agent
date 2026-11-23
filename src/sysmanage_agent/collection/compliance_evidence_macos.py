@@ -41,13 +41,17 @@ RAN = "ran"
 FAILED = "failed"
 _TIMEOUT = 30
 
+_SU = "com.apple.SoftwareUpdate"
+_LW = "com.apple.loginwindow"
+_SYSTEMSETUP = "/usr/sbin/systemsetup"
+
 # (domain, key) pairs the rules read.
 PREFS = (
-    ("com.apple.SoftwareUpdate", "AutomaticCheckEnabled"),
-    ("com.apple.SoftwareUpdate", "AutomaticDownload"),
-    ("com.apple.SoftwareUpdate", "AutomaticallyInstallMacOSUpdates"),
-    ("com.apple.SoftwareUpdate", "ConfigDataInstall"),
-    ("com.apple.SoftwareUpdate", "CriticalUpdateInstall"),
+    (_SU, "AutomaticCheckEnabled"),
+    (_SU, "AutomaticDownload"),
+    (_SU, "AutomaticallyInstallMacOSUpdates"),
+    (_SU, "ConfigDataInstall"),
+    (_SU, "CriticalUpdateInstall"),
     ("com.apple.commerce", "AutoUpdate"),
     ("com.apple.applicationaccess", "enforcedSoftwareUpdateDelay"),
     ("com.apple.applicationaccess", "allowContentCaching"),
@@ -56,12 +60,12 @@ PREFS = (
     ("com.apple.AssetCache", "Activated"),
     ("com.apple.TimeMachine", "AutoBackup"),
     ("com.apple.TimeMachine", "LastDestinationID"),
-    ("com.apple.loginwindow", "LoginwindowText"),
-    ("com.apple.loginwindow", "SHOWFULLNAME"),
-    ("com.apple.loginwindow", "RetriesUntilHint"),
-    ("com.apple.loginwindow", "GuestEnabled"),
-    ("com.apple.loginwindow", "com.apple.login.mcx.DisableAutoLoginClient"),
-    ("com.apple.loginwindow", "autoLoginUser"),
+    (_LW, "LoginwindowText"),
+    (_LW, "SHOWFULLNAME"),
+    (_LW, "RetriesUntilHint"),
+    (_LW, "GuestEnabled"),
+    (_LW, "com.apple.login.mcx.DisableAutoLoginClient"),
+    (_LW, "autoLoginUser"),
     ("com.apple.mDNSResponder", "NoMulticastAdvertisements"),
 )
 
@@ -126,9 +130,36 @@ def launchd_facts(listing: str) -> Dict[str, bool]:
 def parse_global_policy(text: str) -> Dict[str, Any]:
     """``pwpolicy -getglobalpolicy``: ``key=value key=value``."""
     found = {}
-    for key, value in re.findall(r"(\w+)=(\S+)", text):
-        found["pwpolicy_global:" + key.lower()] = _number(value)
+    for token in text.split():
+        key, sep, value = token.partition("=")
+        if sep and key and value and (key.replace("_", "").isalnum()):
+            found["pwpolicy_global:" + key.lower()] = _number(value)
     return found
+
+
+def _policies(data: Any) -> List[Dict[str, Any]]:
+    """Every policy dict in an account-policies plist."""
+    if not isinstance(data, dict):
+        return []
+    return [policy for policies in data.values() if isinstance(policies, list)
+            for policy in policies if isinstance(policy, dict)]  # fmt: skip
+
+
+def _content_limits(content: str) -> List[Tuple[str, int]]:
+    """``policyAttributeX < 5`` / ``>= 15`` pairs in a policyContent
+    string, read token by token (no backtracking regex)."""
+    tokens = content.replace("(", " ").replace(")", " ").split()
+    limits = []
+    for index, token in enumerate(tokens[:-2]):
+        if token.startswith("policyAttribute") and tokens[index + 1] in (
+            "<",
+            "<=",
+            ">",
+            ">=",
+        ):
+            if tokens[index + 2].isdigit():
+                limits.append((token, int(tokens[index + 2])))
+    return limits
 
 
 def parse_account_policies(text: str) -> Dict[str, Any]:
@@ -141,23 +172,30 @@ def parse_account_policies(text: str) -> Dict[str, Any]:
         return {}
     try:
         data = plistlib.loads(text[start:].encode())
-    except (plistlib.InvalidFileException, ValueError):
+    except ValueError:  # plistlib.InvalidFileException is a ValueError
         return {}
     found: Dict[str, Any] = {}
-    for policies in data.values() if isinstance(data, dict) else []:
-        for policy in policies if isinstance(policies, list) else []:
-            for key, value in (policy.get("policyParameters") or {}).items():
-                found["pwpolicy_account:" + key.lower()] = _number(value)
-            content = policy.get("policyContent") or ""
-            for attr, value in re.findall(
-                r"(policyAttribute\w+)\s*[<>]=?\s*(\d+)", content
-            ):
-                found.setdefault("pwpolicy_account:" + attr.lower(), int(value))
+    for policy in _policies(data):
+        for key, value in (policy.get("policyParameters") or {}).items():
+            found["pwpolicy_account:" + key.lower()] = _number(value)
+        for attr, value in _content_limits(policy.get("policyContent") or ""):
+            found.setdefault("pwpolicy_account:" + attr.lower(), value)
     days = found.get("pwpolicy_account:policyattributeexpireseveryndays")
     if isinstance(days, (int, float)):
         found.setdefault(
             "pwpolicy_account:policyattributeexpireseverynminutes", days * 1440
         )
+    return found
+
+
+def _amounts(text: str) -> List[Tuple[int, str]]:
+    """``60d OR 5G`` -> [(60, "d"), (5, "g")] (lower-cased first)."""
+    found = []
+    for token in text.split():
+        digits = token.rstrip("smhdybkg")
+        unit = token[len(digits) :]
+        if digits.isdigit() and len(unit) == 1:
+            found.append((int(digits), unit))
     return found
 
 
@@ -170,9 +208,7 @@ def parse_audit_control(text: str) -> Dict[str, Any]:
         if line.startswith("flags:"):
             found["audit_flags"] = line.split(":", 1)[1].strip()
         elif line.startswith("expire-after:"):
-            for number, unit in re.findall(
-                r"(\d+)\s*([smhdybkg])", line.split(":", 1)[1].lower()
-            ):
+            for number, unit in _amounts(line.split(":", 1)[1].lower()):
                 if unit in _SIZE_UNITS:
                     found["audit_expire_after_bytes"] = int(number) * _SIZE_UNITS[unit]
                 else:
@@ -242,7 +278,7 @@ def _authdb(right: str) -> Optional[Dict[str, Any]]:
         return None
     try:
         return plistlib.loads(out[start:].encode())
-    except (plistlib.InvalidFileException, ValueError):
+    except ValueError:  # plistlib.InvalidFileException is a ValueError
         return None
 
 
@@ -253,9 +289,9 @@ def _status_facts(found: Dict[str, Any]) -> None:
          "firewall_enabled", r"(enabled|state = [12])"),
         (["/usr/libexec/ApplicationFirewall/socketfilterfw", "--getstealthmode"],
          "firewall_stealth", r"(stealth mode is on|mode enabled|state = [12])"),
-        (["/usr/sbin/systemsetup", "-getusingnetworktime"], "network_time", r"Network Time:\s*On"),
-        (["/usr/sbin/systemsetup", "-getremotelogin"], "remote_login", r"Remote Login:\s*On"),
-        (["/usr/sbin/systemsetup", "-getremoteappleevents"], "remote_apple_events",
+        ([_SYSTEMSETUP, "-getusingnetworktime"], "network_time", r"Network Time:\s*On"),
+        ([_SYSTEMSETUP, "-getremotelogin"], "remote_login", r"Remote Login:\s*On"),
+        ([_SYSTEMSETUP, "-getremoteappleevents"], "remote_apple_events",
          r"Remote Apple Events:\s*On"),
         (["/usr/sbin/spctl", "--status"], "gatekeeper_enabled", r"assessments enabled"),
         (["/usr/bin/fdesetup", "status"], "filevault_on", r"FileVault is On"),
@@ -270,7 +306,7 @@ def _status_facts(found: Dict[str, Any]) -> None:
         code, out = _run(argv)
         if out.strip() and (code == 0 or fact in ("smb_guest_access", "nfsd_running")):
             found[fact] = re.search(pattern, out, re.I) is not None
-    code, out = _run(["/usr/sbin/systemsetup", "-getnetworktimeserver"])
+    code, out = _run([_SYSTEMSETUP, "-getnetworktimeserver"])
     m = re.search(r"Network Time Server:\s*(\S+)", out)
     if code == 0 and m:
         found["network_time_server"] = m.group(1)
@@ -332,7 +368,7 @@ def _file_facts(found: Dict[str, Any]) -> None:
             found["internet_sharing"] = bool(
                 plistlib.load(fh).get("NAT", {}).get("Enabled")
             )
-    except (OSError, plistlib.InvalidFileException, ValueError, AttributeError):
+    except (OSError, ValueError, AttributeError):
         pass
     banners = [n for n in _listdir("/Library/Security") if n.startswith("PolicyBanner")]
     found["policy_banner_readable"] = any(

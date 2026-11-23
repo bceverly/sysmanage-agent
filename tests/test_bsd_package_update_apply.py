@@ -51,7 +51,7 @@ def test_openbsd_upgrades_by_installed_name_through_doas():
     calls, run = _capture()
     results = {}
     detector = BSDUpdateDetector()
-    with patch.object(obsd.os, "geteuid", return_value=1000), \
+    with patch.object(obsd.os, "geteuid", return_value=1000, create=True), \
             patch.object(update_apply_batch.subprocess, "run", side_effect=run):  # fmt: skip
         detector._apply_pkg_add_updates(  # pylint: disable=protected-access
             [{"package_name": "vim--perl-python3-ruby"},

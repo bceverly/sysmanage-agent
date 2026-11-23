@@ -22,7 +22,7 @@ import logging
 import os
 import re
 import subprocess  # nosec B404
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from src.i18n import _
 
@@ -30,21 +30,43 @@ from .update_apply_batch import run_batch
 
 logger = logging.getLogger(__name__)
 
-# "497799835 Xcode (15.0 -> 15.1)"
-_MAS_LINE = re.compile(r"^(\d+)\s+(.+?)\s+\((\S+)\s+->\s+(\S+)\)\s*$")
+
+def _mas_line(line: str) -> Optional[Tuple[str, str, str, str]]:
+    """``497799835 Xcode (15.0 -> 15.1)`` -> (id, name, current, available).
+    String splitting, not a regex: no backtracking on odd lines."""
+    start = line.rfind(" (")
+    if not line.endswith(")") or start < 0:
+        return None
+    head = line[:start].split(None, 1)
+    if len(head) != 2:
+        return None
+    app_id, name = head
+    inner = line[start + 2 : -1]
+    versions = [part.strip() for part in inner.split("->")]
+    if (
+        not app_id.isdigit()
+        or not name.strip()
+        or len(versions) != 2
+        or not all(versions)
+    ):
+        return None
+    if any(" " in v for v in versions):
+        return None
+    return app_id, name.strip(), versions[0], versions[1]
 
 
 def parse_mas_outdated(output: str) -> List[Dict]:
     """App Store updates from ``mas outdated``."""
     updates = []
     for line in (output or "").splitlines():
-        match = _MAS_LINE.match(line.strip())
-        if match:
+        found = _mas_line(line.strip())
+        if found:
+            app_id, name, current, available = found
             updates.append({
-                "package_name": match.group(2),
-                "bundle_id": match.group(1),
-                "current_version": match.group(3),
-                "available_version": match.group(4),
+                "package_name": name,
+                "bundle_id": app_id,
+                "current_version": current,
+                "available_version": available,
                 "package_manager": "mas",
                 "is_security_update": False,
                 "is_system_update": False,
@@ -119,20 +141,33 @@ class MacOSApplyMixin:
         ids = [p.get("bundle_id") or p["package_name"] for p in packages]
         run_batch("mas", [["mas", "upgrade", *ids]], packages, results, timeout=3600)
 
-    def apply_updates(
-        self,
-        package_names: List[str] = None,  # pylint: disable=unused-argument
-        package_managers: List[str] = None,  # pylint: disable=unused-argument
-        packages: List[Dict] = None,
-    ) -> Dict:
-        """Apply the requested updates, grouped by package manager."""
-        results: Dict = {"updated_packages": [], "failed_packages": [],
-                         "requires_reboot": False, "timestamp": ""}  # fmt: skip
-        by_manager: Dict[str, List[Dict]] = {}
-        for pkg in packages or []:
+    @staticmethod
+    def _by_manager(packages: List[Dict]) -> Dict[str, List[Dict]]:
+        grouped: Dict[str, List[Dict]] = {}
+        for pkg in packages:
             if "package_name" not in pkg and "name" in pkg:
                 pkg = {**pkg, "package_name": pkg["name"]}
-            by_manager.setdefault(pkg.get("package_manager", "unknown"), []).append(pkg)
+            grouped.setdefault(pkg.get("package_manager", "unknown"), []).append(pkg)
+        return grouped
+
+    @staticmethod
+    def _fail_all(results: Dict, manager: str, pkg_list: List[Dict], error: str):
+        for pkg in pkg_list:
+            results["failed_packages"].append({
+                "package_name": pkg.get("package_name"),
+                "package_manager": manager, "error": error,
+            })  # fmt: skip
+
+    @staticmethod
+    def _needs_reboot(packages: List[Dict]) -> bool:
+        return any(p.get("package_manager") in ("mac_app_store", "macos-upgrade")
+                   and p.get("requires_restart") for p in packages)  # fmt: skip
+
+    def apply_updates(self, packages: List[Dict] = None) -> Dict:
+        """Apply the requested updates, grouped by package manager."""
+        packages = packages or []
+        results: Dict = {"updated_packages": [], "failed_packages": [],
+                         "requires_reboot": False, "timestamp": ""}  # fmt: skip
         dispatch = {
             "homebrew": self._apply_homebrew_updates,
             "macos-upgrade": self._apply_macos_upgrade_updates,
@@ -140,15 +175,11 @@ class MacOSApplyMixin:
             "macports": self._apply_macports_updates,
             "mas": self._apply_mas_updates,
         }
-        for manager, pkg_list in by_manager.items():
+        for manager, pkg_list in self._by_manager(packages).items():
             handler = dispatch.get(manager)
             if handler is None:
-                for pkg in pkg_list:
-                    results["failed_packages"].append({
-                        "package_name": pkg.get("package_name"),
-                        "package_manager": manager,
-                        "error": f"Unsupported package manager: {manager}",
-                    })  # fmt: skip
+                self._fail_all(results, manager, pkg_list,
+                               f"Unsupported package manager: {manager}")  # fmt: skip
                 continue
             try:
                 handler(pkg_list, results)
@@ -156,12 +187,6 @@ class MacOSApplyMixin:
                 logger.exception(
                     _("Failed to apply %s updates: %s"), manager, str(error)
                 )
-                for pkg in pkg_list:
-                    results["failed_packages"].append({
-                        "package_name": pkg.get("package_name"),
-                        "package_manager": manager, "error": str(error),
-                    })  # fmt: skip
-        if any(p.get("package_manager") in ("mac_app_store", "macos-upgrade")
-               and p.get("requires_restart") for p in packages or []):  # fmt: skip
-            results["requires_reboot"] = True
+                self._fail_all(results, manager, pkg_list, str(error))
+        results["requires_reboot"] = self._needs_reboot(packages)
         return results

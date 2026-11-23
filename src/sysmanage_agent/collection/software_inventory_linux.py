@@ -432,6 +432,28 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             "is_user_installed": True,
         }
 
+    def _dnf_installed(self, output: str, sources) -> list:
+        """The packages under dnf's "Installed packages" header, each with
+        the source package Fedora's advisories name."""
+        packages = []
+        in_packages = False
+        for line in output.strip().split("\n"):
+            # dnf4 prints "Installed Packages", dnf5 (Fedora 41+)
+            # "Installed packages": a Fedora 42 host reported no packages at
+            # all (2026-11-23).
+            if line.strip().lower() == "installed packages":
+                in_packages = True
+                continue
+            if not (in_packages and line.strip()):
+                continue
+            package = self._parse_dnf_package_line(line.split())
+            if package:
+                source = sources.get(package["package_name"])
+                if source:
+                    package["source_package"] = source
+                packages.append(package)
+        return packages
+
     def _collect_dnf_packages(self):
         """Collect packages from DNF (Fedora)."""
         try:
@@ -448,28 +470,9 @@ class LinuxSoftwareInventoryCollector(SoftwareInventoryCollectorBase):
             )
 
             if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
-                in_packages = False
-                sources = rpm_sources()
-
-                for line in lines:
-                    # dnf4 prints "Installed Packages", dnf5 (Fedora 41+)
-                    # "Installed packages": a Fedora 42 host reported no
-                    # packages at all (2026-11-23).
-                    if line.strip().lower() == "installed packages":
-                        in_packages = True
-                        continue
-
-                    if in_packages and line.strip():
-                        parts = line.split()
-                        package = self._parse_dnf_package_line(parts)
-                        if package:
-                            if sources.get(package["package_name"]):
-                                # What Fedora's advisories name.
-                                package["source_package"] = sources[
-                                    package["package_name"]
-                                ]
-                            self.collected_packages.append(package)
+                self.collected_packages.extend(
+                    self._dnf_installed(result.stdout, rpm_sources())
+                )
 
         except Exception as error:
             logger.exception(_("Failed to collect DNF packages: %s"), str(error))

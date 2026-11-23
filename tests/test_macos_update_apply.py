@@ -47,7 +47,7 @@ def _capture():
 def test_each_manager_runs_its_own_command_as_root():
     calls, run = _capture()
     detector = MacOSUpdateDetector()
-    with patch.object(mac_apply.os, "geteuid", return_value=0), \
+    with patch.object(mac_apply.os, "geteuid", return_value=0, create=True), \
             patch.object(update_apply_batch.subprocess, "run", side_effect=run):  # fmt: skip
         result = detector.apply_updates(packages=[
             {"package_name": "Safari", "package_manager": "mac_app_store",
@@ -73,7 +73,7 @@ def test_a_software_update_item_without_its_label_is_looked_up_by_title():
     detector = MacOSUpdateDetector()
     with patch.object(detector, "_softwareupdate_labels",
                       return_value={"Command Line Tools for Xcode": "CLT-16.0"}), \
-            patch.object(mac_apply.os, "geteuid", return_value=0), \
+            patch.object(mac_apply.os, "geteuid", return_value=0, create=True), \
             patch.object(update_apply_batch.subprocess, "run", side_effect=run):  # fmt: skip
         result = detector.apply_updates(packages=[
             {"package_name": "Command Line Tools for Xcode", "package_manager": "mac_app_store"},

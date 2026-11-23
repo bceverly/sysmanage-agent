@@ -63,7 +63,7 @@ def test_sshd_t_goes_through_doas_where_there_is_no_sudo():
     def which(name):
         return "/usr/bin/doas" if name == "doas" else None
 
-    with patch.object(bsd.os, "geteuid", return_value=1000), \
+    with patch.object(bsd.os, "geteuid", return_value=1000, create=True), \
             patch.object(bsd.shutil, "which", side_effect=which), \
             patch.object(bsd, "_tool", return_value="/usr/sbin/sshd"), \
             patch.object(bsd.subprocess, "run", side_effect=fake_run):  # fmt: skip
@@ -74,7 +74,7 @@ def test_sshd_t_goes_through_doas_where_there_is_no_sudo():
 
 def test_a_refused_escalation_is_not_privileged_not_a_failure():
     refused = subprocess.CompletedProcess([], 1, "", "doas: Authorization required\n")
-    with patch.object(bsd.os, "geteuid", return_value=1000), \
+    with patch.object(bsd.os, "geteuid", return_value=1000, create=True), \
             patch.object(bsd.shutil, "which", return_value="/usr/bin/doas"), \
             patch.object(bsd.subprocess, "run", return_value=refused):  # fmt: skip
         assert bsd._privileged(["/usr/sbin/sshd", "-T"]) == (None, bsd.NOT_PRIVILEGED)

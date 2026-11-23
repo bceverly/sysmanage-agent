@@ -43,27 +43,33 @@ NOT_PRIVILEGED = "not_privileged"
 FAILED = "failed"
 _TIMEOUT = 30
 
+# Read on all three systems.
+_SECURELEVEL = "kern.securelevel"
+_IP_FORWARDING = "net.inet.ip.forwarding"
+_IP6_FORWARDING = "net.inet6.ip6.forwarding"
+_IP_REDIRECT = "net.inet.ip.redirect"
+
 SYSCTLS = {
     "FreeBSD": (
-        "kern.securelevel", "security.bsd.see_other_uids", "security.bsd.see_other_gids",
+        _SECURELEVEL, "security.bsd.see_other_uids", "security.bsd.see_other_gids",
         "security.bsd.see_jail_proc", "security.bsd.unprivileged_read_msgbuf",
         "security.bsd.unprivileged_proc_debug", "security.bsd.hardlink_check_uid",
         "security.bsd.hardlink_check_gid", "kern.randompid", "kern.elf64.aslr.enable",
-        "net.inet.ip.forwarding", "net.inet6.ip6.forwarding", "net.inet.ip.redirect",
+        _IP_FORWARDING, _IP6_FORWARDING, _IP_REDIRECT,
         "net.inet.ip.sourceroute", "net.inet.ip.accept_sourceroute",
         "net.inet.icmp.drop_redirect", "net.inet.tcp.blackhole", "net.inet.udp.blackhole",
         "net.inet.ip.random_id",
     ),
     "OpenBSD": (
-        "kern.securelevel", "kern.allowkmem", "kern.nosuidcoredump", "ddb.panic",
+        _SECURELEVEL, "kern.allowkmem", "kern.nosuidcoredump", "ddb.panic",
         "machdep.allowaperture", "hw.smt", "kern.audio.record", "kern.video.record",
-        "net.inet.ip.forwarding", "net.inet6.ip6.forwarding", "net.inet.ip.redirect",
+        _IP_FORWARDING, _IP6_FORWARDING, _IP_REDIRECT,
         "net.inet.icmp.rediraccept", "net.inet.ip.sourceroute",
     ),
     "NetBSD": (
-        "kern.securelevel", "security.pax.aslr.global", "security.pax.mprotect.global",
-        "security.curtain", "net.inet.ip.forwarding", "net.inet6.ip6.forwarding",
-        "net.inet.ip.redirect", "net.inet.ip.allowsrcrt", "net.inet.ip.forwsrcrt",
+        _SECURELEVEL, "security.pax.aslr.global", "security.pax.mprotect.global",
+        "security.curtain", _IP_FORWARDING, _IP6_FORWARDING,
+        _IP_REDIRECT, "net.inet.ip.allowsrcrt", "net.inet.ip.forwsrcrt",
         "net.inet.icmp.rediraccept",
     ),
 }  # fmt: skip
@@ -146,7 +152,7 @@ def parse_rc_conf(texts: List[str]) -> Dict[str, str]:
             if re.match(r"\s*(if|then|else|fi|case|esac|for|do|done)\b", line):
                 continue
             for m in re.finditer(
-                r"(?:^|\s)([A-Za-z_][A-Za-z0-9_]*)=(\"[^\"]*\"|'[^']*'|[^\s;]*)", line
+                r"(?:^|\s)([A-Za-z_]\w*)=(\"[^\"]*\"|'[^']*'|[^\s;]*)", line
             ):
                 found[m.group(1)] = m.group(2).strip("\"'")
     return found
@@ -157,7 +163,7 @@ def parse_sysrc(text: str) -> Dict[str, str]:
     found = {}
     for line in text.splitlines():
         name, sep, value = line.partition(": ")
-        if sep and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+        if sep and re.fullmatch(r"[A-Za-z_]\w*", name):
             found[name] = value.strip()
     return found
 

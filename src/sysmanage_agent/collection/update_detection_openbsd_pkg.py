@@ -19,9 +19,8 @@ is ``pkg_add -I -u`` with the installed names, flavor and all, through doas
 
 import logging
 import os
-import re
 import subprocess  # nosec B404
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from src.i18n import _
 
@@ -31,39 +30,52 @@ logger = logging.getLogger(__name__)
 
 PKG_ADD = "/usr/sbin/pkg_add"
 DETECT_SECONDS = 1800
-_UPGRADE = re.compile(r"^(\S+?)->(\S+): ok$")
-# stem-version[-flavor]: the version is the first dash-part starting with a digit.
-_NAME = re.compile(r"^(.+?)-(\d[^-]*)(?:-(.+))?$")
 
 
 def split_name(installed: str) -> Optional[Dict[str, str]]:
     """``{stem, version, flavor}`` of an OpenBSD package name, or None."""
-    match = _NAME.match(installed or "")
-    if not match:
+    # stem-version[-flavor]: the version is the first dash-part (after the
+    # first) that starts with a digit.
+    parts = (installed or "").split("-")
+    for index in range(1, len(parts)):
+        if parts[index][:1].isdigit():
+            stem = "-".join(parts[:index])
+            if not stem:
+                return None
+            return {"stem": stem, "version": parts[index],
+                    "flavor": "-".join(parts[index + 1:])}  # fmt: skip
+    return None
+
+
+def _upgrade_line(line: str) -> Optional[Tuple[str, str]]:
+    """``old->new: ok`` -> (old, new), or None."""
+    if not line.endswith(": ok"):
         return None
-    return {"stem": match.group(1), "version": match.group(2),
-            "flavor": match.group(3) or ""}  # fmt: skip
+    old, sep, new = line[: -len(": ok")].partition("->")
+    if not sep or not old or not new or any(c.isspace() for c in old + new):
+        return None
+    return old, new
 
 
 def parse_pkg_add_dry_run(output: str) -> List[Dict]:
     """The upgrades ``pkg_add -u -n`` reports, as update records."""
     updates = []
     for line in (output or "").splitlines():
-        match = _UPGRADE.match(line.strip())
-        if not match or match.group(1).startswith((".libs", "partial-")):
+        pair = _upgrade_line(line.strip())
+        if pair is None or pair[0].startswith((".libs", "partial-")):
             continue
-        old = split_name(match.group(1))
+        installed, new = pair
+        old = split_name(installed)
         if old is None:
             continue
-        new = match.group(2)
         if old["flavor"] and new.endswith("-" + old["flavor"]):
             new = new[: -len(old["flavor"]) - 1]
         name = old["stem"] + (f"--{old['flavor']}" if old["flavor"] else "")
         updates.append({
             "package_name": name,
-            "installed_name": match.group(1),
+            "installed_name": installed,
             # Kept by the server and sent back on apply: the exact package.
-            "bundle_id": match.group(1),
+            "bundle_id": installed,
             "current_version": old["version"],
             "available_version": new,
             "package_manager": "pkg_add",
