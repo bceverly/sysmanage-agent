@@ -120,6 +120,8 @@ class HardwareCollector:
                 # Server expects memory_total_mb
                 "memory_total_mb": memory_info.get("total_mb"),
                 "memory_available_mb": memory_info.get("available_mb"),
+                # Counted with memory against the antivirus memory floor.
+                "swap_total_mb": memory_info.get("swap_total_mb"),
                 # Detailed JSON for complex data (stored in host table)
                 "hardware_details": json.dumps(
                     {

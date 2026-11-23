@@ -198,6 +198,9 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
         "deploy_files",
         "execute_command_sequence",
         "apply_deployment_plan",
+        # A swap file so ClamAV clears its memory floor (Linux and the BSDs).
+        "ensure_swap",
+        "remove_swap",
     ),
     "agent_update": ("update_agent",),
     "virtualization": (

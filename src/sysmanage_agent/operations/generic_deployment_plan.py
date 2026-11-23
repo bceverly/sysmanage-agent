@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import os
 import tempfile
+import uuid
 from typing import Any, Dict, Optional
 
 from src.i18n import _
@@ -300,9 +301,17 @@ class GenericDeploymentPlanMixin:
                 )
             else:
                 # uninstall_packages takes a list -- wrap the single entry
-                # so the manager hint flows through.
+                # so the manager hint flows through.  It refuses a request
+                # without a request_id, so the plan gives each removal its
+                # own (lab, 2026-11-23: Remove antivirus stopped ClamAV but
+                # never uninstalled it -- every removal failed on this).  The
+                # plan's own result reports to the server, so no separate
+                # uninstall completion is sent for an id it never issued.
                 result = await self.agent.uninstall_packages(
                     {
+                        "request_id": str(uuid.uuid4()),
+                        "requested_by": "deployment_plan",
+                        "notify": False,
                         "packages": [
                             {
                                 "package_name": pkg_name,

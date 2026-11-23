@@ -427,10 +427,12 @@ class PackageOperations:
             request_id, overall_success, uninstall_log_text, self.logger
         )
 
-        # Send completion notification
-        await self._send_uninstall_completion(
-            request_id, overall_success, uninstall_log_text
-        )
+        # Send completion notification -- unless the caller reports the
+        # outcome itself (a deployment plan's removal step).
+        if parameters.get("notify", True):
+            await self._send_uninstall_completion(
+                request_id, overall_success, uninstall_log_text
+            )
 
         return {
             "success": overall_success,

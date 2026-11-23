@@ -361,6 +361,9 @@ class MessageProcessor:
             "update_hardware": lambda params: self.agent.update_hardware(),
             "update_user_access": lambda params: self.agent.update_user_access(),
             "check_updates": lambda params: self.agent.check_updates(),
+            # The antivirus memory floor: SysManage's own swap file.
+            "ensure_swap": self.agent.ensure_swap,
+            "remove_swap": self.agent.remove_swap,
             "apply_updates": self.agent.apply_updates,
             "ubuntu_pro_attach": self.agent.ubuntu_pro_attach,
             "ubuntu_pro_detach": self.agent.ubuntu_pro_detach,

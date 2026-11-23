@@ -16,6 +16,7 @@ import asyncio
 from typing import Any, Dict
 
 from src.sysmanage_agent.operations import clock_resync
+from src.sysmanage_agent.operations import swap_file
 
 
 class SystemOperationsDelegator:
@@ -401,6 +402,21 @@ class MiscDelegator:
         """Step the clock now through the host's time service (Phase 23.3 S5).
         Blocking commands, so off the event loop."""
         return await asyncio.to_thread(clock_resync.resync, parameters)
+
+    async def ensure_swap(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Add SysManage's swap file for the antivirus memory floor, then
+        report the hardware again so the server sees the new swap at once."""
+        result = await asyncio.to_thread(swap_file.ensure_swap, parameters)
+        if result.get("success"):
+            await self.update_hardware()
+        return result
+
+    async def remove_swap(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove the swap file SysManage added, then report the hardware."""
+        result = await asyncio.to_thread(swap_file.remove_swap, parameters)
+        if result.get("removed"):
+            await self.update_hardware()
+        return result
 
     async def run_malware_scan(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Run a malware scan (Phase 21.3)."""

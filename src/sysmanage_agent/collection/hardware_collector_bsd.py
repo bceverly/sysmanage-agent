@@ -10,6 +10,7 @@ Handles BSD-specific (OpenBSD, FreeBSD, NetBSD) hardware information gathering.
 import glob
 import logging
 import os
+import platform
 import re
 import subprocess  # nosec B404
 from typing import Any, Dict, List, Optional
@@ -18,6 +19,39 @@ from src.i18n import _
 from .hardware_collector_base import HardwareCollectorBase
 
 logger = logging.getLogger(__name__)
+
+
+def parse_swapctl_total_kb(text: str):
+    """Total swap in KB from ``swapctl -sk`` (OpenBSD: ``total: 1048576
+    1K-blocks allocated, ...``; NetBSD: ``total: 1048576K allocated, ...``)."""
+    for line in (text or "").splitlines():
+        match = re.match(r"\s*total:\s*(\d+)", line)
+        if match:
+            return int(match.group(1))
+    return None
+
+
+def bsd_swap_total_mb():
+    """The host's total swap in MB, or None when it cannot be read."""
+    if platform.system() == "FreeBSD":
+        argv = ["sysctl", "-n", "vm.swap_total"]  # bytes
+    else:
+        argv = ["swapctl", "-sk"]
+    try:
+        result = subprocess.run(  # nosec B603, B607
+            argv, capture_output=True, text=True, timeout=30, check=False
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return 0 if "no swap" in (result.stderr + result.stdout).lower() else None
+    if platform.system() == "FreeBSD":
+        try:
+            return int(result.stdout.strip()) // (1024 * 1024)
+        except ValueError:
+            return None
+    total = parse_swapctl_total_kb(result.stdout)
+    return total // 1024 if total is not None else None
 
 
 class HardwareCollectorBSD(HardwareCollectorBase):
@@ -131,6 +165,10 @@ class HardwareCollectorBSD(HardwareCollectorBase):
                 # hw.physmem returns bytes
                 memory_bytes = int(result.stdout.strip())
                 memory_info["total_mb"] = memory_bytes // (1024 * 1024)
+            swap = bsd_swap_total_mb()
+            if swap is not None:
+                # The antivirus memory floor counts swap too.
+                memory_info["swap_total_mb"] = swap
 
         except Exception as error:
             memory_info["error"] = _("Failed to get BSD memory info: %s") % str(error)

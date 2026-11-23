@@ -763,8 +763,14 @@ class TestApplyDeploymentPlan:
         result = await self.deployment.apply_deployment_plan({"plan": plan})
         assert result["success"] is True
         assert "packages_to_remove" in result["results"]
-        # uninstall_packages called.
+        # uninstall_packages called -- with what the real one requires: it
+        # refuses a request without a request_id, which made every plan
+        # removal fail (lab, 2026-11-23: ClamAV stopped but never removed).
         assert self.mock_agent.uninstall_packages.called
+        sent = self.mock_agent.uninstall_packages.call_args.args[0]
+        assert sent["request_id"] and sent["requested_by"] == "deployment_plan"
+        assert sent["notify"] is False  # the plan's own result reports it
+        assert sent["packages"][0]["package_name"] == "clamav"
 
     @pytest.mark.asyncio
     async def test_plan_can_be_passed_inline_or_under_plan_key(self):

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-21 05:57-0800\n"
+"POT-Creation-Date: 2026-11-22 14:26-0800\n"
 "Language: nl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -448,31 +448,31 @@ msgstr ""
 msgid "Could not remove the old repository %s: %s"
 msgstr "Het verwijderen van de oude repository %s is mislukt: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:87
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:137
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Kan de verzegelde snapshots niet weergeven: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:102
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:157
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "Kan de oude verzegelde snapshot %(name)s niet verwijderen: %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:182
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:237
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s is op deze host niet gekoppeld op %(path)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:197
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:252
 msgid "restate is not installed on this storage host"
 msgstr "restate is niet geïnstalleerd op deze opslaghost"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:240
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:295
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "Kan de back-upopslag voor beleid %s niet voorbereiden: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:286
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:341
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "De opslagcontrole kon niet worden uitgevoerd: %s"
@@ -560,7 +560,7 @@ msgstr ""
 "gekoppelde dataset aan (zfs create -o mountpoint=%(path)s POOL/NAME) en "
 "bereid dan opnieuw voor."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:394
+#: src/sysmanage_agent/backup/storage_prepare.py:400
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -573,32 +573,32 @@ msgstr ""
 msgid "The repository must be an absolute path."
 msgstr "De repository moet een absoluut pad zijn."
 
-#: src/sysmanage_agent/backup/storage_retire.py:77
+#: src/sysmanage_agent/backup/storage_retire.py:78
 msgid "The repository path is not normalized."
 msgstr "Het repository-pad is niet genormaliseerd."
 
-#: src/sysmanage_agent/backup/storage_retire.py:79
+#: src/sysmanage_agent/backup/storage_retire.py:81
 msgid "That path is not a repository."
 msgstr "Dat pad is geen repository."
 
-#: src/sysmanage_agent/backup/storage_retire.py:114
+#: src/sysmanage_agent/backup/storage_retire.py:116
 #, python-format
 msgid "%s is in use by a backup policy on this storage host."
 msgstr "%s wordt gebruikt door een back-upbeleid op deze opslaghost."
 
-#: src/sysmanage_agent/backup/storage_retire.py:128
+#: src/sysmanage_agent/backup/storage_retire.py:130
 msgid "This storage host does not keep a repository for that policy."
 msgstr "Deze opslaghost bewaart geen repository voor dat beleid."
 
-#: src/sysmanage_agent/backup/storage_retire.py:133
+#: src/sysmanage_agent/backup/storage_retire.py:135
 msgid "That is not the repository this policy uses here."
 msgstr "Dat is niet de repository die dit beleid hier gebruikt."
 
-#: src/sysmanage_agent/backup/storage_retire.py:138
+#: src/sysmanage_agent/backup/storage_retire.py:140
 msgid "This storage host never kept that repository for this policy."
 msgstr "Deze opslaghost heeft nooit een repository voor dat beleid bewaard."
 
-#: src/sysmanage_agent/backup/storage_retire.py:190
+#: src/sysmanage_agent/backup/storage_retire.py:192
 #, python-format
 msgid "%s does not hold a restate repository; it was left alone."
 msgstr "%s heeft geen restate-repository; het is ongemoeid gelaten."
@@ -791,27 +791,27 @@ msgstr "Fout bij het lezen van syslog-ng configuratie: %s"
 msgid "Unsupported platform: %s"
 msgstr "Niet-ondersteund platform voor software-inventaris: %s"
 
-#: src/sysmanage_agent/collection/hardware_collection.py:149
+#: src/sysmanage_agent/collection/hardware_collection.py:151
 #, python-format
 msgid "Failed to collect hardware information: %s"
 msgstr "Fout bij verzamelen software-inventaris: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:113
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:147
 #, python-format
 msgid "Failed to get BSD CPU info: %s"
 msgstr "Mislukt om BSD-CPU-informatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:136
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:174
 #, python-format
 msgid "Failed to get BSD memory info: %s"
 msgstr "Mislukt om BSD-geheugeninformatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:231
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:269
 #, python-format
 msgid "Failed to get BSD storage info: %s"
 msgstr "Mislukt om BSD-opslaginformatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:616
 #, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "Kon geen BSD netwerkinformatie ophalen: %s"
@@ -821,17 +821,17 @@ msgstr "Kon geen BSD netwerkinformatie ophalen: %s"
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Mislukt om Linux-CPU-informatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:221
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:223
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Mislukt om Linux-geheugeninformatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:283
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:285
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Mislukt om Linux-opslaginformatie op te halen: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:490
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:492
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "Kon geen Linux netwerkinformatie ophalen: %s"
@@ -2530,140 +2530,140 @@ msgstr "Pakketverzamelplanner-fout: %s"
 msgid "Failed to build capability report: %s"
 msgstr "Mislukt om capaciteitsrapportage op te bouwen: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:471
+#: src/sysmanage_agent/core/agent_utils.py:474
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "Scriptuitvoerings-UUID %s al verwerkt, duplicaat overgeslagen"
 
-#: src/sysmanage_agent/core/agent_utils.py:476
+#: src/sysmanage_agent/core/agent_utils.py:479
 msgid "Already processed"
 msgstr "Al verwerkt"
 
-#: src/sysmanage_agent/core/agent_utils.py:500
+#: src/sysmanage_agent/core/agent_utils.py:503
 msgid "Generic command nested too deeply"
 msgstr "Generieke opdracht is te diep genest"
 
-#: src/sysmanage_agent/core/agent_utils.py:516
+#: src/sysmanage_agent/core/agent_utils.py:519
 msgid "Generic command missing nested command_type"
 msgstr "Generieke opdracht mist geneste command_type"
 
-#: src/sysmanage_agent/core/agent_utils.py:528
+#: src/sysmanage_agent/core/agent_utils.py:531
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Onbekend opdrachttype: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:587
+#: src/sysmanage_agent/core/agent_utils.py:590
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "Kon scriptuitvoerresultaat niet in de wachtrij plaatsen: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Fout bij het controleren van uitvoering UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:620
+#: src/sysmanage_agent/core/agent_utils.py:623
 msgid "No execution UUID provided, cannot track"
 msgstr "Geen uitvoerings-UUID opgegeven, kan niet volgen"
 
-#: src/sysmanage_agent/core/agent_utils.py:635
+#: src/sysmanage_agent/core/agent_utils.py:638
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "Uitvoerings-UUID %s bestaat al in database"
 
-#: src/sysmanage_agent/core/agent_utils.py:660
+#: src/sysmanage_agent/core/agent_utils.py:663
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Fout bij het opslaan van uitvoerings UUID: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:682
+#: src/sysmanage_agent/core/agent_utils.py:685
 #, python-format
 msgid "Invalid or missing action. Must be one of: %s"
 msgstr "Ongeldige of ontbrekende actie. Moet een van de volgende zijn: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:687
-#: src/sysmanage_agent/core/agent_utils.py:883
+#: src/sysmanage_agent/core/agent_utils.py:690
+#: src/sysmanage_agent/core/agent_utils.py:886
 msgid "No services specified"
 msgstr "Geen services opgegeven"
 
-#: src/sysmanage_agent/core/agent_utils.py:697
+#: src/sysmanage_agent/core/agent_utils.py:700
 msgid "Service control requires privileged mode"
 msgstr "Servicebeheer vereist de bevoorrechte modus"
 
-#: src/sysmanage_agent/core/agent_utils.py:719
+#: src/sysmanage_agent/core/agent_utils.py:722
 #, python-format
 msgid "Service %(action)s completed for %(count)d services"
 msgstr "Serviceactie %(action)s voltooid voor %(count)d services"
 
-#: src/sysmanage_agent/core/agent_utils.py:724
+#: src/sysmanage_agent/core/agent_utils.py:727
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Fout in service-controlafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:764
-#: src/sysmanage_agent/core/agent_utils.py:854
+#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:857
 msgid "Unknown error"
 msgstr "Onbekende fout"
 
-#: src/sysmanage_agent/core/agent_utils.py:769
+#: src/sysmanage_agent/core/agent_utils.py:772
 #, python-format
 msgid "Service %s timed out after 30 seconds"
 msgstr "Serviceactie %s is na 30 seconden verlopen"
 
-#: src/sysmanage_agent/core/agent_utils.py:771
+#: src/sysmanage_agent/core/agent_utils.py:774
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Time-out bij servicebeheer voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:777
+#: src/sysmanage_agent/core/agent_utils.py:780
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Servicebesturingsfout voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:842
 #, python-format
 msgid "Invalid service name: %s"
 msgstr "Ongeldige servicenaam: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:862
 #, python-format
 msgid "Service %s successful"
 msgstr "Serviceactie %s geslaagd"
 
-#: src/sysmanage_agent/core/agent_utils.py:862
+#: src/sysmanage_agent/core/agent_utils.py:865
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "%s van service %s mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:872
+#: src/sysmanage_agent/core/agent_utils.py:875
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Bijwerken van rollen na servicebeheer mislukt: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:891
+#: src/sysmanage_agent/core/agent_utils.py:894
 msgid "Service status check requires privileged mode"
 msgstr "Controle van de servicestatus vereist de bevoorrechte modus"
 
-#: src/sysmanage_agent/core/agent_utils.py:907
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status check completed for %d services"
 msgstr "Statuscontrole voltooid voor %d services"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:915
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Fout in service-statusafhandelaar: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:953
+#: src/sysmanage_agent/core/agent_utils.py:956
 msgid "Service status check timed out after 10 seconds"
 msgstr "Statuscontrole van de service is na 10 seconden verlopen"
 
-#: src/sysmanage_agent/core/agent_utils.py:955
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Time-out bij servicestatus voor %s: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:965
+#: src/sysmanage_agent/core/agent_utils.py:968
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Servicestatusfout voor %s: %s"
@@ -3760,6 +3760,54 @@ msgstr "Agent biedt geen apply_deployment_plan; upgrade vereist"
 #, python-format
 msgid "Script delegation failed: %s"
 msgstr "Script-delegatie mislukt: %s"
+
+#: src/sysmanage_agent/operations/swap_file.py:75
+msgid "The swap size must be a whole number of MB."
+msgstr "De grootte van de swap moet een geheel getal zijn in MB."
+
+#: src/sysmanage_agent/operations/swap_file.py:80
+#, python-format
+msgid ""
+"The swap size must be a whole number of GB from %(low)d to %(high)d MB."
+msgstr ""
+"De uitwisselingsgrootte moet een geheel getal in GB zijn van %(low)d tot "
+"%(high)d MB."
+
+#: src/sysmanage_agent/operations/swap_file.py:129
+#, python-format
+msgid "Swap files are not supported here (%s); add swap by hand."
+msgstr ""
+"Swap-bestanden worden hier niet ondersteund (%s); voeg swap handmatig toe."
+
+#: src/sysmanage_agent/operations/swap_file.py:130
+msgid "no local filesystem"
+msgstr "geen lokaal bestandssysteem"
+
+#: src/sysmanage_agent/operations/swap_file.py:142
+#, python-format
+msgid "There is no room for a %d MB swap file that leaves enough space free."
+msgstr ""
+"Er is geen ruimte voor een %d MB uitwisselingsbestand dat voldoende vrije "
+"ruimte achterlaat."
+
+#: src/sysmanage_agent/operations/swap_file.py:279
+#, python-format
+msgid "Could not update /etc/fstab: %s"
+msgstr "Kon /etc/fstab niet bijwerken: %s"
+
+#: src/sysmanage_agent/operations/swap_file.py:293
+msgid "Swap files are added only on Linux and the BSDs."
+msgstr "Swap-bestanden worden alleen toegevoegd op Linux en de BSD's."
+
+#: src/sysmanage_agent/operations/swap_file.py:299
+msgid "On OpenBSD a swap file is added only by an agent running as root."
+msgstr ""
+"Op OpenBSD wordt een swap-bestand alleen toegevoegd door een agent die als "
+"root draait."
+
+#: src/sysmanage_agent/operations/swap_file.py:304
+msgid "This host is a container; its swap is the host machine's."
+msgstr "Deze host is een container; zijn swap is die van de hostmachine."
 
 #: src/sysmanage_agent/operations/system_control.py:40
 msgid "No command specified"

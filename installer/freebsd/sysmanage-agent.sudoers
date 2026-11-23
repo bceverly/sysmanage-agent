@@ -191,3 +191,11 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^destroy -r [A-Za-z0-9_.:/-]+/[A-Z
 # name.  (Ownership uses the chown/chmod grants above; icloudpd itself runs
 # as the agent's account, never through sudo.)
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^create [A-Za-z0-9_.:/-]+/cloud-photos(/icloud-[0-9a-f]{8})?$
+
+# The antivirus memory floor (ClamAV): SysManage's own swap file at one of
+# four exact paths, through memory disk md99 (fstab: md99 none swap
+# sw,file=...,late).  dd's if= and of= come last; 1 to 8 GB only.
+sysmanage-agent ALL=(ALL) NOPASSWD: /bin/dd ^bs=1048576 count=(1024|2048|3072|4096|5120|6144|7168|8192) if=/dev/zero of=/(var/|home/|usr/)?sysmanage\.swap$
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/swapon ^-aL$
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/swapoff ^/dev/md99$
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/mdconfig ^-d -u 99$

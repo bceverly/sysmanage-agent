@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-21 05:57-0800\n"
+"POT-Creation-Date: 2026-11-22 14:26-0800\n"
 "Language: fr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -459,33 +459,33 @@ msgstr ""
 msgid "Could not remove the old repository %s: %s"
 msgstr "Impossible de supprimer l'ancien dépôt %s : %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:87
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:137
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "Impossible de lister les instantanés scellés : %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:102
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:157
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr ""
 "Impossible de supprimer l'ancien instantané scellé %(name)s : %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:182
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:237
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s n'est pas monté sur %(path)s sur cet hôte"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:197
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:252
 msgid "restate is not installed on this storage host"
 msgstr "restate n'est pas installé sur cet hôte de stockage"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:240
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:295
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr ""
 "Impossible de préparer le stockage de sauvegarde pour la stratégie %s : %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:286
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:341
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "L'audit du stockage n'a pas pu être exécuté : %s"
@@ -573,7 +573,7 @@ msgstr ""
 "endroit (zfs create -o mountpoint=%(path)s POOL/NAME), puis préparez à "
 "nouveau."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:394
+#: src/sysmanage_agent/backup/storage_prepare.py:400
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -586,34 +586,34 @@ msgstr ""
 msgid "The repository must be an absolute path."
 msgstr "Le dépôt doit être un chemin absolu."
 
-#: src/sysmanage_agent/backup/storage_retire.py:77
+#: src/sysmanage_agent/backup/storage_retire.py:78
 msgid "The repository path is not normalized."
 msgstr "Le chemin du dépôt n'est pas normalisé."
 
-#: src/sysmanage_agent/backup/storage_retire.py:79
+#: src/sysmanage_agent/backup/storage_retire.py:81
 msgid "That path is not a repository."
 msgstr "Ce chemin n'est pas un dépôt."
 
-#: src/sysmanage_agent/backup/storage_retire.py:114
+#: src/sysmanage_agent/backup/storage_retire.py:116
 #, python-format
 msgid "%s is in use by a backup policy on this storage host."
 msgstr ""
 "%s est utilisé par une politique de sauvegarde sur cet hôte de stockage."
 
-#: src/sysmanage_agent/backup/storage_retire.py:128
+#: src/sysmanage_agent/backup/storage_retire.py:130
 msgid "This storage host does not keep a repository for that policy."
 msgstr "Cet hôte de stockage ne conserve pas de dépôt pour cette politique."
 
-#: src/sysmanage_agent/backup/storage_retire.py:133
+#: src/sysmanage_agent/backup/storage_retire.py:135
 msgid "That is not the repository this policy uses here."
 msgstr "Ce n'est pas le dépôt utilisé par cette politique ici."
 
-#: src/sysmanage_agent/backup/storage_retire.py:138
+#: src/sysmanage_agent/backup/storage_retire.py:140
 msgid "This storage host never kept that repository for this policy."
 msgstr ""
 "Cet hôte de stockage n'a jamais conservé ce dépôt pour cette politique."
 
-#: src/sysmanage_agent/backup/storage_retire.py:190
+#: src/sysmanage_agent/backup/storage_retire.py:192
 #, python-format
 msgid "%s does not hold a restate repository; it was left alone."
 msgstr "%s ne contient pas de dépôt restate ; il a été laissé intact."
@@ -812,27 +812,27 @@ msgstr "Erreur lors de la lecture de la configuration syslog-ng : %s"
 msgid "Unsupported platform: %s"
 msgstr "Plateforme non prise en charge pour l'inventaire logiciel : %s"
 
-#: src/sysmanage_agent/collection/hardware_collection.py:149
+#: src/sysmanage_agent/collection/hardware_collection.py:151
 #, python-format
 msgid "Failed to collect hardware information: %s"
 msgstr "Échec de la collecte des informations matérielles : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:113
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:147
 #, python-format
 msgid "Failed to get BSD CPU info: %s"
 msgstr "Échec de l’obtention des informations CPU BSD : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:136
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:174
 #, python-format
 msgid "Failed to get BSD memory info: %s"
 msgstr "Échec de l’obtention des informations mémoire BSD : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:231
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:269
 #, python-format
 msgid "Failed to get BSD storage info: %s"
 msgstr "Échec de l’obtention des informations stockage BSD : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:616
 #, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "Échec de la récupération des informations réseau BSD : %s"
@@ -842,17 +842,17 @@ msgstr "Échec de la récupération des informations réseau BSD : %s"
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Échec de l’obtention des informations CPU Linux : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:221
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:223
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Échec de l’obtention des informations mémoire Linux : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:283
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:285
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Échec de l’obtention des informations stockage Linux : %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:490
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:492
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "Échec de la récupération des informations réseau Linux : %s"
@@ -2576,141 +2576,141 @@ msgstr "Erreur du planificateur de collecte de paquets : %s"
 msgid "Failed to build capability report: %s"
 msgstr "Échec de la construction du rapport des capacités : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:471
+#: src/sysmanage_agent/core/agent_utils.py:474
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "UUID d'exécution de script %s déjà traité, doublon ignoré"
 
-#: src/sysmanage_agent/core/agent_utils.py:476
+#: src/sysmanage_agent/core/agent_utils.py:479
 msgid "Already processed"
 msgstr "Déjà traité"
 
-#: src/sysmanage_agent/core/agent_utils.py:500
+#: src/sysmanage_agent/core/agent_utils.py:503
 msgid "Generic command nested too deeply"
 msgstr "La commande générique est imbriquée trop profondément"
 
-#: src/sysmanage_agent/core/agent_utils.py:516
+#: src/sysmanage_agent/core/agent_utils.py:519
 msgid "Generic command missing nested command_type"
 msgstr "Commande générique manquant du command_type imbriqué"
 
-#: src/sysmanage_agent/core/agent_utils.py:528
+#: src/sysmanage_agent/core/agent_utils.py:531
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "Type de commande inconnu : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:587
+#: src/sysmanage_agent/core/agent_utils.py:590
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr ""
 "Échec de la mise en file d'attente du résultat de l'exécution du script : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "Erreur lors de la vérification de l'exécution UUID : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:620
+#: src/sysmanage_agent/core/agent_utils.py:623
 msgid "No execution UUID provided, cannot track"
 msgstr "Aucun UUID d'exécution fourni, impossible de suivre"
 
-#: src/sysmanage_agent/core/agent_utils.py:635
+#: src/sysmanage_agent/core/agent_utils.py:638
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "L'UUID d'exécution %s existe déjà dans la base de données"
 
-#: src/sysmanage_agent/core/agent_utils.py:660
+#: src/sysmanage_agent/core/agent_utils.py:663
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "Erreur lors du stockage de l'exécution UUID : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:682
+#: src/sysmanage_agent/core/agent_utils.py:685
 #, python-format
 msgid "Invalid or missing action. Must be one of: %s"
 msgstr "Action non valide ou manquante. Valeurs possibles : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:687
-#: src/sysmanage_agent/core/agent_utils.py:883
+#: src/sysmanage_agent/core/agent_utils.py:690
+#: src/sysmanage_agent/core/agent_utils.py:886
 msgid "No services specified"
 msgstr "Aucun service spécifié"
 
-#: src/sysmanage_agent/core/agent_utils.py:697
+#: src/sysmanage_agent/core/agent_utils.py:700
 msgid "Service control requires privileged mode"
 msgstr "Le contrôle des services nécessite le mode privilégié"
 
-#: src/sysmanage_agent/core/agent_utils.py:719
+#: src/sysmanage_agent/core/agent_utils.py:722
 #, python-format
 msgid "Service %(action)s completed for %(count)d services"
 msgstr "Action de service %(action)s terminée pour %(count)d services"
 
-#: src/sysmanage_agent/core/agent_utils.py:724
+#: src/sysmanage_agent/core/agent_utils.py:727
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "Erreur dans le gestionnaire de contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:764
-#: src/sysmanage_agent/core/agent_utils.py:854
+#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:857
 msgid "Unknown error"
 msgstr "Erreur inconnue"
 
-#: src/sysmanage_agent/core/agent_utils.py:769
+#: src/sysmanage_agent/core/agent_utils.py:772
 #, python-format
 msgid "Service %s timed out after 30 seconds"
 msgstr "L'action de service %s a expiré après 30 secondes"
 
-#: src/sysmanage_agent/core/agent_utils.py:771
+#: src/sysmanage_agent/core/agent_utils.py:774
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "Délai dépassé pour le contrôle de service de %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:777
+#: src/sysmanage_agent/core/agent_utils.py:780
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "Erreur de contrôle de service pour %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:842
 #, python-format
 msgid "Invalid service name: %s"
 msgstr "Nom de service non valide : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:862
 #, python-format
 msgid "Service %s successful"
 msgstr "Action de service %s réussie"
 
-#: src/sysmanage_agent/core/agent_utils.py:862
+#: src/sysmanage_agent/core/agent_utils.py:865
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "Échec de %s sur le service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:872
+#: src/sysmanage_agent/core/agent_utils.py:875
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "Échec de la mise à jour des rôles après le contrôle de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:891
+#: src/sysmanage_agent/core/agent_utils.py:894
 msgid "Service status check requires privileged mode"
 msgstr "La vérification de l'état des services nécessite le mode privilégié"
 
-#: src/sysmanage_agent/core/agent_utils.py:907
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status check completed for %d services"
 msgstr "Vérification de l'état terminée pour %d services"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:915
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "Erreur dans le gestionnaire d'état de service : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:953
+#: src/sysmanage_agent/core/agent_utils.py:956
 msgid "Service status check timed out after 10 seconds"
 msgstr "La vérification de l'état du service a expiré après 10 secondes"
 
-#: src/sysmanage_agent/core/agent_utils.py:955
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "Délai dépassé pour l'état du service %s : %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:965
+#: src/sysmanage_agent/core/agent_utils.py:968
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "Erreur d'état de service pour %s : %s"
@@ -3815,6 +3815,54 @@ msgstr "L'agent n'expose pas apply_deployment_plan ; mise à niveau requise"
 #, python-format
 msgid "Script delegation failed: %s"
 msgstr "La délégation du script a échoué : %s"
+
+#: src/sysmanage_agent/operations/swap_file.py:75
+msgid "The swap size must be a whole number of MB."
+msgstr "La taille du swap doit être un nombre entier de Mo."
+
+#: src/sysmanage_agent/operations/swap_file.py:80
+#, python-format
+msgid ""
+"The swap size must be a whole number of GB from %(low)d to %(high)d MB."
+msgstr ""
+"La taille du swap doit être un nombre entier de Go de %(low)d à %(high)d Mo."
+
+#: src/sysmanage_agent/operations/swap_file.py:129
+#, python-format
+msgid "Swap files are not supported here (%s); add swap by hand."
+msgstr ""
+"Les fichiers d'échange ne sont pas pris en charge ici (%s) ; ajoutez-le "
+"manuellement."
+
+#: src/sysmanage_agent/operations/swap_file.py:130
+msgid "no local filesystem"
+msgstr "aucun système de fichiers local"
+
+#: src/sysmanage_agent/operations/swap_file.py:142
+#, python-format
+msgid "There is no room for a %d MB swap file that leaves enough space free."
+msgstr ""
+"Il n'y a pas assez d'espace pour un fichier de swap de %d Mo qui laisse "
+"suffisamment d'espace libre."
+
+#: src/sysmanage_agent/operations/swap_file.py:279
+#, python-format
+msgid "Could not update /etc/fstab: %s"
+msgstr "Ne pourrait pas mettre à jour /etc/fstab: %s"
+
+#: src/sysmanage_agent/operations/swap_file.py:293
+msgid "Swap files are added only on Linux and the BSDs."
+msgstr "Les fichiers de swap ne sont ajoutés que sur Linux et les BSDs."
+
+#: src/sysmanage_agent/operations/swap_file.py:299
+msgid "On OpenBSD a swap file is added only by an agent running as root."
+msgstr ""
+"Sur OpenBSD, un fichier de swap n'est ajouté que par un agent exécutant les "
+"privilèges root."
+
+#: src/sysmanage_agent/operations/swap_file.py:304
+msgid "This host is a container; its swap is the host machine's."
+msgstr "Cet hôte est un conteneur ; son swap est celui de la machine hôte."
 
 #: src/sysmanage_agent/operations/system_control.py:40
 msgid "No command specified"

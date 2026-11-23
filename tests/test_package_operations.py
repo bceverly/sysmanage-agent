@@ -550,6 +550,32 @@ class TestPackageOperations:
             self.mock_agent.send_message.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_uninstall_for_a_plan_sends_no_completion(self):
+        """A deployment plan's removal (notify False) reports through the
+        plan's own result: no uninstall completion for an id the server
+        never issued."""
+        with patch(
+            "src.sysmanage_agent.operations.package_operations.get_database_manager"
+        ) as mock_db_manager:
+            mock_session = MagicMock()
+            mock_db_manager.return_value.get_session.return_value.__enter__.return_value = (
+                mock_session
+            )
+            self.package_ops._uninstall_packages_with_apt = AsyncMock(
+                return_value={"success": True, "output": "Packages removed"}
+            )
+            result = await self.package_ops.uninstall_packages(
+                {
+                    "request_id": "plan-1",
+                    "requested_by": "deployment_plan",
+                    "notify": False,
+                    "packages": [{"package_name": "clamav", "package_manager": "apt"}],
+                }
+            )
+            assert result["success"] is True
+            self.mock_agent.send_message.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_uninstall_packages_failure_apt(self):
         """Test failed uninstallation of apt packages."""
         with patch(

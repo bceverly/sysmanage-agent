@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-21 05:57-0800\n"
+"POT-Creation-Date: 2026-11-22 14:26-0800\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -399,31 +399,31 @@ msgstr "이 restate는 다른 스토리지 호스트로 스냅샷을 복사할 �
 msgid "Could not remove the old repository %s: %s"
 msgstr "이전 저장소 %s을(를) 제거할 수 없습니다: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:87
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:137
 #, python-format
 msgid "Could not list the sealed snapshots: %s"
 msgstr "봉인된 스냅샷 목록을 가져오지 못했습니다: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:102
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:157
 #, python-format
 msgid "Could not remove the old sealed snapshot %(name)s: %(error)s"
 msgstr "오래된 봉인 스냅샷 %(name)s을(를) 제거하지 못했습니다: %(error)s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:182
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:237
 #, python-format
 msgid "%(dataset)s is not mounted at %(path)s on this host"
 msgstr "%(dataset)s이(가) 이 호스트의 %(path)s에 마운트되어 있지 않습니다"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:197
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:252
 msgid "restate is not installed on this storage host"
 msgstr "이 스토리지 호스트에 restate가 설치되어 있지 않습니다"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:240
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:295
 #, python-format
 msgid "Could not prepare backup storage for policy %s: %s"
 msgstr "정책 %s의 백업 스토리지를 준비하지 못했습니다: %s"
 
-#: src/sysmanage_agent/backup/storage_actions_mixin.py:286
+#: src/sysmanage_agent/backup/storage_actions_mixin.py:341
 #, python-format
 msgid "The storage audit could not run: %s"
 msgstr "스토리지 감사를 실행할 수 없습니다: %s"
@@ -501,7 +501,7 @@ msgstr ""
 "스토리지 경로 %(path)s에 ZFS 데이터셋이 마운트되어 있지 않아 하위 데이터셋이 저장소 위치에 만들어지지 않습니다. 그곳에 "
 "마운트되는 데이터셋을 만든 다음(zfs create -o mountpoint=%(path)s POOL/NAME) 다시 준비하세요."
 
-#: src/sysmanage_agent/backup/storage_prepare.py:394
+#: src/sysmanage_agent/backup/storage_prepare.py:400
 #, python-format
 msgid ""
 "%(path)s is an empty directory, not a btrfs subvolume. Remove it (rmdir as "
@@ -513,32 +513,32 @@ msgstr ""
 msgid "The repository must be an absolute path."
 msgstr "저장소는 절대 경로여야 합니다."
 
-#: src/sysmanage_agent/backup/storage_retire.py:77
+#: src/sysmanage_agent/backup/storage_retire.py:78
 msgid "The repository path is not normalized."
 msgstr "저장소 경로가 정규화되어 있지 않습니다."
 
-#: src/sysmanage_agent/backup/storage_retire.py:79
+#: src/sysmanage_agent/backup/storage_retire.py:81
 msgid "That path is not a repository."
 msgstr "그 경로는 저장소가 아닙니다."
 
-#: src/sysmanage_agent/backup/storage_retire.py:114
+#: src/sysmanage_agent/backup/storage_retire.py:116
 #, python-format
 msgid "%s is in use by a backup policy on this storage host."
 msgstr "%s는 이 스토리지 호스트에서 백업 정책에 의해 사용 중입니다."
 
-#: src/sysmanage_agent/backup/storage_retire.py:128
+#: src/sysmanage_agent/backup/storage_retire.py:130
 msgid "This storage host does not keep a repository for that policy."
 msgstr "이 스토리지 호스트는 해당 정책에 대한 저장소를 유지하지 않습니다."
 
-#: src/sysmanage_agent/backup/storage_retire.py:133
+#: src/sysmanage_agent/backup/storage_retire.py:135
 msgid "That is not the repository this policy uses here."
 msgstr "그것은 이 정책이 여기서 사용하는 저장소가 아닙니다."
 
-#: src/sysmanage_agent/backup/storage_retire.py:138
+#: src/sysmanage_agent/backup/storage_retire.py:140
 msgid "This storage host never kept that repository for this policy."
 msgstr "이 스토리지 호스트는 이 정책에 대해 그런 저장소를 한 번도 유지한 적이 없습니다."
 
-#: src/sysmanage_agent/backup/storage_retire.py:190
+#: src/sysmanage_agent/backup/storage_retire.py:192
 #, python-format
 msgid "%s does not hold a restate repository; it was left alone."
 msgstr "%s은 restate 저장소를 포함하고 있지 않습니다. 그대로 두었습니다."
@@ -724,27 +724,27 @@ msgstr "syslog-ng 구성 파일 읽는 중 오류: %s"
 msgid "Unsupported platform: %s"
 msgstr "소프트웨어 인벤토리에 지원되지 않는 플랫폼: %s"
 
-#: src/sysmanage_agent/collection/hardware_collection.py:149
+#: src/sysmanage_agent/collection/hardware_collection.py:151
 #, python-format
 msgid "Failed to collect hardware information: %s"
 msgstr "소프트웨어 인벤토리 수집 실패: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:113
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:147
 #, python-format
 msgid "Failed to get BSD CPU info: %s"
 msgstr "BSD CPU 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:136
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:174
 #, python-format
 msgid "Failed to get BSD memory info: %s"
 msgstr "BSD 메모리 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:231
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:269
 #, python-format
 msgid "Failed to get BSD storage info: %s"
 msgstr "BSD 스토리지 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_bsd.py:578
+#: src/sysmanage_agent/collection/hardware_collector_bsd.py:616
 #, python-format
 msgid "Failed to get BSD network info: %s"
 msgstr "BSD 네트워크 정보 가져오기 실패: %s"
@@ -754,17 +754,17 @@ msgstr "BSD 네트워크 정보 가져오기 실패: %s"
 msgid "Failed to get Linux CPU info: %s"
 msgstr "Linux CPU 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:221
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:223
 #, python-format
 msgid "Failed to get Linux memory info: %s"
 msgstr "Linux 메모리 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:283
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:285
 #, python-format
 msgid "Failed to get Linux storage info: %s"
 msgstr "Linux 스토리지 정보를 가져오는 데 실패했습니다: %s"
 
-#: src/sysmanage_agent/collection/hardware_collector_linux.py:490
+#: src/sysmanage_agent/collection/hardware_collector_linux.py:492
 #, python-format
 msgid "Failed to get Linux network info: %s"
 msgstr "Linux 네트워크 정보 가져오기 실패: %s"
@@ -2433,140 +2433,140 @@ msgstr "패키지 수집 스케줄러 오류: %s"
 msgid "Failed to build capability report: %s"
 msgstr "능력 보고서 생성 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:471
+#: src/sysmanage_agent/core/agent_utils.py:474
 #, python-format
 msgid "Script execution UUID %s already processed, skipping duplicate"
 msgstr "스크립트 실행 UUID %s가 이미 처리됨, 중복 건너뜀"
 
-#: src/sysmanage_agent/core/agent_utils.py:476
+#: src/sysmanage_agent/core/agent_utils.py:479
 msgid "Already processed"
 msgstr "이미 처리되었습니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:500
+#: src/sysmanage_agent/core/agent_utils.py:503
 msgid "Generic command nested too deeply"
 msgstr "일반 명령이 너무 깊게 중첩되어 있습니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:516
+#: src/sysmanage_agent/core/agent_utils.py:519
 msgid "Generic command missing nested command_type"
 msgstr "일반 명령에 중첩된 command_type 누락"
 
-#: src/sysmanage_agent/core/agent_utils.py:528
+#: src/sysmanage_agent/core/agent_utils.py:531
 #, python-format
 msgid "Unknown command type: %s"
 msgstr "알 수 없는 명령 유형: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:587
+#: src/sysmanage_agent/core/agent_utils.py:590
 #, python-format
 msgid "Failed to queue script execution result: %s"
 msgstr "스크립트 실행 결과 큐에 오류 발생: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:606
+#: src/sysmanage_agent/core/agent_utils.py:609
 #, python-format
 msgid "Error checking execution UUID: %s"
 msgstr "실행 UUID 확인 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:620
+#: src/sysmanage_agent/core/agent_utils.py:623
 msgid "No execution UUID provided, cannot track"
 msgstr "실행 UUID가 제공되지 않아 추적할 수 없음"
 
-#: src/sysmanage_agent/core/agent_utils.py:635
+#: src/sysmanage_agent/core/agent_utils.py:638
 #, python-format
 msgid "Execution UUID %s already exists in database"
 msgstr "실행 UUID %s가 데이터베이스에 이미 존재함"
 
-#: src/sysmanage_agent/core/agent_utils.py:660
+#: src/sysmanage_agent/core/agent_utils.py:663
 #, python-format
 msgid "Error storing execution UUID: %s"
 msgstr "실행 UUID 저장 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:682
+#: src/sysmanage_agent/core/agent_utils.py:685
 #, python-format
 msgid "Invalid or missing action. Must be one of: %s"
 msgstr "작업이 잘못되었거나 없습니다. 다음 중 하나여야 합니다: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:687
-#: src/sysmanage_agent/core/agent_utils.py:883
+#: src/sysmanage_agent/core/agent_utils.py:690
+#: src/sysmanage_agent/core/agent_utils.py:886
 msgid "No services specified"
 msgstr "지정된 서비스가 없습니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:697
+#: src/sysmanage_agent/core/agent_utils.py:700
 msgid "Service control requires privileged mode"
 msgstr "서비스 제어에는 권한 모드가 필요합니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:719
+#: src/sysmanage_agent/core/agent_utils.py:722
 #, python-format
 msgid "Service %(action)s completed for %(count)d services"
 msgstr "%(count)d개 서비스에 대한 서비스 작업 %(action)s이(가) 완료되었습니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:724
+#: src/sysmanage_agent/core/agent_utils.py:727
 #, python-format
 msgid "Error in service control handler: %s"
 msgstr "서비스 제어 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:764
-#: src/sysmanage_agent/core/agent_utils.py:854
+#: src/sysmanage_agent/core/agent_utils.py:767
+#: src/sysmanage_agent/core/agent_utils.py:857
 msgid "Unknown error"
 msgstr "알 수 없는 오류"
 
-#: src/sysmanage_agent/core/agent_utils.py:769
+#: src/sysmanage_agent/core/agent_utils.py:772
 #, python-format
 msgid "Service %s timed out after 30 seconds"
 msgstr "서비스 작업 %s이(가) 30초 후 시간 초과되었습니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:771
+#: src/sysmanage_agent/core/agent_utils.py:774
 #, python-format
 msgid "Service control timeout for %s: %s"
 msgstr "%s 의 서비스 제어 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:777
+#: src/sysmanage_agent/core/agent_utils.py:780
 #, python-format
 msgid "Service control error for %s: %s"
 msgstr "%s 의 서비스 제어 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:839
+#: src/sysmanage_agent/core/agent_utils.py:842
 #, python-format
 msgid "Invalid service name: %s"
 msgstr "잘못된 서비스 이름: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:859
+#: src/sysmanage_agent/core/agent_utils.py:862
 #, python-format
 msgid "Service %s successful"
 msgstr "서비스 작업 %s 성공"
 
-#: src/sysmanage_agent/core/agent_utils.py:862
+#: src/sysmanage_agent/core/agent_utils.py:865
 #, python-format
 msgid "Failed to %s service %s: %s"
 msgstr "서비스 %s 의 %s 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:872
+#: src/sysmanage_agent/core/agent_utils.py:875
 #, python-format
 msgid "Failed to update roles after service control: %s"
 msgstr "서비스 제어 후 역할 업데이트 실패: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:891
+#: src/sysmanage_agent/core/agent_utils.py:894
 msgid "Service status check requires privileged mode"
 msgstr "서비스 상태 확인에는 권한 모드가 필요합니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:907
+#: src/sysmanage_agent/core/agent_utils.py:910
 #, python-format
 msgid "Service status check completed for %d services"
 msgstr "%d개 서비스의 상태 확인이 완료되었습니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:912
+#: src/sysmanage_agent/core/agent_utils.py:915
 #, python-format
 msgid "Error in service status handler: %s"
 msgstr "서비스 상태 핸들러 오류: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:953
+#: src/sysmanage_agent/core/agent_utils.py:956
 msgid "Service status check timed out after 10 seconds"
 msgstr "서비스 상태 확인이 10초 후 시간 초과되었습니다"
 
-#: src/sysmanage_agent/core/agent_utils.py:955
+#: src/sysmanage_agent/core/agent_utils.py:958
 #, python-format
 msgid "Service status timeout for %s: %s"
 msgstr "%s 의 서비스 상태 시간 초과: %s"
 
-#: src/sysmanage_agent/core/agent_utils.py:965
+#: src/sysmanage_agent/core/agent_utils.py:968
 #, python-format
 msgid "Service status error for %s: %s"
 msgstr "%s 의 서비스 상태 오류: %s"
@@ -3642,6 +3642,47 @@ msgstr "에이전트가 apply_deployment_plan을 노출하지 않음; 업그레�
 #, python-format
 msgid "Script delegation failed: %s"
 msgstr "스크립트 위임이 실패했습니다: %s"
+
+#: src/sysmanage_agent/operations/swap_file.py:75
+msgid "The swap size must be a whole number of MB."
+msgstr "스왑 크기는 전체 MB 숫자여야 합니다."
+
+#: src/sysmanage_agent/operations/swap_file.py:80
+#, python-format
+msgid ""
+"The swap size must be a whole number of GB from %(low)d to %(high)d MB."
+msgstr "스왑 크기는 %(low)d MB에서 %(high)d MB 사이의 전체 GB 숫자여야 합니다."
+
+#: src/sysmanage_agent/operations/swap_file.py:129
+#, python-format
+msgid "Swap files are not supported here (%s); add swap by hand."
+msgstr "이곳에서는 스왑 파일이 지원되지 않습니다 (%s); 수동으로 스왑을 추가하세요."
+
+#: src/sysmanage_agent/operations/swap_file.py:130
+msgid "no local filesystem"
+msgstr "로컬 파일 시스템이 없습니다."
+
+#: src/sysmanage_agent/operations/swap_file.py:142
+#, python-format
+msgid "There is no room for a %d MB swap file that leaves enough space free."
+msgstr "%d MB 교환 파일에 할당할 여유 공간이 없습니다."
+
+#: src/sysmanage_agent/operations/swap_file.py:279
+#, python-format
+msgid "Could not update /etc/fstab: %s"
+msgstr "/etc/fstab 파일을 업데이트할 수 없습니다: %s"
+
+#: src/sysmanage_agent/operations/swap_file.py:293
+msgid "Swap files are added only on Linux and the BSDs."
+msgstr "스왑 파일은 Linux와 BSD에서만 추가됩니다."
+
+#: src/sysmanage_agent/operations/swap_file.py:299
+msgid "On OpenBSD a swap file is added only by an agent running as root."
+msgstr "OpenBSD에서 스왑 파일은 루트 권한으로 실행되는 에이전트에 의해만 추가됩니다."
+
+#: src/sysmanage_agent/operations/swap_file.py:304
+msgid "This host is a container; its swap is the host machine's."
+msgstr "이 호스트는 컨테이너입니다; 그 스왑은 호스트 머신의 것입니다."
 
 #: src/sysmanage_agent/operations/system_control.py:40
 msgid "No command specified"

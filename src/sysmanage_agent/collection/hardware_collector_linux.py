@@ -215,7 +215,9 @@ class HardwareCollectorLinux(HardwareCollectorBase):
                         # MemTotal is in kB
                         mem_kb = int(line.split()[1])
                         memory_info["total_mb"] = mem_kb // 1024
-                        break
+                    elif line.startswith("SwapTotal:"):
+                        # The antivirus memory floor counts swap too.
+                        memory_info["swap_total_mb"] = int(line.split()[1]) // 1024
 
         except Exception as error:
             memory_info["error"] = _("Failed to get Linux memory info: %s") % str(error)
