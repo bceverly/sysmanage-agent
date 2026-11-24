@@ -55,6 +55,7 @@ SECRET_REGISTRATION_FIELDS = (
     "enrollment_token",
     "auto_approve_token",
     "registration_nonce",
+    "reenroll_code",
 )
 
 
@@ -218,6 +219,16 @@ class ClientRegistration:
             basic_info["enrollment_token"] = enrollment_token
             # Log presence only -- never the value or its length.
             self.logger.info("Including enrollment_token in registration data")
+
+        # 2026-11-24: an administrator's one-time code to take over this
+        # host's existing record (a rebuild; its agent database is gone).
+        try:
+            reenroll_code = self.config.get_reenroll_code()
+        except AttributeError:
+            reenroll_code = None
+        if isinstance(reenroll_code, str) and reenroll_code:
+            basic_info["reenroll_code"] = reenroll_code
+            self.logger.info("Including reenroll_code in registration data")
 
         # Debug logging
         logger = logging.getLogger(__name__)

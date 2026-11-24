@@ -38,3 +38,10 @@ def test_no_token_anywhere_is_quiet(caplog):
     with caplog.at_level(logging.WARNING):
         assert config.get_enrollment_token() is None
     assert not caplog.records
+
+
+def test_the_reenroll_code_is_read_from_security():
+    assert (
+        _config({"security": {"reenroll_code": " abc "}}).get_reenroll_code() == "abc"
+    )
+    assert _config({}).get_reenroll_code() is None

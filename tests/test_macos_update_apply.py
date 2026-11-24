@@ -90,3 +90,37 @@ def test_homebrew_goes_to_its_existing_applier():
             packages=[{"package_name": "wget", "package_manager": "homebrew"}]
         )
     assert brew.called
+
+
+def test_an_app_update_is_never_an_os_upgrade(monkeypatch):
+    """macbookair, 2026-11-24: Safari 27.2 was classed ``macos-upgrade``
+    (27 > macOS 15) with macOS 15.6.1 as its current version."""
+    from src.sysmanage_agent.collection.update_detection_macos import (  # pylint: disable=import-outside-toplevel
+        MacOSUpdateDetector,
+    )
+
+    detector = MacOSUpdateDetector()
+    monkeypatch.setattr(detector, "_collect_current_macos_version", lambda: "15.6.1")
+    monkeypatch.setattr(
+        detector, "_is_macos_major_upgrade", lambda title, version: True
+    )
+    monkeypatch.setattr(
+        MacOSUpdateDetector,
+        "_installed_app_version",
+        staticmethod(lambda title: "18.6"),
+    )
+    safari = detector._process_softwareupdate_entry(
+        "Safari27.2SequoiaAuto-27.2",
+        "Title: Safari, Version: 27.2, Size: 238722KiB, Recommended: YES,",
+    )
+    assert (
+        safari["package_manager"] == "mac_app_store"
+        and safari["current_version"] == "18.6"
+    )
+    big = detector._process_softwareupdate_entry(
+        "macOS 27.2.1-26B131",
+        "Title: macOS 27.2.1, Version: 27.2.1, Size: 1KiB, Recommended: YES, Action: restart,",
+    )
+    assert (
+        big["package_manager"] == "macos-upgrade" and big["current_version"] == "15.6.1"
+    )

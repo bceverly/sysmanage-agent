@@ -323,6 +323,15 @@ class ConfigManager:  # pylint: disable=too-many-public-methods
         """
         return self.get("security.registration_key")
 
+    def get_reenroll_code(self) -> Optional[str]:
+        """The one-time code an administrator issued with "Allow re-enroll"
+        (``security.reenroll_code``): it lets this machine take over an
+        existing host's record -- a rebuilt or reinstalled host whose agent
+        database is gone -- instead of being refused for not holding the
+        host's credential.  Single use; harmless once spent."""
+        code = self.get("security.reenroll_code")
+        return str(code).strip() if code else None
+
     def get_enrollment_token(self) -> Optional[str]:
         """
         Get the tenant enrollment token if configured (Phase 13.1).

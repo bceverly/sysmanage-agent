@@ -14,7 +14,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from src.sysmanage_agent.registration.client_registration import ClientRegistration
+from src.sysmanage_agent.registration.client_registration import (
+    _loggable,
+    ClientRegistration,
+)
 
 
 class TestClientRegistration:  # pylint: disable=too-many-public-methods
@@ -141,6 +144,23 @@ class TestClientRegistration:  # pylint: disable=too-many-public-methods
         result = self.client_reg.get_basic_registration_info()
 
         assert result["enrollment_token"] == "sme_secret_token"
+
+    @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
+    def test_a_reenroll_code_is_sent_and_never_logged(self, mock_priv):
+        """2026-11-24: an administrator's one-time code lets a rebuilt host
+        take over its existing record; it is a secret like the others."""
+        mock_priv.return_value = False
+        self.client_reg.network_utils.get_hostname.return_value = "h"
+        self.client_reg.network_utils.get_ip_addresses.return_value = (
+            "10.0.0.1",
+            "::1",
+        )
+        self.mock_config.get_reenroll_code.return_value = "re-code-123"
+        result = self.client_reg.get_basic_registration_info()
+        assert result["reenroll_code"] == "re-code-123"
+        assert _loggable(result)["reenroll_code"] == "<redacted>"
+        self.mock_config.get_reenroll_code.return_value = None
+        assert "reenroll_code" not in self.client_reg.get_basic_registration_info()
 
     @patch("src.sysmanage_agent.registration.client_registration.is_running_privileged")
     def test_get_basic_registration_info_no_enrollment_token(self, mock_priv):

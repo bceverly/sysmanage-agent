@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import plistlib
 import re
 import subprocess  # nosec B404
 from typing import (  # pylint: disable=unused-import  # Optional used in child classes
@@ -275,6 +277,26 @@ class MacOSUpdateDetector(MacOSApplyMixin, UpdateDetectorBase):
             pass
         return "unknown"
 
+    @staticmethod
+    def _installed_app_version(title):
+        """The installed version of the app a Software Update item updates
+        (``Safari`` -> /Applications/Safari.app), or 'unknown'."""
+        name = (title or "").split(",")[0].strip()
+        for folder in (
+            "/Applications",
+            "/System/Applications",
+            "/System/Volumes/Preboot/Cryptexes/App/System/Applications",
+        ):
+            plist = os.path.join(folder, name + ".app", "Contents", "Info.plist")
+            try:
+                with open(plist, "rb") as handle:
+                    found = plistlib.load(handle).get("CFBundleShortVersionString")
+            except (OSError, ValueError):
+                continue
+            if found:
+                return str(found)
+        return "unknown"
+
     def _process_softwareupdate_entry(self, label, details_line):
         """Build an update dict from a softwareupdate label and its details line.
 
@@ -290,8 +312,16 @@ class MacOSUpdateDetector(MacOSApplyMixin, UpdateDetectorBase):
         title = details["title"] if details["title"] else label
         version = details["version"]
 
-        is_major_upgrade = self._is_macos_major_upgrade(title, version)
-        current_version = self._collect_current_macos_version()
+        # Only macOS itself can be an operating-system upgrade: Safari 27.2's
+        # version is not comparable with macOS 15's, and it was classed as
+        # one, with the macOS version as "current" (macbookair, 2026-11-24).
+        is_os = title.startswith(("macOS", "OS X"))
+        is_major_upgrade = is_os and self._is_macos_major_upgrade(title, version)
+        current_version = (
+            self._collect_current_macos_version()
+            if is_os
+            else self._installed_app_version(title)
+        )
 
         return {
             "package_name": title,

@@ -29,6 +29,8 @@ def test_the_dry_run_names_each_upgrade_with_its_flavor():
     assert [(u["package_name"], u["current_version"], u["available_version"])
             for u in found] == [
         ("quirks", "7.103", "7.110"),
+        # joined to a left-over .libs set: once skipped, a real update
+        ("tb-browser", "15.0.26", "16.0.1"),
         ("tb-noscript", "13.6.36.1984", "13.6.38.1984"),
         ("tor-browser", "15.0.26", "16.0.1"),
         ("vim--perl-python3-ruby", "9.2.1125p0", "9.2.1373"),
@@ -90,3 +92,52 @@ def test_the_bsd_dispatcher_routes_pkgin_and_pkg_add():
 def test_netbsd_sudoers_lets_a_packaged_agent_run_pkgin_with_options():
     with open("installer/netbsd/sysmanage_agent.sudoers", encoding="utf-8") as handle:
         assert "NOPASSWD: /usr/pkg/bin/pkgin *\n" in handle.read()
+
+
+def test_the_openbsd_check_never_waits_on_a_question():
+    """t480, 2026-11-24: ``pkg_add -u -n`` with a terminal-less stdin sat ten
+    minutes on a prompt; the check runs non-interactive with no stdin."""
+    seen = {}
+
+    def fake_run(argv, **kwargs):
+        seen["argv"], seen["stdin"] = argv, kwargs.get("stdin")
+        return SimpleNamespace(stdout="", returncode=0)
+
+    detector = BSDUpdateDetector()
+    detector.available_updates = []
+    with patch.object(obsd.subprocess, "run", side_effect=fake_run):
+        detector._detect_openbsd_pkg_updates()  # pylint: disable=protected-access
+    assert seen["argv"][1:] == ["-I", "-u", "-n"]
+    assert seen["stdin"] is obsd.subprocess.DEVNULL
+
+
+T480_SHAPES = """\
+ImageMagick-6.9.13.59:openjp2-2.5.4->2.5.4p0: ok
+ImageMagick-6.9.13.55->6.9.13.59: ok
+.libs-freerdp-2.11.8p0+freerdp-3.32.0->freerdp-3.32.2: ok
+adwaita-icon-theme-50.0:.libs-harfbuzz-14.1.0+harfbuzz-14.5.0+harfbuzz-icu-14.5.0->harfbuzz+harfbuzz-icu-14.5.1: ok
+libreoffice-26.8.0.3v0:postgresql-client+postgresql-server-18.6->18.7: ok
+aisleriot-3.22.35:libjxl-0.12.0->0.13.0: ok
+gnome-49p8:libjxl-0.12.0->0.13.0: ok
+quirks-7.227->7.227: ok
+vim-9.2.1125p0-perl-python3-ruby->9.2.1373-perl-python3-ruby: ok
+"""
+
+
+def test_every_shape_t480_printed_is_one_record_per_installed_package():
+    """t480 (OpenBSD 8.0), 2026-11-24: lines joined with ``+`` to left-over
+    ``.libs`` sets were skipped (freerdp, firefox, clamav never offered);
+    ``PARENT:DEP`` lines became a bogus record for the parent."""
+    found = {u["installed_name"]: u["available_version"]
+             for u in obsd.parse_pkg_add_dry_run(T480_SHAPES)}  # fmt: skip
+    assert found == {
+        "openjp2-2.5.4": "2.5.4p0",
+        "ImageMagick-6.9.13.55": "6.9.13.59",
+        "freerdp-3.32.0": "3.32.2",
+        "harfbuzz-14.5.0": "14.5.1",
+        "harfbuzz-icu-14.5.0": "14.5.1",
+        "postgresql-client-18.6": "18.7",
+        "postgresql-server-18.6": "18.7",
+        "libjxl-0.12.0": "0.13.0",  # named by two parents, offered once
+        "vim-9.2.1125p0-perl-python3-ruby": "9.2.1373",
+    }  # quirks: no change, no record

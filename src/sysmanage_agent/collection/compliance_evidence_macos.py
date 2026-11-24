@@ -162,24 +162,41 @@ def _content_limits(content: str) -> List[Tuple[str, int]]:
     return limits
 
 
+def _pattern_min_length(content: str) -> Optional[int]:
+    """The N of a ``policyAttributePassword matches '...{N,}...'`` rule."""
+    if "policyAttributePassword" not in content or "matches" not in content:
+        return None
+    start = content.find(".{")
+    if start < 0:
+        return None
+    digits = content[start + 2 :].split(",", 1)[0]
+    return int(digits) if digits.isdigit() else None
+
+
 def parse_account_policies(text: str) -> Dict[str, Any]:
     """``pwpolicy -getaccountpolicies`` plist: each policy's parameters, and
     the limits written into its policyContent ("policyAttributeMaximum
     FailedAuthentications < 5"), by attribute name.  An expiry in days is
     also given in minutes, so either form compares."""
-    start = text.find("<?xml")
-    if start < 0:
+    plist = _plist_text(text)
+    if plist is None:
         return {}
     try:
-        data = plistlib.loads(text[start:].encode())
+        data = plistlib.loads(plist.encode())
     except ValueError:  # plistlib.InvalidFileException is a ValueError
         return {}
     found: Dict[str, Any] = {}
     for policy in _policies(data):
         for key, value in (policy.get("policyParameters") or {}).items():
             found["pwpolicy_account:" + key.lower()] = _number(value)
-        for attr, value in _content_limits(policy.get("policyContent") or ""):
+        content = policy.get("policyContent") or ""
+        for attr, value in _content_limits(content):
             found.setdefault("pwpolicy_account:" + attr.lower(), value)
+        length = _pattern_min_length(content)
+        if length is not None:
+            # macOS 15's own default: "policyAttributePassword matches
+            # '^$|.{4,}+'" -- a minimum length with no parameter (2026-11-24).
+            found.setdefault("pwpolicy_account:minimumlength", length)
     days = found.get("pwpolicy_account:policyattributeexpireseveryndays")
     if isinstance(days, (int, float)):
         found.setdefault(
@@ -271,13 +288,23 @@ def _read(path: str) -> Optional[str]:
         return None
 
 
+def _plist_text(out: str) -> Optional[str]:
+    """The plist in a command's output: ``security authorizationdb`` prints
+    "YES (0)" on stderr after it, which broke the parse (macbookair,
+    2026-11-24)."""
+    start, end = out.find("<?xml"), out.rfind("</plist>")
+    if start < 0 or end < start:
+        return None
+    return out[start : end + len("</plist>")]
+
+
 def _authdb(right: str) -> Optional[Dict[str, Any]]:
     code, out = _run(["security", "authorizationdb", "read", right])
-    start = out.find("<?xml")
-    if code != 0 or start < 0:
+    text = _plist_text(out)
+    if code != 0 or text is None:
         return None
     try:
-        return plistlib.loads(out[start:].encode())
+        return plistlib.loads(text.encode())
     except ValueError:  # plistlib.InvalidFileException is a ValueError
         return None
 
@@ -300,7 +327,7 @@ def _status_facts(found: Dict[str, Any]) -> None:
          r"Authenticated Root status: enabled"),
         (["/usr/sbin/sysadminctl", "-smbGuestAccess", "status"], "smb_guest_access",
          r"SMB guest access enabled"),
-        (["/sbin/nfsd", "status"], "nfsd_running", r"nfsd service is enabled|is running"),
+        (["/sbin/nfsd", "status"], "nfsd_running", r"nfsd is running"),
     )  # fmt: skip
     for argv, fact, pattern in checks:
         code, out = _run(argv)

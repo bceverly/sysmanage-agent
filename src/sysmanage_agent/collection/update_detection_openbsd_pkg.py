@@ -57,32 +57,72 @@ def _upgrade_line(line: str) -> Optional[Tuple[str, str]]:
     return old, new
 
 
+def _installed_parts(old: str) -> List[Dict[str, str]]:
+    """The installed packages on the left of an upgrade line.
+
+    t480's real output (2026-11-24) has four shapes besides the plain one:
+    ``PARENT:DEP-1->2`` (a dependency, shown under what needs it);
+    ``.libs-freerdp-2.11.8p0+freerdp-3.32.0`` (left-over library sets
+    joined to the real package -- every such line was skipped, so freerdp,
+    firefox and clamav were never offered); ``harfbuzz-14.5.0+harfbuzz-icu-
+    14.5.0`` (two upgraded together); and ``postgresql-client+postgresql-
+    contrib+postgresql-server-18.6`` (several names sharing the version
+    written on the last)."""
+    old = old.rsplit(":", 1)[-1]
+    names = [n for n in old.split("+") if n and not n.startswith((".libs", "partial-"))]
+    parsed = [split_name(n) for n in names]
+    last = next((p for p in reversed(parsed) if p is not None), None)
+    if last is None:
+        return []
+    out = []
+    for name, part in zip(names, parsed):
+        if part is None:  # a bare name sharing the last one's version
+            part = {"stem": name, "version": last["version"], "flavor": last["flavor"]}
+        installed = "-".join(
+            x for x in (part["stem"], part["version"], part["flavor"]) if x
+        )
+        out.append({**part, "installed": installed})
+    return out
+
+
+def _new_version(new: str, flavor: str) -> str:
+    """The version on the right of an upgrade line: a bare version
+    (``2.5.4p0``, ``9.2.1373-perl-python3-ruby``) or full names
+    (``freerdp-3.32.2``, ``harfbuzz+harfbuzz-icu-14.5.1``)."""
+    last = new.split("+")[-1]
+    named = split_name(last)
+    if named is not None:
+        last = "-".join(x for x in (named["version"], named["flavor"]) if x)
+    if flavor and last.endswith("-" + flavor):
+        last = last[: -len(flavor) - 1]
+    return last
+
+
 def parse_pkg_add_dry_run(output: str) -> List[Dict]:
-    """The upgrades ``pkg_add -u -n`` reports, as update records."""
-    updates = []
+    """The upgrades ``pkg_add -u -n`` reports, as update records -- one per
+    installed package, however many lines name it."""
+    updates: Dict[str, Dict] = {}
     for line in (output or "").splitlines():
         pair = _upgrade_line(line.strip())
-        if pair is None or pair[0].startswith((".libs", "partial-")):
+        if pair is None:
             continue
-        installed, new = pair
-        old = split_name(installed)
-        if old is None:
-            continue
-        if old["flavor"] and new.endswith("-" + old["flavor"]):
-            new = new[: -len(old["flavor"]) - 1]
-        name = old["stem"] + (f"--{old['flavor']}" if old["flavor"] else "")
-        updates.append({
-            "package_name": name,
-            "installed_name": installed,
-            # Kept by the server and sent back on apply: the exact package.
-            "bundle_id": installed,
-            "current_version": old["version"],
-            "available_version": new,
-            "package_manager": "pkg_add",
-            "is_security_update": False,
-            "is_system_update": False,
-        })  # fmt: skip
-    return updates
+        for old in _installed_parts(pair[0]):
+            new = _new_version(pair[1], old["flavor"])
+            if not new or new == old["version"] or old["installed"] in updates:
+                continue  # quirks-7.227->7.227: nothing to do
+            name = old["stem"] + (f"--{old['flavor']}" if old["flavor"] else "")
+            updates[old["installed"]] = {
+                "package_name": name,
+                "installed_name": old["installed"],
+                # Kept by the server and sent back on apply: the exact package.
+                "bundle_id": old["installed"],
+                "current_version": old["version"],
+                "available_version": new,
+                "package_manager": "pkg_add",
+                "is_security_update": False,
+                "is_system_update": False,
+            }  # fmt: skip
+    return list(updates.values())
 
 
 def _privileged(argv: List[str]) -> List[str]:
@@ -94,9 +134,12 @@ class OpenBSDPackageUpdateMixin:
 
     def _detect_openbsd_pkg_updates(self):
         try:
+            # -I and no stdin: without them pkg_add can stop at a question
+            # with no one to answer it, and the check hangs until its
+            # timeout (t480, 2026-11-24: ten minutes over ssh).
             result = subprocess.run(  # nosec B603
-                [PKG_ADD, "-u", "-n"], capture_output=True, text=True,
-                timeout=DETECT_SECONDS, check=False,
+                [PKG_ADD, "-I", "-u", "-n"], capture_output=True, text=True,
+                stdin=subprocess.DEVNULL, timeout=DETECT_SECONDS, check=False,
             )  # fmt: skip
             found = parse_pkg_add_dry_run(result.stdout)
             self.available_updates.extend(found)

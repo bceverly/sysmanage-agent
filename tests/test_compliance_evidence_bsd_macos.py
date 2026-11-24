@@ -189,3 +189,24 @@ def test_macos_reports_its_settings():
     assert report["platform"] == "Darwin" and report["sections"] == {
         "macos_settings": {"x": 1}
     }
+
+
+def test_a_minimum_length_written_only_as_a_pattern_is_read():
+    """macOS 15.6.1's default (macbookair, 2026-11-24): no parameter, just
+    ``policyAttributePassword matches '^$|.{4,}+'``."""
+    text = ACCOUNT_POLICIES.replace(
+        "<key>policyParameters</key><dict><key>minimumLength</key><integer>15</integer></dict>",
+        "",
+    ).replace(
+        "policyAttributePassword matches '.{15,}+'",
+        "policyAttributePassword matches '^$|.{4,}+'",
+    )
+    assert mac.parse_account_policies(text)["pwpolicy_account:minimumlength"] == 4
+
+
+def test_a_plist_followed_by_the_tools_own_status_line_still_parses():
+    """``security authorizationdb read`` prints "YES (0)" on stderr after the
+    plist; stdout and stderr together failed to parse (macbookair)."""
+    out = ACCOUNT_POLICIES + "YES (0)\n"
+    assert mac.parse_account_policies(out)["pwpolicy_account:minimumlength"] == 15
+    assert mac._plist_text("no plist here") is None  # pylint: disable=protected-access

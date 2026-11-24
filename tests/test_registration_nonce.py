@@ -87,7 +87,8 @@ def _registration():
 def test_secret_fields_are_never_logged_as_values():
     loggable = cr._loggable(  # pylint: disable=protected-access
         {"hostname": "h", "registration_key": "rk", "enrollment_token": "sme_x",
-         "auto_approve_token": "at", "registration_nonce": "n" * 43}  # fmt: skip
+         "auto_approve_token": "at", "registration_nonce": "n" * 43,
+         "reenroll_code": "rc"}  # fmt: skip
     )
     assert loggable["hostname"] == "h"
     for field in cr.SECRET_REGISTRATION_FIELDS:
