@@ -45,6 +45,7 @@ def storage(remote, monkeypatch, tmp_path):
     monkeypatch.setattr(proxy_mixin, "proxy_binary", lambda: "/usr/sbin/restate-proxy")
     monkeypatch.setattr(platform, "system", lambda: "Linux")
     monkeypatch.setattr(remote, "_proxy_systemd", lambda: True)
+    monkeypatch.setattr(proxy_mixin, "_account_exists", lambda account: True)
     real = remote._install_root_file
 
     async def install(content, dest, mode="644"):
@@ -318,3 +319,34 @@ async def test_every_audit_path_carries_the_proxy_findings(storage, monkeypatch)
 
     monkeypatch.setattr(storage, "_audit", lambda policy: None)  # could not run
     assert await storage._storage_findings(policy) is None
+
+
+@pytest.mark.asyncio
+async def test_without_the_backup_account_nothing_is_set_up(storage, monkeypatch):
+    """Air-gap lab, 2026-11-24: set up before the operator made the account,
+    the unit crash-looped (``User=restate``: unknown user) and its key stayed
+    root's, so even after the account appeared the proxy could not start."""
+    monkeypatch.setattr(proxy_mixin, "_account_exists", lambda account: False)
+    answer = await storage._apply_proxy_service(
+        _policy({"name": NAME, "pem": None, "renew": True})
+    )
+    assert answer == {"proxy_service": "no_account"}
+    assert not os.path.exists(service.DROP_IN)
+    assert not storage.fake.ran("systemctl", "enable", service.UNIT)
+
+
+@pytest.mark.asyncio
+async def test_every_configure_gives_the_key_back_to_the_account(storage):
+    first = await storage._apply_proxy_service(
+        _policy({"name": NAME, "pem": None, "renew": True})
+    )
+    pem = _sign(first["proxy_csr"])
+    await storage._apply_proxy_service(
+        _policy({"name": NAME, "pem": pem, "renew": False})
+    )
+    before = len(storage.fake.calls)
+    await storage._apply_proxy_service(
+        _policy({"name": NAME, "pem": pem, "renew": False})
+    )
+    later = [c for c in storage.fake.calls[before:] if "chown" in " ".join(map(str, c))]
+    assert later, "an unchanged certificate still re-owns the key"

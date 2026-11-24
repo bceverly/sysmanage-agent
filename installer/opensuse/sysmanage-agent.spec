@@ -107,6 +107,7 @@ cp -r src %{buildroot}/opt/sysmanage-agent/
 install -m 644 main.py %{buildroot}/opt/sysmanage-agent/
 install -m 644 alembic.ini %{buildroot}/opt/sysmanage-agent/
 install -m 644 requirements-prod.txt %{buildroot}/opt/sysmanage-agent/
+install -m 755 installer/common/ensure-venv.sh %{buildroot}/opt/sysmanage-agent/ensure-venv.sh
 
 # Copy vendor directory for offline installation
 cp -r vendor %{buildroot}/opt/sysmanage-agent/
@@ -196,47 +197,17 @@ chmod 755 /var/lib/sysmanage-agent
 chmod 755 /var/log/sysmanage-agent
 chmod 750 /etc/sysmanage-agent
 
-# Fix virtualenv to work with system Python
-# Recreate the venv using the system's Python to fix all symlinks and paths
-cd /opt/sysmanage-agent
-rm -rf .venv
+# The packaged venv (built from the vendored wheels, its paths fixed
+# above) is kept when it is complete; otherwise a new one is built
+# beside it -- vendor/ first, then the network -- and swapped in only
+# when it works.  It used to be deleted first, which left no agent at
+# all when the rebuild could not reach PyPI (air gap, 2026-11-24).
 %if 0%{?suse_version} || 0%{?el8}
-python3.11 -m venv .venv
+sh /opt/sysmanage-agent/ensure-venv.sh /opt/sysmanage-agent python3.11
 %else
-python3 -m venv .venv
+sh /opt/sysmanage-agent/ensure-venv.sh /opt/sysmanage-agent python3
 %endif
-
-# Install Python deps into the venv.
-#
-# Strategy: try vendored (offline) install first when a vendor/ dir
-# exists, and fall back to network install if it fails for ANY reason
-# (missing wheels for the system Python ABI, corrupt wheel, partial
-# download, etc).
-#
-# Why the fallback matters:  the vendor dir bundles wheels per Python
-# version (cp39, cp310, cp311, cp312, cp313, cp314).  If a dependency
-# resolves to a version that dropped a Python the host runs (e.g. an
-# unbounded ``websockets>=15.0.1`` resolving to 16.0, which has no cp39
-# wheel, or ``cryptography`` whose abi3 wheels are tagged for cp311+
-# only and don't satisfy cp39), pip's ``--no-index`` install reports
-# "No matching distribution found" and the venv ends up missing the
-# module.  Without a fallback, the unit crash-loops with ImportError
-# the moment systemd starts it, and there is no way for the user to
-# self-recover short of reinstalling.  With the fallback, an incomplete
-# vendor set degrades to a network install instead of a hard failure.
-if [ -d vendor ]; then
-  if ! .venv/bin/pip install --quiet --upgrade pip --no-index --find-links=vendor \
-     || ! .venv/bin/pip install --quiet -r requirements-prod.txt --no-index --find-links=vendor; then
-    echo "WARNING: offline (vendor/) install failed; falling back to network install"
-    .venv/bin/pip install --quiet --upgrade pip
-    .venv/bin/pip install --quiet -r requirements-prod.txt
-  fi
-else
-  # No vendor dir at all (direct RPM install outside OBS) → network only.
-  .venv/bin/pip install --quiet --upgrade pip
-  .venv/bin/pip install --quiet -r requirements-prod.txt
-fi
-cd -
+chown -R sysmanage-agent:sysmanage-agent /opt/sysmanage-agent/.venv
 
 # Create config file if it doesn't exist
 if [ ! -f /etc/sysmanage-agent.yaml ]; then

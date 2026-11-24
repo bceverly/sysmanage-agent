@@ -1585,6 +1585,8 @@ installer-rpm-suse:
 	cp LICENSE "$$TAR_DIR/" 2>/dev/null || touch "$$TAR_DIR/LICENSE"; \
 	mkdir -p "$$TAR_DIR/installer/opensuse"; \
 	cp installer/opensuse/*.service "$$TAR_DIR/installer/opensuse/"; \
+	mkdir -p "$$TAR_DIR/installer/common"; \
+	cp "installer/common/ensure-venv.sh" "$$TAR_DIR/installer/common/"; \
 	cp installer/opensuse/*.sudoers "$$TAR_DIR/installer/opensuse/"; \
 	cp installer/opensuse/*.example "$$TAR_DIR/installer/opensuse/"; \
 	cd "$$BUILD_TEMP/SOURCES" && tar czf "sysmanage-agent-$$VERSION.tar.gz" "$$TAR_NAME/"; \
@@ -1730,6 +1732,8 @@ installer-deb:
 	cp -r installer/ubuntu/debian "$$BUILD_DIR/"; \
 	mkdir -p "$$BUILD_DIR/installer/ubuntu"; \
 	cp installer/ubuntu/*.service "$$BUILD_DIR/installer/ubuntu/"; \
+	mkdir -p "$$BUILD_DIR/installer/common"; \
+	cp "installer/common/ensure-venv.sh" "$$BUILD_DIR/installer/common/"; \
 	cp installer/ubuntu/*.sudoers "$$BUILD_DIR/installer/ubuntu/"; \
 	cp installer/ubuntu/*.example "$$BUILD_DIR/installer/ubuntu/"; \
 	echo "✓ Packaging files copied"; \
@@ -1944,6 +1948,8 @@ installer-rpm:
 	cp LICENSE "$$TAR_DIR/" 2>/dev/null || touch "$$TAR_DIR/LICENSE"; \
 	mkdir -p "$$TAR_DIR/installer/centos"; \
 	cp installer/centos/*.service "$$TAR_DIR/installer/centos/"; \
+	mkdir -p "$$TAR_DIR/installer/common"; \
+	cp "installer/common/ensure-venv.sh" "$$TAR_DIR/installer/common/"; \
 	cp installer/centos/*.sudoers "$$TAR_DIR/installer/centos/"; \
 	cp installer/centos/*.example "$$TAR_DIR/installer/centos/"; \
 	cd "$$BUILD_TEMP/SOURCES" && tar czf "sysmanage-agent-$$VERSION.tar.gz" "$$TAR_NAME/"; \
@@ -3766,6 +3772,8 @@ deploy-obs:
 	cp "$$WORKSPACE/LICENSE" "/tmp/$$TAR_NAME/" || touch "/tmp/$$TAR_NAME/LICENSE"; \
 	mkdir -p "/tmp/$$TAR_NAME/installer/opensuse"; \
 	cp "$$WORKSPACE/installer/opensuse/"*.service "/tmp/$$TAR_NAME/installer/opensuse/" || true; \
+	mkdir -p "/tmp/$$TAR_NAME/installer/common"; \
+	cp "$$WORKSPACE/installer/common/ensure-venv.sh" "/tmp/$$TAR_NAME/installer/common/"; \
 	cp "$$WORKSPACE/installer/opensuse/"*.sudoers "/tmp/$$TAR_NAME/installer/opensuse/" || true; \
 	cp "$$WORKSPACE/installer/opensuse/"*.example "/tmp/$$TAR_NAME/installer/opensuse/" || true; \
 	cd /tmp; \
@@ -3888,6 +3896,8 @@ deploy-copr:
 	cp "$$WORKSPACE/LICENSE" "/tmp/$$TAR_NAME/" || touch "/tmp/$$TAR_NAME/LICENSE"; \
 	mkdir -p "/tmp/$$TAR_NAME/installer/opensuse"; \
 	cp "$$WORKSPACE/installer/opensuse/"*.service "/tmp/$$TAR_NAME/installer/opensuse/" 2>/dev/null || true; \
+	mkdir -p "/tmp/$$TAR_NAME/installer/common"; \
+	cp "$$WORKSPACE/installer/common/ensure-venv.sh" "/tmp/$$TAR_NAME/installer/common/"; \
 	cp "$$WORKSPACE/installer/opensuse/"*.sudoers "/tmp/$$TAR_NAME/installer/opensuse/" 2>/dev/null || true; \
 	cp "$$WORKSPACE/installer/opensuse/"*.example "/tmp/$$TAR_NAME/installer/opensuse/" 2>/dev/null || true; \
 	cd /tmp; \

@@ -36,6 +36,14 @@ override_dh_auto_install:
 	# riscv64 manylinux wheels (see the Launchpad vendor step).
 	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --no-index --find-links=vendor --upgrade pip
 	debian/sysmanage-agent/opt/sysmanage-agent/.venv/bin/pip install --no-index --prefer-binary --find-links=vendor -r requirements-prod.txt
+	# The venv must work where it is installed, not where it was built: the
+	# build path is in pyvenv.cfg, activate and every console script.  With
+	# it stripped the postinst keeps this venv instead of deleting it and
+	# rebuilding from PyPI -- which left no agent on an air-gapped host
+	# (2026-11-24).
+	grep -rlI "$(CURDIR)/debian/sysmanage-agent" debian/sysmanage-agent/opt/sysmanage-agent/.venv \
+		| xargs -r sed -i "s|$(CURDIR)/debian/sysmanage-agent||g"
+	install -m 755 installer/common/ensure-venv.sh debian/sysmanage-agent/opt/sysmanage-agent/ensure-venv.sh
 
 	# Copy example config
 	install -m 644 installer/ubuntu/sysmanage-agent.yaml.example debian/sysmanage-agent/etc/sysmanage-agent/

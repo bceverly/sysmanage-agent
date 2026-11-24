@@ -23,15 +23,12 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 	chmod 755 /var/log/sysmanage-agent
 	chmod 750 /etc/sysmanage-agent
 
-	# Fix virtualenv to work with system Python
-	echo "Configuring virtualenv for system Python..."
-	# Recreate the venv using the system's Python to fix all symlinks and paths
-	cd /opt/sysmanage-agent
-	rm -rf .venv
-	python3 -m venv .venv
-	.venv/bin/pip install --quiet --upgrade pip
-	.venv/bin/pip install --quiet -r requirements-prod.txt
-	cd -
+	# The packaged venv is kept when it is complete; otherwise a new one is
+	# built beside it and swapped in only when it works.  It used to be
+	# deleted and rebuilt from PyPI, which left no agent at all on an
+	# air-gapped host (2026-11-24).
+	sh /opt/sysmanage-agent/ensure-venv.sh /opt/sysmanage-agent python3
+	chown -R sysmanage-agent:sysmanage-agent /opt/sysmanage-agent/.venv
 
 	# Create config file if it doesn't exist
 	if [ ! -f /etc/sysmanage-agent.yaml ]; then

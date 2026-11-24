@@ -407,10 +407,26 @@ class BackupOperations(  # pylint: disable=too-many-ancestors
                 return self._refusal("wrong_platform", _wrong_platform(policy["role"]))
             return await self._apply_policy(policy)
         except validation.PolicyError as error:
-            return self._refusal("invalid_policy", str(error))
+            return self._with_abilities(
+                parameters, self._refusal("invalid_policy", str(error))
+            )
         except OSError as error:
             self.logger.error(_("Could not install the backup jobs: %s"), error)
             return self._refusal("install_failed", str(error))
+
+    def _with_abilities(
+        self, parameters: Dict[str, Any], refusal: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """A refused configure still says what this host's restate can do.
+        The server sends a restate-proxy target's settings only once it knows
+        the host can read through the proxy -- and learned that only from an
+        ACCEPTED configure, so a host whose first (NFS) configure could not
+        work, on a site with no NFS (an air gap, 2026-11-24), never got one."""
+        if (parameters or {}).get("role") in validation.CAPTURING_ROLES:
+            features = self._features() or {}
+            refusal["abilities"] = contract.host_abilities(features)
+            refusal["restate_version"] = features.get("version")
+        return refusal
 
     async def _apply_policy(self, policy: Dict[str, Any]) -> Dict[str, Any]:
         policy_id = policy["policy_id"]

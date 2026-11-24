@@ -151,6 +151,17 @@ async def test_an_invalid_policy_writes_nothing(ops):
 
 
 @pytest.mark.asyncio
+async def test_a_refused_host_configure_still_reports_its_restate_abilities(ops):
+    """The server sends a restate-proxy target's settings only once it knows
+    the host reads through the proxy -- learned from configure replies.  An
+    NFS configure refused on a site with no NFS (an air gap, 2026-11-24)
+    must still say what this restate can do, or the host waits forever."""
+    answer = await ops.backup_configure(_host_policy(jobs={"capture": {}, "prune": {}}))
+    assert answer["reason"] == "invalid_policy"
+    assert isinstance(answer["abilities"], list) and "restate_version" in answer
+
+
+@pytest.mark.asyncio
 async def test_keys_this_restate_lacks_are_refused_as_outdated(ops, monkeypatch):
     old = {"version": "2.0.0.0", "job_keys": ["command", "repository"]}
     monkeypatch.setattr(BackupOperations, "_features", staticmethod(lambda: old))

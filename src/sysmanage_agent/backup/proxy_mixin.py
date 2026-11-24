@@ -12,6 +12,7 @@ proxy.  Nothing here ever logs or reports a token.
 
 import asyncio
 import json
+import logging
 import os
 import platform
 import shutil
@@ -21,6 +22,8 @@ from typing import Any, Dict, List, Optional
 from src.sysmanage_agent.backup import host_mount
 from src.sysmanage_agent.backup import proxy_access as access
 from src.sysmanage_agent.backup import proxy_service as service
+
+logger = logging.getLogger(__name__)
 from src.sysmanage_agent.backup import restate_contract as contract
 
 PROXY_BINARIES = (
@@ -50,6 +53,19 @@ def _read_bytes(path: str) -> Optional[bytes]:
 def proxy_binary() -> Optional[str]:
     found = shutil.which("restate-proxy")
     return found or next((p for p in PROXY_BINARIES if os.path.exists(p)), None)
+
+
+def _account_exists(account: str) -> bool:
+    """The backup account's user AND group are on this host (POSIX)."""
+    try:
+        import grp  # pylint: disable=import-outside-toplevel
+        import pwd  # pylint: disable=import-outside-toplevel
+
+        pwd.getpwnam(account)
+        grp.getgrnam(account)
+        return True
+    except (ImportError, KeyError):
+        return False
 
 
 class BackupProxyMixin:
@@ -231,6 +247,15 @@ class BackupProxyMixin:
             return {}
         if proxy_binary() is None:
             return {"proxy_service": "not_installed"}
+        if not _account_exists(account):
+            # Running it as a user that is not there crash-loops the unit and
+            # leaves its key root's (lab, 2026-11-24): set nothing up until
+            # the operator has made the account (the storage page says so).
+            logger.warning(
+                "restate-proxy not set up: the backup account %s does not exist",
+                account,
+            )
+            return {"proxy_service": "no_account"}
         changed = await self._run_proxy_as(account)
         out: Dict[str, Any] = {}
         if proxy.get("cert"):
@@ -238,6 +263,11 @@ class BackupProxyMixin:
             changed = changed or renewed
             if csr:
                 out["proxy_csr"] = csr
+        if os.path.exists(access.PROXY_KEY):
+            # Every configure: a key installed while the account was missing,
+            # or re-owned by hand, is the account's again (idempotent).
+            await self._run(self._privileged(
+                ["chown", f"{account}:{account}", access.PROXY_KEY]))  # fmt: skip
         if os.path.exists(access.PROXY_CERT) and os.path.exists(access.PROXY_KEY):
             await self._start_proxy_service(restart=changed)
             out["proxy_service"] = "started"

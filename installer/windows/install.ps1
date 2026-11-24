@@ -150,117 +150,98 @@ try {
         # Create virtual environment
         Write-Log "Creating Python virtual environment..."
         $VenvPath = Join-Path $InstallDir ".venv"
-
-        if (Test-Path $VenvPath) {
-            Write-Log "Removing existing virtual environment..."
-
-            # CRITICAL: Forcibly stop the service if it's still running
-            # This handles the case where old uninstaller didn't stop the service properly
-            $ServiceName = "SysManageAgent"
-            $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-            if ($service) {
-                Write-Log "WARNING: Service '$ServiceName' is still running (old uninstaller may have failed to stop it)"
-                Write-Log "Forcibly stopping service..."
-
-                if ($service.Status -eq 'Running') {
-                    try {
-                        Stop-Service -Name $ServiceName -Force -ErrorAction Stop
-                        Write-Log "Service stopped successfully"
-                    } catch {
-                        Write-Log "Failed to stop service gracefully, using sc.exe..."
-                        sc.exe stop $ServiceName 2>&1 | Out-File -FilePath $LogFile -Append
-                    }
-                    Start-Sleep -Seconds 3
-                }
-            }
-
-            # Give Windows extra time to release file handles after service removal
-            Write-Log "Waiting for file handles to be released..."
-            Start-Sleep -Seconds 5
-
-            # Stop any python processes from the venv that might be locking files
-            $VenvPython = Join-Path $VenvPath "Scripts\python.exe"
-            if (Test-Path $VenvPython) {
-                Write-Log "Stopping any running Python processes from venv..."
-                Get-Process | Where-Object { $_.Path -eq $VenvPython } | Stop-Process -Force -ErrorAction SilentlyContinue
-                Start-Sleep -Seconds 3
-            }
-
-            # Try to remove, retry up to 3 times if locked
-            $retries = 3
-            $removed = $false
-            for ($i = 1; $i -le $retries; $i++) {
-                try {
-                    Remove-Item -Path $VenvPath -Recurse -Force -ErrorAction Stop
-                    $removed = $true
-                    break
-                } catch {
-                    Write-Log "Attempt $i failed to remove venv: $_"
-                    if ($i -lt $retries) {
-                        Write-Log "Waiting before retry..."
-                        Start-Sleep -Seconds 3
-                    }
-                }
-            }
-
-            if (-not $removed) {
-                Write-Log "ERROR: Could not remove existing virtual environment after $retries attempts"
-                Write-Log "Please ensure no Python processes are running and try again"
-                throw "Failed to remove existing virtual environment"
-            }
-        }
-
-        Write-Stage "10" "venv create -- invoking python -m venv"
-        & $PythonExe -m venv $VenvPath 2>&1 | Out-File -FilePath $LogFile -Append
-        Write-Stage "11" "venv create LASTEXITCODE=$LASTEXITCODE"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Log "ERROR: Failed to create virtual environment (exit code $LASTEXITCODE)"
-            throw "Failed to create virtual environment"
-        }
-        Write-Log "Virtual environment created successfully"
-
-        # Activate virtual environment and install dependencies
-        $VenvPython = Join-Path $VenvPath "Scripts\python.exe"
-        $VenvPip = Join-Path $VenvPath "Scripts\pip.exe"
-
-        Write-Log "Installing Python dependencies..."
+        # Build the new environment BESIDE the current one and swap it in
+        # only when it is complete (2026-11-24): deleting the old venv first
+        # left no agent at all when pip could not reach PyPI (an air-gapped
+        # host, or a network blip during an upgrade).
+        $NewVenvPath = Join-Path $InstallDir ".venv.new"
         $RequirementsFile = Join-Path $InstallDir "requirements-prod.txt"
-
         if (-not (Test-Path $RequirementsFile)) {
             Write-Log "ERROR: requirements-prod.txt not found at $RequirementsFile"
             throw "requirements-prod.txt not found"
         }
-
-        # Use python -m pip for better reliability, redirect ALL output to log
-        #
-        # RETRY: unlike the server MSI (which installs from a bundled offline
-        # wheel set), the agent resolves from PyPI at install time, so this step
-        # depends on the target's network at exactly the moment an operator is
-        # installing.  A single transient DNS/TLS blip should not cost the whole
-        # install.  Three attempts with backoff; pip is idempotent, so a partial
-        # first attempt costs nothing on the retry.
-        Write-Log "Running: pip install -r requirements-prod.txt"
-        Write-Stage "12" "pip install starting"
-        $pipAttempts = 3
-        for ($pipTry = 1; $pipTry -le $pipAttempts; $pipTry++) {
-            & $VenvPython -m pip install -r $RequirementsFile --disable-pip-version-check 2>&1 | Tee-Object -FilePath $LogFile -Append
-            if ($LASTEXITCODE -eq 0) { break }
-            if ($pipTry -lt $pipAttempts) {
-                $wait = $pipTry * 10
-                Write-Log "pip install attempt $pipTry/$pipAttempts failed (exit $LASTEXITCODE); retrying in ${wait}s..."
-                Start-Sleep -Seconds $wait
-            }
+        if (Test-Path $NewVenvPath) {
+            Remove-Item -Path $NewVenvPath -Recurse -Force -ErrorAction SilentlyContinue
         }
-        Write-Stage "13" "pip install LASTEXITCODE=$LASTEXITCODE"
 
-        if ($LASTEXITCODE -eq 0) {
-            Write-Log "Dependencies installed successfully"
+        Write-Stage "10" "venv create -- invoking python -m venv"
+        & $PythonExe -m venv $NewVenvPath 2>&1 | Out-File -FilePath $LogFile -Append
+        Write-Stage "11" "venv create LASTEXITCODE=$LASTEXITCODE"
+        $built = ($LASTEXITCODE -eq 0)
+        $NewPython = Join-Path $NewVenvPath "Scripts\python.exe"
+
+        if ($built) {
+            # A wheels folder beside the agent (offline media) is used first;
+            # pip also honors PIP_FIND_LINKS / PIP_NO_INDEX set by an operator.
+            # Otherwise PyPI, three attempts with backoff: a single DNS / TLS
+            # blip should not cost the install (pip is idempotent).
+            $WheelsDir = Join-Path $InstallDir "wheels"
+            $pipArgs = @("-m", "pip", "install", "-r", $RequirementsFile, "--disable-pip-version-check")
+            if (Test-Path $WheelsDir) {
+                $pipArgs += @("--no-index", "--find-links", $WheelsDir)
+            }
+            Write-Log "Running: pip install -r requirements-prod.txt"
+            Write-Stage "12" "pip install starting"
+            $pipAttempts = 3
+            for ($pipTry = 1; $pipTry -le $pipAttempts; $pipTry++) {
+                & $NewPython @pipArgs 2>&1 | Tee-Object -FilePath $LogFile -Append
+                if ($LASTEXITCODE -eq 0) { break }
+                if ($pipTry -lt $pipAttempts) {
+                    $wait = $pipTry * 10
+                    Write-Log "pip install attempt $pipTry/$pipAttempts failed (exit $LASTEXITCODE); retrying in ${wait}s..."
+                    Start-Sleep -Seconds $wait
+                }
+            }
+            Write-Stage "13" "pip install LASTEXITCODE=$LASTEXITCODE"
+            $built = ($LASTEXITCODE -eq 0)
+        }
+
+        if (-not $built) {
+            Remove-Item -Path $NewVenvPath -Recurse -Force -ErrorAction SilentlyContinue
+            if (Test-Path (Join-Path $VenvPath "Scripts\python.exe")) {
+                Write-Log "WARNING: the Python dependencies could not be installed; the current"
+                Write-Log "WARNING: environment is kept and the agent keeps running.  Offline,"
+                Write-Log "WARNING: put the wheels in $InstallDir\wheels and run the MSI again."
+            } else {
+                Write-Log "ERROR: Failed to install dependencies. Check log files for details:"
+                Write-Log "  $LogFile"
+                Write-Log "  $TranscriptFile"
+                throw "Failed to install dependencies"
+            }
         } else {
-            Write-Log "ERROR: Failed to install dependencies (exit code $LASTEXITCODE)"
-            Write-Log "Check log files for details:"
-            Write-Log "  $LogFile"
-            Write-Log "  $TranscriptFile"
-            throw "Failed to install dependencies"
+            # Swap: stop what runs from the old environment, then replace it.
+            $ServiceName = "SysManageAgent"
+            $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+            if ($service -and $service.Status -eq 'Running') {
+                Write-Log "Stopping service '$ServiceName' to swap its Python environment..."
+                try {
+                    Stop-Service -Name $ServiceName -Force -ErrorAction Stop
+                } catch {
+                    sc.exe stop $ServiceName 2>&1 | Out-File -FilePath $LogFile -Append
+                }
+                Start-Sleep -Seconds 3
+            }
+            $OldPython = Join-Path $VenvPath "Scripts\python.exe"
+            if (Test-Path $OldPython) {
+                Get-Process | Where-Object { $_.Path -eq $OldPython } | Stop-Process -Force -ErrorAction SilentlyContinue
+                Start-Sleep -Seconds 3
+            }
+            $removed = -not (Test-Path $VenvPath)
+            for ($i = 1; ($i -le 3) -and (-not $removed); $i++) {
+                try {
+                    Remove-Item -Path $VenvPath -Recurse -Force -ErrorAction Stop
+                    $removed = $true
+                } catch {
+                    Write-Log "Attempt $i failed to remove the old venv: $_"
+                    Start-Sleep -Seconds 3
+                }
+            }
+            if (-not $removed) {
+                Remove-Item -Path $NewVenvPath -Recurse -Force -ErrorAction SilentlyContinue
+                throw "Could not replace the existing virtual environment (files in use)"
+            }
+            Rename-Item -Path $NewVenvPath -NewName ".venv"
+            Write-Log "Dependencies installed successfully"
         }
         Write-Stage "14" "Python branch complete"
     } else {

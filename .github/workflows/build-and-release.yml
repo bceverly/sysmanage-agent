@@ -237,6 +237,8 @@ jobs:
           # Copy installer files to the package
           mkdir -p ../sysmanage-agent-$VERSION/installer/ubuntu
           cp installer/ubuntu/*.service ../sysmanage-agent-$VERSION/installer/ubuntu/
+          mkdir -p "../sysmanage-agent-$VERSION/installer/common"
+          cp installer/common/ensure-venv.sh "../sysmanage-agent-$VERSION/installer/common/"
           cp installer/ubuntu/*.sudoers ../sysmanage-agent-$VERSION/installer/ubuntu/
           cp installer/ubuntu/*.example ../sysmanage-agent-$VERSION/installer/ubuntu/
 
@@ -400,6 +402,8 @@ jobs:
           # Copy installer files
           mkdir -p "$TAR_DIR/installer/centos"
           cp installer/centos/*.service "$TAR_DIR/installer/centos/"
+          mkdir -p "$TAR_DIR/installer/common"
+          cp "installer/common/ensure-venv.sh" "$TAR_DIR/installer/common/"
           cp installer/centos/*.sudoers "$TAR_DIR/installer/centos/"
           cp installer/centos/*.example "$TAR_DIR/installer/centos/"
           cp installer/centos/sysmanage-agent.spec "$TAR_DIR/installer/centos/"
@@ -572,6 +576,8 @@ jobs:
           # Copy installer files for openSUSE/SLES
           mkdir -p "$TAR_DIR/installer/opensuse"
           cp installer/opensuse/*.service "$TAR_DIR/installer/opensuse/" || true
+          mkdir -p "$TAR_DIR/installer/common"
+          cp "installer/common/ensure-venv.sh" "$TAR_DIR/installer/common/"
           cp installer/opensuse/*.sudoers "$TAR_DIR/installer/opensuse/" || true
           cp installer/opensuse/*.example "$TAR_DIR/installer/opensuse/" || true
           cp installer/opensuse/sysmanage-agent.spec "$TAR_DIR/installer/opensuse/"
@@ -3679,6 +3685,8 @@ jobs:
           # Copy installer files
           mkdir -p /tmp/$TAR_NAME/installer/opensuse
           cp $WORKSPACE/installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ || true
+          mkdir -p "/tmp/$TAR_NAME/installer/common"
+          cp $WORKSPACE/installer/common/ensure-venv.sh "/tmp/$TAR_NAME/installer/common/"
           cp $WORKSPACE/installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ || true
           cp $WORKSPACE/installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ || true
 
@@ -3943,6 +3951,8 @@ jobs:
           # Copy installer files (using opensuse files which work for RHEL/Fedora too)
           mkdir -p /tmp/$TAR_NAME/installer/opensuse
           cp $WORKSPACE/installer/opensuse/*.service /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
+          mkdir -p "/tmp/$TAR_NAME/installer/common"
+          cp $WORKSPACE/installer/common/ensure-venv.sh "/tmp/$TAR_NAME/installer/common/"
           cp $WORKSPACE/installer/opensuse/*.sudoers /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
           cp $WORKSPACE/installer/opensuse/*.example /tmp/$TAR_NAME/installer/opensuse/ 2>/dev/null || true
 
