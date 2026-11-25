@@ -44,16 +44,21 @@ BuildRequires:  sudo
 BuildRequires:  fdupes
 %endif
 
+# pip only rebuilds the venv when the packaged one does not suit this
+# host's Python (ensure-venv.sh); the packaged venv needs nothing beyond
+# python itself.  Recommends, not Requires: an air-gapped host installs
+# the .rpm with rpm -i and no repository, where a hard Requires on pip
+# refuses it, as the .deb's did on the air-gap lab server (2026-11-25).
 %if 0%{?suse_version}
 Requires:       python311
-Requires:       python311-pip
+Recommends:     python311-pip
 %else
 %if 0%{?el8}
 Requires:       python3.11
-Requires:       python3.11-pip
+Recommends:     python3.11-pip
 %else
 Requires:       python3
-Requires:       python3-pip
+Recommends:     python3-pip
 %endif
 %endif
 

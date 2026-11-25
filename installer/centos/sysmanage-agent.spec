@@ -52,7 +52,12 @@ BuildRequires:  %{python3_setuptools}
 BuildRequires:  systemd-rpm-macros
 
 Requires:       %{python3_pkg}
-Requires:       %{python3_pip}
+# pip only rebuilds the venv when the packaged one does not suit this
+# host's Python (ensure-venv.sh); the packaged venv needs nothing beyond
+# python itself.  Recommends, not Requires: an air-gapped host installs
+# the .rpm with rpm -i and no repository, where a hard Requires on pip
+# refuses it, as the .deb's did on the air-gap lab server (2026-11-25).
+Recommends:     %{python3_pip}
 Requires:       systemd
 Requires:       sudo
 Requires(pre):  shadow-utils

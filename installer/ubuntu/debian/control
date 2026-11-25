@@ -14,15 +14,21 @@ Package: sysmanage-agent
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends},
  python3 (>= 3.10),
- python3-pip,
+ adduser,
+ systemd,
+ sudo
+# The packaged venv is complete and needs nothing beyond python3 (its
+# cryptography and cffi wheels carry their own OpenSSL and libffi).  pip,
+# venv, a compiler and the -dev headers are only for ensure-venv.sh's
+# rebuild when this host's Python does not suit that venv, so they are
+# Recommends: apt still installs them online, and dpkg -i on an air-gapped
+# host no longer refuses the package for want of libffi-dev (2026-11-25).
+Recommends: python3-pip,
  python3-venv,
  python3-dev,
  gcc,
  libffi-dev,
- libssl-dev,
- adduser,
- systemd,
- sudo
+ libssl-dev
 Suggests: genisoimage | mkisofs | xorriso,
  qemu-utils,
  virtinst,
