@@ -194,6 +194,9 @@ CAPABILITY_GROUPS: Dict[str, tuple] = {
     # once Enable has installed it -- a missing tool is the host's to fix.
     "cloud_backup_enable": ("cloud_backup_enable", "cloud_backup_remove"),
     "cloud_backup": ("cloud_backup_run",),
+    # 27.3 the off-site cloud copy (S3 Glacier Deep Archive) on the storage
+    # host: check, upload and the Community restore.
+    "offsite_cloud": ("offsite_cloud_run",),
     "deployment": (
         "deploy_files",
         "execute_command_sequence",

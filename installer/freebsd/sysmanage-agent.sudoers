@@ -191,6 +191,14 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^destroy -r [A-Za-z0-9_.:/-]+/[A-Z
 # name.  (Ownership uses the chown/chmod grants above; icloudpd itself runs
 # as the agent's account, never through sudo.)
 sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^create [A-Za-z0-9_.:/-]+/cloud-photos(/icloud-[0-9a-f]{8})?$
+# The off-site cloud copy (server ROADMAP 27.3): the storage host sends each
+# dataset under its storage path to S3 itself.  Exactly ``zfs send`` of one
+# of the copy's own snapshots (``-i`` from another for an incremental), the
+# destroy of one such snapshot -- never any other name -- and the Community
+# restore's ``zfs receive -u <dataset>`` (the agent refuses an existing one).
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^send( -i [A-Za-z0-9_.:/-]+@sysmanage-offsite-[0-9]{8}T[0-9]{6}Z)? [A-Za-z0-9_.:/-]+@sysmanage-offsite-[0-9]{8}T[0-9]{6}Z$
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^destroy [A-Za-z0-9_.:/-]+@sysmanage-offsite-[0-9]{8}T[0-9]{6}Z$
+sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/zfs ^receive -u [A-Za-z0-9_.:/-]+$
 
 # The antivirus memory floor (ClamAV): SysManage's own swap file at one of
 # four exact paths, through memory disk md99 (fstab: md99 none swap

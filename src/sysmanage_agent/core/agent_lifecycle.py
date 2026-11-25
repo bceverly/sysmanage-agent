@@ -20,6 +20,7 @@ import asyncio
 
 from src.i18n import _
 from src.sysmanage_agent.cloud_backup import tool as cloud_tool
+from src.sysmanage_agent.offsite_cloud import operations as offsite_operations
 from src.sysmanage_agent.collection.public_ip_fetcher import public_ip_refresh_service
 from src.sysmanage_agent.core.agent_utils import reconcile_inflight_journal
 
@@ -66,6 +67,14 @@ class AgentLifecycleMixin:
                 self._cloud_backup().start_upgrade()
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.logger.warning("Could not start the icloudpd upgrade: %s", error)
+
+        # The off-site cloud copy (27.3): report runs that ended while the
+        # agent was down, and watch those still going.
+        try:
+            if offsite_operations.unavailable_reason() is None:
+                await self._offsite_cloud().resume_watching()
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            self.logger.warning("Could not look for off-site runs: %s", error)
 
         try:
             self._public_ip_task = asyncio.create_task(public_ip_refresh_service())

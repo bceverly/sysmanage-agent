@@ -516,6 +516,28 @@ class MiscDelegator:
         """Forget an iCloud account's sign-in (its photos are kept)."""
         return await self._cloud_backup().cloud_backup_remove(parameters)
 
+    def _offsite_cloud(self):
+        """The off-site cloud copy's commands (27.3), made on first use."""
+        ops = getattr(self, "_offsite_cloud_ops", None)
+        if ops is None:
+            # pylint: disable=import-outside-toplevel
+            from src.sysmanage_agent.offsite_cloud import operations  # noqa: PLC0415
+            from src.sysmanage_agent.operations import (
+                backup_operations,
+            )  # noqa: PLC0415
+
+            ops = operations.OffsiteCloudOperations(
+                self, backup_operations.default_state_dir()
+            )
+            self._offsite_cloud_ops = (
+                ops  # pylint: disable=attribute-defined-outside-init
+            )
+        return ops
+
+    async def offsite_cloud_run(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """One off-site cloud copy run: check, upload or restore (27.3)."""
+        return await self._offsite_cloud().offsite_cloud_run(parameters)
+
     async def collect_diagnostics(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Collect system diagnostics and send to server.  A backup storage
         host also re-sends its storage audit (Request Host Data is how an

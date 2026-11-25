@@ -692,6 +692,10 @@ TERMS: Dict[str, Dict[str, Dict[str, object]]] = {
             "pt": ["offline"],
             "es": ["fuera de línea", "offline"],
             "fr": ["hors ligne", "offline"],
+            # 2026-11-25: the cloud copy's strings said 离线 / 離線 (offline);
+            # 异地 / 異地 is the established word.
+            "zh_CN": ["离线"],
+            "zh_TW": ["離線"],
         },
     },
     "cascade": {"forbid": {"ko": ["폭포수"]}},  # a waterfall

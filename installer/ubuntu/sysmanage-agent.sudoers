@@ -556,6 +556,19 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/chattr -a *, /bin/chattr -a *
 # every host's child dataset was sealed too) or btrfs seals it recorded making.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs destroy -r *
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/bin/btrfs subvolume delete *, /usr/sbin/btrfs subvolume delete *, /sbin/btrfs subvolume delete *
+# The off-site cloud copy (server ROADMAP 27.3): the storage host sends each
+# dataset under its storage path to S3 itself.  ``zfs send`` of one snapshot
+# (``-i`` for an incremental), the copy's own ``@sysmanage-offsite-<time>``
+# snapshots destroyed once newer ones are uploaded, and the Community
+# restore's ``zfs receive -u`` into a NEW dataset (which it refuses to
+# replace).  Trailing wildcards, as sudo-rs has no regular expressions and
+# refuses a wildcard inside an argument (``*@sysmanage-offsite-*`` made the
+# whole file invalid); ``destroy *`` grants nothing ``destroy -r *`` above
+# does not.  The agent builds every argument from names it checked
+# (offsite_cloud/datasets.py).
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs destroy *
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/zfs receive -u *
 
 # The antivirus memory floor (ClamAV): SysManage's own swap file, 1 to 8 GB,
 # at one of four exact paths.  Every allowed dd is spelled out in full: sudo-rs
