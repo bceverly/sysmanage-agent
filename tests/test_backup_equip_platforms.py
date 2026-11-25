@@ -315,14 +315,17 @@ def test_openbsds_doas_admits_pkg_add_by_its_absolute_path():
     [
         ("Linux", {"ID": "ubuntu", "VERSION_ID": "24.04"}, None, "x86_64",
          [["apt-get", "update"],
-          ["apt-get", "install", "-y", "restate", "nfs-common", "restate-proxy"]]),
+          ["apt-get", "install", "-y", "restate", "restate-proxy"],
+          ["apt-get", "install", "-y", "nfs-common"]]),
         ("Linux", {"ID": "fedora", "VERSION_ID": "44"}, None, "x86_64",
-         [["dnf", "install", "-y", "restate", "nfs-utils", "restate-proxy"]]),
+         [["dnf", "install", "-y", "restate", "restate-proxy"],
+          ["dnf", "install", "-y", "nfs-utils"]]),
         ("Linux", {"ID": "debian", "VERSION_ID": "13"}, None, "x86_64",
          [["apt-get", "update"],
-          ["apt-get", "install", "-y", "restate", "nfs-common", "restate-proxy"]]),
+          ["apt-get", "install", "-y", "restate", "restate-proxy"],
+          ["apt-get", "install", "-y", "nfs-common"]]),
         ("Linux", {"ID": "alpine", "VERSION_ID": "3.23.4"}, None, "x86_64",
-         [["apk", "update"], ["apk", "add", "restate", "nfs-utils"]]),
+         [["apk", "update"], ["apk", "add", "restate"], ["apk", "add", "nfs-utils"]]),
         ("FreeBSD", None, "15.0-RELEASE", "amd64",
          [["pkg", "install", "-y", "restate", "restate-proxy"]]),
         ("OpenBSD", None, "8.0", "amd64", [["pkg_add", "restate"]]),
@@ -337,6 +340,51 @@ def test_an_air_gapped_site_installs_from_its_own_repositories(
     assert result == {"success": True, "installed": "local"}
     assert [_bare(a) for a in host.ran] == expected
     assert not host.fetched  # no PPA, COPR or GitHub: nothing from the internet
+
+
+def test_an_air_gapped_host_without_an_nfs_client_package_is_still_equipped(
+    host, monkeypatch
+):
+    # The site's tools repository carries restate and restate-proxy only; a
+    # host that came up air-gapped had no nfs-common and could not be equipped
+    # at all, though a restate-proxy target never mounts NFS (2026-11-25).
+    ran = []
+
+    async def run(argv):
+        ran.append(_bare(argv))
+        if argv[-1] == "nfs-common":
+            return 100, "E: Package 'nfs-common' has no installation candidate"
+        return 0, "ok"
+
+    monkeypatch.setattr(
+        equip, "_os_release", lambda path="": {"ID": "ubuntu", "VERSION_ID": "26.04"}
+    )
+    monkeypatch.setattr(equip.platform, "machine", lambda: "x86_64")
+    result = asyncio.run(
+        equip.equip("/nonexistent", run=run, system="Linux", local=True)
+    )
+    assert result["success"] is True and result["installed"] == "local"
+    assert result["nfs_client"] == "unavailable"
+    assert "no installation candidate" in result["detail"]
+    assert ran[-2] == ["apt-get", "install", "-y", "restate"]
+
+
+def test_an_air_gapped_restate_that_will_not_install_still_fails(host, monkeypatch):
+    async def run(argv):
+        return (
+            (100, "E: Unable to locate package restate")
+            if "restate" in argv
+            else (0, "ok")
+        )
+
+    monkeypatch.setattr(
+        equip, "_os_release", lambda path="": {"ID": "ubuntu", "VERSION_ID": "26.04"}
+    )
+    monkeypatch.setattr(equip.platform, "machine", lambda: "x86_64")
+    result = asyncio.run(
+        equip.equip("/nonexistent", run=run, system="Linux", local=True)
+    )
+    assert result["success"] is False and result["reason"] == "install_failed"
 
 
 def test_an_air_gapped_mac_says_there_is_no_local_package(host, monkeypatch):

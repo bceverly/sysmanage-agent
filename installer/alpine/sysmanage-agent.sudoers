@@ -138,3 +138,9 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /bin/dd bs=1048576 count=1024 if=/dev/zero o
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/mkswap /sysmanage.swap, /usr/sbin/mkswap /var/sysmanage.swap, /usr/sbin/mkswap /home/sysmanage.swap, /usr/sbin/mkswap /usr/sysmanage.swap, /sbin/mkswap /sysmanage.swap, /sbin/mkswap /var/sysmanage.swap, /sbin/mkswap /home/sysmanage.swap, /sbin/mkswap /usr/sysmanage.swap
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/swapon /sysmanage.swap, /usr/sbin/swapon /var/sysmanage.swap, /usr/sbin/swapon /home/sysmanage.swap, /usr/sbin/swapon /usr/sysmanage.swap, /sbin/swapon /sysmanage.swap, /sbin/swapon /var/sysmanage.swap, /sbin/swapon /home/sysmanage.swap, /sbin/swapon /usr/sysmanage.swap
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/swapoff /sysmanage.swap, /usr/sbin/swapoff /var/sysmanage.swap, /usr/sbin/swapoff /home/sysmanage.swap, /usr/sbin/swapoff /usr/sysmanage.swap, /sbin/swapoff /sysmanage.swap, /sbin/swapoff /var/sysmanage.swap, /sbin/swapoff /home/sysmanage.swap, /sbin/swapoff /usr/sysmanage.swap
+
+# Malware scans' rootkit leg (2026-11-25): chkrootkit and rkhunter read what
+# only root can.  These exact arguments only -- nothing that updates their
+# databases or changes the host.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/chkrootkit -q, /usr/bin/chkrootkit -q
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/rkhunter --check --sk --rwo --nocolors, /usr/bin/rkhunter --check --sk --rwo --nocolors

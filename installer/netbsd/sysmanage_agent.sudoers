@@ -124,3 +124,9 @@ sysmanage-agent ALL=(ALL) NOPASSWD: /sbin/swapctl -d /sysmanage.swap, /sbin/swap
 # EFFECTIVE sshd settings, and sshd -T needs root (it loads the host keys).
 # Exactly this argv; nothing else of sshd.
 sysmanage-agent ALL=(ALL) NOPASSWD: /usr/sbin/sshd -T
+
+# Malware scans' rootkit leg (2026-11-25): chkrootkit and rkhunter read what
+# only root can.  These exact arguments only -- nothing that updates their
+# databases or changes the host.
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/sbin/chkrootkit -q, /usr/pkg/bin/chkrootkit -q
+sysmanage-agent ALL=(ALL) NOPASSWD: /usr/pkg/sbin/rkhunter --check --sk --rwo --nocolors, /usr/pkg/bin/rkhunter --check --sk --rwo --nocolors

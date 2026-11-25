@@ -198,35 +198,52 @@ def fedora_steps(proxy: bool = False) -> List[List[str]]:
 def local_steps(kind: str, proxy: bool = False) -> Optional[List[List[str]]]:
     """Install restate (and restate-proxy for a proxy target's storage host)
     from the host's configured repositories; None where there is no such
-    repository (macOS: Homebrew's formula comes from the internet)."""
+    repository (macOS: Homebrew's formula comes from the internet).  The NFS
+    client is a step of its own (local_nfs_step)."""
     extra = [PROXY_PACKAGE] if proxy else []
     steps = {
         # apt and apk install from their cached indexes only: refresh first,
         # or a package the site's repository gained since the host's last
         # refresh is "Unable to locate" (isolated-network lab, 2026-11-23).
         # dnf, zypper and pkg refresh stale metadata themselves.
-        UBUNTU: [
-            ["apt-get", "update"],
-            ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra],
-        ],
+        UBUNTU: [["apt-get", "update"], ["apt-get", "install", "-y", "restate", *extra]],
         release.DEBIAN: [
             ["apt-get", "update"],
-            ["apt-get", "install", "-y", "restate", NFS_CLIENT_PACKAGE, *extra],
+            ["apt-get", "install", "-y", "restate", *extra],
         ],
-        FEDORA: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
-        release.EL: [["dnf", "install", "-y", "restate", "nfs-utils", *extra]],
-        release.LEAP: [
-            ["zypper", "--non-interactive", "install", "restate", "nfs-client"]
-        ],
-        release.TUMBLEWEED: [
-            ["zypper", "--non-interactive", "install", "restate", "nfs-client"]
-        ],
-        release.ALPINE: [["apk", "update"], ["apk", "add", "restate", "nfs-utils"]],
+        FEDORA: [["dnf", "install", "-y", "restate", *extra]],
+        release.EL: [["dnf", "install", "-y", "restate", *extra]],
+        release.LEAP: [["zypper", "--non-interactive", "install", "restate"]],
+        release.TUMBLEWEED: [["zypper", "--non-interactive", "install", "restate"]],
+        release.ALPINE: [["apk", "update"], ["apk", "add", "restate"]],
         release.FREEBSD: [["pkg", "install", "-y", "restate", *extra]],
         release.NETBSD: [["pkgin", "-y", "install", "restate"]],
         release.OPENBSD: [["pkg_add", "restate"]],
-    }
+    }  # fmt: skip
     return steps.get(kind)
+
+
+# The NFS client on an air-gapped site, or None where the base system has it
+# (the BSDs).  Installed after restate and NOT required: the site's tools
+# repository carries restate and restate-proxy only, and a host that came up
+# air-gapped without the client could not be equipped at all -- although a
+# restate-proxy target (HTTPS, the air-gap default) never mounts NFS (lab,
+# ag-server, 2026-11-25).  Without it the result says so; an NFS target's
+# reach check then fails with the mount error.
+_LOCAL_NFS = {
+    UBUNTU: ["apt-get", "install", "-y", NFS_CLIENT_PACKAGE],
+    release.DEBIAN: ["apt-get", "install", "-y", NFS_CLIENT_PACKAGE],
+    FEDORA: ["dnf", "install", "-y", "nfs-utils"],
+    release.EL: ["dnf", "install", "-y", "nfs-utils"],
+    release.LEAP: ["zypper", "--non-interactive", "install", "nfs-client"],
+    release.TUMBLEWEED: ["zypper", "--non-interactive", "install", "nfs-client"],
+    release.ALPINE: ["apk", "add", "nfs-utils"],
+}
+
+
+def local_nfs_step(kind: str) -> Optional[List[str]]:
+    """The NFS client's install on an air-gapped site; None on the BSDs."""
+    return _LOCAL_NFS.get(kind)
 
 
 def asset_name(version: str, release_name: str) -> str:
@@ -317,7 +334,13 @@ async def _equip_local(run: Callable, kind: str, proxy: bool, system: str):
         code, out = await run(privileged(argv))
         if code:
             return _failed("install_failed", out)
-    return {"success": True, "installed": "local"}
+    result = {"success": True, "installed": "local"}
+    nfs = local_nfs_step(kind)
+    if nfs is not None:
+        code, out = await run(privileged(nfs))
+        if code:
+            result.update(nfs_client="unavailable", detail=(out or "")[-2000:])
+    return result
 
 
 async def equip(  # pylint: disable=too-many-arguments
