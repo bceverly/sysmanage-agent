@@ -549,15 +549,17 @@ def test_the_agent_starts_the_upgrade_only_where_icloudpd_is_offered(monkeypatch
     from src.sysmanage_agent.core import agent_lifecycle
 
     started = []
+
+    async def nothing(*_args):
+        return None
+
     host = SimpleNamespace(
         _cloud_backup=lambda: SimpleNamespace(
             start_upgrade=lambda: started.append(True)
         ),
-        logger=SimpleNamespace(info=noop, warning=noop, error=noop),
+        _offsite_cloud=lambda: SimpleNamespace(resume_watching=nothing),
+        logger=SimpleNamespace(info=print, warning=print, error=print),
     )
-
-    async def nothing(*_args):
-        return None
 
     monkeypatch.setattr(agent_lifecycle, "reconcile_inflight_journal", nothing)
     monkeypatch.setattr(agent_lifecycle, "public_ip_refresh_service", nothing)

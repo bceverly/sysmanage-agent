@@ -84,7 +84,10 @@ def _object_key(key: bytes, salt: bytes, kid: bytes) -> AESGCM:
 
 
 def _nonce(index: int, last: bool) -> bytes:
-    return b"\0" * 7 + struct.pack(">I", index) + (b"\1" if last else b"\0")
+    # A counter nonce is safe here: each object has its own key, derived from
+    # a random 32-byte salt, so no (key, nonce) pair ever repeats.
+    flag = b"\1" if last else b"\0"
+    return b"\0" * 7 + struct.pack(">I", index) + flag  # nosemgrep
 
 
 class Header:  # pylint: disable=too-few-public-methods

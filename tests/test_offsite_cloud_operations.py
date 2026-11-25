@@ -160,7 +160,7 @@ def test_a_result_left_while_the_agent_was_down_is_reported(
 
 
 def test_unavailable_without_zfs_or_off_linux_and_freebsd():
-    assert ops.unavailable_reason(None, "Windows") == "not_supported"
+    assert ops.unavailable_reason(None, "Windows") == "wrong_platform"
     with patch.object(ops, "zfs_path", return_value=None):
         assert ops.unavailable_reason(None, "Linux") == "no_zfs"
     with patch.object(ops, "zfs_path", return_value="/sbin/zfs"):

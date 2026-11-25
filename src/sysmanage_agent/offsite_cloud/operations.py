@@ -55,7 +55,7 @@ def unavailable_reason(_lookup=None, system: Optional[str] = None) -> Optional[s
     """Where the off-site copy can run: a Linux or FreeBSD host with ZFS."""
     system = system or platform.system()
     if system not in ("Linux", "FreeBSD"):
-        return "not_supported"
+        return "wrong_platform"
     return None if zfs_path() else "no_zfs"
 
 

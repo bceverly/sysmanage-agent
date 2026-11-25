@@ -77,7 +77,12 @@ REASON_BUILD_EXCLUDED = "build_excluded"
 # With a restate that captures through restate-proxy (25.5) they back up that
 # way instead, and the reason is not given.
 REASON_NO_NFSV4_CLIENT = "no_nfsv4_client"
-INAPPLICABLE_REASONS = frozenset({REASON_WRONG_PLATFORM, REASON_NO_NFSV4_CLIENT})
+# REASON_NO_ZFS (27.3): the off-site cloud copy sends ZFS snapshots, so a host
+# without ZFS is not a storage host it applies to -- not a gap to close.
+REASON_NO_ZFS = "no_zfs"
+INAPPLICABLE_REASONS = frozenset(
+    {REASON_WRONG_PLATFORM, REASON_NO_NFSV4_CLIENT, REASON_NO_ZFS}
+)
 
 
 # command -> ((executable, ...), reason)
