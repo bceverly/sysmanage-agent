@@ -136,6 +136,30 @@ chromium   119.0.6045.123  2691   nicpottier    -
         assert result[0]["package_name"] == "firefox"
         assert result[0]["package_manager"] == "snap"
 
+    def test_the_new_version_is_the_version_column_not_the_size(self, detector):
+        """gdr-t14, 2026-11-26: firefox showed as "157.0-1 -> 275MB" -- the
+        Version column of ``snap refresh --list`` is the NEW version, and the
+        installed one is ``snap list``'s."""
+        refresh = Mock(returncode=0, stdout=(
+            "Name              Version   Rev   Size    Publisher   Notes\n"
+            "firefox           161.0-1   9269  300MB   mozilla**   -\n"
+            "core24            20261022  2307  70.1MB  canonical** base\n"
+        ))  # fmt: skip
+        installed = Mock(returncode=0, stdout=(
+            "Name     Version   Rev   Tracking       Publisher   Notes\n"
+            "firefox  157.0-1   9001  latest/stable  mozilla**   -\n"
+        ))  # fmt: skip
+
+        def run(argv, **_kw):
+            return refresh if argv[:2] == ["snap", "refresh"] else installed
+
+        with patch("subprocess.run", side_effect=run):
+            result = detector.detect_snap_updates()
+
+        assert [(u["package_name"], u["current_version"], u["available_version"])
+                for u in result] == [("firefox", "157.0-1", "161.0-1"),
+                                     ("core24", "unknown", "20261022")]  # fmt: skip
+
     def test_detect_snap_updates_no_updates(self, detector):
         """Test Snap update detection with no updates."""
         mock_result = Mock()

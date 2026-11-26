@@ -448,7 +448,7 @@ class MacOSUpdateDetector(MacOSApplyMixin, UpdateDetectorBase):
                         {
                             "package_name": package["package_name"],
                             "old_version": package.get("current_version"),
-                            "new_version": package["available_version"],
+                            "new_version": package.get("available_version"),
                             "package_manager": "homebrew",
                         }
                     )

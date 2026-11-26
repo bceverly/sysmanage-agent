@@ -92,6 +92,28 @@ class LinuxUpdateDetector:
 
         return updates
 
+    @staticmethod
+    def _installed_snap_versions():
+        """Each installed snap's version, from ``snap list``."""
+        try:
+            result = subprocess.run(  # nosec B603, B607
+                ["snap", "list"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return {}
+        if result.returncode != 0:
+            return {}
+        versions = {}
+        for line in result.stdout.strip().split("\n")[1:]:
+            parts = line.split()
+            if len(parts) >= 2:
+                versions[parts[0]] = parts[1]
+        return versions
+
     def detect_snap_updates(self):
         """Detect updates from Snap."""
         updates = []
@@ -107,13 +129,16 @@ class LinuxUpdateDetector:
             )
 
             if result.returncode == 0 and result.stdout.strip():
+                # ``snap refresh --list``: Name, Version (the NEW one), Rev,
+                # Size, ...  The installed version is ``snap list``'s.
+                installed = self._installed_snap_versions()
                 for line in result.stdout.strip().split("\n")[1:]:
                     parts = line.split()
-                    if len(parts) >= 4:
+                    if len(parts) >= 2:
                         update = {
                             "package_name": parts[0],
-                            "current_version": parts[1],
-                            "available_version": parts[3],
+                            "current_version": installed.get(parts[0], "unknown"),
+                            "available_version": parts[1],
                             "package_manager": "snap",
                             "is_security_update": False,
                             "is_system_update": False,

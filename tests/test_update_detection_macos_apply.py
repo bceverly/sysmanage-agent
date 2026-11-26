@@ -53,6 +53,18 @@ class TestApplyHomebrewUpdates:
         assert results["updated_packages"][0]["old_version"] == "2.40.0"
         assert results["updated_packages"][0]["new_version"] == "2.41.0"
 
+    def test_a_command_without_versions_still_reports_success(self, detector):
+        """The server names packages without their versions (2026-11-26)."""
+        results = {"updated_packages": [], "failed_packages": []}
+        ok = Mock(returncode=0, stdout="", stderr="")
+        with patch.object(detector, "_get_brew_command", return_value="brew"):
+            with patch("subprocess.run", return_value=ok):
+                detector._apply_homebrew_updates(
+                    [{"package_name": "git", "package_manager": "homebrew"}], results
+                )
+        assert results["failed_packages"] == []
+        assert results["updated_packages"][0]["new_version"] is None
+
     def test_apply_cask_updates_success(self, detector):
         """Test successful Homebrew cask update."""
         packages = [

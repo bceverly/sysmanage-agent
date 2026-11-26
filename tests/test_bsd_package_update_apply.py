@@ -141,3 +141,19 @@ def test_every_shape_t480_printed_is_one_record_per_installed_package():
         "libjxl-0.12.0": "0.13.0",  # named by two parents, offered once
         "vim-9.2.1125p0-perl-python3-ruby": "9.2.1373",
     }  # quirks: no change, no record
+
+
+def test_a_freebsd_upgrade_without_versions_in_the_command_is_not_a_failure():
+    """The lab's FreeBSD host, 2026-11-26: ``pkg upgrade`` upgraded 329
+    packages, then every one was reported failed with ``'available_version'``
+    -- the server's command names packages without their versions."""
+    results = {"updated_packages": [], "failed_packages": []}
+    ok = SimpleNamespace(returncode=0, stdout="", stderr="")
+    with patch("subprocess.run", return_value=ok):
+        BSDUpdateDetector()._apply_pkg_updates(  # pylint: disable=protected-access
+            [{"package_name": "abseil", "bundle_id": None, "package_manager": "pkg"},
+             {"package_name": "curl", "package_manager": "pkg",
+              "current_version": "8.17.0", "available_version": "8.18.0"}], results)  # fmt: skip
+    assert results["failed_packages"] == []
+    assert [(p["package_name"], p["new_version"]) for p in results["updated_packages"]] == [
+        ("abseil", None), ("curl", "8.18.0")]  # fmt: skip
