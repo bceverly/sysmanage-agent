@@ -100,7 +100,10 @@ class TestRebootRequiredDetection:
             {"package_name": "nginx", "package_manager": "apt"},
         ]
 
-        with patch("os.path.exists", return_value=False):
+        with patch("os.path.exists", return_value=False), patch(
+            "src.sysmanage_agent.collection.kernel_state.newer_kernel",
+            return_value=None,
+        ):
             result = base_detector.check_reboot_required()
 
         assert result is False

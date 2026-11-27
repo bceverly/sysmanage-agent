@@ -6407,3 +6407,29 @@ msgstr "Error checking WSL support: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPUs cannot exceed 64"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "Kernel %(installed)s is installed; %(running)s is running"
+msgstr "Kernel %(installed)s is installed; %(running)s is running"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "no protected kernel is installed"
+msgstr "no protected kernel is installed"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "Package cleanup needs apt (Debian or Ubuntu)"
+msgstr "Package cleanup needs apt (Debian or Ubuntu)"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "timed out"
+msgstr "timed out"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "apt would also remove: %s"
+msgstr "apt would also remove: %s"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "run_id is required"
+msgstr "run_id is required"

@@ -6156,3 +6156,29 @@ msgstr "WSL 지원 확인 오류: %s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU는 64개를 초과할 수 없습니다"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "Kernel %(installed)s is installed; %(running)s is running"
+msgstr "커널 %(installed)s이(가) 설치되어 있고 %(running)s이(가) 실행 중입니다"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "no protected kernel is installed"
+msgstr "보호된 커널이 설치되어 있지 않습니다"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "Package cleanup needs apt (Debian or Ubuntu)"
+msgstr "패키지 정리에는 apt (Debian 또는 Ubuntu)가 필요합니다"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "timed out"
+msgstr "시간 초과"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "apt would also remove: %s"
+msgstr "apt가 다음도 제거합니다: %s"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "run_id is required"
+msgstr "run_id가 필요합니다"

@@ -17,7 +17,7 @@ import time
 from typing import Any, Dict, Optional
 
 from src.i18n import _
-from src.sysmanage_agent.collection import pro_status_cache
+from src.sysmanage_agent.collection import kernel_state, pro_status_cache
 
 # Constant for zoneinfo path used in timezone extraction
 ZONEINFO_PATH_SEGMENT = "/zoneinfo/"
@@ -693,6 +693,14 @@ class OSInfoCollector:
                 os_release = self._parse_os_release_file()
         except (AttributeError, OSError):
             os_release = {}
+
+        # The running kernel and every installed one (27.8): the server picks
+        # the kernels a vulnerability counts for, and which ones are old.
+        os_info["kernel_release"] = kernel_state.running_release()
+        try:
+            os_info["installed_kernels"] = kernel_state.installed_releases()
+        except OSError:
+            pass
 
         if os_release:
             os_info["distribution"] = os_release.get("NAME", "")

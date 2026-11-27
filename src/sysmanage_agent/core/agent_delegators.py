@@ -534,6 +534,19 @@ class MiscDelegator:
             )
         return ops
 
+    async def package_cleanup(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Plan or apply the old-kernel and unneeded-package cleanup (27.8)."""
+        ops = getattr(self, "_package_cleanup_ops", None)
+        if ops is None:
+            # pylint: disable=import-outside-toplevel
+            from src.sysmanage_agent.operations import package_cleanup  # noqa: PLC0415
+
+            ops = package_cleanup.PackageCleanup(self)
+            self._package_cleanup_ops = (
+                ops  # pylint: disable=attribute-defined-outside-init
+            )
+        return await ops.package_cleanup(parameters)
+
     async def offsite_cloud_run(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """One off-site cloud copy run: check, upload or restore (27.3)."""
         return await self._offsite_cloud().offsite_cloud_run(parameters)

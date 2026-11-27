@@ -423,6 +423,8 @@ class MessageProcessor:
             "cloud_backup_remove": self.agent.cloud_backup_remove,
             # 27.3: the off-site cloud copy (S3 Glacier Deep Archive).
             "offsite_cloud_run": self.agent.offsite_cloud_run,
+            # 27.8: old kernels and unneeded packages, removed safely.
+            "package_cleanup": self.agent.package_cleanup,
             "backup_run": self.agent.backup_ops.backup_run,
             "backup_restore": self.agent.backup_ops.backup_restore,
             "list_third_party_repositories": self.agent.list_third_party_repositories,

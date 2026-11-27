@@ -325,9 +325,13 @@ class TestCheckRebootStatus:
                 manager = UpdateManager(self.mock_agent)
                 manager.send_reboot_status_update = AsyncMock()
 
-                await manager.check_reboot_status()
+                with patch(
+                    "src.sysmanage_agent.operations.update_manager._kernel_reason",
+                    return_value=None,
+                ):
+                    await manager.check_reboot_status()
 
-                manager.send_reboot_status_update.assert_called_once_with(True)
+                manager.send_reboot_status_update.assert_called_once_with(True, None)
 
     @pytest.mark.asyncio
     async def test_check_reboot_status_exception_handling(self):

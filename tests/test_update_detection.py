@@ -247,6 +247,10 @@ class TestUpdateDetector:
         with (
             patch("platform.system", return_value="Linux"),
             patch("os.path.exists", return_value=False),
+            patch(
+                "src.sysmanage_agent.collection.kernel_state.newer_kernel",
+                return_value=None,
+            ),
         ):
             detector = UpdateDetector()
             assert detector.check_reboot_required() is False

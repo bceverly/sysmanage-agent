@@ -49,6 +49,7 @@ from src.sysmanage_agent.backup import storage_reach
 from src.sysmanage_agent.cloud_backup import tool as cloud_tool
 from src.sysmanage_agent.collection import package_manager_health
 from src.sysmanage_agent.offsite_cloud import operations as offsite_operations
+from src.sysmanage_agent.operations import package_cleanup
 from src.sysmanage_agent.collection import malware_scan
 from src.sysmanage_agent.operations import config_mgmt_locator
 
@@ -197,6 +198,7 @@ _REASONED_LOCATORS: Dict[str, Callable[..., Optional[str]]] = {
     "cloud_backup_run": lambda _lookup, system: _cloud_run_reason(system),
     # 27.3: the off-site cloud copy runs where ZFS does (Linux, FreeBSD).
     "offsite_cloud_run": offsite_operations.unavailable_reason,
+    "package_cleanup": package_cleanup.unavailable_reason,
 }
 
 

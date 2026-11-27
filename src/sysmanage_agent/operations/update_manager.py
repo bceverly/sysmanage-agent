@@ -9,11 +9,27 @@ Handles all update-related operations including package updates and reboot statu
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
+from src.sysmanage_agent.collection import kernel_state
 from src.sysmanage_agent.collection.update_detection import UpdateDetector
 from src.sysmanage_agent.operations.update_operations import UpdateOperations
 from src.i18n import _
+
+
+def _kernel_reason() -> Optional[str]:
+    """ "Kernel X is installed; Y is running", when that is why (27.8)."""
+    try:
+        newer = kernel_state.newer_kernel()
+    except OSError:
+        return None
+    if not newer:
+        return None
+    text = _("Kernel %(installed)s is installed; %(running)s is running") % {
+        "installed": newer,
+        "running": kernel_state.running_release(),
+    }
+    return text[:255]
 
 
 class UpdateManager:
@@ -63,15 +79,18 @@ class UpdateManager:
         try:
             detector = UpdateDetector()
             requires_reboot = detector.check_reboot_required()
+            reason = _kernel_reason() if requires_reboot else None
 
             result = {
                 "success": True,
                 "reboot_required": requires_reboot,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
+            if reason:
+                result["reboot_required_reason"] = reason
 
             # Send reboot status update to server
-            await self.send_reboot_status_update(requires_reboot)
+            await self.send_reboot_status_update(requires_reboot, reason)
 
             return result
 
@@ -83,12 +102,15 @@ class UpdateManager:
                 "reboot_required": False,
             }
 
-    async def send_reboot_status_update(self, requires_reboot: bool) -> None:
+    async def send_reboot_status_update(
+        self, requires_reboot: bool, reason: Optional[str] = None
+    ) -> None:
         """
         Send reboot status update to server.
 
         Args:
             requires_reboot: Boolean indicating if reboot is required
+            reason: why, when known (a newer kernel installed than running)
         """
         try:
             self.logger.info("Sending reboot status update: %s", requires_reboot)
@@ -102,6 +124,8 @@ class UpdateManager:
                 "reboot_required": requires_reboot,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
+            if reason:
+                reboot_data["reboot_required_reason"] = reason
 
             reboot_message = self.agent.create_message(
                 "reboot_status_update", reboot_data

@@ -6159,3 +6159,29 @@ msgstr "WSL 対応のチェックに失敗しました：%s"
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU は 64 を超えることはできません"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "Kernel %(installed)s is installed; %(running)s is running"
+msgstr "カーネル %(installed)s がインストールされていますが、実行中は %(running)s です"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "no protected kernel is installed"
+msgstr "保護対象のカーネルがインストールされていません"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "Package cleanup needs apt (Debian or Ubuntu)"
+msgstr "パッケージのクリーンアップには apt (Debian または Ubuntu) が必要です"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "timed out"
+msgstr "タイムアウトしました"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "apt would also remove: %s"
+msgstr "apt は次も削除します: %s"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "run_id is required"
+msgstr "run_id は必須です"

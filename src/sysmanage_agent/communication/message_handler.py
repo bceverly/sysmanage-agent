@@ -19,6 +19,7 @@ import aiohttp
 import websockets
 
 from src.database.queue_manager import MessageQueueManager
+from src.sysmanage_agent.collection import kernel_state
 from src.i18n import _
 from src.security import client_tls
 from src.sysmanage_agent.collection import public_ip_fetcher
@@ -215,6 +216,9 @@ class MessageHandler(MessageHandlerQueueMixin):
         booted = _boot_time()
         if booted:
             payload["boot_time"] = booted
+            # With the boot time, the server records which kernel each boot
+            # ran: a kernel is proven only by a boot that stayed up (27.8).
+            payload["kernel_release"] = kernel_state.running_release()
         return self.create_message("heartbeat", payload)
 
     async def send_message(self, message: Dict[str, Any]):

@@ -161,6 +161,7 @@ ar	335deb286c485970	model
 ar	3364956fb3e40d55	model
 ar	337d507611762775	model
 ar	33b3ed7a78dce72d	model
+ar	33ce761e0e5759ad	human Hand-translated (kernel and package cleanup, 27.8)
 ar	33f39c31b9369ece	model
 ar	343ff446dc5b911b	model
 ar	347b664d77bcf6cf	model
@@ -203,6 +204,7 @@ ar	3c138e7703270ecd	model
 ar	3c2525f5fa51e7d1	model
 ar	3c434a700e946525	model
 ar	3caa9fea7047f659	model
+ar	3cb9576472856989	human Hand-translated (kernel and package cleanup, 27.8)
 ar	3d431e3c3c425cbe	model
 ar	3d71d34d67638134	model
 ar	3d7b9add7cbe5537	model
@@ -320,6 +322,7 @@ ar	61adf4706146ade8	model
 ar	61bf742b82cda3db	model
 ar	61cb1e89aa2aa518	model
 ar	61d53e526b16cea1	model
+ar	620c81bbaf0847d5	human Hand-translated (kernel and package cleanup, 27.8)
 ar	62716c3d969876d4	model
 ar	636b1bc0bc97dd87	model
 ar	64c04e76a80e7aab	model
@@ -472,6 +475,7 @@ ar	907c519a11a04754	model
 ar	90d900504656c020	model
 ar	90e3e4e14f88d160	model
 ar	91263fb0142e6d1a	model
+ar	9142e97c733b462d	human Hand-translated (kernel and package cleanup, 27.8)
 ar	91907932e53fddf1	model
 ar	91c71a4e8b4d0642	model
 ar	91e7d475a2408014	model
@@ -499,6 +503,7 @@ ar	97b718cb5e176359	model
 ar	97eb1d891fa2a32e	model
 ar	98a394e227be2caf	model
 ar	98b54b32955a0900	model
+ar	999a622f137d1a92	human Hand-translated (kernel and package cleanup, 27.8)
 ar	9a14a77780c1b400	model
 ar	9a50cc99c06b7045	model
 ar	9a59d5ccba00e3a7	model
@@ -860,6 +865,7 @@ ar	fecdd28d0d822766	model
 ar	fed3137f2ac70176	model
 ar	fee87f4c16e18c68	model
 ar	fef2f1f33115c57d	model
+ar	ff5bfb1b9ae03d3d	human Hand-translated (kernel and package cleanup, 27.8)
 ar	ff7f94a6361af26d	model
 de	000bfcae73e0b085	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 de	003511dc8506bbf3	model
@@ -867,6 +873,7 @@ de	005868580b3b98aa	model
 de	019cdeddfe29b35a	model
 de	01c349f3ec3ab51a	model
 de	0214635147c53f50	model
+de	02532454a124ddd2	human Hand-translated (kernel and package cleanup, 27.8)
 de	025a5467fe1f8873	model
 de	02e841530f8b059d	model
 de	02f40090683e7e66	model
@@ -922,6 +929,7 @@ de	10dec9e24b2df3d1	model
 de	113e019e629652ce	model
 de	11a2ce9eb3fc28b5	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 de	11bd277c7b5afef8	model
+de	11e4c16c6955a487	human Hand-translated (kernel and package cleanup, 27.8)
 de	12104980c0d6de21	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 de	1256292072c17bec	model
 de	1288294dfa322821	model
@@ -1052,6 +1060,7 @@ de	3842601da9228abe	model
 de	3867fc2197833120	model
 de	38973cb9e5df0cef	model
 de	38e8f59cd2e7ec5b	model
+de	38ff2e8419d3c67e	human Hand-translated (kernel and package cleanup, 27.8)
 de	392c3cf84b05b613	model
 de	39563ce4d13c03c7	model
 de	39f976cec8767944	model
@@ -1319,6 +1328,7 @@ de	86d4f3ad212a854b	model
 de	86dcf235a3ce4d55	model
 de	86e828c7f4b68529	model
 de	8756afaa0e5d20a8	model
+de	875e890a19f313f3	human Hand-translated (kernel and package cleanup, 27.8)
 de	879724eec50ab34b	model
 de	87a9ac340de207a6	model
 de	87b22bd3e8c7bb45	model
@@ -1625,10 +1635,12 @@ de	e3611c5fb3b9c90b	model
 de	e38c001ca535a457	model
 de	e41c5b0d1cd13cbe	model
 de	e448377d68e1a2f4	model
+de	e489e032240e61ec	human Hand-translated (kernel and package cleanup, 27.8)
 de	e4ad8f663fb8da6f	model
 de	e4ae1391b7be13cc	model
 de	e4b0342015395a6c	model
 de	e4d591f198ef7a27	model
+de	e4e487bbd84dc5e0	human Hand-translated (kernel and package cleanup, 27.8)
 de	e599014bee850bfd	model
 de	e5a805768a9655f5	model
 de	e66c7a8147776748	model
@@ -1888,11 +1900,13 @@ es	2e799d83b3ec8289	model
 es	2e7e69aa6ea7861f	model
 es	2e9fd8bf2bc0469f	model
 es	2f15ece504c29f2a	model
+es	2f1aa70e1d848866	human Hand-translated (kernel and package cleanup, 27.8)
 es	2f286aa219454f7f	model
 es	2f95d253a79c165a	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 es	30134f1d468a03f2	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 es	30ccfa8f0ef188f6	model
 es	31aea03c1a61cf67	model
+es	31c8a97c85946437	human Hand-translated (kernel and package cleanup, 27.8)
 es	321e2369e95b668a	model
 es	324baf5ae815b2ca	model
 es	32b3a884caecdf76	model
@@ -1940,6 +1954,7 @@ es	3e8fb39aa946d6e0	model
 es	3ef399b50084576c	model
 es	3f31d83f2aa634d6	model
 es	3fba14078d8b3055	model
+es	40337bb49ea9e11d	human Hand-translated (kernel and package cleanup, 27.8)
 es	40b62f044221deb2	model
 es	410f7b29291a3137	model
 es	411efcd002f08844	model
@@ -2084,6 +2099,7 @@ es	6c600f30337376d6	model
 es	6c66ae72d8556b99	model
 es	6c73117284596f96	model
 es	6c7c57dcdb05fafe	model
+es	6d4142a164130561	human Hand-translated (kernel and package cleanup, 27.8)
 es	6d78914ccb1cb0d1	model
 es	6d8f4b9acfd2ad06	model
 es	6d97e7c232cf4787	model
@@ -2201,6 +2217,7 @@ es	8f42ecd0430bfcd7	model
 es	8f862f952dc09310	model
 es	8fa1a98bfa7ceb2f	model
 es	8fa6e96e5ecb81f0	model
+es	9007fd711cb77576	human Hand-translated (kernel and package cleanup, 27.8)
 es	906552386a1c097b	model
 es	90d83c11122a5763	model
 es	910f68afc119e93d	model
@@ -2497,6 +2514,7 @@ es	e68cdf64df218cff	model
 es	e7a4b3c2c3d86e4c	model
 es	e7d07664467ff870	model
 es	e7ebe3689d9fd35a	model
+es	e815cb441e7ca920	human Hand-translated (kernel and package cleanup, 27.8)
 es	e81b080460b18cdf	model
 es	e81e99ddc0acf3dd	model
 es	e83afc61b8866b5e	model
@@ -2873,6 +2891,7 @@ fr	54cba15ee661a5b6	human hand-translated ROADMAP 25.10 agent mTLS string (writt
 fr	5521c96d53f98ef8	model
 fr	554afc78bda6c562	model
 fr	5593195ab5de8625	model
+fr	55cf0560cb93a104	human Hand-translated (kernel and package cleanup, 27.8)
 fr	562f665e93763efb	model
 fr	5664a886aa61be0c	model
 fr	56d2c09ff2782196	model
@@ -2964,6 +2983,7 @@ fr	6e2daa1c9b57efd5	model
 fr	6e798dfe88b1a832	model
 fr	6ea7de05c6dfb2ce	model
 fr	6ed76cf6b54325f3	model
+fr	6efc5037a63a0b1a	human Hand-translated (kernel and package cleanup, 27.8)
 fr	6f06265cada21baa	model
 fr	6f83196005da23b5	model
 fr	6f9dba9369147d7e	model
@@ -3186,6 +3206,7 @@ fr	b331651c715ccec9	model
 fr	b383584cf2eea8fa	model
 fr	b3a415c86ad84fe4	model
 fr	b461b4a30d8a5fca	model
+fr	b4b6a78d7211d675	human Hand-translated (kernel and package cleanup, 27.8)
 fr	b4bf4b468a59891f	model
 fr	b57e4a059cd93691	model
 fr	b5f76cf0048cc598	model
@@ -3336,6 +3357,7 @@ fr	de6b0d65d808aba0	model
 fr	df7f936781d04952	model
 fr	dfc8562962bae877	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 fr	dfcf32b54e067ceb	model
+fr	e060526d9278ed3e	human Hand-translated (kernel and package cleanup, 27.8)
 fr	e066b40057e7d790	model
 fr	e06e836be40a9469	model
 fr	e09f46f1b65b4a22	model
@@ -3413,9 +3435,11 @@ fr	f48468b2f0a3443e	model
 fr	f5b3d72c2a11fcbc	model
 fr	f5ca2b3eb74e9293	model
 fr	f65627300121f68d	model
+fr	f71d9e9dd403d14c	human Hand-translated (kernel and package cleanup, 27.8)
 fr	f76e47e15f83c995	model
 fr	f79bac7f9a948d5e	model
 fr	f7a9e1ab1b12663f	model
+fr	f7ca643ea8e312db	human Hand-translated (kernel and package cleanup, 27.8)
 fr	f900b6b86e111c2c	model
 fr	f974f74229fcf631	model
 fr	f9e3216d1b150f0e	model
@@ -3724,6 +3748,7 @@ hi	548041a02902fb34	model
 hi	54a203b06cdccfc7	model
 hi	54cb882fe0483502	model
 hi	5503b0bc1a03a71a	model
+hi	5505197cdd0abe04	human Hand-translated (kernel and package cleanup, 27.8)
 hi	55224e5a26a384bd	model
 hi	55379faead3458c4	model
 hi	557ca1e3ccd71957	model
@@ -3770,6 +3795,7 @@ hi	62e26f03f60ee435	model
 hi	632cc36d3473fa09	model
 hi	6336bf4fa975a86e	model
 hi	6373b07994fda961	model
+hi	63deec59340e724d	human Hand-translated (kernel and package cleanup, 27.8)
 hi	63e2cb7d096e9bdb	model
 hi	63e60d64a9b4f0ac	model
 hi	63ec770a60e35dc2	model
@@ -3803,6 +3829,7 @@ hi	6d8df4d6b7024edb	human hand-reviewed Phase 24 backup string (read and correct
 hi	6d9a6732a16d09d4	model
 hi	6e7adc591871356f	model
 hi	6e7e6d56752fa123	model
+hi	6e8f53bb7dbc3974	human Hand-translated (kernel and package cleanup, 27.8)
 hi	6efd4b3573f55ff4	model
 hi	6f25a09a46db7b8f	model
 hi	6f260900b869066b	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
@@ -3929,6 +3956,7 @@ hi	9043bf6a09559ede	model
 hi	9067266437a0ce65	model
 hi	9122c56da6027002	model
 hi	91749ed37304f97d	model
+hi	91845a24522cbdb9	human Hand-translated (kernel and package cleanup, 27.8)
 hi	91dd0d0fa7c40e56	model
 hi	91e5f0e310b9e767	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
 hi	923d6a23f39937d6	model
@@ -3947,6 +3975,7 @@ hi	95da0ace903b4fc1	model
 hi	95fd9089f32aea6e	model
 hi	966a32e0f3702ead	model
 hi	96ef96b34f7c6594	model
+hi	9727e67536d6df7b	human Hand-translated (kernel and package cleanup, 27.8)
 hi	97c492df0f7dd53f	model
 hi	97fc8a52075566b4	model
 hi	9856579bd2c9841a	model
@@ -4153,6 +4182,7 @@ hi	cbd6a6f088fc2869	model
 hi	cc0272a75b696b37	model
 hi	cc18fa6b77f98714	model
 hi	cc8e11be5f080bcb	model
+hi	cd09ea7414dba4e0	human Hand-translated (kernel and package cleanup, 27.8)
 hi	cd650985b6dafc5a	model
 hi	cdda03bed1448455	model
 hi	cdf98b525e4a15d8	model
@@ -4555,6 +4585,7 @@ it	4443cd1e8f1fcc34	model
 it	445fe91016326771	model
 it	449df9436c8fb6af	model
 it	44de3dc02cda57c8	model
+it	4508b7fceaedd5ef	human Hand-translated (kernel and package cleanup, 27.8)
 it	45429e9c916913ca	model
 it	456488b2cb568744	model
 it	4632ec79fe574f95	model
@@ -4584,6 +4615,7 @@ it	4bdc04a20e4df2d3	model
 it	4c26de0a21ea0f64	model
 it	4c8f46c78e9d0ac5	model
 it	4cb567a6c6316bca	model
+it	4d8e2acfdcfb9dad	human Hand-translated (kernel and package cleanup, 27.8)
 it	4dcb1e0a79306f7b	model
 it	4e3b45c2d6143377	model
 it	4e4e7787cc4ae2ed	model
@@ -4951,6 +4983,7 @@ it	b7d5686e1b9a4027	model
 it	b7d984255bbb0513	model
 it	b806b7967f7c5080	model
 it	b80ced282b58e08e	model
+it	b85dc80ba98f837a	human Hand-translated (kernel and package cleanup, 27.8)
 it	b8953e84a0886070	model
 it	b8f916e3555e64fe	model
 it	b9d77d974dfd962b	model
@@ -5006,9 +5039,11 @@ it	cf4076f8c05b3cd5	model
 it	cf41884441c24967	model
 it	cf7956d3d9865f4d	model
 it	cff986b7e5df786b	model
+it	d070b3b9adb4b5c4	human Hand-translated (kernel and package cleanup, 27.8)
 it	d1222652fcd9661d	model
 it	d1793c3387cdbd32	model
 it	d202721cd14e47b6	model
+it	d207a140ea6385fb	human Hand-translated (kernel and package cleanup, 27.8)
 it	d219ee950544bd7b	model
 it	d22286caba2d5f00	model
 it	d30359cb460fe0ee	model
@@ -5059,6 +5094,7 @@ it	df94e6b93b9c7431	model
 it	e045ba8cd4b95464	model
 it	e07a4c9d77ea7387	model
 it	e0c5cb1bd4682622	model
+it	e108f23735d679fd	human Hand-translated (kernel and package cleanup, 27.8)
 it	e143cbd01511f456	model
 it	e18c8b20e7fc3a58	model
 it	e1b625e293cda132	model
@@ -5208,6 +5244,7 @@ ja	0e3cd3ab3019e5f2	model
 ja	0eef31d9ee02cd96	model
 ja	0f2942be568a77de	model
 ja	0f4596f4236bed3c	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
+ja	0fbc2f207c8dc6eb	human Hand-translated (kernel and package cleanup, 27.8)
 ja	0fcf38b0869734f8	model
 ja	1007f633b0bdd3fa	model
 ja	10a03e906cb04263	model
@@ -5445,6 +5482,7 @@ ja	562d05db3eda4f34	model
 ja	56af264d59e7bf33	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
 ja	572bae566c45bc8b	model
 ja	575503acff9f8d8f	model
+ja	575a4caa709c1b77	human Hand-translated (kernel and package cleanup, 27.8)
 ja	57878ede6d4aadd4	model
 ja	57ee9297ba392144	model
 ja	58060b4b44831b99	model
@@ -5516,6 +5554,7 @@ ja	66adc8c40ff9b311	model
 ja	66c7b4e503157f1c	model
 ja	671f2f1a01468aee	model
 ja	675c2e568e7c2e9c	model
+ja	675d2563d333bed6	human Hand-translated (kernel and package cleanup, 27.8)
 ja	67d25496eaaa4cfa	model
 ja	67e86447c83b112d	model
 ja	685a5b286fef81cf	model
@@ -5664,6 +5703,7 @@ ja	8fc3244d632fea5c	model
 ja	8fd7ab697956c7b1	model
 ja	8fe631e88fcb15d0	model
 ja	8fe9ddb6cd22bc5f	model
+ja	90c99dc666d330df	human Hand-translated (kernel and package cleanup, 27.8)
 ja	9168d01cdeb14db8	model
 ja	918d6d0966d4ee46	model
 ja	9241ef64c4b5a599	model
@@ -5733,6 +5773,7 @@ ja	a743c1d7f5654e6b	model
 ja	a75f7dbbce5d135b	model
 ja	a79b12037520cb4b	model
 ja	a8160550118f8334	model
+ja	a8212b77e302a73b	human Hand-translated (kernel and package cleanup, 27.8)
 ja	a8432ed0c607f664	model
 ja	a874671a27c14faf	model
 ja	a892aaa73b82d548	model
@@ -5809,6 +5850,7 @@ ja	c157d8ff970bc8d8	model
 ja	c1821c2ff8ec5e77	model
 ja	c184df227100053c	model
 ja	c1ab15492b0a6bd8	model
+ja	c224e890d5486c3e	human Hand-translated (kernel and package cleanup, 27.8)
 ja	c266f52de43c073b	model
 ja	c2c31b3d695a84ae	model
 ja	c2fa76e2afc6777c	model
@@ -6138,6 +6180,7 @@ ko	25627f77e585406d	model
 ko	25a5569e0d355238	model
 ko	25fc54f4df20533f	model
 ko	260d063628d9c8ea	model
+ko	2643d0b0a09cdf9a	human Hand-translated (kernel and package cleanup, 27.8)
 ko	267ffe9bc02609b3	model
 ko	269bc4658333c632	model
 ko	26f343c44a0ce2d2	model
@@ -6164,6 +6207,7 @@ ko	2dbe72228929d04c	model
 ko	2dcfe8d32442890d	model
 ko	2e3aac18f656c7ae	model
 ko	2f49150c34e7a048	model
+ko	2f52c9a003f1f62c	human Hand-translated (kernel and package cleanup, 27.8)
 ko	2fdbb0492749133b	model
 ko	30601896d3c3f171	model
 ko	30ee6053b82b31cd	model
@@ -6502,6 +6546,7 @@ ko	96853c159651c22d	model
 ko	96871a8317fd5309	model
 ko	96c1bd8a26167bbd	model
 ko	97565f02ed216110	model
+ko	979456dff69db454	human Hand-translated (kernel and package cleanup, 27.8)
 ko	97d756826e06d21e	model
 ko	97e64597d5d421c1	model
 ko	98099dce665e97c6	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
@@ -6511,6 +6556,7 @@ ko	99f436d82eeee8f6	model
 ko	9a028915ff394623	model
 ko	9a060c192f75c684	model
 ko	9a483c351292a0c8	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
+ko	9a4d0caf74889696	human Hand-translated (kernel and package cleanup, 27.8)
 ko	9aad5506538e66e9	model
 ko	9b19d2f8a5471800	model
 ko	9bc9743938ac051c	model
@@ -6730,6 +6776,8 @@ ko	d56f0435a2476030	model
 ko	d579aefceea058af	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 ko	d57af79f56f4a3d3	model
 ko	d5974d43f429af33	model
+ko	d69831fbd538ac50	human Hand-translated (kernel and package cleanup, 27.8)
+ko	d6afb404157bcf3d	human Hand-translated (kernel and package cleanup, 27.8)
 ko	d6b838f1dbf0f354	model
 ko	d6ced1b2fb782482	model
 ko	d77208417625fb1a	model
@@ -6918,6 +6966,7 @@ nl	0958b0f19f430363	model
 nl	09971dd14654a182	model
 nl	099846e3365a0f65	model
 nl	09b6a8b08e160df0	model
+nl	09d3beaa92164692	human Hand-translated (kernel and package cleanup, 27.8)
 nl	09f4aa6a5f39faa8	model
 nl	0a5766978a18bdbb	model
 nl	0b6f47489d4e0d31	model
@@ -7034,6 +7083,7 @@ nl	305b7033ce4cd8bc	model
 nl	3070ec66027c5254	model
 nl	30b2760d36124a2a	model
 nl	319db954b62b1b5e	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
+nl	31d762d1331bce91	human Hand-translated (kernel and package cleanup, 27.8)
 nl	32215ef4d88cdcc4	model
 nl	323c06951f6e2863	model
 nl	32eea6ee8f9681de	model
@@ -7175,6 +7225,7 @@ nl	5dc4b63094ebb1b9	model
 nl	5dfa00711eacb359	model
 nl	5e8ec505f9cd369c	model
 nl	5ed5ce98029de1ac	model
+nl	5f51bba7b154ebb0	human Hand-translated (kernel and package cleanup, 27.8)
 nl	5f6b6a4c9b3b86e4	model
 nl	604d890c33cb9641	model
 nl	6060987eafbe4292	model
@@ -7229,6 +7280,7 @@ nl	6d04c1c6426eca5d	model
 nl	6d28e9bb00d74f51	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
 nl	6d3839c018b8c8d7	model
 nl	6d4c8f9cfa6d782e	model
+nl	6d53d4f918e387e6	human Hand-translated (kernel and package cleanup, 27.8)
 nl	6d55bb9fd4d79bf5	model
 nl	6d892383e4509036	model
 nl	6dc332bd7fedba11	model
@@ -7592,6 +7644,7 @@ nl	d2fd79e80380c07a	model
 nl	d3fb81ad0a9465f5	model
 nl	d44ef2d848a6bcf9	model
 nl	d463bf54c0cfa301	model
+nl	d46b7853ebc9b1e0	human Hand-translated (kernel and package cleanup, 27.8)
 nl	d5486699a7ffb1d4	model
 nl	d5ba8ce76a4284df	model
 nl	d5d7c0d636c36792	model
@@ -7682,6 +7735,7 @@ nl	eb8e920044c1a9dd	model
 nl	eb90aa6f9bb661ec	model
 nl	ec9497570b04c3ef	model
 nl	ecfe788e9d1c33fc	model
+nl	ed3729005975df99	human Hand-translated (kernel and package cleanup, 27.8)
 nl	ed44230e3e00c338	model
 nl	eddadc6ba7e2907a	model
 nl	ee2296a7a18e398e	model
@@ -7821,6 +7875,7 @@ pt	171810a4ae07d691	model
 pt	1744dd5159457bbc	model
 pt	17aeaf50b54bf67b	model
 pt	17fc81fae80cfc4f	model
+pt	185b223fb6f72141	human Hand-translated (kernel and package cleanup, 27.8)
 pt	18c06a80b4a562c0	model
 pt	18c84d8dcb8fde65	model
 pt	1975b4c473102d93	model
@@ -8062,6 +8117,7 @@ pt	5d04b5bd8c1f425c	model
 pt	5d0778a4f64596b9	model
 pt	5d6475a12181ef37	model
 pt	5d97abb446b2185c	model
+pt	5dda7b051f6ebdbd	human Hand-translated (kernel and package cleanup, 27.8)
 pt	5e0fef33abda4307	model
 pt	5e2f49d7d64b93fc	model
 pt	5e64a958e04cbcf9	model
@@ -8247,6 +8303,7 @@ pt	923c3991b945bef1	model
 pt	928918c87f685bf3	model
 pt	928e193159efc270	model
 pt	92c102693118e980	model
+pt	92fc36f1b95a0357	human Hand-translated (kernel and package cleanup, 27.8)
 pt	935937f42387f2a0	model
 pt	9385f6c0a18c032e	model
 pt	94054934ebd5cb9b	model
@@ -8338,6 +8395,7 @@ pt	adf3890360d76164	model
 pt	ae2b7039493894bb	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 pt	af3cae27f0451d33	model
 pt	af56b26daf8053f2	model
+pt	af9f9b4ee807f666	human Hand-translated (kernel and package cleanup, 27.8)
 pt	affe69051d9210e7	model
 pt	b04d551c39bc28eb	model
 pt	b05694ad952b2117	model
@@ -8392,6 +8450,7 @@ pt	be2cc55c9cb834c2	model
 pt	be50359ff542e586	model
 pt	be61bd2172be3bd3	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 pt	be9eef2e46482604	model
+pt	beb7071b7488b180	human Hand-translated (kernel and package cleanup, 27.8)
 pt	bf63e32181889282	model
 pt	bfccda4bb9ef76fe	model
 pt	bfec5c7045f61772	model
@@ -8586,6 +8645,7 @@ pt	fbda394e93a810c5	model
 pt	fc6aaac6b413ffda	model
 pt	fc7cfadd99e25e89	model
 pt	fc875e9843e7cbf8	model
+pt	fc8a74eca27cda59	human Hand-translated (kernel and package cleanup, 27.8)
 pt	fd1069faefdbc48a	model
 pt	fd1798c6fd314995	model
 pt	fdc3d3d3062d7bfe	model
@@ -8635,6 +8695,7 @@ ru	06b4a6bb32c60d6c	model
 ru	06d79b02ec5cc1a1	model
 ru	07046a0ee9d18ce2	model
 ru	0736d23eda06fef5	model
+ru	0782175c26e96a8e	human Hand-translated (kernel and package cleanup, 27.8)
 ru	08976a8b059d64fa	model
 ru	08b5f34918ab06e1	model
 ru	092cd30bd5267dd4	model
@@ -8711,6 +8772,7 @@ ru	1d363b9c7a463b68	model
 ru	1da0faa3663f056a	model
 ru	1dda88a9bc02e975	model
 ru	1f53fb809d23f864	model
+ru	1faf87567a9a4797	human Hand-translated (kernel and package cleanup, 27.8)
 ru	20881b5e89744f3f	model
 ru	20f6e7945274b8c1	model
 ru	216b46102aaa41ee	model
@@ -8983,6 +9045,7 @@ ru	75c0f6e860164741	model
 ru	75cf169a07e704b2	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 ru	766bae3f59a4a4d2	model
 ru	76dc6697d73ca867	model
+ru	771568a7cbfc5181	human Hand-translated (kernel and package cleanup, 27.8)
 ru	77281bb98eaa3881	model
 ru	77451b0b27db789d	model
 ru	77963aa721a3b38d	model
@@ -9071,6 +9134,7 @@ ru	8fa77c86c4bd82b7	model
 ru	8fc52b707c65bcda	model
 ru	901d6667af2d6e6a	model
 ru	9057a8c6e89e6ee9	model
+ru	90c52d11bf59e57c	human Hand-translated (kernel and package cleanup, 27.8)
 ru	9193547954db0b88	model
 ru	92b0f153f2ca3fd6	model
 ru	936f97ed99059f67	model
@@ -9291,6 +9355,7 @@ ru	d18151a73001618a	model
 ru	d18770dc5716bb44	model
 ru	d1e315f20750350d	model
 ru	d1ed7affbb1bc6d9	model
+ru	d21f2be0e1aa0ef3	human Hand-translated (kernel and package cleanup, 27.8)
 ru	d251b220007e3acd	model
 ru	d27466f7126e5ed3	model
 ru	d2f2c2ea5d3b5948	model
@@ -9402,6 +9467,7 @@ ru	f02bd1b80806071e	model
 ru	f044936f3580b163	model
 ru	f05b32d9bc1e4d80	model
 ru	f083b9fa8ee89c3b	model
+ru	f08dd2bd2fd32bfa	human Hand-translated (kernel and package cleanup, 27.8)
 ru	f0a6f10a57250b77	model
 ru	f20a00468257522a	model
 ru	f219797cd0c29867	model
@@ -9547,6 +9613,7 @@ zh_CN	18d8e14d7c1108d0	human hand-translated ROADMAP 25.10 agent mTLS string (wr
 zh_CN	199e6bb5ac96ed14	model
 zh_CN	19fe9769fe093eff	model
 zh_CN	1a5bcaee6f5d1869	model
+zh_CN	1a5fa0a0d60bf2b0	human Hand-translated (kernel and package cleanup, 27.8)
 zh_CN	1b45ba64bf4135a1	model
 zh_CN	1b8fdc2aa060726c	model
 zh_CN	1c5c727a7c2c0b52	model
@@ -9910,6 +9977,7 @@ zh_CN	8561b363774c05b2	model
 zh_CN	85d622a5774e746c	model
 zh_CN	8602dca2f50103d7	model
 zh_CN	86592d0ec5097401	model
+zh_CN	8681d016aa907182	human Hand-translated (kernel and package cleanup, 27.8)
 zh_CN	86c0fc7876ac2f52	model
 zh_CN	86d5c50ba37722b3	model
 zh_CN	8783ef43fd635d82	model
@@ -10040,6 +10108,7 @@ zh_CN	b046ed95c1c7dd2c	model
 zh_CN	b0cd6bbd10fdcde0	model
 zh_CN	b100bd8a42589be6	model
 zh_CN	b12842c279740107	model
+zh_CN	b15db514c6b2f11f	human Hand-translated (kernel and package cleanup, 27.8)
 zh_CN	b1ac5de70d951b54	model
 zh_CN	b1d60bb6b99f3e61	model
 zh_CN	b1e33688509d3620	model
@@ -10087,6 +10156,7 @@ zh_CN	bd594243ae54358f	model
 zh_CN	bd94925076eacdbb	model
 zh_CN	bdb61e34c925b572	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 zh_CN	bdee78b14d55b628	model
+zh_CN	bdf3a2d4fc2ea356	human Hand-translated (kernel and package cleanup, 27.8)
 zh_CN	be7a8bff280c5387	model
 zh_CN	bfb0907eef59bac4	model
 zh_CN	bfd7a58d0b03c696	model
@@ -10180,6 +10250,7 @@ zh_CN	d549a61bb693d1d7	model
 zh_CN	d5c6a1a7f2d2097e	model
 zh_CN	d5e193bdbbb3b1c0	model
 zh_CN	d6864e313cf44f50	model
+zh_CN	d71b170010452557	human Hand-translated (kernel and package cleanup, 27.8)
 zh_CN	d7ce714a893d1a84	model
 zh_CN	d8b88cc28568f777	model
 zh_CN	d8ce1e0a465c6855	model
@@ -10272,6 +10343,7 @@ zh_CN	f2240da56738d1c3	model
 zh_CN	f29e24ab9519759f	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 zh_CN	f2a2126453037194	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)
 zh_CN	f3882c5c114b734e	model
+zh_CN	f43a230ee2e6c7a5	human Hand-translated (kernel and package cleanup, 27.8)
 zh_CN	f43f697d45d4ba6d	model
 zh_CN	f44842b19f714285	model
 zh_CN	f4777c4b06e7793e	model
@@ -10657,6 +10729,7 @@ zh_TW	637b701de9d76b57	model
 zh_TW	638b67a638406d6c	model
 zh_TW	63bf6f874dec8c28	model
 zh_TW	63bff168c6f2f441	model
+zh_TW	63ee405be47242a4	human Hand-translated (kernel and package cleanup, 27.8)
 zh_TW	63f68c69eda9ce01	model
 zh_TW	64cdf469fef09c1e	model
 zh_TW	651cb5e5176d06d5	model
@@ -10878,6 +10951,7 @@ zh_TW	a210980bb01ed432	model
 zh_TW	a2385cc279b39814	model
 zh_TW	a23c66632b8e1634	model
 zh_TW	a2938d23e57d4f72	model
+zh_TW	a2b262454ef509c2	human Hand-translated (kernel and package cleanup, 27.8)
 zh_TW	a31dd99949f3c5e4	model
 zh_TW	a3f3ba8e2982eec3	model
 zh_TW	a40dfa53aaf6f876	model
@@ -10967,6 +11041,7 @@ zh_TW	beb6ab4587106783	human hand-translated ROADMAP 25.10 agent mTLS string (wr
 zh_TW	bf4d318baf10309e	model
 zh_TW	bf67353c433dca3b	model
 zh_TW	c062c1450f19aa82	model
+zh_TW	c06a7eda5193377c	human Hand-translated (kernel and package cleanup, 27.8)
 zh_TW	c09e80ade7653308	model
 zh_TW	c0c92489442ff9e9	model
 zh_TW	c0e399689b7ce55b	model
@@ -11007,6 +11082,7 @@ zh_TW	c9a47945e0f5d89b	model
 zh_TW	c9fe3e403b2ad72b	model
 zh_TW	ca1fa73d918df51a	model
 zh_TW	ca4b8daf7c4302c9	model
+zh_TW	ca51a0727c21a9a7	human Hand-translated (kernel and package cleanup, 27.8)
 zh_TW	cae205e43ebc4d80	model
 zh_TW	cb6c502475d3dc2f	model
 zh_TW	cb7d2aac10a2f0db	model
@@ -11032,7 +11108,9 @@ zh_TW	d1213f0c150f625b	model
 zh_TW	d1216c520c844dc4	model
 zh_TW	d14749dd3d673513	human hand-reviewed Phase 24 backup string (read and corrected by Claude)
 zh_TW	d1511c4e729ba31f	model
+zh_TW	d18552bc29752cc0	human Hand-translated (kernel and package cleanup, 27.8)
 zh_TW	d226323744c29b14	model
+zh_TW	d239fb9ee94998d5	human Hand-translated (kernel and package cleanup, 27.8)
 zh_TW	d2797542141f718e	model
 zh_TW	d28d220919167db4	model
 zh_TW	d2b5b13d273f01ee	human hand-translated ROADMAP 25.10 agent mTLS string (written by Claude, not model-verified)

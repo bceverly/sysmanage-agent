@@ -6296,3 +6296,29 @@ msgstr "WSL समर्थन की जाँच में त्रुटि:
 
 #~ msgid "CPUs cannot exceed 64"
 #~ msgstr "CPU 64 से अधिक नहीं हो सकते"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "Kernel %(installed)s is installed; %(running)s is running"
+msgstr "कर्नेल %(installed)s इंस्टॉल है; %(running)s चल रहा है"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "no protected kernel is installed"
+msgstr "कोई संरक्षित कर्नेल इंस्टॉल नहीं है"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "Package cleanup needs apt (Debian or Ubuntu)"
+msgstr "पैकेज क्लीनअप के लिए apt आवश्यक है (Debian या Ubuntu)"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "timed out"
+msgstr "समय समाप्त हो गया"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+#, python-format
+msgid "apt would also remove: %s"
+msgstr "apt यह भी हटाएगा: %s"
+
+#: src/sysmanage_agent/operations/package_cleanup.py
+msgid "run_id is required"
+msgstr "run_id आवश्यक है"

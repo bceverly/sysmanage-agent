@@ -460,7 +460,8 @@ class TestPlatformInfoCollection:
             create=True,
         ), patch.object(self.collector, "_collect_image_mode_info", return_value={}):
             os_info = self.collector._collect_linux_os_info()
-            assert not os_info
+            # Only the kernel fields (27.8), which do not come from os-release.
+            assert set(os_info) <= {"kernel_release", "installed_kernels"}
 
     def test_collect_windows_info(self):
         """Test Windows info collection."""

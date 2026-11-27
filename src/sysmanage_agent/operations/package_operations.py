@@ -568,12 +568,13 @@ class PackageOperations:
                 "Uninstalling packages with apt-get: %s", ", ".join(package_names)
             )
 
-            # Uninstall all packages in a single command (autoremove to clean up dependencies)
+            # Uninstall all packages in a single command.  Never --autoremove:
+            # it can take the last kernel known to boot (27.8); the package
+            # cleanup removes what is left over, with the kernels protected.
             uninstall_cmd = [
                 "sudo",
                 "apt-get",
                 "remove",
-                "--autoremove",
                 "-y",
             ] + package_names
             uninstall_process = await asyncio.create_subprocess_exec(

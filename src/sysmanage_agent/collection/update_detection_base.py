@@ -19,6 +19,8 @@ from typing import (  # pylint: disable=unused-import  # Any used in child class
     List,
 )
 
+from src.sysmanage_agent.collection import kernel_state
+
 # Platform-specific imports
 try:
     import pwd  # Unix/macOS only
@@ -184,6 +186,10 @@ class UpdateDetectorBase:
     def _detect_linux_reboot_required(self) -> bool:
         """Check if a Linux system reboot is required based on pending updates."""
         if os.path.exists("/var/run/reboot-required"):
+            return True
+        # The flag file can be missing or cleared; a newer kernel installed
+        # than the one running needs a reboot all the same (2026-11-27).
+        if kernel_state.newer_kernel():
             return True
 
         has_kernel_updates = any(
